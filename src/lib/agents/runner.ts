@@ -367,10 +367,13 @@ async function saveSocialPost(content: string) {
     }
   }
 
-  console.log('[Emma] saveSocialPost terminé — Unsplash + Supabase en arrière-plan');
+  console.log('[Emma] saveSocialPost terminé — DB en arrière-plan');
 
-  // 3. Unsplash + Supabase en arrière-plan, n'affectent pas le webhook
+  // Arrière-plan : Unsplash + social_posts + activity_logs + agent_stats
   void (async () => {
+    const startBg = Date.now();
+
+    // Unsplash
     let finalImageUrl = imageUrl;
     try {
       const imageData = await Promise.race([
@@ -385,27 +388,31 @@ async function saveSocialPost(content: string) {
       console.log('[Emma] Unsplash ignoré');
     }
 
-    // 4. INSERT Supabase
+    // INSERT social_posts (une ligne par plateforme)
     try {
       const supabase = createAdminClient();
-      await Promise.race([
-        supabase
+      for (const platform of ['facebook', 'instagram'] as const) {
+        const { data, error } = await supabase
           .from('social_posts')
-          .insert({ content: postContent, platform: 'facebook', hashtags, image_url: finalImageUrl, status: 'draft' })
+          .insert({ content: postContent, platform, hashtags, status: 'draft' })
           .select('id')
-          .single()
-          .then(({ data, error }) => {
-            if (error) console.log('[Emma] Supabase ignoré -', error.message);
-            else console.log('[Emma] Supabase OK - id:', data?.id);
-          }),
-        new Promise<void>((resolve) => setTimeout(() => {
-          console.log('[Emma] Supabase timeout 3s');
-          resolve();
-        }, 3000)),
-      ]);
-    } catch {
-      console.log('[Emma] Supabase ignoré');
+          .single();
+        if (error) console.log(`[Emma] social_posts ${platform} ignoré -`, error.message);
+        else console.log(`[Emma] social_posts ${platform} OK - id:`, data?.id);
+      }
+    } catch (err) {
+      console.log('[Emma] social_posts exception:', err);
     }
+
+    // INSERT activity_logs
+    await logActivity('emma', 'Emma', 'Post réseaux sociaux publié', 'success', Date.now() - startBg, {
+      platforms: ['facebook', 'instagram'],
+      hashtags_count: hashtags.length,
+      image_url: finalImageUrl,
+    });
+
+    // UPDATE agent_stats
+    await updateAgentStats('emma', 'success', 0);
   })();
 }
 
