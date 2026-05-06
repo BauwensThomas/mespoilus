@@ -25,30 +25,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   return [
-    {
-      url: `${APP_URL}/`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 1.0,
-    },
-    {
-      url: `${APP_URL}/blog`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${APP_URL}/adoption`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: `${APP_URL}/boutique`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
+    { url: `${APP_URL}/`,         lastModified: new Date(), changeFrequency: 'weekly', priority: 1.0 },
+    { url: `${APP_URL}/blog`,     lastModified: new Date(), changeFrequency: 'daily',  priority: 0.9 },
+    { url: `${APP_URL}/adoption`, lastModified: new Date(), changeFrequency: 'daily',  priority: 0.8 },
+    { url: `${APP_URL}/boutique`, lastModified: new Date(), changeFrequency: 'daily',  priority: 0.8 },
+    { url: `${APP_URL}/adoption/deposer`,          lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${APP_URL}/mentions-legales`,          lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
+    { url: `${APP_URL}/politique-confidentialite`, lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
+    { url: `${APP_URL}/cgu`,     lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${APP_URL}/cgv`,     lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${APP_URL}/cookies`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
     ...articleEntries,
   ];
 }
