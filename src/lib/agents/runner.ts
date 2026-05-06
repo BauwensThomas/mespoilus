@@ -348,25 +348,30 @@ async function saveSocialPost(content: string) {
   const supabase = createAdminClient();
   let insertedId: string | null = null;
 
-  // Étape A — INSERT Supabase
-  console.log('[Emma] étape A - avant INSERT');
+  // Étape A — INSERT Supabase (timeout 5s)
+  console.log('[Emma] étape A - INSERT start');
   try {
-    const { data: inserted, error: insertError } = await supabase
+    const insertPromise = supabase
       .from('social_posts')
       .insert({ content: postContent, platform: 'facebook', hashtags, status: 'draft' })
       .select('id')
       .single();
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Supabase INSERT timeout 5s')), 5000)
+    );
+    const { data: inserted, error: insertError } = await Promise.race([insertPromise, timeoutPromise]);
     if (insertError) {
-      console.error('[Emma] étape A - INSERT erreur:', insertError.message, insertError.code, insertError.details);
+      console.error('[Emma] étape A - INSERT result: erreur:', insertError.message, insertError.code);
     } else {
       insertedId = inserted?.id ?? null;
-      console.log('[Emma] étape B - après INSERT, id:', insertedId);
+      console.log('[Emma] étape A - INSERT result: ok, id:', insertedId);
     }
   } catch (err) {
-    console.error('[Emma] étape A - INSERT exception:', err);
+    console.error('[Emma] étape A - INSERT result: erreur/timeout:', err instanceof Error ? err.message : String(err));
   }
 
-  // Étape B→C — Unsplash avec retry + fallback
+  // Étape B — Unsplash avec retry + fallback
+  console.log('[Emma] étape B - avant Unsplash');
   const FALLBACK: Record<string, string> = {
     chien:  'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200&q=80',
     chat:   'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&q=80',
@@ -416,11 +421,11 @@ async function saveSocialPost(content: string) {
     }
   }
 
-  // Étape D — Webhook Make
-  console.log('[Emma] étape D - avant sendToMakeWebhook');
+  // Étape C — Webhook Make
+  console.log('[Emma] étape C - avant webhook Make');
   try {
     const makeResult = await sendToMakeWebhook('both', postContent, hashtags, imageUrl);
-    console.log(`[Emma] étape D - après sendToMakeWebhook: success=${makeResult.success}, error=${makeResult.error ?? 'aucune'}`);
+    console.log(`[Emma] étape C - après webhook Make: success=${makeResult.success}, error=${makeResult.error ?? 'aucune'}`);
 
     if (makeResult.success && insertedId) {
       const { error: updateError } = await supabase
