@@ -10,13 +10,19 @@ export default function GoogleAnalytics() {
   const [consented, setConsented] = useState(false);
 
   useEffect(() => {
-    const check = () => {
-      setConsented(localStorage.getItem(CONSENT_KEY) === 'accepted');
-    };
-    check();
-    window.addEventListener('storage', check);
-    return () => window.removeEventListener('storage', check);
-  }, []);
+  const check = () => {
+    setConsented(localStorage.getItem(CONSENT_KEY) === 'accepted');
+  };
+  check();
+
+  // Écoute un événement custom depuis CookieBanner
+  window.addEventListener('cookie-consent-updated', check);
+  window.addEventListener('storage', check);
+  return () => {
+    window.removeEventListener('cookie-consent-updated', check);
+    window.removeEventListener('storage', check);
+  };
+}, []);
 
   if (!consented) return null;
 
