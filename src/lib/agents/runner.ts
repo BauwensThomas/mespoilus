@@ -345,17 +345,7 @@ async function saveSocialPost(content: string) {
     const hashtags = hashtagsMatch || [];
     console.log('[Emma] hashtags extraits:', hashtags.length);
 
-    console.log('[Emma] avant fetch Unsplash...');
-    let imageUrl: string | null = null;
-    try {
-      const query = hashtags[0]?.replace('#', '') || 'animaux';
-      const imageData = await getPhotoForArticle(postContent.slice(0, 60), query);
-      imageUrl = imageData?.url ?? null;
-      console.log('[Emma] image Unsplash:', imageUrl ? imageUrl.slice(0, 60) + '…' : 'aucune');
-    } catch (err) {
-      console.warn('[Emma] Unsplash indisponible:', err);
-    }
-
+    // 1. INSERT Supabase en premier
     console.log('[Emma] avant INSERT Supabase...');
     const supabase = createAdminClient();
     const { data: inserted, error: insertError } = await supabase
@@ -365,6 +355,38 @@ async function saveSocialPost(content: string) {
       .single();
     console.log(`[Emma] INSERT: id=${inserted?.id ?? 'null'}, error=${insertError?.message ?? 'aucune'}`);
 
+    // 2. Fetch Unsplash avec retry (non-bloquant pour la suite)
+    let imageUrl: string | null = null;
+    const query = hashtags[0]?.replace('#', '') || 'animaux';
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      console.log(`[Emma] Unsplash tentative ${attempt}/3...`);
+      try {
+        const imageData = await Promise.race([
+          getPhotoForArticle(postContent.slice(0, 60), query),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+        ]);
+        if (imageData?.url) {
+          imageUrl = imageData.url;
+          console.log(`[Emma] Unsplash OK: ${imageUrl.slice(0, 60)}…`);
+          break;
+        }
+      } catch (err) {
+        console.warn(`[Emma] Unsplash tentative ${attempt}/3 erreur:`, err);
+      }
+      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    if (!imageUrl) console.log('[Emma] Unsplash abandonnée après 3 tentatives - post sans image');
+
+    // 3. UPDATE Supabase avec image_url si Unsplash a réussi
+    if (imageUrl && inserted?.id) {
+      const { error: imgError } = await supabase
+        .from('social_posts')
+        .update({ image_url: imageUrl })
+        .eq('id', inserted.id);
+      console.log('[Emma] UPDATE image_url:', imgError?.message ?? 'OK');
+    }
+
+    // 4. Webhook Make (toujours, avec ou sans image)
     console.log('[Emma] avant sendToMakeWebhook');
     const makeResult = await sendToMakeWebhook('both', postContent, hashtags, imageUrl);
     console.log(`[Emma] après sendToMakeWebhook: success=${makeResult.success}, error=${makeResult.error ?? 'aucune'}`);
