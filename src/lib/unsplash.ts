@@ -159,18 +159,15 @@ export async function getPhotoForAgent(agentId: string): Promise<UnsplashPhoto |
 }
 
 export async function getBannerPhotos(query: string): Promise<(UnsplashPhoto | null)[]> {
+  // per_page=5 matches getHeroPhotos — shares the Next.js fetch cache for the same query
   const data = await unsplashGet<SearchResponse>(
-    `/search/photos?query=${encodeURIComponent(query)}&per_page=12&content_filter=high`
+    `/search/photos?query=${encodeURIComponent(query)}&per_page=5&content_filter=high`
   );
-  if (!data?.results.length) return [null, null, null, null];
+  if (!data?.results.length) return [null];
 
-  const shuffled = [...data.results].sort(() => Math.random() - 0.5).slice(0, 4);
-  return Promise.all(
-    shuffled.map(async (raw) => {
-      await trackDownload(raw.links.download_location);
-      return mapPhoto(raw);
-    })
-  );
+  const raw = pickRandom(data.results);
+  await trackDownload(raw.links.download_location);
+  return [mapPhoto(raw)];
 }
 
 export async function getHeroPhotos(): Promise<(UnsplashPhoto | null)[]> {

@@ -5,7 +5,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
-import BackButton from '@/components/ui/BackButton';
 
 const BLOG_URL = '/blog';
 
@@ -79,12 +78,10 @@ export default async function BlogPage({ searchParams }: Props) {
 
   return (
     <div className="px-8 py-8 space-y-8 animate-fade-in">
-      <BackButton label="← Accueil" href="/" />
-
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white tracking-tight">Blog Mes Poilus</h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-400 text-sm mt-1">
           Conseils, guides et actualités sur les animaux de compagnie
         </p>
       </div>
@@ -97,7 +94,7 @@ export default async function BlogPage({ searchParams }: Props) {
             <Link
               key={id}
               href={id === 'all' ? '/blog' : `/blog?category=${id}`}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-150 flex items-center gap-1.5 ${
+              className={`text-xs px-3 py-1.5 rounded-lg border transition-all duration-150 flex items-center gap-1.5 ${
                 isActive
                   ? 'bg-amber-500 text-black border-amber-500 font-semibold'
                   : 'bg-transparent text-gray-400 border-[#333] hover:border-amber-500/50 hover:text-amber-400'
@@ -113,17 +110,13 @@ export default async function BlogPage({ searchParams }: Props) {
       {/* Bannière */}
       <div className="relative h-28 rounded-2xl overflow-hidden bg-[#111]">
 
-        {/* 4 photos Unsplash à droite */}
-        <div className="absolute right-0 top-0 bottom-0 w-[55%] flex gap-0.5">
-          {allPhotos.filter(Boolean).map((photo, i) => (
-            <div key={i} className="relative flex-1">
-              <Image src={photo!.url} alt={photo!.alt} fill className="object-cover" />
-            </div>
-          ))}
-        </div>
+        {/* Photo plein-format en fond */}
+        {allPhotos[0] && (
+          <Image src={allPhotos[0].url} alt={allPhotos[0].alt} fill className="object-cover object-center" />
+        )}
 
-        {/* Dégradé orange de gauche vers la droite */}
-        <div className="absolute left-0 top-0 bottom-0 w-[50%] bg-gradient-to-r from-amber-600 via-amber-500/70 to-transparent pointer-events-none" />
+        {/* Dégradé amber recouvrant 65% à gauche */}
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-600 from-30% via-amber-500/80 via-55% to-transparent pointer-events-none" />
 
         {/* Texte */}
         <div className="absolute inset-0 flex items-center px-6 z-10">

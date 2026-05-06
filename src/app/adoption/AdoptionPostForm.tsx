@@ -11,9 +11,29 @@ const ANIMAL_TYPES = [
   { id: 'autre',   label: 'Autre'   },
 ];
 
+const COUNTRIES = [
+  // Europe francophone
+  'Belgique', 'France', 'Suisse', 'Luxembourg', 'Monaco',
+  // Amérique
+  'Canada (Québec)', 'Haïti',
+  // DOM-TOM français
+  'Guadeloupe', 'Martinique', 'La Réunion', 'Guyane française', 'Mayotte',
+  'Nouvelle-Calédonie', 'Polynésie française',
+  // Maghreb
+  'Algérie', 'Maroc', 'Tunisie',
+  // Afrique subsaharienne
+  'Bénin', 'Burkina Faso', 'Burundi', 'Cameroun', 'Comores',
+  'Côte d\'Ivoire', 'Djibouti', 'Gabon', 'Guinée', 'Guinée Équatoriale',
+  'Madagascar', 'Mali', 'Maurice', 'Niger', 'République Centrafricaine',
+  'République Démocratique du Congo', 'République du Congo', 'Rwanda',
+  'Sénégal', 'Seychelles', 'Tchad', 'Togo',
+  // Océanie
+  'Vanuatu',
+];
+
 const EMPTY = {
   poster_name: '', email: '', animal_type: '', breed: '',
-  age: '', gender: 'inconnu', region: '', description: '',
+  age: '', gender: 'inconnu', country: 'Belgique', region: '', description: '',
   contact_email: '', contact_phone: '',
 };
 
@@ -72,10 +92,15 @@ export default function AdoptionPostForm() {
       }
 
       // 2. Soumettre le formulaire
+      const { country, region, ...rest } = form;
       const res  = await fetch('/api/adoption/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, photo_urls: photoUrls }),
+        body: JSON.stringify({
+          ...rest,
+          region: region ? `${region}, ${country}` : country,
+          photo_urls: photoUrls,
+        }),
       });
 
       const data = await res.json();
@@ -91,12 +116,11 @@ export default function AdoptionPostForm() {
     }
   }
 
-  const inputCls = 'w-full bg-[#0d0d0d] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30';
+  const inputCls = 'w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30';
 
   if (status === 'success') {
     return (
       <div className="max-w-2xl">
-        <h2 className="text-2xl font-bold text-white mb-6">Déposer une annonce</h2>
         <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-8 text-center">
           <span className="text-4xl block mb-3">✅</span>
           <h3 className="text-white font-semibold text-lg mb-2">Annonce envoyée !</h3>
@@ -113,9 +137,6 @@ export default function AdoptionPostForm() {
 
   return (
     <div className="max-w-2xl">
-      <h2 className="text-2xl font-bold text-white mb-1">Déposer une annonce</h2>
-      <p className="text-gray-500 text-sm mb-6">Votre annonce sera vérifiée avant publication.</p>
-
       <form onSubmit={submit} className="space-y-5">
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
@@ -157,7 +178,7 @@ export default function AdoptionPostForm() {
                 <button
                   type="button"
                   onClick={() => inputRef.current?.click()}
-                  className="aspect-square rounded-lg border border-dashed border-[#333] hover:border-amber-500/50 flex items-center justify-center text-gray-600 hover:text-amber-400 transition-colors text-xl"
+                  className="aspect-square rounded-lg border border-dashed border-gray-600 hover:border-amber-500/50 flex items-center justify-center text-gray-600 hover:text-amber-400 transition-colors text-xl"
                 >
                   +
                 </button>
@@ -170,7 +191,7 @@ export default function AdoptionPostForm() {
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="w-full border border-dashed border-[#333] hover:border-amber-500/50 rounded-xl py-8 flex flex-col items-center gap-2 text-gray-500 hover:text-amber-400 transition-colors"
+              className="w-full border border-dashed border-gray-600 hover:border-amber-500/50 rounded-xl py-8 flex flex-col items-center gap-2 text-gray-500 hover:text-amber-400 transition-colors"
             >
               <span className="text-sm font-medium">Cliquez pour ajouter des photos</span>
               <span className="text-xs text-gray-600">JPG, PNG, WebP · Max 5 Mo par photo</span>
@@ -214,7 +235,7 @@ export default function AdoptionPostForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs text-gray-400 mb-1.5 font-medium">Âge approximatif</label>
             <input type="text" value={form.age} onChange={e => set('age', e.target.value)} placeholder="ex : 2 ans" className={inputCls} />
@@ -225,6 +246,15 @@ export default function AdoptionPostForm() {
               <option value="inconnu">Inconnu</option>
               <option value="mâle">Mâle</option>
               <option value="femelle">Femelle</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1.5 font-medium">Pays *</label>
+            <select required value={form.country} onChange={e => set('country', e.target.value)} className={inputCls}>
+              {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
