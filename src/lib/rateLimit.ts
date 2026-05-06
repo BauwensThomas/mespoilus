@@ -12,9 +12,9 @@ const MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS ?? '30', 10);
 // Clean expired entries every 5 minutes
 setInterval(() => {
   const now = Date.now();
-  for (const [key, entry] of store.entries()) {
+  Array.from(store.entries()).forEach(([key, entry]) => {
     if (now > entry.resetAt) store.delete(key);
-  }
+  });
 }, 5 * 60 * 1000);
 
 export interface RateLimitResult {
