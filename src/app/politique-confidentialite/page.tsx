@@ -12,7 +12,7 @@ export default function PolitiqueConfidentialitePage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="max-w-3xl mx-auto px-6 py-12">
-        <BackButton label="← Retour" />
+        <BackButton label="← Accueil" href="/" />
 
         <h1 className="text-3xl font-bold text-white mt-8 mb-2">Politique de confidentialité</h1>
         <p className="text-gray-500 text-sm mb-12">Conforme au RGPD (Règlement UE 2016/679) - dernière mise à jour : mai 2026</p>
