@@ -171,11 +171,6 @@ async function saveSofia(content: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const secret = req.headers.get('x-internal-secret');
-  if (secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  }
-
   const { agentId, agentName, content, task, durationMs, tokens } = await req.json() as {
     agentId: string; agentName: string; content: string; task: string; durationMs: number; tokens: number;
   };
