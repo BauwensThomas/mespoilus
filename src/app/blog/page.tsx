@@ -4,7 +4,7 @@ import { Article } from '@/types';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getHeroPhotos } from '@/lib/unsplash';
+import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
 import BackButton from '@/components/ui/BackButton';
 
 const BLOG_URL = '/blog';
@@ -68,11 +68,14 @@ export default async function BlogPage({ searchParams }: Props) {
     ? searchParams.category
     : undefined;
 
-  const articles = await getArticles(activeCategory);
-  const [featured, ...rest] = articles;
-
   const activeCat = CATEGORIES.find((c) => c.id === (activeCategory ?? 'all'));
-  const allPhotos = await getHeroPhotos();
+  const bannerQuery = activeCategory && CATEGORY_QUERIES[activeCategory];
+
+  const [articles, allPhotos] = await Promise.all([
+    getArticles(activeCategory),
+    bannerQuery ? getBannerPhotos(bannerQuery) : getHeroPhotos(),
+  ]);
+  const [featured, ...rest] = articles;
 
   return (
     <div className="px-8 py-8 space-y-8 animate-fade-in">

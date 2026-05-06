@@ -7,7 +7,7 @@ import { fr } from 'date-fns/locale';
 import Image from 'next/image';
 import Link from 'next/link';
 import BackButton from '@/components/ui/BackButton';
-import { getHeroPhotos } from '@/lib/unsplash';
+import { getHeroPhotos, getBannerPhotos } from '@/lib/unsplash';
 
 export const metadata: Metadata = {
   title: 'Adoption animaux',
@@ -27,6 +27,15 @@ const ANIMAL_TYPES = [
   { id: 'reptile', label: 'Reptiles', emoji: '🦎' },
   { id: 'autre',   label: 'Autre',    emoji: '🐾' },
 ];
+
+const ADOPTION_BANNER_QUERIES: Record<string, string> = {
+  chien:   'cute dog puppy',
+  chat:    'cute cat kitten',
+  oiseau:  'pet bird parrot',
+  rongeur: 'rabbit hamster guinea pig',
+  reptile: 'lizard reptile gecko',
+  autre:   'pet animal cute',
+};
 
 const TYPE_COLOR: Record<string, { border: string; badge: string; bg: string }> = {
   chien:   { border: 'border-amber-500/30',   badge: 'text-amber-400',   bg: 'bg-amber-500/10'   },
@@ -60,7 +69,11 @@ interface Props {
 
 export default async function AdoptionPage({ searchParams }: Props) {
   const animal = searchParams.animal;
-  const [posts, allPhotos] = await Promise.all([getPosts(animal), getHeroPhotos()]);
+  const bannerQuery = animal && ADOPTION_BANNER_QUERIES[animal];
+  const [posts, allPhotos] = await Promise.all([
+    getPosts(animal),
+    bannerQuery ? getBannerPhotos(bannerQuery) : getHeroPhotos(),
+  ]);
   const activeType = ANIMAL_TYPES.find(t => t.id === (animal ?? 'all')) ?? ANIMAL_TYPES[0];
 
   return (
