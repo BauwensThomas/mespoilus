@@ -337,13 +337,15 @@ async function saveSecurityAnalysis(content: string) {
 
 async function saveSocialPost(content: string) {
   console.log('[Emma] saveSocialPost - contenu:', content.length, 'chars');
-  console.log('[Emma] MAKE_WEBHOOK_URL défini:', !!process.env.MAKE_WEBHOOK_URL);
+  const webhookUrl = process.env.MAKE_WEBHOOK_URL;
+  console.log('[Emma] MAKE_WEBHOOK_URL défini:', !!webhookUrl, '| préfixe:', webhookUrl?.slice(0, 30) ?? 'undefined');
   try {
     const postContent = content.trim();
     const hashtagsMatch = postContent.match(/#[\wÀ-ɏ]+/g);
     const hashtags = hashtagsMatch || [];
     console.log('[Emma] hashtags extraits:', hashtags.length);
 
+    console.log('[Emma] avant fetch Unsplash...');
     let imageUrl: string | null = null;
     try {
       const query = hashtags[0]?.replace('#', '') || 'animaux';
@@ -354,6 +356,7 @@ async function saveSocialPost(content: string) {
       console.warn('[Emma] Unsplash indisponible:', err);
     }
 
+    console.log('[Emma] avant INSERT Supabase...');
     const supabase = createAdminClient();
     const { data: inserted, error: insertError } = await supabase
       .from('social_posts')
@@ -362,9 +365,9 @@ async function saveSocialPost(content: string) {
       .single();
     console.log(`[Emma] INSERT: id=${inserted?.id ?? 'null'}, error=${insertError?.message ?? 'aucune'}`);
 
-    console.log('[Emma] sendToMakeWebhook platform=both...');
+    console.log('[Emma] avant sendToMakeWebhook');
     const makeResult = await sendToMakeWebhook('both', postContent, hashtags, imageUrl);
-    console.log(`[Emma] Make: success=${makeResult.success}, error=${makeResult.error ?? 'aucune'}`);
+    console.log(`[Emma] après sendToMakeWebhook: success=${makeResult.success}, error=${makeResult.error ?? 'aucune'}`);
 
     if (makeResult.success && inserted?.id) {
       const { error: updateError } = await supabase
