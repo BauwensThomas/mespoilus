@@ -339,84 +339,101 @@ async function saveSocialPost(content: string) {
   console.log('[Emma] saveSocialPost - contenu:', content.length, 'chars');
   const webhookUrl = process.env.MAKE_WEBHOOK_URL;
   console.log('[Emma] MAKE_WEBHOOK_URL défini:', !!webhookUrl, '| préfixe:', webhookUrl?.slice(0, 30) ?? 'undefined');
-  try {
-    const postContent = content.trim();
-    const hashtagsMatch = postContent.match(/#[\wÀ-ɏ]+/g);
-    const hashtags = hashtagsMatch || [];
-    console.log('[Emma] hashtags extraits:', hashtags.length);
 
-    // 1. INSERT Supabase en premier
-    console.log('[Emma] avant INSERT Supabase...');
-    const supabase = createAdminClient();
+  const postContent = content.trim();
+  const hashtagsMatch = postContent.match(/#[\wÀ-ɏ]+/g);
+  const hashtags = hashtagsMatch || [];
+  console.log('[Emma] hashtags extraits:', hashtags.length);
+
+  const supabase = createAdminClient();
+  let insertedId: string | null = null;
+
+  // Étape A — INSERT Supabase
+  console.log('[Emma] étape A - avant INSERT');
+  try {
     const { data: inserted, error: insertError } = await supabase
       .from('social_posts')
       .insert({ content: postContent, platform: 'facebook', hashtags, status: 'draft' })
       .select('id')
       .single();
-    console.log(`[Emma] INSERT: id=${inserted?.id ?? 'null'}, error=${insertError?.message ?? 'aucune'}`);
+    if (insertError) {
+      console.error('[Emma] étape A - INSERT erreur:', insertError.message, insertError.code, insertError.details);
+    } else {
+      insertedId = inserted?.id ?? null;
+      console.log('[Emma] étape B - après INSERT, id:', insertedId);
+    }
+  } catch (err) {
+    console.error('[Emma] étape A - INSERT exception:', err);
+  }
 
-    // 2. Fetch Unsplash avec retry 3x (2 secondes entre chaque)
-    let imageUrl: string | null = null;
-    const query = hashtags[0]?.replace('#', '') || 'animaux';
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      console.log(`[Emma] Unsplash tentative ${attempt}/3`);
-      try {
-        const imageData = await Promise.race([
-          getPhotoForArticle(postContent.slice(0, 60), query),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
-        ]);
-        if (imageData?.url) {
-          imageUrl = imageData.url;
-          console.log(`[Emma] Unsplash OK: ${imageUrl.slice(0, 80)}`);
-          break;
-        }
-      } catch (err) {
-        console.warn(`[Emma] Unsplash tentative ${attempt}/3 erreur:`, err);
+  // Étape B→C — Unsplash avec retry + fallback
+  const FALLBACK: Record<string, string> = {
+    chien:  'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200&q=80',
+    chat:   'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&q=80',
+    oiseau: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=1200&q=80',
+    rongeur:'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=1200&q=80',
+    reptile:'https://images.unsplash.com/photo-1519439050986-9cd34fc28ddc?w=1200&q=80',
+  };
+  const query = hashtags[0]?.replace('#', '') || 'animaux';
+  let imageUrl: string | null = null;
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    console.log(`[Emma] Unsplash tentative ${attempt}/3`);
+    try {
+      const imageData = await Promise.race([
+        getPhotoForArticle(postContent.slice(0, 60), query),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+      ]);
+      if (imageData?.url) {
+        imageUrl = imageData.url;
+        console.log(`[Emma] Unsplash OK: ${imageUrl.slice(0, 80)}`);
+        break;
       }
-      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 2000));
+    } catch (err) {
+      console.warn(`[Emma] Unsplash tentative ${attempt}/3 erreur:`, err);
     }
+    if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
 
-    // Fallback statique par catégorie si Unsplash échoue
-    if (!imageUrl) {
-      const FALLBACK: Record<string, string> = {
-        chien: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200&q=80',
-        chat:  'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&q=80',
-        oiseau:'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=1200&q=80',
-        rongeur:'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=1200&q=80',
-        reptile:'https://images.unsplash.com/photo-1519439050986-9cd34fc28ddc?w=1200&q=80',
-      };
-      const key = Object.keys(FALLBACK).find(k => query.toLowerCase().includes(k));
-      imageUrl = key ? FALLBACK[key] : 'https://images.unsplash.com/photo-1444212477490-ca407925329e?w=1200&q=80';
-      console.log(`[Emma] Unsplash échec - utilisation image fallback: ${imageUrl}`);
-    }
-    console.log(`[Emma] image finale: ${imageUrl.slice(0, 80)}`);
+  if (!imageUrl) {
+    const key = Object.keys(FALLBACK).find(k => query.toLowerCase().includes(k));
+    imageUrl = key ? FALLBACK[key] : 'https://images.unsplash.com/photo-1444212477490-ca407925329e?w=1200&q=80';
+    console.log(`[Emma] Unsplash échec - utilisation image fallback: ${imageUrl}`);
+  }
+  console.log(`[Emma] étape C - après Unsplash, image finale: ${imageUrl.slice(0, 80)}`);
 
-    // 3. UPDATE Supabase avec image_url si Unsplash a réussi
-    if (imageUrl && inserted?.id) {
+  // UPDATE image_url dans Supabase
+  if (insertedId) {
+    try {
       const { error: imgError } = await supabase
         .from('social_posts')
         .update({ image_url: imageUrl })
-        .eq('id', inserted.id);
-      console.log('[Emma] UPDATE image_url:', imgError?.message ?? 'OK');
+        .eq('id', insertedId);
+      if (imgError) console.error('[Emma] UPDATE image_url erreur:', imgError.message);
+      else console.log('[Emma] UPDATE image_url OK');
+    } catch (err) {
+      console.error('[Emma] UPDATE image_url exception:', err);
     }
+  }
 
-    // 4. Webhook Make (toujours, avec ou sans image)
-    console.log('[Emma] avant sendToMakeWebhook');
+  // Étape D — Webhook Make
+  console.log('[Emma] étape D - avant sendToMakeWebhook');
+  try {
     const makeResult = await sendToMakeWebhook('both', postContent, hashtags, imageUrl);
-    console.log(`[Emma] après sendToMakeWebhook: success=${makeResult.success}, error=${makeResult.error ?? 'aucune'}`);
+    console.log(`[Emma] étape D - après sendToMakeWebhook: success=${makeResult.success}, error=${makeResult.error ?? 'aucune'}`);
 
-    if (makeResult.success && inserted?.id) {
+    if (makeResult.success && insertedId) {
       const { error: updateError } = await supabase
         .from('social_posts')
         .update({ status: 'scheduled' })
-        .eq('id', inserted.id);
+        .eq('id', insertedId);
       console.log('[Emma] UPDATE → scheduled:', updateError?.message ?? 'OK');
     }
-
-    console.log('[Emma] saveSocialPost terminé');
   } catch (err) {
-    console.error('[Emma] saveSocialPost exception:', err);
+    console.error('[Emma] étape D - webhook exception:', err);
   }
+
+  console.log('[Emma] saveSocialPost terminé');
 }
 
 async function sendToMakeWebhook(
