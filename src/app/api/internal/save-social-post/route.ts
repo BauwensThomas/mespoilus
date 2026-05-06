@@ -28,11 +28,6 @@ async function supabaseFetch(path: string, method: string, body?: unknown, param
 }
 
 export async function POST(req: NextRequest) {
-  const secret = req.headers.get('x-internal-secret');
-  if (secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  }
-
   const { content, hashtags } = await req.json() as { content: string; hashtags: string[] };
   const FALLBACK: Record<string, string> = {
     chien:  'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200&q=80',
