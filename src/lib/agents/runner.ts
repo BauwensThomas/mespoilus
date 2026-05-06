@@ -94,11 +94,9 @@ export async function streamAgentTask(
       try {
         const { done, value } = await reader.read();
         if (done) {
-          controller.close();
           const duration = Date.now() - startTime;
           console.log(`[stream:${agentId}] Stream terminé - ${fullContent.length} caractères, ${duration}ms`);
-          // Appel ATTENDU vers route interne — stream déjà fermé, client a tout reçu
-          // La fonction reste vivante jusqu'à la réponse (keeps Vercel alive)
+          // Appel AVANT controller.close() — garde la fonction Vercel vivante
           try {
             const appUrl = process.env.VERCEL_URL
               ? `https://${process.env.VERCEL_URL}`
@@ -112,6 +110,7 @@ export async function streamAgentTask(
           } catch (err) {
             console.error(`[stream:${agentId}] save-agent-data erreur:`, err);
           }
+          controller.close();
           return;
         }
         if (!value) return;
