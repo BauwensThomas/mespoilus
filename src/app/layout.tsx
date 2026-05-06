@@ -13,7 +13,11 @@ export const metadata: Metadata = {
   },
   description: "Blog de conseils, guides pratiques et boutique d'accessoires pour vos animaux de compagnie.",
   robots: { index: false, follow: false },
-  other: { 'google-adsense-account': 'ca-pub-3549294158319032' },
+  other: {
+    'google-adsense-account': 'ca-pub-3549294158319032',
+    'google-site-verification': 'RjHr4b1Sf6FfVs0bvOXjkteGNw7xDIHyqxKJZSb0dJ8',
+    'msvalidate.01': '8ABCB6EDE93FF1A2E1C99FA1281F33E7',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
