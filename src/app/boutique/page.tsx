@@ -104,7 +104,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
         </>
       )}
 
-      <p className="text-xs text-gray-700 pt-4 border-t border-gray-800">
+      <p className="text-xs text-gray-500 pt-4 border-t border-gray-800 mt-auto">
         Les liens présents sur cette page sont des liens affiliés. Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
       </p>
     </div>

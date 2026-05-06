@@ -82,19 +82,11 @@ export default async function AdoptionPage({ searchParams }: Props) {
         <BackButton label="← Accueil" href="/" />
 
         {/* Hero */}
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Animaux à adopter</h1>
-            <p className="text-gray-500 text-sm mt-1">
-              Trouvez un compagnon près de chez vous, ou aidez un animal à trouver un foyer aimant.
-            </p>
-          </div>
-          <a
-            href="#deposer"
-            className="shrink-0 bg-amber-500 hover:bg-amber-400 text-black font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
-          >
-            Déposer une annonce
-          </a>
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Animaux à adopter</h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Trouvez un compagnon près de chez vous, ou aidez un animal à trouver un foyer aimant.
+          </p>
         </div>
 
         {/* Filtres */}
@@ -131,7 +123,7 @@ export default async function AdoptionPage({ searchParams }: Props) {
           <div className="absolute inset-0 flex items-center px-6 z-10">
             <div>
               <p className="text-white/60 text-[10px] uppercase tracking-widest font-medium">Filtre</p>
-              <p className="text-white font-bold text-xl">{activeType.emoji} {activeType.label}</p>
+              <p className="text-white font-bold text-xl">{activeType.label}</p>
               <p className="text-white/60 text-xs mt-0.5">{posts.length} annonce{posts.length !== 1 ? 's' : ''}</p>
             </div>
           </div>
@@ -149,8 +141,19 @@ export default async function AdoptionPage({ searchParams }: Props) {
           </div>
         )}
 
+        {/* CTA central */}
+        <div id="deposer" className="flex flex-col items-center gap-3 py-6 border-t border-gray-800">
+          <p className="text-gray-400 text-sm">Vous avez un animal à donner ?</p>
+          <a
+            href="#formulaire"
+            className="bg-amber-500 hover:bg-amber-400 text-black font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors"
+          >
+            Déposer une annonce
+          </a>
+        </div>
+
         {/* Formulaire */}
-        <div id="deposer" className="pt-8 border-t border-gray-800">
+        <div id="formulaire" className="pt-4">
           <AdoptionPostForm />
         </div>
       </div>
@@ -164,7 +167,7 @@ function AdoptionCard({ post }: { post: AdoptionPost }) {
   const date = formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: fr });
 
   return (
-    <div className={`bg-[#111] rounded-2xl border ${colors.border} overflow-hidden flex flex-col`}>
+    <div className={`bg-gray-800 rounded-2xl border ${colors.border} overflow-hidden flex flex-col`}>
       {/* Photo principale */}
       {post.photo_urls?.length > 0 ? (
         <div className="relative h-44 overflow-hidden bg-gray-800">
@@ -196,9 +199,9 @@ function AdoptionCard({ post }: { post: AdoptionPost }) {
       <div className="p-4 flex flex-col gap-3 flex-1">
         {/* Tags race / âge / genre */}
         <div className="flex flex-wrap gap-1.5">
-          {post.breed  && <span className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded-full">{post.breed}</span>}
-          {post.age    && <span className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded-full">{post.age}</span>}
-          {post.gender !== 'inconnu' && <span className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded-full capitalize">{post.gender}</span>}
+          {post.breed  && <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">{post.breed}</span>}
+          {post.age    && <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">{post.age}</span>}
+          {post.gender !== 'inconnu' && <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full capitalize">{post.gender}</span>}
         </div>
 
         <p className="text-xs text-gray-400 flex items-center gap-1">
@@ -210,7 +213,7 @@ function AdoptionCard({ post }: { post: AdoptionPost }) {
         </p>
 
         {/* Footer carte */}
-        <div className="pt-3 border-t border-gray-800/60 flex items-center justify-between gap-2">
+        <div className="pt-3 border-t border-gray-700/60 flex items-center justify-between gap-2">
           <span className="text-[10px] text-gray-600">Par {post.poster_name}</span>
           <span className={`text-xs font-medium ${colors.badge} truncate max-w-[140px]`}>
             {post.contact_info}
