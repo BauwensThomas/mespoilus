@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
+import AdBanner from '@/components/ui/AdBanner';
 
 const BLOG_URL = '/blog';
 
@@ -161,6 +162,8 @@ export default async function BlogPage({ searchParams }: Props) {
           </div>
         </>
       )}
+
+      <AdBanner slot="1266534148" variant="in-article" className="mt-6" />
     </div>
   );
 }

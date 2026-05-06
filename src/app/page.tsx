@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getPhotoForArticle, getHeroPhotos, CATEGORY_PLACEHOLDER } from '@/lib/unsplash';
 import NewsletterForm from '@/components/landing/NewsletterForm';
+import AdBanner from '@/components/ui/AdBanner';
 import type { Article } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -291,6 +292,13 @@ export default async function LandingPage() {
           </p>
         </div>
       </section>
+
+      {/* ── PUB ───────────────────────────────────────────────────────────── */}
+      <div className="bg-gray-900 px-6 py-6">
+        <div className="max-w-4xl mx-auto">
+          <AdBanner slot="2276363485" />
+        </div>
+      </div>
 
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
       <footer className="bg-gray-900 text-gray-400 py-14 px-6">
