@@ -425,10 +425,13 @@ async function sendToMakeWebhook(
     console.warn('[Make] MAKE_WEBHOOK_URL non configuré — publication ignorée');
     return { success: false, error: 'MAKE_WEBHOOK_URL non configuré' };
   }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
   try {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
         platform,
         content: content.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim(),
@@ -436,6 +439,7 @@ async function sendToMakeWebhook(
         image_url: imageUrl,
       }),
     });
+    clearTimeout(timeout);
     if (!res.ok) {
       const text = await res.text();
       console.error(`[Make] Webhook error ${res.status}:`, text);
@@ -444,8 +448,10 @@ async function sendToMakeWebhook(
     console.log(`[Make] ✅ Webhook ${platform} envoyé — status: ${res.status}`);
     return { success: true };
   } catch (err) {
-    console.error('[Make] Exception webhook:', err);
-    return { success: false, error: String(err) };
+    clearTimeout(timeout);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[Make] Exception webhook (${platform}):`, msg);
+    return { success: false, error: msg };
   }
 }
 
