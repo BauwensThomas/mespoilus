@@ -159,7 +159,7 @@ RÈGLES STRICTES :
 - Hashtags : exactement 6-8 hashtags pertinents sur la dernière ligne séparée par une ligne vide, sans duplication
 - INTERDIT : **, *, ##, markdown, hashtags dans le corps du texte
 
-Format de sortie : UNIQUEMENT les phrases (une ligne vide entre chaque), puis une ligne vide, puis "🔗 mespoilus.com", puis une ligne vide, puis les hashtags. Rien d'autre.`,
+Format de sortie : UNIQUEMENT les phrases (une ligne vide entre chaque), puis une ligne vide, puis "🔗 mespoilus.com", puis une ligne vide, puis les hashtags. STOP. Rien après les hashtags — pas de commentaire, pas de conseil photo, pas d'explication.`,
   },
 
   maxime: {
