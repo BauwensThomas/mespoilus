@@ -18,7 +18,6 @@
 .env.test.local
 .env.production.local
 password.txt
-prompts.txt
 note.txt
 
 # Debug
@@ -41,4 +40,5 @@ Thumbs.db
 .claude/settings.local.json
 *.jsonl
 CONTEXT.md
+AGENTS.md
 
