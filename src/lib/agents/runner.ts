@@ -426,7 +426,7 @@ async function sendToMakeWebhook(
     return { success: false, error: 'MAKE_WEBHOOK_URL non configuré' };
   }
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), 4000);
   try {
     const res = await fetch(url, {
       method: 'POST',
