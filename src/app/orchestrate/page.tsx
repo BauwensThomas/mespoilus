@@ -1,0 +1,196 @@
+'use client';
+
+import { useState } from 'react';
+import clsx from 'clsx';
+import { AGENTS } from '@/lib/agents/config';
+
+interface AgentResult {
+  agent: string;
+  success: boolean;
+  preview: string;
+}
+
+interface OrchestrationResult {
+  success: boolean;
+  strategy: string;
+  results: AgentResult[];
+  synthesis: string;
+  tokensUsed: number;
+  error?: string;
+}
+
+export default function OrchestratePage() {
+  const [objective, setObjective] = useState('');
+  const [result, setResult] = useState<OrchestrationResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function runOrchestration() {
+    if (!objective.trim() || isLoading) return;
+
+    setIsLoading(true);
+    setResult(null);
+    setError('');
+
+    try {
+      const res = await fetch('/api/orchestrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ objective }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? `Erreur ${res.status}`);
+      setResult(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur inconnue');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const EXAMPLE_OBJECTIVES = [
+    'Lance une campagne de contenu sur l\'adoption de chats en Belgique : article, posts sociaux et stratégie SEO.',
+    'Analyse les performances du mois et génère un rapport complet avec recommandations.',
+    'Crée un contenu complet sur les vaccins obligatoires pour chiens en Belgique.',
+  ];
+
+  return (
+    <div className="px-8 py-8 space-y-8 animate-fade-in max-w-4xl mx-auto">
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-xl">
+            👔
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Orchestration Thomas</h1>
+            <p className="text-gray-500 text-xs">Coordination multi-agents par le CEO</p>
+          </div>
+        </div>
+        <p className="text-gray-400 text-sm leading-relaxed mt-3">
+          Thomas analyse ton objectif, crée un plan stratégique, délègue les tâches aux agents concernés,
+          puis synthétise les résultats.
+        </p>
+      </div>
+
+      {/* Input objectif */}
+      <div className="card p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-white">Objectif à orchestrer</h2>
+        <textarea
+          className="input-dark resize-none h-28"
+          placeholder="Ex: Lance une campagne complète sur les chiots en Belgique..."
+          value={objective}
+          onChange={(e) => setObjective(e.target.value)}
+        />
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={runOrchestration}
+            disabled={isLoading || !objective.trim()}
+            className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <>
+                <span className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                Orchestration en cours…
+              </>
+            ) : (
+              '⚡ Lancer l\'orchestration'
+            )}
+          </button>
+          {isLoading && (
+            <span className="text-xs text-gray-500">Peut prendre 30-60 secondes…</span>
+          )}
+        </div>
+
+        {/* Exemples */}
+        <div>
+          <p className="text-xs text-gray-600 mb-2">Exemples :</p>
+          <div className="space-y-1.5">
+            {EXAMPLE_OBJECTIVES.map((obj, i) => (
+              <button
+                key={i}
+                onClick={() => setObjective(obj)}
+                className="w-full text-left text-xs text-gray-500 hover:text-gray-300 bg-[#0d0d0d] hover:bg-[#161616] border border-[#1a1a1a] hover:border-[#2a2a2a] rounded-lg px-3 py-2 transition-all duration-150"
+              >
+                {obj}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Erreur */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
+      )}
+
+      {/* Résultats */}
+      {result && (
+        <div className="space-y-5 animate-slide-up">
+          {/* Stratégie */}
+          <div className="card p-5">
+            <h2 className="text-sm font-semibold text-amber-400 mb-3">📋 Stratégie de Thomas</h2>
+            <p className="text-sm text-gray-300 leading-relaxed">{result.strategy}</p>
+          </div>
+
+          {/* Résultats par agent */}
+          <div>
+            <h2 className="text-sm font-semibold text-white mb-3">
+              Résultats des agents ({result.results.length})
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {result.results.map((r) => {
+                const agent = AGENTS[r.agent as keyof typeof AGENTS];
+                return (
+                  <div
+                    key={r.agent}
+                    className={clsx(
+                      'card p-4 border',
+                      r.success ? (agent?.borderColor ?? 'border-[#222]') : 'border-red-500/20'
+                    )}
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">{agent?.icon ?? '🤖'}</span>
+                      <span className={clsx('text-sm font-medium', agent?.color ?? 'text-gray-400')}>
+                        {agent?.name ?? r.agent}
+                      </span>
+                      <span
+                        className={clsx(
+                          'ml-auto text-[10px] px-2 py-0.5 rounded-full',
+                          r.success
+                            ? 'bg-emerald-500/15 text-emerald-400'
+                            : 'bg-red-500/15 text-red-400'
+                        )}
+                      >
+                        {r.success ? '✓ OK' : '✗ Erreur'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400 leading-relaxed line-clamp-4">{r.preview}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Synthèse Thomas */}
+          <div className="card p-5 border border-amber-400/20">
+            <h2 className="text-sm font-semibold text-amber-400 mb-3">✅ Synthèse de Thomas</h2>
+            <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+              {result.synthesis}
+            </p>
+          </div>
+
+          {/* Meta */}
+          <div className="flex items-center justify-between text-xs text-gray-600">
+            <span>{result.tokensUsed?.toLocaleString()} tokens utilisés</span>
+            <span>{result.results.filter((r) => r.success).length}/{result.results.length} agents réussis</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

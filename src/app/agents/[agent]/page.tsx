@@ -1,0 +1,73 @@
+import { notFound } from 'next/navigation';
+import { AGENTS, getAgent } from '@/lib/agents/config';
+import { createAdminClient } from '@/lib/supabase/server';
+import AgentPageComponent from '@/components/agents/AgentPage';
+import type { AgentId, AgentStat, ActivityLog } from '@/types';
+import type { Metadata } from 'next';
+import { getPhotoForAgent, AGENT_PLACEHOLDER, type UnsplashPhoto } from '@/lib/unsplash';
+
+export const revalidate = 30;
+
+interface Props {
+  params: { agent: string };
+}
+
+export async function generateStaticParams() {
+  return Object.keys(AGENTS).map((id) => ({ agent: id }));
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const agent = AGENTS[params.agent as AgentId];
+  if (!agent) return { title: 'Agent introuvable' };
+  return {
+    title: `${agent.name} - ${agent.role}`,
+    description: agent.description,
+  };
+}
+
+async function getAgentData(agentId: AgentId) {
+  try {
+    const supabase = createAdminClient();
+    const [statRes, logsRes] = await Promise.all([
+      supabase.from('agent_stats').select('*').eq('agent_id', agentId).single(),
+      supabase
+        .from('activity_logs')
+        .select('*')
+        .eq('agent_id', agentId)
+        .order('created_at', { ascending: false })
+        .limit(15),
+    ]);
+    return {
+      stat: statRes.data as AgentStat | undefined,
+      recentLogs: (logsRes.data as ActivityLog[]) ?? [],
+    };
+  } catch {
+    return { stat: undefined, recentLogs: [] };
+  }
+}
+
+export default async function AgentPage({ params }: Props) {
+  const agentId = params.agent as AgentId;
+  if (!AGENTS[agentId]) notFound();
+
+  const agent = getAgent(agentId);
+
+  // Fetch agent photo + DB data en parallèle
+  const [{ stat, recentLogs }, agentPhoto] = await Promise.all([
+    getAgentData(agentId),
+    getPhotoForAgent(agentId).catch(() => null) as Promise<UnsplashPhoto | null>,
+  ]);
+
+  const photo = agentPhoto ?? null;
+  const placeholderSrc = AGENT_PLACEHOLDER[agentId] ?? '/images/agents/thomas.svg';
+
+  return (
+    <AgentPageComponent
+      agent={agent}
+      stat={stat}
+      recentLogs={recentLogs}
+      photo={photo}
+      placeholderSrc={placeholderSrc}
+    />
+  );
+}
