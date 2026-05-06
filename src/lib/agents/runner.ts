@@ -363,6 +363,7 @@ async function saveSocialPost(content: string) {
           .single();
 
         // Envoi à Buffer pour publication automatique (non-bloquant)
+        console.log(`[Emma] Appel publishToBuffer pour ${platform} — ${postContent.length} chars`);
         const bufferResult = await publishToBuffer(postContent, platform);
         if (bufferResult.success && inserted?.id) {
           await supabase

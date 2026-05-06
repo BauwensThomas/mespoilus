@@ -18,30 +18,39 @@ interface BufferResult {
 let profilesCache: BufferProfile[] | null = null;
 
 async function getProfiles(token: string): Promise<BufferProfile[]> {
-  if (profilesCache) return profilesCache;
+  if (profilesCache) {
+    console.log('[Buffer] Profiles depuis le cache:', profilesCache.map(p => `${p.service}(${p.id})`));
+    return profilesCache;
+  }
+  console.log('[Buffer] Appel API profiles...');
   const res = await fetch(`${BUFFER_API}/profiles.json?access_token=${encodeURIComponent(token)}`);
+  console.log('[Buffer] Réponse profiles — status:', res.status);
   if (!res.ok) throw new Error(`Buffer profiles fetch failed: ${res.status}`);
   profilesCache = await res.json();
+  console.log('[Buffer] Profiles trouvés:', profilesCache!.map(p => `${p.service}(${p.service_username})`));
   return profilesCache!;
 }
 
-/**
- * Envoie un post à Buffer pour publication planifiée sur la plateforme cible.
- * Si scheduledAt n'est pas fourni, le post est ajouté à la file d'attente Buffer.
- * Retourne { success: false } silencieusement si BUFFER_ACCESS_TOKEN n'est pas configuré.
- */
 export async function publishToBuffer(
   text: string,
   platform: Platform,
   scheduledAt?: Date
 ): Promise<BufferResult> {
   const token = process.env.BUFFER_ACCESS_TOKEN;
-  if (!token) return { success: false, error: 'BUFFER_ACCESS_TOKEN non configuré' };
+  if (!token) {
+    console.warn('[Buffer] BUFFER_ACCESS_TOKEN non configuré — publication ignorée');
+    return { success: false, error: 'BUFFER_ACCESS_TOKEN non configuré' };
+  }
 
   try {
     const profiles = await getProfiles(token);
     const profile = profiles.find(p => p.service === platform);
-    if (!profile) return { success: false, error: `Aucun profil Buffer pour ${platform}` };
+    if (!profile) {
+      console.warn(`[Buffer] Aucun profil trouvé pour ${platform} — profils dispo: ${profiles.map(p => p.service).join(', ')}`);
+      return { success: false, error: `Aucun profil Buffer pour ${platform}` };
+    }
+
+    console.log(`[Buffer] Publication sur ${platform} (profil: ${profile.service_username}, id: ${profile.id})`);
 
     const body = new URLSearchParams();
     body.append('access_token', token);
@@ -56,12 +65,16 @@ export async function publishToBuffer(
     });
 
     const data = await res.json();
+    console.log(`[Buffer] Réponse ${platform} — status: ${res.status}, success: ${data.success}, message: ${data.message ?? 'OK'}`);
+
     if (!res.ok || !data.success) {
       return { success: false, error: data.message ?? `Buffer error ${res.status}` };
     }
 
+    console.log(`[Buffer] ✅ Post ${platform} programmé — bufferId: ${data.updates?.[0]?.id}`);
     return { success: true, bufferId: data.updates?.[0]?.id };
   } catch (err) {
+    console.error(`[Buffer] Exception sur ${platform}:`, err);
     return { success: false, error: String(err) };
   }
 }
