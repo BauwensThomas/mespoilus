@@ -393,13 +393,15 @@ async function saveSocialPost(content: string) {
     }, 3000)),
   ]);
 
-  // Webhook Make — part TOUJOURS, indépendant de Supabase
-  console.log('[Emma] étape C - avant webhook Make');
-  try {
-    const makeResult = await sendToMakeWebhook('both', postContent, hashtags, imageUrl);
-    console.log(`[Emma] étape C - après webhook Make: success=${makeResult.success}, error=${makeResult.error ?? 'aucune'}`);
-  } catch (err) {
-    console.error('[Emma] étape D - webhook exception:', err);
+  // Webhooks Make — partent TOUJOURS, indépendants de Supabase
+  for (const platform of ['facebook', 'instagram']) {
+    console.log(`[Emma] étape C - avant webhook Make (${platform})`);
+    try {
+      const makeResult = await sendToMakeWebhook(platform, postContent, hashtags, imageUrl);
+      console.log(`[Emma] étape C - après webhook Make (${platform}): success=${makeResult.success}, error=${makeResult.error ?? 'aucune'}`);
+    } catch (err) {
+      console.error(`[Emma] étape D - webhook exception (${platform}):`, err);
+    }
   }
 
   console.log('[Emma] saveSocialPost terminé');
