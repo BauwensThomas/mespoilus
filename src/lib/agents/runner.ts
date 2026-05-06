@@ -175,15 +175,29 @@ async function updateAgentStats(agentId: AgentId, result: 'success' | 'error', t
     const supabase = createAdminClient();
     const isSuccess = result === 'success';
 
-    // Lire la ligne courante (seeded par migration_complete.sql)
+    // Lire la ligne courante
     const { data, error: selectError } = await supabase
       .from('agent_stats')
       .select('tasks_completed, tasks_failed, total_tokens_used')
       .eq('agent_id', agentId)
-      .single();
+      .maybeSingle();
 
     if (selectError) {
       console.error(`[stats:${agentId}] SELECT error:`, selectError);
+      return;
+    }
+
+    if (!data) {
+      // Ligne inexistante — INSERT
+      const { error: insertError } = await supabase.from('agent_stats').insert({
+        agent_id:          agentId,
+        tasks_completed:   isSuccess ? 1 : 0,
+        tasks_failed:      isSuccess ? 0 : 1,
+        total_tokens_used: tokens,
+        last_active:       new Date().toISOString(),
+      });
+      if (insertError) console.error(`[stats:${agentId}] INSERT error:`, insertError);
+      else console.log(`[stats:${agentId}] Stats créées (${result})`);
       return;
     }
 
@@ -323,6 +337,8 @@ async function saveSecurityAnalysis(content: string) {
 }
 
 async function saveSocialPost(content: string) {
+  console.log('[Emma] saveSocialPost appelé - contenu:', content.length, 'chars');
+  console.log('[Emma] BUFFER_ACCESS_TOKEN défini:', !!process.env.BUFFER_ACCESS_TOKEN);
   try {
     const platforms = ['instagram', 'facebook', 'tiktok'] as const;
     const supabase = createAdminClient();
