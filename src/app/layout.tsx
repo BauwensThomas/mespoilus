@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import LayoutShell from '@/components/layout/LayoutShell';
 import CookieBanner from '@/components/ui/CookieBanner';
+import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://mespoilus.com'),
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen">
         <LayoutShell>{children}</LayoutShell>
         <CookieBanner />
+        <GoogleAnalytics />
       </body>
     </html>
   );
