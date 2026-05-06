@@ -159,13 +159,14 @@ export async function getPhotoForAgent(agentId: string): Promise<UnsplashPhoto |
 }
 
 export async function getBannerPhotos(query: string): Promise<(UnsplashPhoto | null)[]> {
+  const data = await unsplashGet<SearchResponse>(
+    `/search/photos?query=${encodeURIComponent(query)}&per_page=12&content_filter=high`
+  );
+  if (!data?.results.length) return [null, null, null, null];
+
+  const shuffled = [...data.results].sort(() => Math.random() - 0.5).slice(0, 4);
   return Promise.all(
-    [1, 2, 3, 4].map(async (page) => {
-      const data = await unsplashGet<SearchResponse>(
-        `/search/photos?query=${encodeURIComponent(query)}&per_page=1&page=${page}&content_filter=high`
-      );
-      if (!data?.results.length) return null;
-      const raw = data.results[0];
+    shuffled.map(async (raw) => {
       await trackDownload(raw.links.download_location);
       return mapPhoto(raw);
     })
