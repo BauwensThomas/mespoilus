@@ -358,29 +358,34 @@ async function saveSocialPost(content: string) {
 
   const startDb = Date.now();
 
-  // INSERT social_posts
+  // INSERT social_posts via fetch direct (AbortController garanti)
   console.log('[Emma] 4/8 INSERT social_posts...');
-  try {
-    const supabase = createAdminClient();
-    console.log('[Emma] 4/8 client créé');
-    for (const platform of ['facebook', 'instagram'] as const) {
-      console.log(`[Emma] 4/8 INSERT ${platform}...`);
-      let done = false;
-      const timer = setTimeout(() => {
-        if (!done) console.log(`[Emma] social_posts ${platform} - timeout 5s`);
-      }, 5000);
-      const { data, error } = await supabase
-        .from('social_posts')
-        .insert({ content: postContent, platform, hashtags, status: 'draft' })
-        .select('id')
-        .single();
-      done = true;
-      clearTimeout(timer);
-      if (error) console.log(`[Emma] social_posts ${platform} erreur -`, error.message);
-      else console.log(`[Emma] social_posts ${platform} OK - id:`, data?.id);
+  for (const platform of ['facebook', 'instagram']) {
+    console.log(`[Emma] 4/8 INSERT ${platform}...`);
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/social_posts`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+            'Prefer': 'return=minimal',
+          },
+          body: JSON.stringify({ content: postContent, platform, hashtags, status: 'draft' }),
+          signal: ctrl.signal,
+        }
+      );
+      clearTimeout(t);
+      if (res.ok) console.log(`[Emma] social_posts ${platform} OK - status:`, res.status);
+      else console.log(`[Emma] social_posts ${platform} erreur - ${res.status}:`, await res.text());
+    } catch (err) {
+      clearTimeout(t);
+      console.log(`[Emma] social_posts ${platform} exception:`, err instanceof Error ? err.message : err);
     }
-  } catch (err) {
-    console.log('[Emma] social_posts exception:', err);
   }
 
   // activity_logs + agent_stats
