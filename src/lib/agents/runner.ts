@@ -355,27 +355,41 @@ async function saveSocialPost(content: string) {
       .single();
     console.log(`[Emma] INSERT: id=${inserted?.id ?? 'null'}, error=${insertError?.message ?? 'aucune'}`);
 
-    // 2. Fetch Unsplash avec retry (non-bloquant pour la suite)
+    // 2. Fetch Unsplash avec retry 3x (2 secondes entre chaque)
     let imageUrl: string | null = null;
     const query = hashtags[0]?.replace('#', '') || 'animaux';
     for (let attempt = 1; attempt <= 3; attempt++) {
-      console.log(`[Emma] Unsplash tentative ${attempt}/3...`);
+      console.log(`[Emma] Unsplash tentative ${attempt}/3`);
       try {
         const imageData = await Promise.race([
           getPhotoForArticle(postContent.slice(0, 60), query),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
         ]);
         if (imageData?.url) {
           imageUrl = imageData.url;
-          console.log(`[Emma] Unsplash OK: ${imageUrl.slice(0, 60)}…`);
+          console.log(`[Emma] Unsplash OK: ${imageUrl.slice(0, 80)}`);
           break;
         }
       } catch (err) {
         console.warn(`[Emma] Unsplash tentative ${attempt}/3 erreur:`, err);
       }
-      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 2000));
     }
-    if (!imageUrl) console.log('[Emma] Unsplash abandonnée après 3 tentatives - post sans image');
+
+    // Fallback statique par catégorie si Unsplash échoue
+    if (!imageUrl) {
+      const FALLBACK: Record<string, string> = {
+        chien: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200&q=80',
+        chat:  'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&q=80',
+        oiseau:'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=1200&q=80',
+        rongeur:'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=1200&q=80',
+        reptile:'https://images.unsplash.com/photo-1519439050986-9cd34fc28ddc?w=1200&q=80',
+      };
+      const key = Object.keys(FALLBACK).find(k => query.toLowerCase().includes(k));
+      imageUrl = key ? FALLBACK[key] : 'https://images.unsplash.com/photo-1444212477490-ca407925329e?w=1200&q=80';
+      console.log(`[Emma] Unsplash échec - utilisation image fallback: ${imageUrl}`);
+    }
+    console.log(`[Emma] image finale: ${imageUrl.slice(0, 80)}`);
 
     // 3. UPDATE Supabase avec image_url si Unsplash a réussi
     if (imageUrl && inserted?.id) {
@@ -420,7 +434,12 @@ async function sendToMakeWebhook(
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ platform, content, hashtags, image_url: imageUrl }),
+      body: JSON.stringify({
+        platform,
+        content: content.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim(),
+        hashtags: hashtags.join(' '),
+        image_url: imageUrl,
+      }),
     });
     if (!res.ok) {
       const text = await res.text();
