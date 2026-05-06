@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import BackButton from '@/components/ui/BackButton';
 import CookieResetButton from '@/components/ui/CookieResetButton';
 
 export const metadata: Metadata = {
@@ -13,7 +12,6 @@ export default function CookiesPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="max-w-3xl mx-auto px-6 py-12">
-        <BackButton label="← Retour" />
 
         <h1 className="text-3xl font-bold text-white mt-8 mb-2">Politique de cookies</h1>
         <p className="text-gray-500 text-sm mb-12">Conforme au RGPD et à la recommandation de l'APD belge - dernière mise à jour : mai 2026</p>

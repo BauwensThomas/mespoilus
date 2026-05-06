@@ -79,7 +79,7 @@ export default async function AdoptionPage({ searchParams }: Props) {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
-        <BackButton label="← Accueil" />
+        <BackButton label="← Accueil" href="/" />
 
         {/* Hero */}
         <div className="flex items-center justify-between gap-4">

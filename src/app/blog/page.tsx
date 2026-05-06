@@ -79,7 +79,7 @@ export default async function BlogPage({ searchParams }: Props) {
 
   return (
     <div className="px-8 py-8 space-y-8 animate-fade-in">
-      <BackButton />
+      <BackButton label="← Accueil" href="/" />
 
       {/* Header */}
       <div>
