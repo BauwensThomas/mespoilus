@@ -3,6 +3,7 @@ import { runAgent, streamAgent } from '@/lib/anthropic';
 import { getAgent } from './config';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getPhotoForArticle } from '@/lib/unsplash';
+import { publishToBuffer } from '@/lib/buffer';
 
 export async function executeAgentTask(
   agentId: AgentId,
@@ -332,12 +333,29 @@ async function saveSocialPost(content: string) {
       if (match) {
         const postContent = match[1].trim();
         const hashtagsMatch = postContent.match(/#[\wÀ-ɏ]+/g);
-        await supabase.from('social_posts').insert({
-          content: postContent,
-          platform,
-          hashtags: hashtagsMatch || [],
-          status: 'draft',
-        });
+
+        // Sauvegarde Supabase (status draft par défaut)
+        const { data: inserted } = await supabase
+          .from('social_posts')
+          .insert({
+            content: postContent,
+            platform,
+            hashtags: hashtagsMatch || [],
+            status: 'draft',
+          })
+          .select('id')
+          .single();
+
+        // Envoi à Buffer pour publication automatique (non-bloquant)
+        const bufferResult = await publishToBuffer(postContent, platform);
+        if (bufferResult.success && inserted?.id) {
+          await supabase
+            .from('social_posts')
+            .update({ status: 'scheduled', buffer_id: bufferResult.bufferId })
+            .eq('id', inserted.id);
+        } else if (!bufferResult.success && bufferResult.error) {
+          console.error(`[buffer:${platform}] ${bufferResult.error}`);
+        }
       }
     }
   } catch {
