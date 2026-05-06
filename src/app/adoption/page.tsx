@@ -6,6 +6,7 @@ import { fr } from 'date-fns/locale';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getHeroPhotos, getBannerPhotos } from '@/lib/unsplash';
+import AdBanner from '@/components/ui/AdBanner';
 
 export const metadata: Metadata = {
   title: 'Adoption animaux',
@@ -142,6 +143,8 @@ export default async function AdoptionPage({ searchParams }: Props) {
             {posts.map(post => <AdoptionCard key={post.id} post={post} />)}
           </div>
         )}
+
+        <AdBanner slot="1148710530" className="mt-6" />
 
       </div>
     </div>
