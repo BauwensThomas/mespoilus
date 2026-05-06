@@ -367,53 +367,51 @@ async function saveSocialPost(content: string) {
     }
   }
 
-  console.log('[Emma] saveSocialPost terminé — DB en arrière-plan');
+  // Webhook envoyé — on peut maintenant await les opérations DB sans bloquer l'utilisateur
+  const startDb = Date.now();
 
-  // Arrière-plan : Unsplash + social_posts + activity_logs + agent_stats
-  void (async () => {
-    const startBg = Date.now();
-
-    // Unsplash
-    let finalImageUrl = imageUrl;
-    try {
-      const imageData = await Promise.race([
-        getPhotoForArticle(postContent.slice(0, 60), query),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
-      ]);
-      if (imageData?.url) {
-        finalImageUrl = imageData.url;
-        console.log('[Emma] Unsplash OK:', finalImageUrl.slice(0, 80));
-      }
-    } catch {
-      console.log('[Emma] Unsplash ignoré');
+  // Unsplash
+  let finalImageUrl = imageUrl;
+  try {
+    const imageData = await Promise.race([
+      getPhotoForArticle(postContent.slice(0, 60), query),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+    ]);
+    if (imageData?.url) {
+      finalImageUrl = imageData.url;
+      console.log('[Emma] Unsplash OK:', finalImageUrl.slice(0, 80));
     }
+  } catch {
+    console.log('[Emma] Unsplash ignoré');
+  }
 
-    // INSERT social_posts (une ligne par plateforme)
-    try {
-      const supabase = createAdminClient();
-      for (const platform of ['facebook', 'instagram'] as const) {
-        const { data, error } = await supabase
-          .from('social_posts')
-          .insert({ content: postContent, platform, hashtags, status: 'draft' })
-          .select('id')
-          .single();
-        if (error) console.log(`[Emma] social_posts ${platform} ignoré -`, error.message);
-        else console.log(`[Emma] social_posts ${platform} OK - id:`, data?.id);
-      }
-    } catch (err) {
-      console.log('[Emma] social_posts exception:', err);
+  // INSERT social_posts (une ligne par plateforme)
+  try {
+    const supabase = createAdminClient();
+    for (const platform of ['facebook', 'instagram'] as const) {
+      const { data, error } = await supabase
+        .from('social_posts')
+        .insert({ content: postContent, platform, hashtags, status: 'draft' })
+        .select('id')
+        .single();
+      if (error) console.log(`[Emma] social_posts ${platform} erreur -`, error.message);
+      else console.log(`[Emma] social_posts ${platform} OK - id:`, data?.id);
     }
+  } catch (err) {
+    console.log('[Emma] social_posts exception:', err);
+  }
 
-    // INSERT activity_logs
-    await logActivity('emma', 'Emma', 'Post réseaux sociaux publié', 'success', Date.now() - startBg, {
-      platforms: ['facebook', 'instagram'],
-      hashtags_count: hashtags.length,
-      image_url: finalImageUrl,
-    });
+  // INSERT activity_logs
+  await logActivity('emma', 'Emma', 'Post réseaux sociaux publié', 'success', Date.now() - startDb, {
+    platforms: ['facebook', 'instagram'],
+    hashtags_count: hashtags.length,
+    image_url: finalImageUrl,
+  });
 
-    // UPDATE agent_stats
-    await updateAgentStats('emma', 'success', 0);
-  })();
+  // UPDATE agent_stats
+  await updateAgentStats('emma', 'success', 0);
+
+  console.log('[Emma] saveSocialPost terminé');
 }
 
 async function sendToMakeWebhook(
