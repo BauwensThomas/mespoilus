@@ -338,12 +338,11 @@ async function saveSecurityAnalysis(content: string) {
 async function saveSocialPost(content: string) {
   console.log('[Emma] saveSocialPost start');
 
+  // 1. Extraire contenu et hashtags
   const postContent = content.trim();
-  const hashtagsMatch = postContent.match(/#[\wÀ-ɏ]+/g);
-  const hashtags = hashtagsMatch || [];
+  const hashtags = postContent.match(/#[\wÀ-ɏ]+/g) || [];
   console.log('[Emma] hashtags:', hashtags.length);
 
-  // Image fallback statique par catégorie
   const FALLBACK: Record<string, string> = {
     chien:  'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200&q=80',
     chat:   'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&q=80',
@@ -354,57 +353,60 @@ async function saveSocialPost(content: string) {
   };
   const query = hashtags[0]?.replace('#', '') || 'animaux';
   const fallbackKey = Object.keys(FALLBACK).find(k => k !== 'default' && query.toLowerCase().includes(k));
-  const fallbackUrl = FALLBACK[fallbackKey ?? 'default'];
+  const imageUrl = FALLBACK[fallbackKey ?? 'default'];
 
-  // Unsplash (timeout 4s, 1 seule tentative — fallback immédiat si échec)
-  let imageUrl: string = fallbackUrl;
-  console.log('[Emma] étape B - avant Unsplash');
-  try {
-    const imageData = await Promise.race([
-      getPhotoForArticle(postContent.slice(0, 60), query),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
-    ]);
-    if (imageData?.url) {
-      imageUrl = imageData.url;
-      console.log('[Emma] Unsplash OK:', imageUrl.slice(0, 80));
-    } else {
-      console.log('[Emma] Unsplash ignoré - utilisation fallback');
-    }
-  } catch {
-    console.log('[Emma] Unsplash ignoré - utilisation fallback');
-  }
-
-  // Supabase fire-and-forget (timeout 3s, resolve toujours — ne bloque jamais Make)
-  console.log('[Emma] Supabase INSERT (non-bloquant)...');
-  const supabase = createAdminClient();
-  void Promise.race([
-    supabase
-      .from('social_posts')
-      .insert({ content: postContent, platform: 'facebook', hashtags, status: 'draft' })
-      .select('id')
-      .single()
-      .then(({ data, error }) => {
-        if (error) console.log('[Emma] Supabase ignoré -', error.message);
-        else console.log('[Emma] Supabase OK - id:', data?.id);
-      }),
-    new Promise<void>((resolve) => setTimeout(() => {
-      console.log('[Emma] Supabase ignoré - timeout 3s');
-      resolve();
-    }, 3000)),
-  ]);
-
-  // Webhooks Make — partent TOUJOURS, indépendants de Supabase
+  // 2. Webhooks Make EN PREMIER — rien d'autre avant
   for (const platform of ['facebook', 'instagram']) {
-    console.log(`[Emma] étape C - avant webhook Make (${platform})`);
+    console.log(`[Emma] webhook Make (${platform})...`);
     try {
-      const makeResult = await sendToMakeWebhook(platform, postContent, hashtags, imageUrl);
-      console.log(`[Emma] étape C - après webhook Make (${platform}): success=${makeResult.success}, error=${makeResult.error ?? 'aucune'}`);
+      const result = await sendToMakeWebhook(platform, postContent, hashtags, imageUrl);
+      if (!result.success) console.log(`[Emma] webhook ${platform} échoué:`, result.error);
+      else console.log(`[Emma] webhook ${platform} OK`);
     } catch (err) {
-      console.error(`[Emma] étape D - webhook exception (${platform}):`, err);
+      console.error(`[Emma] webhook ${platform} exception:`, err);
     }
   }
 
-  console.log('[Emma] saveSocialPost terminé');
+  console.log('[Emma] saveSocialPost terminé — Unsplash + Supabase en arrière-plan');
+
+  // 3. Unsplash + Supabase en arrière-plan, n'affectent pas le webhook
+  void (async () => {
+    let finalImageUrl = imageUrl;
+    try {
+      const imageData = await Promise.race([
+        getPhotoForArticle(postContent.slice(0, 60), query),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+      ]);
+      if (imageData?.url) {
+        finalImageUrl = imageData.url;
+        console.log('[Emma] Unsplash OK:', finalImageUrl.slice(0, 80));
+      }
+    } catch {
+      console.log('[Emma] Unsplash ignoré');
+    }
+
+    // 4. INSERT Supabase
+    try {
+      const supabase = createAdminClient();
+      await Promise.race([
+        supabase
+          .from('social_posts')
+          .insert({ content: postContent, platform: 'facebook', hashtags, image_url: finalImageUrl, status: 'draft' })
+          .select('id')
+          .single()
+          .then(({ data, error }) => {
+            if (error) console.log('[Emma] Supabase ignoré -', error.message);
+            else console.log('[Emma] Supabase OK - id:', data?.id);
+          }),
+        new Promise<void>((resolve) => setTimeout(() => {
+          console.log('[Emma] Supabase timeout 3s');
+          resolve();
+        }, 3000)),
+      ]);
+    } catch {
+      console.log('[Emma] Supabase ignoré');
+    }
+  })();
 }
 
 async function sendToMakeWebhook(
