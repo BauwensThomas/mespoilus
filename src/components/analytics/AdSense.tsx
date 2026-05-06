@@ -1,6 +1,5 @@
 'use client';
 
-import Script from 'next/script';
 import { useState, useEffect } from 'react';
 
 const PUB_ID = 'ca-pub-3549294158319032';
@@ -20,14 +19,15 @@ export default function AdSense() {
     };
   }, []);
 
-  if (!consented) return null;
+  useEffect(() => {
+    if (!consented) return;
+    if (document.querySelector('script[src*="adsbygoogle.js"]')) return;
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${PUB_ID}`;
+    script.crossOrigin = 'anonymous';
+    document.head.appendChild(script);
+  }, [consented]);
 
-  return (
-    <Script
-      async
-      src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${PUB_ID}`}
-      crossOrigin="anonymous"
-      strategy="afterInteractive"
-    />
-  );
+  return null;
 }
