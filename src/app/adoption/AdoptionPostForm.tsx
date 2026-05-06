@@ -114,7 +114,7 @@ export default function AdoptionPostForm() {
   return (
     <div className="max-w-2xl">
       <h2 className="text-2xl font-bold text-white mb-1">Déposer une annonce</h2>
-      <p className="text-gray-500 text-sm mb-6">Votre annonce sera vérifiée avant publication (sous 24h).</p>
+      <p className="text-gray-500 text-sm mb-6">Votre annonce sera vérifiée avant publication.</p>
 
       <form onSubmit={submit} className="space-y-5">
         {error && (
