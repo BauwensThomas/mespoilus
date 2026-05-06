@@ -57,7 +57,7 @@ export interface UnsplashPhoto {
 
 // ─── Requêtes par catégorie / agent ───────────────────────────────────────────
 
-const CATEGORY_QUERIES: Record<string, string> = {
+export const CATEGORY_QUERIES: Record<string, string> = {
   chiens: 'cute dog puppy',
   chats: 'cute cat kitten',
   oiseaux: 'pet bird parrot',
@@ -156,6 +156,16 @@ export async function getPhotoForAgent(agentId: string): Promise<UnsplashPhoto |
   const raw = pickRandom(data.results);
   await trackDownload(raw.links.download_location);
   return mapPhoto(raw);
+}
+
+export async function getBannerPhotos(query: string): Promise<(UnsplashPhoto | null)[]> {
+  const data = await unsplashGet<SearchResponse>(
+    `/search/photos?query=${encodeURIComponent(query)}&per_page=12&content_filter=high`
+  );
+  if (!data?.results.length) return [null, null, null, null];
+  const shuffled = [...data.results].sort(() => Math.random() - 0.5).slice(0, 4);
+  await Promise.all(shuffled.map(r => trackDownload(r.links.download_location)));
+  return shuffled.map(mapPhoto);
 }
 
 export async function getHeroPhotos(): Promise<(UnsplashPhoto | null)[]> {
