@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import type { AwinProduct } from '@/types';
 import Link from 'next/link';
 import Image from 'next/image';
-import BackButton from '@/components/ui/BackButton';
+import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
 
 export const metadata: Metadata = {
   title: 'Boutique animaux — Mes Poilus',
@@ -46,17 +46,21 @@ interface Props {
 
 export default async function BoutiquePage({ searchParams }: Props) {
   const category = searchParams.category;
-  const products = await getProducts(category);
+  const bannerQuery = category && category !== 'all' ? CATEGORY_QUERIES[category] : undefined;
+
+  const [products, allPhotos] = await Promise.all([
+    getProducts(category),
+    bannerQuery ? getBannerPhotos(bannerQuery) : getHeroPhotos(),
+  ]);
+
   const activeCat = CATEGORIES.find(c => c.id === (category ?? 'all')) ?? CATEGORIES[0];
   const hasSynced = products.length > 0;
 
   return (
-    <div className="px-8 py-8 space-y-8 animate-fade-in">
-      <BackButton label="← Accueil" href="/" />
-
+    <div className="px-8 py-8 pb-14 space-y-8 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold text-white tracking-tight">Boutique Mes Poilus</h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-400 text-sm mt-1">
           Sélection de produits pour vos animaux de compagnie
         </p>
       </div>
@@ -69,7 +73,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
             <Link
               key={cat.id}
               href={cat.id === 'all' ? '/boutique' : `/boutique?category=${cat.id}`}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 ${
+              className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
                 isActive
                   ? 'bg-amber-500 text-black border-amber-500 font-semibold'
                   : 'bg-transparent text-gray-400 border-[#333] hover:border-amber-500/50 hover:text-amber-400'
@@ -80,6 +84,23 @@ export default async function BoutiquePage({ searchParams }: Props) {
             </Link>
           );
         })}
+      </div>
+
+      {/* Bannière */}
+      <div className="relative h-28 rounded-2xl overflow-hidden bg-[#111]">
+        {allPhotos[0] && (
+          <Image src={allPhotos[0].url} alt={allPhotos[0].alt} fill className="object-cover object-center" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-600 from-30% via-amber-500/80 via-55% to-transparent pointer-events-none" />
+        <div className="absolute inset-0 flex items-center px-6 z-10">
+          <div>
+            <p className="text-white/60 text-[10px] uppercase tracking-widest font-medium">Catégorie</p>
+            <p className="text-white font-bold text-xl">{activeCat.label}</p>
+            <p className="text-white/60 text-xs mt-0.5">
+              {hasSynced ? `${products.length} produit${products.length !== 1 ? 's' : ''}` : 'Bientôt disponible'}
+            </p>
+          </div>
+        </div>
       </div>
 
       {!hasSynced ? (
@@ -104,9 +125,11 @@ export default async function BoutiquePage({ searchParams }: Props) {
         </>
       )}
 
-      <p className="text-xs text-gray-500 pt-4 border-t border-gray-800 mt-auto">
-        Les liens présents sur cette page sont des liens affiliés. Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
-      </p>
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 px-4 py-2">
+        <p className="text-xs text-gray-400 text-center">
+          Les liens présents sur cette page sont des liens affiliés. Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
+        </p>
+      </div>
     </div>
   );
 }

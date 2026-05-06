@@ -287,7 +287,7 @@ export default async function LandingPage() {
           </p>
           <NewsletterForm />
           <p className="text-white/50 text-xs mt-4">
-            Pas de spam. Désinscription en un clic. Conformité RGPD.
+            Pas de spam. Désinscription à tout moment sur simple demande. Conformité RGPD.
           </p>
         </div>
       </section>
@@ -302,7 +302,7 @@ export default async function LandingPage() {
                 <span className="text-2xl">🐾</span>
                 <span className="font-bold text-white text-lg">Mes Poilus</span>
               </div>
-              <p className="text-sm leading-relaxed text-gray-500 max-w-xs">
+              <p className="text-sm leading-relaxed text-gray-400 max-w-xs">
                 Blog de conseils et boutique d'accessoires pour tous les amoureux des animaux
                 de compagnie.
               </p>
@@ -310,7 +310,7 @@ export default async function LandingPage() {
                 {['Instagram', 'Facebook', 'TikTok'].map((social) => (
                   <span
                     key={social}
-                    className="text-xs text-gray-600 hover:text-amber-400 cursor-pointer transition-colors"
+                    className="text-xs text-gray-400 hover:text-amber-400 cursor-pointer transition-colors"
                   >
                     {social}
                   </span>
@@ -360,10 +360,10 @@ export default async function LandingPage() {
           </div>
 
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8">
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-gray-400">
               © 2026 Mes Poilus. Tous droits réservés.
             </p>
-            <div className="flex items-center gap-4 text-xs text-gray-700">
+            <div className="flex items-center gap-4 text-xs text-gray-400">
               <span>Contenu rédigé par IA avec supervision humaine</span>
               <span>•</span>
               <Link href="/login" className="hover:text-gray-500 transition-colors">

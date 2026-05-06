@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
-import AdoptionPostForm from './AdoptionPostForm';
 import type { AdoptionPost } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Image from 'next/image';
 import Link from 'next/link';
-import BackButton from '@/components/ui/BackButton';
 import { getHeroPhotos, getBannerPhotos } from '@/lib/unsplash';
 
 export const metadata: Metadata = {
@@ -79,25 +77,24 @@ export default async function AdoptionPage({ searchParams }: Props) {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="px-8 py-8 space-y-8">
-        <BackButton label="← Accueil" href="/" />
 
         {/* Hero */}
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Animaux à adopter</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-400 text-sm mt-1">
             Trouvez un compagnon près de chez vous, ou aidez un animal à trouver un foyer aimant.
           </p>
         </div>
 
-        {/* Filtres */}
-        <div className="flex flex-wrap gap-2">
+        {/* Filtres + bouton */}
+        <div className="relative flex flex-wrap gap-2">
           {ANIMAL_TYPES.map(t => {
             const isActive = (t.id === 'all' && !animal) || t.id === animal;
             return (
               <Link
                 key={t.id}
                 href={t.id === 'all' ? '/adoption' : `/adoption?animal=${t.id}`}
-                className={`text-xs px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 ${
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
                   isActive
                     ? 'bg-amber-500 text-black border-amber-500 font-semibold'
                     : 'bg-transparent text-gray-400 border-[#333] hover:border-amber-500/50 hover:text-amber-400'
@@ -108,18 +105,23 @@ export default async function AdoptionPage({ searchParams }: Props) {
               </Link>
             );
           })}
+          <div className="absolute right-[20%] bottom-0 flex flex-col items-end gap-1">
+            <p className="text-gray-400 text-xs whitespace-nowrap">Vous avez un animal à donner ?</p>
+            <Link
+              href="/adoption/deposer"
+              className="bg-rose-300 hover:bg-rose-200 text-rose-900 font-semibold px-4 py-2 rounded-lg text-sm transition-colors whitespace-nowrap"
+            >
+              Déposer une annonce
+            </Link>
+          </div>
         </div>
 
         {/* Bandeau */}
         <div className="relative h-28 rounded-2xl overflow-hidden bg-[#111]">
-          <div className="absolute right-0 top-0 bottom-0 w-[55%] flex gap-0.5">
-            {allPhotos.filter(Boolean).map((photo, i) => (
-              <div key={i} className="relative flex-1">
-                <Image src={photo!.url} alt={photo!.alt} fill className="object-cover" />
-              </div>
-            ))}
-          </div>
-          <div className="absolute left-0 top-0 bottom-0 w-[50%] bg-gradient-to-r from-amber-600 via-amber-500/70 to-transparent pointer-events-none" />
+          {allPhotos[0] && (
+            <Image src={allPhotos[0].url} alt={allPhotos[0].alt} fill className="object-cover object-center" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-600 from-30% via-amber-500/80 via-55% to-transparent pointer-events-none" />
           <div className="absolute inset-0 flex items-center px-6 z-10">
             <div>
               <p className="text-white/60 text-[10px] uppercase tracking-widest font-medium">Filtre</p>
@@ -141,21 +143,6 @@ export default async function AdoptionPage({ searchParams }: Props) {
           </div>
         )}
 
-        {/* CTA central */}
-        <div id="deposer" className="flex flex-col items-center gap-3 py-6 border-t border-gray-800">
-          <p className="text-gray-400 text-sm">Vous avez un animal à donner ?</p>
-          <a
-            href="#formulaire"
-            className="bg-amber-500 hover:bg-amber-400 text-black font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors"
-          >
-            Déposer une annonce
-          </a>
-        </div>
-
-        {/* Formulaire */}
-        <div id="formulaire" className="pt-4">
-          <AdoptionPostForm />
-        </div>
       </div>
     </div>
   );
@@ -168,7 +155,6 @@ function AdoptionCard({ post }: { post: AdoptionPost }) {
 
   return (
     <div className={`bg-gray-800 rounded-2xl border ${colors.border} overflow-hidden flex flex-col`}>
-      {/* Photo principale */}
       {post.photo_urls?.length > 0 ? (
         <div className="relative h-44 overflow-hidden bg-gray-800">
           <Image
@@ -186,7 +172,6 @@ function AdoptionCard({ post }: { post: AdoptionPost }) {
         </div>
       ) : null}
 
-      {/* Header coloré */}
       <div className={`${colors.bg} px-4 py-3 flex items-center justify-between`}>
         <span className={`text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 ${colors.badge}`}>
           <span>{typeInfo?.emoji ?? '🐾'}</span>
@@ -195,9 +180,7 @@ function AdoptionCard({ post }: { post: AdoptionPost }) {
         <span className="text-[10px] text-gray-500">{date}</span>
       </div>
 
-      {/* Corps */}
       <div className="p-4 flex flex-col gap-3 flex-1">
-        {/* Tags race / âge / genre */}
         <div className="flex flex-wrap gap-1.5">
           {post.breed  && <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">{post.breed}</span>}
           {post.age    && <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">{post.age}</span>}
@@ -212,7 +195,6 @@ function AdoptionCard({ post }: { post: AdoptionPost }) {
           {post.description}
         </p>
 
-        {/* Footer carte */}
         <div className="pt-3 border-t border-gray-700/60 flex items-center justify-between gap-2">
           <span className="text-[10px] text-gray-600">Par {post.poster_name}</span>
           <span className={`text-xs font-medium ${colors.badge} truncate max-w-[140px]`}>
