@@ -95,26 +95,31 @@ export async function streamAgentTask(
         const { done, value } = await reader.read();
         if (done) {
           const duration = Date.now() - startTime;
-          console.log(`[A] Stream done - ${fullContent.length} chars, ${duration}ms`);
-          console.log(`[B] VERCEL_URL=${process.env.VERCEL_URL ?? 'undefined'} | APP_URL=${process.env.NEXT_PUBLIC_APP_URL ?? 'undefined'} | CRON=${!!process.env.CRON_SECRET}`);
-          const appUrl = process.env.VERCEL_URL
-            ? `https://${process.env.VERCEL_URL}`
-            : (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000');
-          console.log(`[C] fetch vers: ${appUrl}/api/internal/save-agent-data`);
+          // Préférer NEXT_PUBLIC_APP_URL (domaine custom sans protection Vercel)
+          // VERCEL_URL = URL de déploiement hashée → protégée par Vercel → 401
+          const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+          const appUrl = (rawAppUrl && !rawAppUrl.startsWith('http://localhost'))
+            ? rawAppUrl
+            : process.env.VERCEL_URL
+              ? `https://${process.env.VERCEL_URL}`
+              : 'http://localhost:3000';
+          console.log(`[save-agent] fetch → ${appUrl}/api/internal/save-agent-data`);
           try {
-            console.log('[D] avant fetch...');
             const r = await fetch(`${appUrl}/api/internal/save-agent-data`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET ?? '' },
               body: JSON.stringify({ agentId, agentName: agent.name, content: fullContent, task, durationMs: duration, tokens: totalTokens }),
             });
-            console.log(`[E] fetch réponse: ${r.status}`);
+            if (!r.ok) {
+              const text = await r.text().catch(() => '');
+              console.error(`[save-agent] ${r.status} - ${text.slice(0, 200)}`);
+            } else {
+              console.log(`[save-agent] OK ${r.status}`);
+            }
           } catch (err) {
-            console.error('[F] fetch exception:', err instanceof Error ? err.message : err);
+            console.error('[save-agent] exception:', err instanceof Error ? err.message : err);
           }
-          console.log('[G] controller.close()');
           controller.close();
-          console.log('[H] terminé');
           return;
         }
         if (!value) return;
