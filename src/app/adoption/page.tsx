@@ -78,7 +78,7 @@ export default async function AdoptionPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
+      <div className="px-8 py-8 space-y-8">
         <BackButton label="← Accueil" href="/" />
 
         {/* Hero */}
@@ -144,7 +144,7 @@ export default async function AdoptionPage({ searchParams }: Props) {
             <p className="text-gray-500 text-sm mt-1">Soyez le premier à déposer une annonce !</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {posts.map(post => <AdoptionCard key={post.id} post={post} />)}
           </div>
         )}

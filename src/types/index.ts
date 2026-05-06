@@ -146,6 +146,20 @@ export interface AdoptionPost {
   updated_at: string;
 }
 
+export interface AwinProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  image_url: string;
+  affiliate_url: string;
+  merchant_name: string;
+  category: 'chiens' | 'chats' | 'oiseaux' | 'rongeurs' | 'reptiles' | 'general';
+  in_stock: boolean;
+  last_synced: string;
+}
+
 export interface BlockedIP {
   id: string;
   ip_address: string;
