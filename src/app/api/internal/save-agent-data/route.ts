@@ -65,14 +65,16 @@ async function saveEmma(content: string) {
   const fallbackKey = Object.keys(FALLBACK).find(k => k !== 'default' && query.toLowerCase().includes(k));
   const imageUrl = FALLBACK[fallbackKey ?? 'default'];
 
-  for (const platform of ['facebook', 'instagram']) {
+  // Instagram non connecté → facebook seulement pour l'instant
+  const platforms = ['facebook'];
+  for (const platform of platforms) {
     const r = await dbFetch('social_posts', 'POST', { content: postContent, platform, hashtags, status: 'draft' });
     console.log(`[save-agent] Emma social_posts ${platform}:`, r.ok ? 'OK' : `erreur ${r.status}`);
   }
 
   const makeUrl = process.env.MAKE_WEBHOOK_URL;
   if (makeUrl) {
-    for (const platform of ['facebook', 'instagram']) {
+    for (const platform of platforms) {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 5000);
       try {
