@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { CATEGORY_PLACEHOLDER } from '@/lib/unsplash';
+import AdBanner from '@/components/ui/AdBanner';
 
 interface Props {
   params: { slug: string };
@@ -236,6 +237,8 @@ export default async function ArticlePage({ params }: Props) {
               prose-tr:border-b prose-tr:border-[#222]"
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
+
+          <AdBanner slot="1266534148" variant="in-article" className="my-10" />
 
           {/* Footer article */}
           <footer className="mt-12 pt-6 border-t border-[#1a1a1a]">

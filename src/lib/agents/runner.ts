@@ -3,7 +3,6 @@ import { runAgent, streamAgent } from '@/lib/anthropic';
 import { getAgent } from './config';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getPhotoForArticle } from '@/lib/unsplash';
-import { publishToBuffer } from '@/lib/buffer';
 
 export async function executeAgentTask(
   agentId: AgentId,
@@ -337,46 +336,77 @@ async function saveSecurityAnalysis(content: string) {
 }
 
 async function saveSocialPost(content: string) {
-  console.log('[Emma] saveSocialPost appelé - contenu:', content.length, 'chars');
-  console.log('[Emma] BUFFER_ACCESS_TOKEN défini:', !!process.env.BUFFER_ACCESS_TOKEN);
+  console.log('[Emma] saveSocialPost - contenu:', content.length, 'chars');
+  console.log('[Emma] MAKE_WEBHOOK_URL défini:', !!process.env.MAKE_WEBHOOK_URL);
   try {
-    const platforms = ['instagram', 'facebook', 'tiktok'] as const;
-    const supabase = createAdminClient();
+    const postContent = content.trim();
+    const hashtagsMatch = postContent.match(/#[\wÀ-ɏ]+/g);
+    const hashtags = hashtagsMatch || [];
+    console.log('[Emma] hashtags extraits:', hashtags.length);
 
-    for (const platform of platforms) {
-      const regex = new RegExp(`#{1,3}\\s*${platform}[^\\n]*\\n([\\s\\S]*?)(?=#{1,3}|$)`, 'i');
-      const match = content.match(regex);
-      if (match) {
-        const postContent = match[1].trim();
-        const hashtagsMatch = postContent.match(/#[\wÀ-ɏ]+/g);
-
-        // Sauvegarde Supabase (status draft par défaut)
-        const { data: inserted } = await supabase
-          .from('social_posts')
-          .insert({
-            content: postContent,
-            platform,
-            hashtags: hashtagsMatch || [],
-            status: 'draft',
-          })
-          .select('id')
-          .single();
-
-        // Envoi à Buffer pour publication automatique (non-bloquant)
-        console.log(`[Emma] Appel publishToBuffer pour ${platform} — ${postContent.length} chars`);
-        const bufferResult = await publishToBuffer(postContent, platform);
-        if (bufferResult.success && inserted?.id) {
-          await supabase
-            .from('social_posts')
-            .update({ status: 'scheduled', buffer_id: bufferResult.bufferId })
-            .eq('id', inserted.id);
-        } else if (!bufferResult.success && bufferResult.error) {
-          console.error(`[buffer:${platform}] ${bufferResult.error}`);
-        }
-      }
+    let imageUrl: string | null = null;
+    try {
+      const query = hashtags[0]?.replace('#', '') || 'animaux';
+      const imageData = await getPhotoForArticle(postContent.slice(0, 60), query);
+      imageUrl = imageData?.url ?? null;
+      console.log('[Emma] image Unsplash:', imageUrl ? imageUrl.slice(0, 60) + '…' : 'aucune');
+    } catch (err) {
+      console.warn('[Emma] Unsplash indisponible:', err);
     }
-  } catch {
-    // Non-blocking
+
+    const supabase = createAdminClient();
+    const { data: inserted, error: insertError } = await supabase
+      .from('social_posts')
+      .insert({ content: postContent, platform: 'facebook', hashtags, status: 'draft' })
+      .select('id')
+      .single();
+    console.log(`[Emma] INSERT: id=${inserted?.id ?? 'null'}, error=${insertError?.message ?? 'aucune'}`);
+
+    console.log('[Emma] sendToMakeWebhook platform=both...');
+    const makeResult = await sendToMakeWebhook('both', postContent, hashtags, imageUrl);
+    console.log(`[Emma] Make: success=${makeResult.success}, error=${makeResult.error ?? 'aucune'}`);
+
+    if (makeResult.success && inserted?.id) {
+      const { error: updateError } = await supabase
+        .from('social_posts')
+        .update({ status: 'scheduled' })
+        .eq('id', inserted.id);
+      console.log('[Emma] UPDATE → scheduled:', updateError?.message ?? 'OK');
+    }
+
+    console.log('[Emma] saveSocialPost terminé');
+  } catch (err) {
+    console.error('[Emma] saveSocialPost exception:', err);
+  }
+}
+
+async function sendToMakeWebhook(
+  platform: string,
+  content: string,
+  hashtags: string[],
+  imageUrl: string | null
+): Promise<{ success: boolean; error?: string }> {
+  const url = process.env.MAKE_WEBHOOK_URL;
+  if (!url) {
+    console.warn('[Make] MAKE_WEBHOOK_URL non configuré — publication ignorée');
+    return { success: false, error: 'MAKE_WEBHOOK_URL non configuré' };
+  }
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ platform, content, hashtags, image_url: imageUrl }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`[Make] Webhook error ${res.status}:`, text);
+      return { success: false, error: `Make webhook error ${res.status}` };
+    }
+    console.log(`[Make] ✅ Webhook ${platform} envoyé — status: ${res.status}`);
+    return { success: true };
+  } catch (err) {
+    console.error('[Make] Exception webhook:', err);
+    return { success: false, error: String(err) };
   }
 }
 
