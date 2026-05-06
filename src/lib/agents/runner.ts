@@ -95,22 +95,26 @@ export async function streamAgentTask(
         const { done, value } = await reader.read();
         if (done) {
           const duration = Date.now() - startTime;
-          console.log(`[stream:${agentId}] Stream terminé - ${fullContent.length} caractères, ${duration}ms`);
-          // Appel AVANT controller.close() — garde la fonction Vercel vivante
+          console.log(`[A] Stream done - ${fullContent.length} chars, ${duration}ms`);
+          console.log(`[B] VERCEL_URL=${process.env.VERCEL_URL ?? 'undefined'} | APP_URL=${process.env.NEXT_PUBLIC_APP_URL ?? 'undefined'} | CRON=${!!process.env.CRON_SECRET}`);
+          const appUrl = process.env.VERCEL_URL
+            ? `https://${process.env.VERCEL_URL}`
+            : (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000');
+          console.log(`[C] fetch vers: ${appUrl}/api/internal/save-agent-data`);
           try {
-            const appUrl = process.env.VERCEL_URL
-              ? `https://${process.env.VERCEL_URL}`
-              : (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000');
+            console.log('[D] avant fetch...');
             const r = await fetch(`${appUrl}/api/internal/save-agent-data`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET ?? '' },
               body: JSON.stringify({ agentId, agentName: agent.name, content: fullContent, task, durationMs: duration, tokens: totalTokens }),
             });
-            console.log(`[stream:${agentId}] save-agent-data: ${r.status}`);
+            console.log(`[E] fetch réponse: ${r.status}`);
           } catch (err) {
-            console.error(`[stream:${agentId}] save-agent-data erreur:`, err);
+            console.error('[F] fetch exception:', err instanceof Error ? err.message : err);
           }
+          console.log('[G] controller.close()');
           controller.close();
+          console.log('[H] terminé');
           return;
         }
         if (!value) return;
