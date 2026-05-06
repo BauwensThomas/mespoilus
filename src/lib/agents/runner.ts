@@ -336,12 +336,11 @@ async function saveSecurityAnalysis(content: string) {
 }
 
 async function saveSocialPost(content: string) {
-  console.log('[Emma] saveSocialPost start');
+  console.log('[Emma] 1/8 start');
 
-  // 1. Extraire contenu et hashtags
   const postContent = content.trim();
   const hashtags = postContent.match(/#[\wÀ-ɏ]+/g) || [];
-  console.log('[Emma] hashtags:', hashtags.length);
+  console.log('[Emma] 2/8 hashtags:', hashtags.length);
 
   const FALLBACK: Record<string, string> = {
     chien:  'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200&q=80',
@@ -355,26 +354,12 @@ async function saveSocialPost(content: string) {
   const fallbackKey = Object.keys(FALLBACK).find(k => k !== 'default' && query.toLowerCase().includes(k));
   const imageUrl = FALLBACK[fallbackKey ?? 'default'];
 
+  console.log('[Emma] 3/8 env check - SUPABASE:', !!process.env.NEXT_PUBLIC_SUPABASE_URL, '| MAKE:', !!process.env.MAKE_WEBHOOK_URL);
+
   const startDb = Date.now();
 
-  // 2. Unsplash
-  let finalImageUrl = imageUrl;
-  try {
-    const imageData = await Promise.race([
-      getPhotoForArticle(postContent.slice(0, 60), query),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
-    ]);
-    if (imageData?.url) {
-      finalImageUrl = imageData.url;
-      console.log('[Emma] Unsplash OK:', finalImageUrl.slice(0, 80));
-    } else {
-      console.log('[Emma] Unsplash ignoré - fallback');
-    }
-  } catch {
-    console.log('[Emma] Unsplash ignoré - fallback');
-  }
-
-  // 3. INSERT social_posts (une ligne par plateforme)
+  // INSERT social_posts
+  console.log('[Emma] 4/8 INSERT social_posts...');
   try {
     const supabase = createAdminClient();
     for (const platform of ['facebook', 'instagram'] as const) {
@@ -390,19 +375,21 @@ async function saveSocialPost(content: string) {
     console.log('[Emma] social_posts exception:', err);
   }
 
-  // 4. activity_logs + agent_stats
+  // activity_logs + agent_stats
+  console.log('[Emma] 5/8 activity_logs...');
   await logActivity('emma', 'Emma', 'Post réseaux sociaux publié', 'success', Date.now() - startDb, {
     platforms: ['facebook', 'instagram'],
     hashtags_count: hashtags.length,
-    image_url: finalImageUrl,
+    image_url: imageUrl,
   });
+  console.log('[Emma] 6/8 agent_stats...');
   await updateAgentStats('emma', 'success', 0);
 
-  // 5. Webhook Make EN DERNIER — avec timeout 3s
+  // Webhook Make
+  console.log('[Emma] 7/8 webhooks Make...');
   for (const platform of ['facebook', 'instagram']) {
-    console.log(`[Emma] webhook Make (${platform})...`);
     try {
-      const result = await sendToMakeWebhook(platform, postContent, hashtags, finalImageUrl);
+      const result = await sendToMakeWebhook(platform, postContent, hashtags, imageUrl);
       if (!result.success) console.log(`[Emma] webhook ${platform} échoué:`, result.error);
       else console.log(`[Emma] webhook ${platform} OK`);
     } catch (err) {
@@ -410,7 +397,7 @@ async function saveSocialPost(content: string) {
     }
   }
 
-  console.log('[Emma] saveSocialPost terminé');
+  console.log('[Emma] 8/8 terminé');
 }
 
 async function sendToMakeWebhook(
