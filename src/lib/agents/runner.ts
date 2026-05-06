@@ -362,12 +362,20 @@ async function saveSocialPost(content: string) {
   console.log('[Emma] 4/8 INSERT social_posts...');
   try {
     const supabase = createAdminClient();
+    console.log('[Emma] 4/8 client créé');
     for (const platform of ['facebook', 'instagram'] as const) {
+      console.log(`[Emma] 4/8 INSERT ${platform}...`);
+      let done = false;
+      const timer = setTimeout(() => {
+        if (!done) console.log(`[Emma] social_posts ${platform} - timeout 5s`);
+      }, 5000);
       const { data, error } = await supabase
         .from('social_posts')
         .insert({ content: postContent, platform, hashtags, status: 'draft' })
         .select('id')
         .single();
+      done = true;
+      clearTimeout(timer);
       if (error) console.log(`[Emma] social_posts ${platform} erreur -`, error.message);
       else console.log(`[Emma] social_posts ${platform} OK - id:`, data?.id);
     }
