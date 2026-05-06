@@ -97,28 +97,15 @@ export async function streamAgentTask(
           controller.close();
           const duration = Date.now() - startTime;
           console.log(`[stream:${agentId}] Stream terminé - ${fullContent.length} caractères, ${duration}ms`);
-          // Post-processing : on attend explicitement pour garantir l'exécution
-          void (async () => {
-            try {
-              // Pour Marie : sauvegarder l'article d'abord pour récupérer le slug
-              let extraDetails: Record<string, unknown> = {};
-              if (agentId === 'marie') {
-                const slug = await saveMariesArticle(fullContent);
-                if (slug) extraDetails = { article_slug: slug };
-              } else if (agentId === 'nathalie') await saveSecurityAnalysis(fullContent);
-              else if (agentId === 'emma') await saveSocialPost(fullContent);
-              else if (agentId === 'antoine') await saveFinancialReport(fullContent, task);
-              else if (agentId === 'sofia') await saveNewsletterDraft(fullContent);
-              await logActivity(agentId, agent.name, task.slice(0, 200), 'success', duration, {
-                content_length: fullContent.length,
-                content: agentId !== 'marie' ? fullContent : undefined,
-                ...extraDetails,
-              });
-              await updateAgentStats(agentId, 'success', totalTokens);
-            } catch (err) {
-              console.error(`[stream:${agentId}] Post-processing error:`, err);
-            }
-          })();
+          // Fire-and-forget vers route interne indépendante (son propre timeout Vercel)
+          const appUrl = process.env.VERCEL_URL
+            ? `https://${process.env.VERCEL_URL}`
+            : (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000');
+          fetch(`${appUrl}/api/internal/save-agent-data`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET ?? '' },
+            body: JSON.stringify({ agentId, agentName: agent.name, content: fullContent, task, durationMs: duration, tokens: totalTokens }),
+          }).catch(err => console.error(`[stream:${agentId}] save-agent-data erreur:`, err));
           return;
         }
         if (!value) return;
@@ -349,7 +336,9 @@ async function saveSocialPost(content: string) {
   console.log('[Emma] hashtags:', hashtags.length);
 
   // Appel fire-and-forget vers la route interne — son propre timeout Vercel
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mespoilus.com';
+  const appUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000');
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 3000);
   try {
