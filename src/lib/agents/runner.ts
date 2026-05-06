@@ -342,123 +342,36 @@ async function saveSecurityAnalysis(content: string) {
 }
 
 async function saveSocialPost(content: string) {
-  console.log('[Emma] 1/8 start');
+  console.log('[Emma] saveSocialPost start');
 
   const postContent = content.trim();
   const hashtags = postContent.match(/#[\wÀ-ɏ]+/g) || [];
-  console.log('[Emma] 2/8 hashtags:', hashtags.length);
+  console.log('[Emma] hashtags:', hashtags.length);
 
-  const FALLBACK: Record<string, string> = {
-    chien:  'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200&q=80',
-    chat:   'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&q=80',
-    oiseau: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=1200&q=80',
-    rongeur:'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=1200&q=80',
-    reptile:'https://images.unsplash.com/photo-1519439050986-9cd34fc28ddc?w=1200&q=80',
-    default:'https://images.unsplash.com/photo-1444212477490-ca407925329e?w=1200&q=80',
-  };
-  const query = hashtags[0]?.replace('#', '') || 'animaux';
-  const fallbackKey = Object.keys(FALLBACK).find(k => k !== 'default' && query.toLowerCase().includes(k));
-  const imageUrl = FALLBACK[fallbackKey ?? 'default'];
-
-  console.log('[Emma] 3/8 env check - SUPABASE:', !!process.env.NEXT_PUBLIC_SUPABASE_URL, '| MAKE:', !!process.env.MAKE_WEBHOOK_URL);
-
-  const startDb = Date.now();
-
-  // INSERT social_posts via fetch direct (AbortController garanti)
-  console.log('[Emma] 4/8 INSERT social_posts...');
-  for (const platform of ['facebook', 'instagram']) {
-    console.log(`[Emma] 4/8 INSERT ${platform}...`);
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/social_posts`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY!,
-            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
-            'Prefer': 'return=minimal',
-          },
-          body: JSON.stringify({ content: postContent, platform, hashtags, status: 'draft' }),
-          signal: ctrl.signal,
-        }
-      );
-      clearTimeout(t);
-      if (res.ok) console.log(`[Emma] social_posts ${platform} OK - status:`, res.status);
-      else console.log(`[Emma] social_posts ${platform} erreur - ${res.status}:`, await res.text());
-    } catch (err) {
-      clearTimeout(t);
-      console.log(`[Emma] social_posts ${platform} exception:`, err instanceof Error ? err.message : err);
-    }
-  }
-
-  // activity_logs + agent_stats
-  console.log('[Emma] 5/8 activity_logs...');
-  await logActivity('emma', 'Emma', 'Post réseaux sociaux publié', 'success', Date.now() - startDb, {
-    platforms: ['facebook', 'instagram'],
-    hashtags_count: hashtags.length,
-    image_url: imageUrl,
-  });
-  console.log('[Emma] 6/8 agent_stats...');
-  await updateAgentStats('emma', 'success', 0);
-
-  // Webhook Make
-  console.log('[Emma] 7/8 webhooks Make...');
-  for (const platform of ['facebook', 'instagram']) {
-    try {
-      const result = await sendToMakeWebhook(platform, postContent, hashtags, imageUrl);
-      if (!result.success) console.log(`[Emma] webhook ${platform} échoué:`, result.error);
-      else console.log(`[Emma] webhook ${platform} OK`);
-    } catch (err) {
-      console.error(`[Emma] webhook ${platform} exception:`, err);
-    }
-  }
-
-  console.log('[Emma] 8/8 terminé');
-}
-
-async function sendToMakeWebhook(
-  platform: string,
-  content: string,
-  hashtags: string[],
-  imageUrl: string | null
-): Promise<{ success: boolean; error?: string }> {
-  const url = process.env.MAKE_WEBHOOK_URL;
-  if (!url) {
-    console.warn('[Make] MAKE_WEBHOOK_URL non configuré — publication ignorée');
-    return { success: false, error: 'MAKE_WEBHOOK_URL non configuré' };
-  }
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 4000);
+  // Appel fire-and-forget vers la route interne — son propre timeout Vercel
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mespoilus.com';
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 3000);
   try {
-    const res = await fetch(url, {
+    fetch(`${appUrl}/api/internal/save-social-post`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
-      body: JSON.stringify({
-        platform,
-        content: content.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim(),
-        hashtags: hashtags.join(' '),
-        image_url: imageUrl,
-      }),
-    });
-    clearTimeout(timeout);
-    if (!res.ok) {
-      const text = await res.text();
-      console.error(`[Make] Webhook error ${res.status}:`, text);
-      return { success: false, error: `Make webhook error ${res.status}` };
-    }
-    console.log(`[Make] ✅ Webhook ${platform} envoyé — status: ${res.status}`);
-    return { success: true };
-  } catch (err) {
-    clearTimeout(timeout);
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[Make] Exception webhook (${platform}):`, msg);
-    return { success: false, error: msg };
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-secret': process.env.CRON_SECRET ?? '',
+      },
+      body: JSON.stringify({ content: postContent, hashtags }),
+      signal: ctrl.signal,
+    }).catch(() => {});
+    clearTimeout(t);
+    console.log('[Emma] save-social-post déclenché');
+  } catch {
+    clearTimeout(t);
+    console.log('[Emma] save-social-post échec déclenchement');
   }
+
+  console.log('[Emma] saveSocialPost terminé');
 }
+
 
 async function saveFinancialReport(content: string, period: string) {
   try {
