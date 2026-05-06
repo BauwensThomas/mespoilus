@@ -35,6 +35,10 @@ export default function PolitiqueConfidentialitePage() {
                 <p>Lorsque vous vous inscrivez à notre newsletter, nous collectons votre <strong>adresse email</strong>. Aucune autre donnée n'est requise.</p>
               </div>
               <div>
+                <h3 className="font-medium text-gray-200 mb-2">2.2 Annonces d'adoption</h3>
+                <p>Lorsque vous déposez une annonce d'adoption, nous collectons : votre <strong>prénom</strong>, votre <strong>adresse email privée</strong> (non affichée publiquement), votre <strong>région ou ville</strong>, une <strong>adresse email publique</strong> et optionnellement un <strong>numéro de téléphone</strong> (affichés sur l'annonce publiée), ainsi que les <strong>photos</strong> de l'animal. Ces données sont nécessaires à la publication et à la modération de l'annonce.</p>
+              </div>
+              <div>
                 <h3 className="font-medium text-gray-200 mb-2">2.3 Cookies et données de navigation</h3>
                 <p>Nous utilisons des cookies analytiques (Google Analytics) pour comprendre l'utilisation du site. Ces cookies ne sont déposés qu'avec votre consentement explicite. Consultez notre <Link href="/cookies" className="text-amber-400 hover:underline">politique cookies</Link>.</p>
               </div>
@@ -51,6 +55,7 @@ export default function PolitiqueConfidentialitePage() {
               <div className="grid grid-cols-1 gap-3">
                 {[
                   { traitement: 'Newsletter', base: 'Consentement (Art. 6.1.a RGPD)' },
+                  { traitement: 'Annonces d\'adoption', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Cookies analytiques', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Cookies essentiels', base: 'Intérêt légitime (Art. 6.1.f RGPD)' },
                   { traitement: 'Logs de sécurité', base: 'Intérêt légitime (Art. 6.1.f RGPD)' },
@@ -70,6 +75,8 @@ export default function PolitiqueConfidentialitePage() {
             <div className="text-sm space-y-2">
               {[
                 { type: 'Adresse email newsletter', duree: "Jusqu'à désinscription" },
+                { type: 'Annonces d\'adoption', duree: "Jusqu'à suppression à votre demande ou après 12 mois sans activité" },
+                { type: 'Photos d\'adoption', duree: "Supprimées avec l'annonce" },
                 { type: 'Logs techniques', duree: '12 mois' },
                 { type: 'Cookies analytiques', duree: '13 mois maximum' },
               ].map(({ type, duree }) => (
@@ -88,9 +95,10 @@ export default function PolitiqueConfidentialitePage() {
               <p>Vos données peuvent être partagées avec :</p>
               <ul className="list-disc list-inside space-y-1 text-gray-400 ml-2">
                 <li>Nos partenaires affiliés (Amazon, Zooplus, etc.) — aucune donnée personnelle transmise, simple redirection</li>
-                <li>Google Analytics - données de navigation anonymisées (si consentement accordé)</li>
-                <li>Vercel - hébergeur du site (infrastructure technique)</li>
-                <li>Supabase - base de données (hébergement EU disponible)</li>
+                <li>Google Analytics — données de navigation anonymisées (si consentement accordé)</li>
+                <li>Resend — service d'envoi d'emails transactionnels (confirmation d'annonce, notifications)</li>
+                <li>Vercel — hébergeur du site (infrastructure technique)</li>
+                <li>Supabase — base de données et stockage des photos (hébergement EU disponible)</li>
               </ul>
               <p>Tout transfert hors UE est encadré par les clauses contractuelles types de la Commission européenne.</p>
             </div>

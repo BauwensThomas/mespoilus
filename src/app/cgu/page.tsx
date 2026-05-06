@@ -22,7 +22,7 @@ export default function CGUPage() {
           <section>
             <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">1. Objet du site</h2>
             <p className="text-sm">
-              Mes Poilus est un site de contenu éditorial spécialisé dans les animaux de compagnie. Il propose des articles de conseils, guides pratiques et recommandations de produits à destination des propriétaires d'animaux. Mes Poilus ne vend aucun produit directement.
+              Mes Poilus est un site de contenu éditorial spécialisé dans les animaux de compagnie. Il propose des articles de conseils, guides pratiques, recommandations de produits, ainsi qu'un service de petites annonces pour l'adoption d'animaux entre particuliers. Mes Poilus ne vend aucun produit directement.
             </p>
           </section>
 
@@ -40,7 +40,22 @@ export default function CGUPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">3. Contenu éditorial</h2>
+            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">3. Service d'adoption entre particuliers</h2>
+            <div className="text-sm space-y-3">
+              <p>Mes Poilus met à disposition un espace permettant aux particuliers de publier des annonces pour donner un animal. Ce service est <strong>gratuit</strong> et soumis aux règles suivantes :</p>
+              <ul className="list-disc list-inside space-y-1 text-gray-400 ml-2">
+                <li>Les annonces concernent uniquement des animaux <strong>donnés gratuitement</strong>. Toute annonce impliquant une contrepartie financière est interdite.</li>
+                <li>Les photos soumises doivent représenter l'animal réel décrit dans l'annonce.</li>
+                <li>Tout contenu illicite, trompeur, offensant ou contraire aux lois sur la protection animale est strictement interdit.</li>
+                <li>Chaque annonce est soumise à <strong>modération</strong> avant publication. Mes Poilus se réserve le droit de refuser ou supprimer toute annonce sans justification.</li>
+                <li>Les coordonnées publiques (email, téléphone) renseignées seront visibles de tous les visiteurs du site.</li>
+              </ul>
+              <p>Mes Poilus agit uniquement en tant qu'intermédiaire technique. Mes Poilus n'est pas partie aux transactions ou arrangements conclus entre les utilisateurs et ne peut être tenu responsable des litiges, dommages ou problèmes résultant d'une adoption conclue via le site.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">4. Contenu éditorial</h2>
             <div className="text-sm space-y-3">
               <p>Les articles publiés sur Mes Poilus sont rédigés à titre informatif. Ils ne constituent en aucun cas un avis vétérinaire professionnel. En cas de doute sur la santé de votre animal, consultez un vétérinaire.</p>
               <p>Une partie des contenus est produite avec l'aide d'outils d'intelligence artificielle et relue par un éditeur humain.</p>
@@ -49,28 +64,28 @@ export default function CGUPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">4. Propriété intellectuelle</h2>
+            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">5. Propriété intellectuelle</h2>
             <p className="text-sm">
               L'ensemble des contenus du site (textes, images, logo, structure) est protégé par le droit d'auteur belge. Toute reproduction, même partielle, est interdite sans autorisation écrite préalable de Mes Poilus.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">5. Limitation de responsabilité</h2>
+            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">6. Limitation de responsabilité</h2>
             <p className="text-sm">
               Mes Poilus ne peut être tenu responsable des dommages directs ou indirects résultant de l'utilisation du site, de l'application des conseils publiés, ou de transactions effectuées sur des sites tiers accessibles via des liens affiliés.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">6. Contact</h2>
+            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">7. Contact</h2>
             <p className="text-sm">
               Pour toute question : <a href="mailto:contact@mespoilus.com" className="text-amber-400 hover:underline">contact@mespoilus.com</a>
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">7. Droit applicable</h2>
+            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">8. Droit applicable</h2>
             <p className="text-sm">
               Les présentes CGU sont soumises au droit belge. Tout litige sera soumis à la compétence exclusive des tribunaux compétents en Belgique.
             </p>
