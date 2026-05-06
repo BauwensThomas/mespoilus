@@ -141,6 +141,38 @@ export async function streamAgentTask(
   });
 }
 
+async function supabaseFetch(
+  path: string,
+  method: string,
+  body?: unknown,
+  params?: string
+): Promise<{ ok: boolean; status: number; data?: unknown }> {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const url = `${base}/rest/v1/${path}${params ? `?${params}` : ''}`;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 5000);
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': key,
+        'Authorization': `Bearer ${key}`,
+        'Prefer': method === 'POST' ? 'return=representation' : 'return=minimal',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    const data = res.ok && method !== 'PATCH' ? await res.json().catch(() => null) : null;
+    return { ok: res.ok, status: res.status, data };
+  } catch (err) {
+    clearTimeout(t);
+    return { ok: false, status: 0, data: err instanceof Error ? err.message : 'timeout' };
+  }
+}
+
 async function logActivity(
   agentId: AgentId,
   agentName: string,
@@ -149,76 +181,50 @@ async function logActivity(
   durationMs: number,
   details: Record<string, unknown>
 ) {
-  try {
-    const supabase = createAdminClient();
-    const { error } = await supabase.from('activity_logs').insert({
-      agent_id: agentId,
-      agent_name: agentName,
-      action,
-      status,
-      duration_ms: durationMs,
-      details,
-    });
-    if (error) {
-      console.error(`[activity:${agentId}] Insert error:`, error);
-    } else {
-      console.log(`[activity:${agentId}] Log enregistré (${status}, ${durationMs}ms)`);
-    }
-  } catch (err) {
-    console.error(`[activity:${agentId}] Exception:`, err);
-  }
+  const res = await supabaseFetch('activity_logs', 'POST', {
+    agent_id: agentId,
+    agent_name: agentName,
+    action,
+    status,
+    duration_ms: durationMs,
+    details,
+  });
+  if (res.ok) console.log(`[activity:${agentId}] OK (${status}, ${durationMs}ms)`);
+  else console.error(`[activity:${agentId}] erreur ${res.status}:`, res.data);
 }
 
 async function updateAgentStats(agentId: AgentId, result: 'success' | 'error', tokens: number) {
-  try {
-    const supabase = createAdminClient();
-    const isSuccess = result === 'success';
+  const isSuccess = result === 'success';
 
-    // Lire la ligne courante
-    const { data, error: selectError } = await supabase
-      .from('agent_stats')
-      .select('tasks_completed, tasks_failed, total_tokens_used')
-      .eq('agent_id', agentId)
-      .maybeSingle();
-
-    if (selectError) {
-      console.error(`[stats:${agentId}] SELECT error:`, selectError);
-      return;
-    }
-
-    if (!data) {
-      // Ligne inexistante — INSERT
-      const { error: insertError } = await supabase.from('agent_stats').insert({
-        agent_id:          agentId,
-        tasks_completed:   isSuccess ? 1 : 0,
-        tasks_failed:      isSuccess ? 0 : 1,
-        total_tokens_used: tokens,
-        last_active:       new Date().toISOString(),
-      });
-      if (insertError) console.error(`[stats:${agentId}] INSERT error:`, insertError);
-      else console.log(`[stats:${agentId}] Stats créées (${result})`);
-      return;
-    }
-
-    const { error: updateError } = await supabase
-      .from('agent_stats')
-      .update({
-        tasks_completed:   (data.tasks_completed   ?? 0) + (isSuccess ? 1 : 0),
-        tasks_failed:      (data.tasks_failed       ?? 0) + (isSuccess ? 0 : 1),
-        total_tokens_used: (data.total_tokens_used  ?? 0) + tokens,
-        last_active:       new Date().toISOString(),
-        updated_at:        new Date().toISOString(),
-      })
-      .eq('agent_id', agentId);
-
-    if (updateError) {
-      console.error(`[stats:${agentId}] UPDATE error:`, updateError);
-    } else {
-      console.log(`[stats:${agentId}] Stats mis à jour (${result})`);
-    }
-  } catch (err) {
-    console.error(`[stats:${agentId}] Exception:`, err);
+  const selectRes = await supabaseFetch('agent_stats', 'GET', undefined, `agent_id=eq.${agentId}&select=tasks_completed,tasks_failed,total_tokens_used`);
+  if (!selectRes.ok) {
+    console.error(`[stats:${agentId}] SELECT erreur ${selectRes.status}`);
+    return;
   }
+
+  const rows = selectRes.data as { tasks_completed: number; tasks_failed: number; total_tokens_used: number }[] | null;
+  const row = rows?.[0];
+
+  if (!row) {
+    const ins = await supabaseFetch('agent_stats', 'POST', {
+      agent_id: agentId,
+      tasks_completed: isSuccess ? 1 : 0,
+      tasks_failed: isSuccess ? 0 : 1,
+      total_tokens_used: tokens,
+      last_active: new Date().toISOString(),
+    });
+    console.log(`[stats:${agentId}] INSERT ${ins.ok ? 'OK' : `erreur ${ins.status}`}`);
+    return;
+  }
+
+  const upd = await supabaseFetch('agent_stats', 'PATCH', {
+    tasks_completed: (row.tasks_completed ?? 0) + (isSuccess ? 1 : 0),
+    tasks_failed: (row.tasks_failed ?? 0) + (isSuccess ? 0 : 1),
+    total_tokens_used: (row.total_tokens_used ?? 0) + tokens,
+    last_active: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }, `agent_id=eq.${agentId}`);
+  console.log(`[stats:${agentId}] UPDATE ${upd.ok ? 'OK' : `erreur ${upd.status}`}`);
 }
 
 async function saveMariesArticle(content: string): Promise<string | null> {
