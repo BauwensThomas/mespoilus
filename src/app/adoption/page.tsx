@@ -7,6 +7,7 @@ import { fr } from 'date-fns/locale';
 import Image from 'next/image';
 import Link from 'next/link';
 import BackButton from '@/components/ui/BackButton';
+import { getHeroPhotos } from '@/lib/unsplash';
 
 export const metadata: Metadata = {
   title: 'Adoption animaux',
@@ -59,7 +60,7 @@ interface Props {
 
 export default async function AdoptionPage({ searchParams }: Props) {
   const animal = searchParams.animal;
-  const posts = await getPosts(animal);
+  const [posts, allPhotos] = await Promise.all([getPosts(animal), getHeroPhotos()]);
   const activeType = ANIMAL_TYPES.find(t => t.id === (animal ?? 'all')) ?? ANIMAL_TYPES[0];
 
   return (
@@ -104,11 +105,24 @@ export default async function AdoptionPage({ searchParams }: Props) {
           })}
         </div>
 
-        {/* Compteur */}
-        <p className="text-sm text-gray-500">
-          {posts.length} annonce{posts.length !== 1 ? 's' : ''}
-          {animal && animal !== 'all' ? ` · ${activeType.label}` : ''}
-        </p>
+        {/* Bandeau */}
+        <div className="relative h-28 rounded-2xl overflow-hidden bg-[#111]">
+          <div className="absolute right-0 top-0 bottom-0 w-[55%] flex gap-0.5">
+            {allPhotos.filter(Boolean).map((photo, i) => (
+              <div key={i} className="relative flex-1">
+                <Image src={photo!.url} alt={photo!.alt} fill className="object-cover" />
+              </div>
+            ))}
+          </div>
+          <div className="absolute left-0 top-0 bottom-0 w-[50%] bg-gradient-to-r from-amber-600 via-amber-500/70 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 flex items-center px-6 z-10">
+            <div>
+              <p className="text-white/60 text-[10px] uppercase tracking-widest font-medium">Filtre</p>
+              <p className="text-white font-bold text-xl">{activeType.emoji} {activeType.label}</p>
+              <p className="text-white/60 text-xs mt-0.5">{posts.length} annonce{posts.length !== 1 ? 's' : ''}</p>
+            </div>
+          </div>
+        </div>
 
         {/* Grille */}
         {posts.length === 0 ? (
