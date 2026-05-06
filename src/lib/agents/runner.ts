@@ -355,22 +355,9 @@ async function saveSocialPost(content: string) {
   const fallbackKey = Object.keys(FALLBACK).find(k => k !== 'default' && query.toLowerCase().includes(k));
   const imageUrl = FALLBACK[fallbackKey ?? 'default'];
 
-  // 2. Webhooks Make EN PREMIER — rien d'autre avant
-  for (const platform of ['facebook', 'instagram']) {
-    console.log(`[Emma] webhook Make (${platform})...`);
-    try {
-      const result = await sendToMakeWebhook(platform, postContent, hashtags, imageUrl);
-      if (!result.success) console.log(`[Emma] webhook ${platform} échoué:`, result.error);
-      else console.log(`[Emma] webhook ${platform} OK`);
-    } catch (err) {
-      console.error(`[Emma] webhook ${platform} exception:`, err);
-    }
-  }
-
-  // Webhook envoyé — on peut maintenant await les opérations DB sans bloquer l'utilisateur
   const startDb = Date.now();
 
-  // Unsplash
+  // 2. Unsplash
   let finalImageUrl = imageUrl;
   try {
     const imageData = await Promise.race([
@@ -380,12 +367,14 @@ async function saveSocialPost(content: string) {
     if (imageData?.url) {
       finalImageUrl = imageData.url;
       console.log('[Emma] Unsplash OK:', finalImageUrl.slice(0, 80));
+    } else {
+      console.log('[Emma] Unsplash ignoré - fallback');
     }
   } catch {
-    console.log('[Emma] Unsplash ignoré');
+    console.log('[Emma] Unsplash ignoré - fallback');
   }
 
-  // INSERT social_posts (une ligne par plateforme)
+  // 3. INSERT social_posts (une ligne par plateforme)
   try {
     const supabase = createAdminClient();
     for (const platform of ['facebook', 'instagram'] as const) {
@@ -401,15 +390,25 @@ async function saveSocialPost(content: string) {
     console.log('[Emma] social_posts exception:', err);
   }
 
-  // INSERT activity_logs
+  // 4. activity_logs + agent_stats
   await logActivity('emma', 'Emma', 'Post réseaux sociaux publié', 'success', Date.now() - startDb, {
     platforms: ['facebook', 'instagram'],
     hashtags_count: hashtags.length,
     image_url: finalImageUrl,
   });
-
-  // UPDATE agent_stats
   await updateAgentStats('emma', 'success', 0);
+
+  // 5. Webhook Make EN DERNIER — avec timeout 3s
+  for (const platform of ['facebook', 'instagram']) {
+    console.log(`[Emma] webhook Make (${platform})...`);
+    try {
+      const result = await sendToMakeWebhook(platform, postContent, hashtags, finalImageUrl);
+      if (!result.success) console.log(`[Emma] webhook ${platform} échoué:`, result.error);
+      else console.log(`[Emma] webhook ${platform} OK`);
+    } catch (err) {
+      console.error(`[Emma] webhook ${platform} exception:`, err);
+    }
+  }
 
   console.log('[Emma] saveSocialPost terminé');
 }
