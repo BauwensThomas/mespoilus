@@ -11,11 +11,15 @@ async function unsplashGet<T>(path: string): Promise<T | null> {
   try {
     const res = await fetch(`${BASE_URL}${path}`, {
       headers: { Authorization: `Client-ID ${key}` },
-      next: { revalidate: 3600 },
+      cache: 'no-store',
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error('[unsplash] API erreur:', res.status, res.statusText, path.slice(0, 100));
+      return null;
+    }
     return res.json() as Promise<T>;
-  } catch {
+  } catch (err) {
+    console.error('[unsplash] exception:', err instanceof Error ? err.message : err);
     return null;
   }
 }
