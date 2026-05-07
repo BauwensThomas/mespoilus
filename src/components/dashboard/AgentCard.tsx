@@ -73,7 +73,7 @@ export default function AgentCard({ agent, stat }: AgentCardProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between relative mt-auto pt-3 border-t border-[#1a1a1a]">
+        <div className="flex items-center justify-between relative mt-auto pt-3 border-t border-[#404040]">
           <span className="text-[10px] text-gray-600">Actif {lastActive}</span>
           <span className={clsx('text-[10px] font-medium', agent.color, 'group-hover:underline')}>
             Voir le tableau →
@@ -86,7 +86,7 @@ export default function AgentCard({ agent, stat }: AgentCardProps) {
 
 function Stat({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
   return (
-    <div className="bg-[#0d0d0d] rounded-lg p-2 text-center">
+    <div className="bg-[#1e1e1e] border border-[#3a3a3a] rounded-lg p-2 text-center">
       <div className={clsx('text-sm font-bold', highlight ? 'text-emerald-400' : 'text-white')}>
         {value}
       </div>

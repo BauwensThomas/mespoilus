@@ -7,8 +7,8 @@ interface StatItemProps {
 
 function StatItem({ label, value, sub, icon }: StatItemProps) {
   return (
-    <div className="bg-[#111] border border-[#222] rounded-xl p-4 flex items-center gap-4">
-      <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-xl flex-shrink-0">
+    <div className="bg-[#262626] border border-[#484848] rounded-xl p-4 flex items-center gap-4">
+      <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-xl flex-shrink-0">
         {icon}
       </div>
       <div>

@@ -4,10 +4,10 @@
 
 @layer base {
   :root {
-    --bg-primary: #161616;
-    --bg-card: #1a1a1a;
-    --bg-hover: #222222;
-    --bg-border: #3a3a3a;
+    --bg-primary: #1e1e1e;
+    --bg-card: #262626;
+    --bg-hover: #2e2e2e;
+    --bg-border: #484848;
   }
 
   html {
@@ -44,11 +44,11 @@
 
 @layer components {
   .card {
-    @apply bg-[#1a1a1a] border border-[#3a3a3a] rounded-xl;
+    @apply bg-[#262626] border border-[#484848] rounded-xl;
   }
 
   .card-hover {
-    @apply card transition-all duration-200 hover:border-[#555] hover:bg-[#222];
+    @apply card transition-all duration-200 hover:border-[#666] hover:bg-[#2e2e2e];
   }
 
   .badge {

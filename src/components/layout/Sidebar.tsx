@@ -18,9 +18,9 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-[#0d1117] border-r border-gray-800 flex flex-col z-40">
+    <aside className="fixed left-0 top-0 h-full w-64 bg-[#202020] border-r border-[#484848] flex flex-col z-40">
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-gray-800">
+      <div className="px-6 py-5 border-b border-[#484848]">
         <Link href="/dashboard" className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-sm">
             🐾
@@ -87,7 +87,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer avec déconnexion */}
-      <div className="px-4 py-4 border-t border-gray-800 space-y-2">
+      <div className="px-4 py-4 border-t border-[#484848] space-y-2">
         <form action={logout}>
           <button
             type="submit"
