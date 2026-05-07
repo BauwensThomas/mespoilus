@@ -28,7 +28,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 async function getAgentData(agentId: AgentId) {
   try {
     const supabase = createAdminClient();
-    const [statRes, logsRes] = await Promise.all([
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const [statRes, logsRes, monthlyRes] = await Promise.all([
       supabase.from('agent_stats').select('*').eq('agent_id', agentId).single(),
       supabase
         .from('activity_logs')
@@ -36,13 +40,27 @@ async function getAgentData(agentId: AgentId) {
         .eq('agent_id', agentId)
         .order('created_at', { ascending: false })
         .limit(15),
+      supabase
+        .from('activity_logs')
+        .select('status, tokens_used')
+        .eq('agent_id', agentId)
+        .gte('created_at', startOfMonth.toISOString()),
     ]);
+
+    const monthly = { tasks: 0, failed: 0, tokens: 0 };
+    for (const row of (monthlyRes.data ?? [])) {
+      if (row.status === 'success') monthly.tasks++;
+      else if (row.status === 'error') monthly.failed++;
+      monthly.tokens += row.tokens_used ?? 0;
+    }
+
     return {
       stat: statRes.data as AgentStat | undefined,
       recentLogs: (logsRes.data as ActivityLog[]) ?? [],
+      monthly,
     };
   } catch {
-    return { stat: undefined, recentLogs: [] };
+    return { stat: undefined, recentLogs: [], monthly: { tasks: 0, failed: 0, tokens: 0 } };
   }
 }
 
@@ -53,7 +71,7 @@ export default async function AgentPage({ params }: Props) {
   const agent = getAgent(agentId);
 
   // Fetch agent photo + DB data en parallèle
-  const [{ stat, recentLogs }, agentPhoto] = await Promise.all([
+  const [{ stat, recentLogs, monthly }, agentPhoto] = await Promise.all([
     getAgentData(agentId),
     getPhotoForAgent(agentId).catch(() => null) as Promise<UnsplashPhoto | null>,
   ]);
@@ -68,6 +86,7 @@ export default async function AgentPage({ params }: Props) {
       recentLogs={recentLogs}
       photo={photo}
       placeholderSrc={placeholderSrc}
+      monthly={monthly}
     />
   );
 }
