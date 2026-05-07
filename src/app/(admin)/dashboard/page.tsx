@@ -60,7 +60,7 @@ export default async function DashboardPage() {
       />
 
       {/* Feed d'activité horizontal */}
-      <ActivityFeed logs={logs} horizontal />
+      <ActivityFeed logs={logs} />
 
       {/* Grille agents */}
       <div>
