@@ -28,6 +28,19 @@ export async function GET(req: Request) {
   const now = new Date();
   const month = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
+  // Éviter les doublons : vérifier si un rapport existe déjà ce mois-ci
+  const { data: existing } = await supabase
+    .from('financial_reports')
+    .select('id')
+    .eq('period', month)
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) {
+    console.log(`[Cron Finance] Rapport ${month} déjà existant, abandon.`);
+    return NextResponse.json({ success: false, reason: 'already_done', period: month });
+  }
+
   try {
     const prompt = await buildEnrichedPrompt(
       'antoine',

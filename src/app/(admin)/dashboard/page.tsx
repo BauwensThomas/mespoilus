@@ -9,15 +9,24 @@ import { AgentStat, ActivityLog } from '@/types';
 
 export const revalidate = 30;
 
+export type MonthlyAgentStat = { tasks: number; tokens: number };
+
 async function getDashboardData() {
   try {
     const supabase = createAdminClient();
 
-    const [statsRes, logsRes, articlesRes, securityRes] = await Promise.all([
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const [statsRes, logsRes, articlesRes, securityRes, monthlyRes] = await Promise.all([
       supabase.from('agent_stats').select('*'),
       supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(20),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published'),
       supabase.from('security_logs').select('id', { count: 'exact' }).in('threat_level', ['high', 'critical']),
+      supabase.from('activity_logs')
+        .select('agent_id, status, tokens_used')
+        .gte('created_at', startOfMonth.toISOString()),
     ]);
 
     const stats: AgentStat[] = statsRes.data ?? [];
@@ -27,14 +36,22 @@ async function getDashboardData() {
     const totalTasks = stats.reduce((sum, s) => sum + (s.tasks_completed ?? 0), 0);
     const totalTokens = stats.reduce((sum, s) => sum + (s.total_tokens_used ?? 0), 0);
 
-    return { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts };
+    // Stats mensuelles par agent
+    const monthlyByAgent: Record<string, MonthlyAgentStat> = {};
+    for (const row of (monthlyRes.data ?? [])) {
+      if (!monthlyByAgent[row.agent_id]) monthlyByAgent[row.agent_id] = { tasks: 0, tokens: 0 };
+      if (row.status === 'success') monthlyByAgent[row.agent_id].tasks++;
+      monthlyByAgent[row.agent_id].tokens += row.tokens_used ?? 0;
+    }
+
+    return { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, monthlyByAgent };
   } catch {
-    return { stats: [], logs: [], totalArticles: 0, totalTasks: 0, totalTokens: 0, securityAlerts: 0 };
+    return { stats: [], logs: [], totalArticles: 0, totalTasks: 0, totalTokens: 0, securityAlerts: 0, monthlyByAgent: {} };
   }
 }
 
 export default async function DashboardPage() {
-  const { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts } = await getDashboardData();
+  const { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, monthlyByAgent } = await getDashboardData();
   const agents = getAllAgents();
 
   const statByAgent = Object.fromEntries(stats.map((s) => [s.agent_id, s]));
@@ -76,6 +93,7 @@ export default async function DashboardPage() {
               key={agent.id}
               agent={agent}
               stat={statByAgent[agent.id]}
+              monthly={monthlyByAgent[agent.id]}
             />
           ))}
         </div>

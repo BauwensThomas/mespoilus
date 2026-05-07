@@ -49,7 +49,7 @@ export async function executeAgentTask(
       content_length: content.length,
       content: agentId !== 'marie' ? content : undefined,
       ...extraDetails,
-    });
+    }, totalTokens);
     await updateAgentStats(agentId, 'success', totalTokens);
 
     return {
@@ -185,7 +185,8 @@ async function logActivity(
   action: string,
   status: 'success' | 'error' | 'pending',
   durationMs: number,
-  details: Record<string, unknown>
+  details: Record<string, unknown>,
+  tokensUsed = 0
 ) {
   const res = await supabaseFetch('activity_logs', 'POST', {
     agent_id: agentId,
@@ -194,6 +195,7 @@ async function logActivity(
     status,
     duration_ms: durationMs,
     details,
+    tokens_used: tokensUsed,
   });
   if (res.ok) console.log(`[activity:${agentId}] OK (${status}, ${durationMs}ms)`);
   else console.error(`[activity:${agentId}] erreur ${res.status}:`, res.data);
