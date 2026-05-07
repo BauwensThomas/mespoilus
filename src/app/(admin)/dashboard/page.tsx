@@ -10,6 +10,7 @@ import { AgentStat, ActivityLog } from '@/types';
 export const revalidate = 30;
 
 export type MonthlyAgentStat = { tasks: number; tokens: number };
+export type TotalAgentStat = { tasks: number; tokens: number; failed: number };
 
 async function getDashboardData() {
   try {
@@ -19,56 +20,55 @@ async function getDashboardData() {
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const [statsRes, logsRes, articlesRes, securityRes, monthlyRes, monthlySecurityRes] = await Promise.all([
-      supabase.from('agent_stats').select('*'),
+    const [statsRes, logsRes, articlesRes, securityRes, allActivityRes, monthlySecurityRes, monthlyArticlesRes] = await Promise.all([
+      supabase.from('agent_stats').select('agent_id, last_active, tasks_failed'),
       supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(20),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published'),
       supabase.from('security_logs').select('id', { count: 'exact' }).in('threat_level', ['high', 'critical']),
-      supabase.from('activity_logs')
-        .select('agent_id, status, tokens_used')
-        .gte('created_at', startOfMonth.toISOString()),
-      supabase.from('security_logs')
-        .select('id', { count: 'exact' })
-        .in('threat_level', ['high', 'critical'])
-        .gte('created_at', startOfMonth.toISOString()),
+      supabase.from('activity_logs').select('agent_id, status, tokens_used, created_at'),
+      supabase.from('security_logs').select('id', { count: 'exact' }).in('threat_level', ['high', 'critical']).gte('created_at', startOfMonth.toISOString()),
+      supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published').gte('published_at', startOfMonth.toISOString()),
     ]);
 
     const stats: AgentStat[] = statsRes.data ?? [];
     const logs: ActivityLog[] = logsRes.data ?? [];
     const totalArticles = articlesRes.count ?? 0;
     const securityAlerts = securityRes.count ?? 0;
-    const totalTasks = stats.reduce((sum, s) => sum + (s.tasks_completed ?? 0), 0);
-    const totalTokens = stats.reduce((sum, s) => sum + (s.total_tokens_used ?? 0), 0);
-
-    // Stats mensuelles par agent
-    const monthlyByAgent: Record<string, MonthlyAgentStat> = {};
-    let monthlyTasks = 0;
-    let monthlyTokens = 0;
-    for (const row of (monthlyRes.data ?? [])) {
-      if (!monthlyByAgent[row.agent_id]) monthlyByAgent[row.agent_id] = { tasks: 0, tokens: 0 };
-      if (row.status === 'success') { monthlyByAgent[row.agent_id].tasks++; monthlyTasks++; }
-      monthlyByAgent[row.agent_id].tokens += row.tokens_used ?? 0;
-      monthlyTokens += row.tokens_used ?? 0;
-    }
-
-    // Articles publiés ce mois
-    const monthlyArticlesRes = await supabase
-      .from('articles')
-      .select('id', { count: 'exact' })
-      .eq('status', 'published')
-      .gte('published_at', startOfMonth.toISOString());
     const monthlyArticles = monthlyArticlesRes.count ?? 0;
-
     const monthlySecurityAlerts = monthlySecurityRes.count ?? 0;
 
-    return { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts };
+    // Calcul totaux + mensuels depuis activity_logs (source unique)
+    const totalByAgent: Record<string, TotalAgentStat> = {};
+    const monthlyByAgent: Record<string, MonthlyAgentStat> = {};
+    let totalTasks = 0, totalTokens = 0, monthlyTasks = 0, monthlyTokens = 0;
+
+    for (const row of (allActivityRes.data ?? [])) {
+      if (!totalByAgent[row.agent_id]) totalByAgent[row.agent_id] = { tasks: 0, tokens: 0, failed: 0 };
+      if (!monthlyByAgent[row.agent_id]) monthlyByAgent[row.agent_id] = { tasks: 0, tokens: 0 };
+
+      const isThisMonth = new Date(row.created_at) >= startOfMonth;
+      const tokens = row.tokens_used ?? 0;
+
+      if (row.status === 'success') {
+        totalByAgent[row.agent_id].tasks++;
+        totalTasks++;
+        if (isThisMonth) { monthlyByAgent[row.agent_id].tasks++; monthlyTasks++; }
+      } else if (row.status === 'error') {
+        totalByAgent[row.agent_id].failed++;
+      }
+      totalByAgent[row.agent_id].tokens += tokens;
+      totalTokens += tokens;
+      if (isThisMonth) { monthlyByAgent[row.agent_id].tokens += tokens; monthlyTokens += tokens; }
+    }
+
+    return { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, totalByAgent, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts };
   } catch {
-    return { stats: [], logs: [], totalArticles: 0, totalTasks: 0, totalTokens: 0, securityAlerts: 0, monthlyByAgent: {}, monthlyTasks: 0, monthlyTokens: 0, monthlyArticles: 0, monthlySecurityAlerts: 0 };
+    return { stats: [], logs: [], totalArticles: 0, totalTasks: 0, totalTokens: 0, securityAlerts: 0, totalByAgent: {}, monthlyByAgent: {}, monthlyTasks: 0, monthlyTokens: 0, monthlyArticles: 0, monthlySecurityAlerts: 0 };
   }
 }
 
 export default async function DashboardPage() {
-  const { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts } = await getDashboardData();
+  const { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, totalByAgent, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts } = await getDashboardData();
   const agents = getAllAgents();
 
   const statByAgent = Object.fromEntries(stats.map((s) => [s.agent_id, s]));
@@ -115,6 +115,7 @@ export default async function DashboardPage() {
               agent={agent}
               stat={statByAgent[agent.id]}
               monthly={monthlyByAgent[agent.id]}
+              total={totalByAgent[agent.id]}
             />
           ))}
         </div>
