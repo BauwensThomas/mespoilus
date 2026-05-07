@@ -3,6 +3,7 @@ import { runAgent, streamAgent } from '@/lib/anthropic';
 import { getAgent } from './config';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getPhotoForArticle } from '@/lib/unsplash';
+import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 
 export async function executeAgentTask(
   agentId: AgentId,
@@ -281,11 +282,20 @@ async function saveMariesArticle(content: string): Promise<string | null> {
     // Récupérer une image Unsplash pertinente (non-bloquant si pas de clé ou erreur)
     let imageData: { url: string; alt: string; credit: string; creditUrl: string } | null = null;
     try {
-      imageData = await Promise.race([
+      const photo = await Promise.race([
         getPhotoForArticle(title, category),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
       ]);
-      console.log('[Marie] Image Unsplash:', imageData ? imageData.url.slice(0, 60) + '…' : 'aucune/timeout');
+      if (photo) {
+        const storedUrl = await Promise.race([
+          downloadAndStorePhoto(photo.url, `article-${Date.now()}.jpg`),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+        ]);
+        imageData = { ...photo, url: storedUrl ?? photo.url };
+        console.log('[Marie] Image:', storedUrl ? 'stockée Supabase' : 'URL Unsplash directe');
+      } else {
+        console.log('[Marie] Image Unsplash: aucune/timeout');
+      }
     } catch (err) {
       console.warn('[Marie] Unsplash indisponible:', err);
     }
