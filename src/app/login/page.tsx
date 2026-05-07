@@ -14,7 +14,7 @@ export default function LoginPage({ searchParams }: Props) {
   const hasError = searchParams.error === '1';
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#111827] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -24,11 +24,11 @@ export default function LoginPage({ searchParams }: Props) {
             </div>
             <span className="text-white font-bold text-xl tracking-wide">Mes Poilus</span>
           </div>
-          <p className="text-gray-500 text-sm">Espace administration</p>
+          <p className="text-gray-300 text-sm">Espace administration</p>
         </div>
 
         {/* Card */}
-        <div className="bg-[#111] border border-[#222] rounded-2xl p-8">
+        <div className="bg-[#262626] border border-[#484848] rounded-2xl p-8">
           <h1 className="text-white font-semibold text-lg mb-6">Se connecter</h1>
 
           {hasError && (
@@ -39,7 +39,7 @@ export default function LoginPage({ searchParams }: Props) {
 
           <form action={signIn} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-xs text-gray-400 mb-1.5 font-medium">
+              <label htmlFor="email" className="block text-xs text-gray-200 mb-1.5 font-medium">
                 Adresse email
               </label>
               <input
@@ -49,14 +49,14 @@ export default function LoginPage({ searchParams }: Props) {
                 required
                 autoComplete="email"
                 placeholder="admin@mespoilus.com"
-                className="w-full bg-[#0d0d0d] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-sm text-white
+                className="w-full bg-[#1e1e1e] border border-[#484848] rounded-lg px-3 py-2.5 text-sm text-white
                            placeholder-gray-600 focus:outline-none focus:border-amber-500/50 focus:ring-1
                            focus:ring-amber-500/30 transition-colors duration-150"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-xs text-gray-400 mb-1.5 font-medium">
+              <label htmlFor="password" className="block text-xs text-gray-200 mb-1.5 font-medium">
                 Mot de passe
               </label>
               <input
@@ -66,7 +66,7 @@ export default function LoginPage({ searchParams }: Props) {
                 required
                 autoComplete="current-password"
                 placeholder="••••••••"
-                className="w-full bg-[#0d0d0d] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-sm text-white
+                className="w-full bg-[#1e1e1e] border border-[#484848] rounded-lg px-3 py-2.5 text-sm text-white
                            placeholder-gray-600 focus:outline-none focus:border-amber-500/50 focus:ring-1
                            focus:ring-amber-500/30 transition-colors duration-150"
               />
@@ -82,7 +82,7 @@ export default function LoginPage({ searchParams }: Props) {
           </form>
         </div>
 
-        <p className="text-center text-[11px] text-gray-600 mt-6">
+        <p className="text-center text-[11px] text-gray-300 mt-6">
           Accès réservé à l'équipe Mes Poilus
         </p>
       </div>

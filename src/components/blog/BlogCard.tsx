@@ -103,7 +103,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
         </div>
 
         {/* Contenu */}
-        <div className="flex flex-col gap-2 p-4 flex-1">
+        <div className="flex flex-col gap-2 p-4 flex-1 bg-[#1e2a3a]">
           {/* Title */}
           <h2 className="text-sm font-semibold text-white group-hover:text-gray-200 transition-colors leading-snug line-clamp-2">
             {article.title}
@@ -111,7 +111,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
 
           {/* Excerpt */}
           {article.excerpt && (
-            <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 flex-1">
+            <p className="text-xs text-gray-200 leading-relaxed line-clamp-2 flex-1">
               {article.excerpt}
             </p>
           )}
@@ -120,7 +120,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
           {article.seo_keywords.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {article.seo_keywords.slice(0, 3).map((kw) => (
-                <span key={kw} className="text-[10px] bg-gray-700/40 text-gray-300 px-2 py-0.5 rounded-full border border-gray-600/50">
+                <span key={kw} className="text-[10px] bg-white/10 text-gray-200 px-2 py-0.5 rounded-full border border-white/20">
                   #{kw}
                 </span>
               ))}
@@ -128,14 +128,14 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between pt-2 border-t border-[#1a1a1a] mt-auto">
+          <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-auto">
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-full bg-purple-400/10 border border-purple-400/20 flex items-center justify-center text-[10px]">
                 ✍️
               </div>
-              <span className="text-[10px] text-gray-500">Marie</span>
+              <span className="text-[10px] text-gray-200">Marie</span>
             </div>
-            <div className="flex items-center gap-3 text-[10px] text-gray-600">
+            <div className="flex items-center gap-3 text-[10px] text-gray-300">
               {publishedDate && <span>{publishedDate}</span>}
               <span>{article.reading_time} min</span>
             </div>
