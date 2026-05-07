@@ -61,6 +61,7 @@ export async function fetchApprovedAdvertisers(
     return [];
   }
   const json = await res.json();
+  console.log('Advertisers trouvés:', json.length, json.map((p: any) => p.name));
   return (json ?? []).map((p: any) => ({ id: p.id, name: p.name }));
 }
 
@@ -73,6 +74,7 @@ export async function fetchAwinProducts(
 ): Promise<AwinProduct[]> {
   const keywords = AWIN_CATEGORY_SEARCH[category] ?? ['pet'];
   const advertisers = await fetchApprovedAdvertisers(publisherId, apiToken);
+  console.log('Nombre advertisers:', advertisers.length);
 
   if (!advertisers.length) {
     console.error('Aucun advertiser approuvé trouvé');
