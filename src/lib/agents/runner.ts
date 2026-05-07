@@ -2,8 +2,6 @@ import { AgentId, AgentTaskResult } from '@/types';
 import { runAgent, streamAgent } from '@/lib/anthropic';
 import { getAgent } from './config';
 import { createAdminClient } from '@/lib/supabase/server';
-import { getPhotoForArticle } from '@/lib/unsplash';
-import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 
 export async function executeAgentTask(
   agentId: AgentId,
@@ -279,28 +277,6 @@ async function saveMariesArticle(content: string): Promise<string | null> {
       return null;
     }
 
-    // Récupérer une image Unsplash pertinente (non-bloquant si pas de clé ou erreur)
-    let imageData: { url: string; alt: string; credit: string; creditUrl: string } | null = null;
-    try {
-      console.log('[Marie] UNSPLASH_ACCESS_KEY présent:', !!process.env.UNSPLASH_ACCESS_KEY);
-      const photo = await Promise.race([
-        getPhotoForArticle(title, category),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
-      ]);
-      if (photo) {
-        const storedUrl = await Promise.race([
-          downloadAndStorePhoto(photo.url, `article-${Date.now()}.jpg`),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
-        ]);
-        imageData = { ...photo, url: storedUrl ?? photo.url };
-        console.log('[Marie] Image:', storedUrl ? 'stockée Supabase' : 'URL Unsplash directe');
-      } else {
-        console.log('[Marie] Image Unsplash: aucune/timeout');
-      }
-    } catch (err) {
-      console.warn('[Marie] Unsplash indisponible:', err);
-    }
-
     const supabase = createAdminClient();
     console.log('[Marie] Upsert Supabase en cours...');
     const { error } = await supabase.from('articles').upsert({
@@ -315,10 +291,6 @@ async function saveMariesArticle(content: string): Promise<string | null> {
       reading_time: readingTime,
       status: 'published',
       published_at: new Date().toISOString(),
-      image_url: imageData?.url ?? null,
-      image_alt: imageData?.alt ?? null,
-      image_credit: imageData?.credit ?? null,
-      image_credit_url: imageData?.creditUrl ?? null,
     }, { onConflict: 'slug' });
 
     if (error) {
