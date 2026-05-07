@@ -9,11 +9,12 @@ export const maxDuration = 120;
 async function logActivity(
   agentId: string, agentName: string, action: string,
   status: 'success' | 'error', durationMs: number,
-  details: Record<string, unknown> = {}
+  details: Record<string, unknown> = {},
+  tokensUsed = 0
 ) {
   try {
     const supabase = createAdminClient();
-    await supabase.from('activity_logs').insert({ agent_id: agentId, agent_name: agentName, action, status, duration_ms: durationMs, details });
+    await supabase.from('activity_logs').insert({ agent_id: agentId, agent_name: agentName, action, status, duration_ms: durationMs, details, tokens_used: tokensUsed });
   } catch { /* non-bloquant */ }
 }
 
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
     );
     const nathalieResult = await executeAgentTask('nathalie', nathaliePrompt);
     if (!nathalieResult.success) throw new Error(nathalieResult.error ?? 'Nathalie a échoué');
-    await logActivity('thomas', 'Thomas', 'Cron sécurité : audit Nathalie terminé', 'success', nathalieResult.duration_ms ?? 0);
+    await logActivity('thomas', 'Thomas', 'Cron sécurité : audit Nathalie terminé', 'success', nathalieResult.duration_ms ?? 0, {}, nathalieResult.tokens_used ?? 0);
     console.log('[Cron Security] Nathalie OK');
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erreur inconnue';
@@ -54,7 +55,7 @@ export async function GET(req: Request) {
     );
     const maximeResult = await executeAgentTask('maxime', maximePrompt);
     if (!maximeResult.success) throw new Error(maximeResult.error ?? 'Maxime a échoué');
-    await logActivity('thomas', 'Thomas', 'Cron sécurité : audit Maxime terminé', 'success', maximeResult.duration_ms ?? 0);
+    await logActivity('thomas', 'Thomas', 'Cron sécurité : audit Maxime terminé', 'success', maximeResult.duration_ms ?? 0, {}, maximeResult.tokens_used ?? 0);
     console.log('[Cron Security] Maxime OK');
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erreur inconnue';

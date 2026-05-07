@@ -9,11 +9,12 @@ export const maxDuration = 120;
 async function logActivity(
   agentId: string, agentName: string, action: string,
   status: 'success' | 'error', durationMs: number,
-  details: Record<string, unknown> = {}
+  details: Record<string, unknown> = {},
+  tokensUsed = 0
 ) {
   try {
     const supabase = createAdminClient();
-    await supabase.from('activity_logs').insert({ agent_id: agentId, agent_name: agentName, action, status, duration_ms: durationMs, details });
+    await supabase.from('activity_logs').insert({ agent_id: agentId, agent_name: agentName, action, status, duration_ms: durationMs, details, tokens_used: tokensUsed });
   } catch { /* non-bloquant */ }
 }
 
@@ -52,7 +53,7 @@ export async function GET(req: Request) {
     if (!result.success) throw new Error(result.error ?? 'Antoine a échoué');
 
     const duration = Date.now() - globalStart;
-    await logActivity('thomas', 'Thomas', `Cron finance : rapport ${month} généré`, 'success', duration);
+    await logActivity('thomas', 'Thomas', `Cron finance : rapport ${month} généré`, 'success', duration, { period: month }, result.tokens_used ?? 0);
 
     console.log(`[Cron Finance] Terminé en ${duration}ms`);
     return NextResponse.json({ success: true, duration_ms: duration, period: month });
