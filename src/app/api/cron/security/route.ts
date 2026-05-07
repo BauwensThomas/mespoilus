@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { buildEnrichedPrompt } from '@/lib/agents/context';
 
 export const runtime = 'nodejs';
-export const maxDuration = 90;
+export const maxDuration = 120;
 
 async function logActivity(
   agentId: string, agentName: string, action: string,
