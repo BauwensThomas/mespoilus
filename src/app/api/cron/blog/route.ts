@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
+import { getPhotoForArticle } from '@/lib/unsplash';
+import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 
 const ANIMAL_CATEGORIES = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
 
@@ -171,6 +173,45 @@ C'est un article de CONSEILS PRATIQUES destiné aux propriétaires francophones.
     }
 
     console.log(`[Cron1] Marie : slug=${articleSlug}`);
+
+    // ─── IMAGE : télécharger pour l'animal + stocker dans Supabase Storage ───
+    let imageUrl: string | null = null;
+    if (articleSlug) {
+      try {
+        // Vérifier si l'article a déjà une image (runner.ts peut l'avoir ajoutée)
+        const { data: imgCheck } = await supabase
+          .from('articles').select('image_url').eq('slug', articleSlug).maybeSingle();
+        imageUrl = imgCheck?.image_url ?? null;
+
+        if (!imageUrl) {
+          console.log(`[Cron1] Image: téléchargement pour catégorie "${animal}"...`);
+          const photo = await Promise.race([
+            getPhotoForArticle(articleTitle || sujet, animal),
+            new Promise<null>(r => setTimeout(() => r(null), 5000)),
+          ]);
+          if (photo) {
+            const stored = await Promise.race([
+              downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`),
+              new Promise<null>(r => setTimeout(() => r(null), 5000)),
+            ]);
+            imageUrl = stored ?? photo.url;
+            await supabase.from('articles').update({
+              image_url: imageUrl,
+              image_alt: photo.alt,
+              image_credit: photo.credit,
+              image_credit_url: photo.creditUrl,
+            }).eq('slug', articleSlug);
+            console.log('[Cron1] Image:', stored ? `stockée Supabase ✅` : 'URL Unsplash directe');
+          } else {
+            console.log('[Cron1] Image: Unsplash indisponible (clé absente ou timeout)');
+          }
+        } else {
+          console.log('[Cron1] Image déjà présente:', imageUrl.slice(0, 60));
+        }
+      } catch (err) {
+        console.warn('[Cron1] Image erreur:', err instanceof Error ? err.message : err);
+      }
+    }
 
     // Sauvegarde dans cron_state pour que le cron social le lise dans 30min
     await supabase.from('cron_state').insert({
