@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
-import { AWIN_CATEGORY_SEARCH } from '@/lib/awin';
 
-// Détermine la saison en fonction du mois courant (hémisphère nord)
+const ANIMAL_CATEGORIES = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
+
+const GENERIC_PRODUCTS: Record<string, string[]> = {
+  chiens:   ['tapis rafraîchissant', 'gamelle inox', 'laisse rétractable'],
+  chats:    ['griffoir', 'litière végétale', 'jouet interactif'],
+  oiseaux:  ['cage spacieuse', 'perchoir naturel', 'graines premium'],
+  rongeurs: ['roue d\'exercice', 'tunnel de jeu', 'foin de qualité'],
+  reptiles: ['lampe UV', 'thermomètre digital', 'substrat naturel'],
+};
+
 function getSeason(month: number): string {
   if (month >= 3 && month <= 5) return 'printemps';
   if (month >= 6 && month <= 8) return 'été';
@@ -11,49 +19,6 @@ function getSeason(month: number): string {
   return 'hiver';
 }
 
-// Pool de sujets par saison pour diversifier le contenu
-const SEASONAL_TOPICS: Record<string, string[]> = {
-  printemps: [
-    'Préparer son jardin pour accueillir son chien en toute sécurité',
-    'Les allergies printanières chez le chat : symptômes et solutions',
-    'Activités outdoor avec son chien au printemps',
-    'Comment protéger son oiseau des variations de température printanières',
-    'Puces et tiques : guide de prévention printanière pour tous les animaux',
-    'Les plantes de printemps dangereuses pour vos animaux de compagnie',
-  ],
-  été: [
-    'Protéger son animal de la chaleur estivale : conseils essentiels',
-    'Voyager avec son chien cet été : tout ce qu\'il faut savoir',
-    'Coup de chaleur chez le chat : reconnaître et agir vite',
-    'Les meilleures activités aquatiques avec son chien',
-    'Alimentation estivale : adapter la diète de son animal en été',
-    'Garder son lapin au frais pendant les canicules',
-  ],
-  automne: [
-    'Préparer son animal pour l\'arrivée du froid',
-    'Les maladies de l\'automne chez le chien : prévention et traitement',
-    'Adapter l\'alimentation de son chat en automne',
-    'Les champignons d\'automne : lesquels sont dangereux pour vos animaux',
-    'Manteau, veste ou combinaison pour chien : guide complet',
-    'Les petits animaux en automne : rongeurs, reptiles et changement de saison',
-  ],
-  hiver: [
-    'Comment garder son chien actif et en forme pendant l\'hiver',
-    'Protéger les pattes de son chien du sel et du froid',
-    'Le confort hivernal de votre chat : accessoires et astuces',
-    'Chauffage et animaux : quels risques et comment les éviter',
-    'Noël et animaux : les dangers cachés des fêtes de fin d\'année',
-    'Alimentation enrichie pour passer l\'hiver en pleine santé',
-  ],
-};
-
-// Détermine une catégorie animale à cibler (rotation par numéro de semaine)
-function getWeeklyCategory(week: number): string {
-  const categories = Object.keys(AWIN_CATEGORY_SEARCH);
-  return categories[week % categories.length];
-}
-
-// Numéro de semaine ISO
 function getISOWeek(date: Date): number {
   const tmp = new Date(date.getTime());
   tmp.setHours(0, 0, 0, 0);
@@ -62,72 +27,179 @@ function getISOWeek(date: Date): number {
   return 1 + Math.round(((tmp.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
 }
 
+async function logActivity(
+  agentId: string, agentName: string, action: string,
+  status: 'success' | 'error', durationMs: number,
+  details: Record<string, unknown> = {}
+) {
+  try {
+    const supabase = createAdminClient();
+    await supabase.from('activity_logs').insert({
+      agent_id: agentId, agent_name: agentName,
+      action, status, duration_ms: durationMs, details,
+    });
+  } catch { /* non-bloquant */ }
+}
+
 export async function GET(req: Request) {
   const authHeader = req.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const globalStart = Date.now();
   const now = new Date();
-  const month = now.getMonth() + 1; // 1-12
-  const season = getSeason(month);
-  const week = getISOWeek(now);
-  const animalCategory = getWeeklyCategory(week);
+  const supabase = createAdminClient();
 
-  // Récupérer les slugs des articles récents pour éviter les doublons
-  let recentSlugs: string[] = [];
+  let animal = 'chiens';
+  let season = 'printemps';
+  let sujet = '';
+  let motsCles: string[] = [];
+  let articleSlug = '';
+  let articleTitle = '';
+  let articleExcerpt = '';
+  const errors: string[] = [];
+
+  // ─── ÉTAPE 1 : Thomas prépare le contexte ────────────────────────────────
+  const step1Start = Date.now();
   try {
-    const supabase = createAdminClient();
-    const { data } = await supabase
+    const month = now.getMonth() + 1;
+    season = getSeason(month);
+    const week = getISOWeek(now);
+    animal = ANIMAL_CATEGORIES[week % 5];
+
+    const { data: articles } = await supabase
       .from('articles')
       .select('title')
-      .order('created_at', { ascending: false })
+      .order('published_at', { ascending: false })
       .limit(20);
-    recentSlugs = (data ?? []).map((a: { title: string }) => a.title);
-  } catch {
-    // Non-bloquant
-  }
+    const recentTitles = (articles ?? []).map((a: { title: string }) => a.title);
 
-  // Choisir un sujet en fonction de la semaine (rotation)
-  const topicPool = SEASONAL_TOPICS[season] ?? SEASONAL_TOPICS.printemps;
-  const topic = topicPool[week % topicPool.length];
+    const { data: productRows } = await supabase
+      .from('products')
+      .select('name')
+      .eq('category', animal)
+      .eq('in_stock', true)
+      .limit(3);
+    const products = (productRows && productRows.length > 0)
+      ? productRows.map((p: { name: string }) => p.name)
+      : GENERIC_PRODUCTS[animal];
 
-  const awinCategories = Object.keys(AWIN_CATEGORY_SEARCH).join(', ');
-  const recentContext = recentSlugs.length
-    ? `\n\nArticles récents à ne pas dupliquer :\n${recentSlugs.slice(0, 10).map(t => `- ${t}`).join('\n')}`
-    : '';
+    console.log(`[Cron1] Thomas : animal=${animal}, saison=${season}`);
+    await logActivity('thomas', 'Thomas',
+      `Cron étape 1 : contexte préparé — ${animal} en ${season}`,
+      'success', Date.now() - step1Start,
+      { animal, season, products, recent_count: recentTitles.length }
+    );
 
-  const task = `Rédige un article de blog complet sur le sujet suivant :
+    // ─── ÉTAPE 2 : Lucas analyse le SEO ──────────────────────────────────
+    const step2Start = Date.now();
+    const recentContext = recentTitles.length
+      ? recentTitles.slice(0, 15).map(t => `- ${t}`).join('\n')
+      : 'Aucun article récent.';
 
-**"${topic}"**
+    const lucasPrompt = `Trouve le meilleur sujet de conseil pratique pour les propriétaires de ${animal} en ${season} dans les pays francophones.
+Le sujet doit être un CONSEIL PRATIQUE utile (pas un article générique).
+Exemples : 'comment hydrater son chien en été', 'signes de stress chez le chat', 'alimentation du lapin en hiver'.
+Évite ces sujets déjà couverts :
+${recentContext}
+Retourne UNIQUEMENT :
+SUJET: [le sujet]
+MOTS_CLES: [mot1, mot2, mot3, mot4, mot5]
+INTENTION: [ce que cherche l'internaute]`;
 
-Contexte :
-- Saison actuelle : ${season} (mois ${month})
-- Catégorie animale principale : ${animalCategory}
-- Date de publication : ${now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+    const lucasResult = await executeAgentTask('lucas', lucasPrompt);
+    if (lucasResult.success) {
+      const subjectMatch = lucasResult.content.match(/SUJET:\s*(.+)/i);
+      const keywordsMatch = lucasResult.content.match(/MOTS_CLES:\s*(.+)/i);
+      sujet = subjectMatch?.[1]?.trim() ?? '';
+      motsCles = keywordsMatch?.[1]?.split(',').map(k => k.trim()).filter(Boolean) ?? [];
+      console.log(`[Cron1] Lucas : sujet=${sujet}`);
+      await logActivity('thomas', 'Thomas',
+        `Cron étape 2 : Lucas → ${sujet}`,
+        'success', Date.now() - step2Start, { sujet, mots_cles: motsCles }
+      );
+    } else {
+      sujet = `Conseils pratiques pour votre ${animal.replace(/s$/, '')} en ${season}`;
+      motsCles = [animal, season, 'conseils', 'bien-être', 'santé'];
+      errors.push(`Étape 2: ${lucasResult.error}`);
+      await logActivity('thomas', 'Thomas',
+        `Cron étape 2 erreur Lucas — fallback sujet utilisé`,
+        'error', Date.now() - step2Start
+      );
+    }
 
-Instructions spécifiques :
-1. L'article doit faire entre 900 et 1400 mots, structuré avec des titres H2 et H3.
-2. Intègre NATURELLEMENT 2 à 3 recommandations de produits affiliés dans le corps de l'article. Ces recommandations doivent s'intégrer dans le conseil pratique (ex: "Pour cela, un harnais adapté ou une laisse à enrouleur sont de bonnes options que vous trouverez facilement chez nos partenaires"). Les catégories de produits disponibles sont : ${awinCategories}.
-3. Ne pas mentionner de marques spécifiques — parler de types de produits (harnais, gamelle, jouet, etc.).
-4. L'article doit être utile, pratique et basé sur des faits vétérinaires reconnus.
-5. Conclure avec un appel à l'action vers la boutique Mes Poilus ou vers d'autres articles du blog.
-6. Respecter strictement le format frontmatter demandé.${recentContext}`;
+    // ─── ÉTAPE 3 : Marie écrit l'article ─────────────────────────────────
+    const step3Start = Date.now();
+    const productsStr = products.map(p => `- ${p}`).join('\n');
+    const mariePrompt = `Écris un article de conseil pratique sur : ${sujet}
+Mots-clés à intégrer naturellement : ${motsCles.join(', ')}
+Saison : ${season} — adapte les conseils à la saison
+Animal : ${animal}
 
-  try {
-    const result = await executeAgentTask('marie', task);
+Intègre naturellement 2-3 recommandations de produits dans le texte :
+${productsStr}
+Formule ainsi : 'Un [type produit] de qualité peut vraiment aider...' puis renvoie vers mespoilus.com/boutique
 
-    return NextResponse.json({
-      success: result.success,
-      topic,
-      season,
-      animalCategory,
-      tokens_used: result.tokens_used,
-      duration_ms: result.duration_ms,
-      ...(result.success ? {} : { error: result.error }),
+C'est un article de CONSEILS PRATIQUES destiné aux propriétaires francophones. Ton bienveillant, accessible, utile.`;
+
+    const marieResult = await executeAgentTask('marie', mariePrompt);
+    if (!marieResult.success) throw new Error(marieResult.error ?? 'Marie a échoué');
+
+    const slugMatch = marieResult.content.match(/^slug:\s*(.+)/m);
+    const titleMatch = marieResult.content.match(/^title:\s*(.+)/m);
+    const excerptMatch = marieResult.content.match(/^excerpt:\s*(.+)/m);
+    articleSlug = slugMatch?.[1]?.trim() ?? '';
+    articleTitle = titleMatch?.[1]?.trim() ?? sujet;
+    articleExcerpt = excerptMatch?.[1]?.trim() ?? '';
+
+    // Fallback : fetch depuis Supabase si slug non parsé du frontmatter
+    if (!articleSlug) {
+      await new Promise(r => setTimeout(r, 3000));
+      const { data } = await supabase
+        .from('articles')
+        .select('slug, title, excerpt')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (data) {
+        articleSlug = data.slug ?? '';
+        articleTitle = data.title ?? articleTitle;
+        articleExcerpt = data.excerpt ?? articleExcerpt;
+      }
+    }
+
+    console.log(`[Cron1] Marie : slug=${articleSlug}`);
+
+    // Sauvegarde dans cron_state pour que le cron social le lise dans 30min
+    await supabase.from('cron_state').insert({
+      slug: articleSlug,
+      title: articleTitle,
+      excerpt: articleExcerpt,
+      status: 'article_ready',
     });
+
+    await logActivity('thomas', 'Thomas',
+      `Cron étape 3 : Marie → article prêt (slug: ${articleSlug})`,
+      'success', Date.now() - step3Start,
+      { article_slug: articleSlug, article_title: articleTitle }
+    );
+
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Erreur inconnue';
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Erreur inconnue';
+    errors.push(msg);
+    console.error('[Cron1] erreur:', msg);
+    await logActivity('thomas', 'Thomas', `Cron blog erreur: ${msg}`, 'error', Date.now() - globalStart);
   }
+
+  const totalDuration = Date.now() - globalStart;
+  console.log(`[Cron1] Terminé en ${totalDuration}ms — slug=${articleSlug}`);
+
+  return NextResponse.json({
+    success: !!articleSlug,
+    duration_ms: totalDuration,
+    animal, season, sujet, article_slug: articleSlug,
+    ...(errors.length ? { errors } : {}),
+  });
 }

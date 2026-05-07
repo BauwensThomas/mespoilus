@@ -41,62 +41,32 @@ export async function POST(req: NextRequest) {
   const fallbackKey = Object.keys(FALLBACK).find(k => k !== 'default' && query.toLowerCase().includes(k));
   const imageUrl = FALLBACK[fallbackKey ?? 'default'];
 
-  // INSERT social_posts
   for (const platform of ['facebook', 'instagram']) {
     const r = await supabaseFetch('social_posts', 'POST', { content, platform, hashtags, status: 'draft' });
     console.log(`[save-post] social_posts ${platform}:`, r.ok ? 'OK' : `erreur ${r.status}`);
   }
 
-  // activity_logs
-  const logRes = await supabaseFetch('activity_logs', 'POST', {
-    agent_id: 'emma',
-    agent_name: 'Emma',
-    action: 'Post réseaux sociaux publié',
-    status: 'success',
-    duration_ms: 0,
-    details: { platforms: ['facebook', 'instagram'], hashtags_count: hashtags.length, image_url: imageUrl },
-  });
-  console.log('[save-post] activity_logs:', logRes.ok ? 'OK' : `erreur ${logRes.status}`);
-
-  // agent_stats
-  const selectRes = await supabaseFetch('agent_stats', 'GET', undefined, 'agent_id=eq.emma&select=tasks_completed,tasks_failed,total_tokens_used');
-  const rows = selectRes.data as { tasks_completed: number; tasks_failed: number; total_tokens_used: number }[] | null;
-  const row = rows?.[0];
-  if (!row) {
-    await supabaseFetch('agent_stats', 'POST', { agent_id: 'emma', tasks_completed: 1, tasks_failed: 0, total_tokens_used: 0, last_active: new Date().toISOString() });
-  } else {
-    await supabaseFetch('agent_stats', 'PATCH', {
-      tasks_completed: (row.tasks_completed ?? 0) + 1,
-      last_active: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }, 'agent_id=eq.emma');
-  }
-  console.log('[save-post] agent_stats: OK');
-
-  // Webhooks Make
+  // Un seul webhook → Make scénario linéaire (Facebook → Instagram)
   const makeUrl = process.env.MAKE_WEBHOOK_URL;
   if (makeUrl) {
-    for (const platform of ['facebook', 'instagram']) {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 5000);
-      try {
-        const res = await fetch(makeUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            platform,
-            content: content.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim(),
-            hashtags: hashtags.join(' '),
-            image_url: imageUrl,
-          }),
-          signal: ctrl.signal,
-        });
-        clearTimeout(t);
-        console.log(`[save-post] webhook ${platform}:`, res.ok ? 'OK' : `erreur ${res.status}`);
-      } catch (err) {
-        clearTimeout(t);
-        console.log(`[save-post] webhook ${platform} exception:`, err instanceof Error ? err.message : err);
-      }
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    try {
+      const res = await fetch(makeUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: content.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim(),
+          hashtags: hashtags.join(' '),
+          image_url: imageUrl,
+        }),
+        signal: ctrl.signal,
+      });
+      clearTimeout(t);
+      console.log('[save-post] webhook:', res.ok ? 'OK' : `erreur ${res.status}`);
+    } catch (err) {
+      clearTimeout(t);
+      console.log('[save-post] webhook exception:', err instanceof Error ? err.message : err);
     }
   }
 
