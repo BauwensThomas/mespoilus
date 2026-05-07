@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
+import { sendBulkNewsletter } from '@/lib/resend';
 
 async function dbFetch(path: string, method: string, body?: unknown, params?: string) {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -186,8 +187,48 @@ async function saveSofia(content: string) {
   let parsed: { subject?: string; preview_text?: string; content_html?: string } = {};
   try { parsed = JSON.parse(cleaned); } catch { parsed = { subject: 'Newsletter Mes Poilus', content_html: content }; }
   if (!parsed.subject || !parsed.content_html) return;
-  await dbFetch('newsletter_campaigns', 'POST', { subject: parsed.subject, preview_text: parsed.preview_text ?? null, content_html: parsed.content_html, status: 'draft' });
+
+  // Anti-doublon : skip si une campagne envoyée dans les 5 derniers jours
+  const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+  const recent = await dbFetch('newsletter_campaigns', 'GET', undefined, `status=eq.sent&sent_at=gte.${fiveDaysAgo}&select=id&limit=1`);
+  const recentRows = recent.data as { id: string }[] | null;
+  if (recentRows && recentRows.length > 0) {
+    console.log('[save-agent] Sofia : newsletter déjà envoyée récemment, draft sauvegardé sans envoi');
+    await dbFetch('newsletter_campaigns', 'POST', { subject: parsed.subject, preview_text: parsed.preview_text ?? null, content_html: parsed.content_html, status: 'draft' });
+    return;
+  }
+
+  // Sauvegarder le draft
+  const saveRes = await dbFetch('newsletter_campaigns', 'POST', { subject: parsed.subject, preview_text: parsed.preview_text ?? null, content_html: parsed.content_html, status: 'draft' });
   console.log('[save-agent] Sofia newsletter_campaigns OK');
+
+  // Récupérer l'ID du draft créé
+  const savedRows = saveRes.data as { id: string }[] | null;
+  const campaignId = savedRows?.[0]?.id;
+
+  // Récupérer les abonnés actifs
+  const subsRes = await dbFetch('newsletter_subscribers', 'GET', undefined, 'status=eq.active&select=email');
+  const subscribers = (subsRes.data as { email: string }[] | null ?? []).map(s => s.email);
+  if (subscribers.length === 0) {
+    console.log('[save-agent] Sofia : aucun abonné actif, draft sauvegardé sans envoi');
+    return;
+  }
+
+  // Envoyer via Resend
+  const { sent, failed } = await sendBulkNewsletter({ subject: parsed.subject, html: parsed.content_html, subscribers });
+  console.log(`[save-agent] Sofia newsletter envoyée : ${sent}/${subscribers.length}`);
+
+  // Marquer comme envoyée
+  if (campaignId) {
+    await dbFetch('newsletter_campaigns', 'PATCH', {
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+      recipients_count: subscribers.length,
+      sent_count: sent,
+      failed_count: failed,
+      updated_at: new Date().toISOString(),
+    }, `id=eq.${campaignId}`);
+  }
 }
 
 export async function POST(req: NextRequest) {
