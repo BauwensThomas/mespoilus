@@ -70,53 +70,6 @@ https://mespoilus.com/blog/${slug}`;
     await logActivity('thomas', 'Thomas', `Cron étape 4 erreur: ${msg}`, 'error', Date.now() - step4Start);
   }
 
-  // ─── ÉTAPE 5 : Sofia (vendredi uniquement) ───────────────────────────────
-  if (now.getDay() === 5) {
-    const step5Start = Date.now();
-    try {
-      const weekStart = new Date(now);
-      weekStart.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-      weekStart.setHours(0, 0, 0, 0);
-
-      const { data: weekArticles } = await supabase
-        .from('articles')
-        .select('title, slug, excerpt')
-        .eq('status', 'published')
-        .gte('published_at', weekStart.toISOString())
-        .order('published_at', { ascending: false })
-        .limit(3);
-
-      const articles = weekArticles ?? [];
-      if (articles.length > 0) {
-        const articlesStr = articles.map((a: { title: string; slug: string; excerpt: string | null }) =>
-          `- ${a.title}\n  Lien : https://mespoilus.com/blog/${a.slug}\n  Résumé : ${a.excerpt ?? ''}`
-        ).join('\n\n');
-
-        const sofiaPrompt = `Crée la newsletter hebdomadaire de Mes Poilus avec les meilleurs articles de cette semaine :
-
-${articlesStr}
-
-Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": "..." }`;
-
-        const result = await executeAgentTask('sofia', sofiaPrompt);
-        if (!result.success) throw new Error(result.error ?? 'Sofia a échoué');
-
-        console.log('[Cron2] Sofia : newsletter draft créée');
-        await logActivity('thomas', 'Thomas',
-          `Cron étape 5 : Sofia → newsletter draft créée`,
-          'success', Date.now() - step5Start, { articles_count: articles.length }
-        );
-      } else {
-        console.log('[Cron2] Sofia : pas d\'articles cette semaine, skip');
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erreur inconnue';
-      errors.push(`Étape 5: ${msg}`);
-      console.error('[Cron2] Sofia erreur:', msg);
-      await logActivity('thomas', 'Thomas', `Cron étape 5 erreur: ${msg}`, 'error', Date.now() - step5Start);
-    }
-  }
-
   // Marquer cron_state comme terminé
   await supabase.from('cron_state').update({ status: 'done' }).eq('id', stateId);
 
