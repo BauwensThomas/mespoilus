@@ -46,7 +46,7 @@ export default async function DashboardPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Tableau de bord</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-300 text-sm mt-1">
             Système multi-agents Mes Poilus
           </p>
         </div>
