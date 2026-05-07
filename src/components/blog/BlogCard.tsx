@@ -120,7 +120,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
           {article.seo_keywords.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {article.seo_keywords.slice(0, 3).map((kw) => (
-                <span key={kw} className="text-[10px] bg-[#1a1a1a] text-gray-500 px-2 py-0.5 rounded-full">
+                <span key={kw} className="text-[10px] bg-gray-700/40 text-gray-300 px-2 py-0.5 rounded-full border border-gray-600/50">
                   #{kw}
                 </span>
               ))}

@@ -215,7 +215,7 @@ export default async function ArticlePage({ params }: Props) {
           {article.seo_keywords.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-8 pb-6 border-b border-[#1a1a1a]">
               {article.seo_keywords.map((kw) => (
-                <span key={kw} className="text-[10px] bg-[#1a1a1a] text-gray-500 px-2 py-1 rounded-full border border-[#222]">
+                <span key={kw} className="text-[10px] bg-gray-700/40 text-gray-300 px-2.5 py-1 rounded-full border border-gray-600/50">
                   #{kw}
                 </span>
               ))}
