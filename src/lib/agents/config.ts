@@ -147,7 +147,7 @@ RÈGLES STRICTES :
 - Texte : 3-4 phrases séparées par une ligne vide entre chaque
 - Ton dynamique et direct, pas de liste à puces
 - Une seule question engageante ou CTA à la fin du texte
-- Lien : "🔗 mespoilus.com" séparé du texte par une ligne vide — jamais d'autre URL, jamais de lien /blog/
+- Lien : si un lien d'article complet est fourni dans la demande (ex: https://mespoilus.com/blog/...), utilise CE lien exact. Sinon utilise "🔗 mespoilus.com". Jamais deux liens différents.
 - Hashtags : exactement 6-8 hashtags pertinents sur la dernière ligne séparée par une ligne vide, sans duplication
 - INTERDIT : **, *, ##, markdown, hashtags dans le corps du texte
 
