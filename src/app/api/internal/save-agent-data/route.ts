@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPhotoForArticle } from '@/lib/unsplash';
+import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 
 async function dbFetch(path: string, method: string, body?: unknown, params?: string) {
@@ -54,15 +54,6 @@ async function updateAgentStats(agentId: string, tokens: number) {
 async function saveEmma(content: string) {
   const postContent = content.trim();
   const hashtags = postContent.match(/#[\wÀ-ɏ]+/g) || [];
-  const FALLBACK: Record<string, string> = {
-    chien:  'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200&q=80',
-    chat:   'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&q=80',
-    oiseau: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=1200&q=80',
-    rongeur:'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=1200&q=80',
-    reptile:'https://images.unsplash.com/photo-1519439050986-9cd34fc28ddc?w=1200&q=80',
-    default:'https://images.unsplash.com/photo-1444212477490-ca407925329e?w=1200&q=80',
-  };
-
   // 1. Essayer de récupérer l'image de l'article promu (même URL Supabase que le blog)
   let imageUrl: string | null = null;
   const slugMatch = postContent.match(/mespoilus\.com\/blog\/([a-z0-9-]+)/);
@@ -74,13 +65,21 @@ async function saveEmma(content: string) {
     } catch { /* fallback */ }
   }
 
-  // 2. Fallback : télécharger + stocker l'image catégorie dans Supabase Storage
+  // 2. Fallback : Pexels → stocker dans Supabase Storage
   if (!imageUrl) {
-    const query = hashtags[0]?.replace('#', '') || 'animaux';
-    const fallbackKey = Object.keys(FALLBACK).find(k => k !== 'default' && query.toLowerCase().includes(k));
-    const fallbackUnsplashUrl = FALLBACK[fallbackKey ?? 'default'];
-    imageUrl = await downloadAndStorePhoto(fallbackUnsplashUrl, `fallback-${fallbackKey ?? 'default'}.jpg`)
-      ?? fallbackUnsplashUrl;
+    try {
+      const tag = hashtags[0]?.replace('#', '').toLowerCase() ?? '';
+      const cat = tag.includes('chien') || tag.includes('dog') ? 'chiens'
+        : tag.includes('chat') || tag.includes('cat') ? 'chats'
+        : tag.includes('oiseau') || tag.includes('bird') ? 'oiseaux'
+        : tag.includes('rongeur') || tag.includes('lapin') || tag.includes('hamster') ? 'rongeurs'
+        : tag.includes('reptile') || tag.includes('lézard') ? 'reptiles'
+        : 'general';
+      const photo = await getPhotoForCategory(cat);
+      if (photo) {
+        imageUrl = await downloadAndStorePhoto(photo.url, `social-fallback-${cat}.jpg`) ?? photo.url;
+      }
+    } catch { /* non-bloquant */ }
   }
 
   for (const platform of ['facebook', 'instagram']) {
@@ -141,7 +140,7 @@ async function saveMarie(content: string) {
   let imageData: { url: string; alt: string; credit: string; creditUrl: string } | null = null;
   try {
     imageData = await Promise.race([
-      getPhotoForArticle(title, category),
+      getPhotoForCategory(category),
       new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
     ]);
   } catch { /* ignore */ }

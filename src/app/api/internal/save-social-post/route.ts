@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
-
-const CATEGORY_QUERIES: Record<string, string> = {
-  chiens:   'cute dog puppy',
-  chats:    'cute cat kitten',
-  oiseaux:  'pet bird parrot',
-  rongeurs: 'rabbit hamster guinea pig',
-  reptiles: 'lizard reptile gecko',
-  general:  'pet animal cute',
-};
 
 async function supabaseFetch(path: string, method: string, body?: unknown, params?: string) {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -48,28 +40,14 @@ async function getImageUrl(): Promise<string | null> {
     return rows[0].image_url;
   }
 
-  // 2. Fallback via API Unsplash (si clé disponible) + stockage Supabase
-  const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
-  if (!unsplashKey) {
-    console.log('[save-post] pas de clé Unsplash — post sans image');
-    return null;
-  }
-
-  const category = rows?.[0] ? 'general' : 'general';
-  const query = encodeURIComponent(CATEGORY_QUERIES[category] ?? CATEGORY_QUERIES.general);
+  // 2. Fallback via Pexels + stockage Supabase
+  const category = rows?.[0]?.category ?? 'general';
   try {
-    const apiRes = await fetch(
-      `https://api.unsplash.com/photos/random?query=${query}&orientation=landscape&content_filter=high`,
-      { headers: { Authorization: `Client-ID ${unsplashKey}` } }
-    );
-    if (!apiRes.ok) return null;
-    const photo = await apiRes.json() as { urls?: { regular?: string } };
-    const photoUrl = photo.urls?.regular;
-    if (!photoUrl) return null;
-
-    const stored = await downloadAndStorePhoto(photoUrl, `social-fallback-${category}.jpg`);
-    console.log('[save-post] image fallback Unsplash:', stored ? 'stockée' : 'échec stockage');
-    return stored ?? null;
+    const photo = await getPhotoForCategory(category);
+    if (!photo) { console.log('[save-post] Pexels aucun résultat — post sans image'); return null; }
+    const stored = await downloadAndStorePhoto(photo.url, `social-fallback-${category}.jpg`);
+    console.log('[save-post] image fallback Pexels:', stored ? 'stockée' : 'URL directe');
+    return stored ?? photo.url;
   } catch {
     return null;
   }

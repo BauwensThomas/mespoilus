@@ -166,7 +166,7 @@ export default async function ArticlePage({ params }: Props) {
             rel="noopener noreferrer nofollow"
             className="absolute bottom-4 right-6 text-[10px] text-white/40 hover:text-white/70 transition-colors bg-black/40 px-2 py-1 rounded backdrop-blur-sm"
           >
-            📷 {article.image_credit} / Unsplash
+            📷 {article.image_credit} / Pexels
           </a>
         )}
 
