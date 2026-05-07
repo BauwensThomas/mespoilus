@@ -20,9 +20,9 @@ export interface AwinRawProduct {
   id: string;
   title: string;
   description: string;
-  price: string;           // format: "12.99 EUR"
+  price: string;
   image_link: string;
-  link: string;            // lien affilié
+  link: string;
   brand?: string;
   availability: string;
   google_product_category?: string;
@@ -45,16 +45,13 @@ function mapAwinProduct(raw: AwinRawProduct, category: AwinProduct['category'], 
   };
 }
 
-// 1. Récupérer les advertisers approuvés
 export async function fetchApprovedAdvertisers(
   publisherId: string,
   apiToken: string
 ): Promise<AwinAdvertiser[]> {
   const res = await fetch(
     `${AWIN_API_BASE}/publishers/${publisherId}/programmes?relationship=joined`,
-    {
-      headers: { Authorization: `Bearer ${apiToken}` },
-    }
+    { headers: { Authorization: `Bearer ${apiToken}` } }
   );
   if (!res.ok) {
     console.error('Awin advertisers error:', res.status, await res.text());
@@ -65,7 +62,6 @@ export async function fetchApprovedAdvertisers(
   return (json ?? []).map((p: any) => ({ id: p.id, name: p.name }));
 }
 
-// 2. Télécharger le feed d'un advertiser et filtrer par mots-clés
 export async function fetchAwinProducts(
   publisherId: string,
   apiToken: string,
@@ -83,20 +79,26 @@ export async function fetchAwinProducts(
 
   const allProducts: AwinProduct[] = [];
 
-  for (const advertiser of advertisers.slice(0, 5)) { // max 5 advertisers par run
+  for (const advertiser of advertisers.slice(0, 5)) {
     try {
-      const res = await fetch(
-        `${AWIN_API_BASE}/publishers/${publisherId}/awinfeeds/download/${advertiser.id}-retail-fr_FR.jsonl`,
-        {
-          headers: { Authorization: `Bearer ${apiToken}` },
-          next: { revalidate: 86400 },
-        }
-      );
+      const locales = ['fr_FR', 'fr_BE', 'en_GB', 'nl_NL'];
+      let res = null;
 
-      if (!res.ok) continue;
+      for (const locale of locales) {
+        const r = await fetch(
+          `${AWIN_API_BASE}/publishers/${publisherId}/awinfeeds/download/${advertiser.id}-retail-${locale}.jsonl`,
+          { headers: { Authorization: `Bearer ${apiToken}` }, next: { revalidate: 86400 } }
+        );
+        console.log(`Feed ${advertiser.name} locale ${locale}:`, r.status);
+        if (r.ok) { res = r; break; }
+      }
+
+      if (!res) continue;
 
       const text = await res.text();
       const lines = text.trim().split('\n');
+      console.log(`Feed ${advertiser.name} - nombre de lignes:`, lines.length);
+      console.log('Première ligne:', lines[0]);
 
       for (const line of lines) {
         if (allProducts.length >= limit) break;
