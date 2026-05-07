@@ -127,6 +127,34 @@ ${recentTitles}
 Fournis une analyse SEO complète avec mots-clés, volumes estimés par marché (BE/FR/CH/CA) et recommandations on-page.`;
     }
 
+    if (agentId === 'sofia') {
+      const { data: recent } = await supabase
+        .from('articles')
+        .select('title, slug, excerpt, published_at')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(3);
+
+      const articles = (recent ?? []) as Array<{ title: string; slug: string; excerpt: string | null; published_at: string }>;
+      const articlesStr = articles.length
+        ? articles.map((a) =>
+            `- ${a.title}\n  Lien : https://mespoilus.com/blog/${a.slug}\n  Résumé : ${a.excerpt ?? ''}`
+          ).join('\n\n')
+        : '- Aucun article récent';
+
+      const currentYear = new Date().getFullYear();
+
+      return `${baseTask}
+
+Voici les 3 derniers articles publiés sur Mes Poilus :
+
+${articlesStr}
+
+Année actuelle : ${currentYear} (utilise cette année dans le footer copyright).
+
+Génère la newsletter en te basant sur ces articles. Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": "..." }`;
+    }
+
     if (agentId === 'maxime') {
       const [errorRes, activityRes] = await Promise.all([
         supabase.from('activity_logs').select('id', { count: 'exact', head: true }).eq('status', 'error'),
