@@ -4,6 +4,7 @@ import type { AwinProduct } from '@/types';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
+import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
 
 export const metadata: Metadata = {
   title: 'Boutique animaux — Mes Poilus',
@@ -23,7 +24,7 @@ const CATEGORIES = [
   { id: 'reptiles', label: 'Reptiles', emoji: '🦎' },
 ];
 
-async function getProducts(category?: string): Promise<AwinProduct[]> {
+async function getProducts(category?: string, search?: string): Promise<AwinProduct[]> {
   try {
     const supabase = createAdminClient();
     let q = supabase
@@ -33,6 +34,7 @@ async function getProducts(category?: string): Promise<AwinProduct[]> {
       .order('price', { ascending: true })
       .limit(48);
     if (category && category !== 'all') q = q.eq('category', category);
+    if (search) q = q.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
     const { data } = await q;
     return (data as AwinProduct[]) ?? [];
   } catch {
@@ -41,15 +43,16 @@ async function getProducts(category?: string): Promise<AwinProduct[]> {
 }
 
 interface Props {
-  searchParams: { category?: string };
+  searchParams: { category?: string; search?: string };
 }
 
 export default async function BoutiquePage({ searchParams }: Props) {
   const category = searchParams.category;
+  const search = searchParams.search?.trim();
   const bannerQuery = category && category !== 'all' ? CATEGORY_QUERIES[category] : undefined;
 
   const [products, allPhotos] = await Promise.all([
-    getProducts(category),
+    getProducts(category, search),
     bannerQuery ? getBannerPhotos(bannerQuery) : getHeroPhotos(),
   ]);
 
@@ -64,6 +67,9 @@ export default async function BoutiquePage({ searchParams }: Props) {
           Sélection de produits pour vos animaux de compagnie
         </p>
       </div>
+
+      {/* Recherche */}
+      <BoutiqueSearchBar defaultValue={search ?? ''} />
 
       {/* Filtres */}
       <div className="flex flex-wrap gap-2">
@@ -116,6 +122,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
           <p className="text-sm text-gray-500">
             {products.length} produit{products.length !== 1 ? 's' : ''}
             {category && category !== 'all' ? ` · ${activeCat.label}` : ''}
+            {search ? ` · "${search}"` : ''}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {products.map(product => (
