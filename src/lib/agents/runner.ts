@@ -281,8 +281,11 @@ async function saveMariesArticle(content: string): Promise<string | null> {
     // Récupérer une image Unsplash pertinente (non-bloquant si pas de clé ou erreur)
     let imageData: { url: string; alt: string; credit: string; creditUrl: string } | null = null;
     try {
-      imageData = await getPhotoForArticle(title, category);
-      console.log('[Marie] Image Unsplash:', imageData ? imageData.url.slice(0, 60) + '…' : 'aucune');
+      imageData = await Promise.race([
+        getPhotoForArticle(title, category),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]);
+      console.log('[Marie] Image Unsplash:', imageData ? imageData.url.slice(0, 60) + '…' : 'aucune/timeout');
     } catch (err) {
       console.warn('[Marie] Unsplash indisponible:', err);
     }
