@@ -31,8 +31,8 @@ async function dbFetch(path: string, method: string, body?: unknown, params?: st
   }
 }
 
-async function logActivity(agentId: string, agentName: string, action: string, durationMs: number, details: Record<string, unknown>) {
-  await dbFetch('activity_logs', 'POST', { agent_id: agentId, agent_name: agentName, action, status: 'success', duration_ms: durationMs, details });
+async function logActivity(agentId: string, agentName: string, action: string, durationMs: number, details: Record<string, unknown>, tokensUsed = 0) {
+  await dbFetch('activity_logs', 'POST', { agent_id: agentId, agent_name: agentName, action, status: 'success', duration_ms: durationMs, details, tokens_used: tokensUsed });
 }
 
 async function updateAgentStats(agentId: string, tokens: number) {
@@ -211,7 +211,7 @@ export async function POST(req: NextRequest) {
     await saveSofia(content);
   }
 
-  await logActivity(agentId, agentName, task.slice(0, 200), durationMs, { content_length: content.length, ...extraDetails });
+  await logActivity(agentId, agentName, task.slice(0, 200), durationMs, { content_length: content.length, ...extraDetails }, tokens);
   await updateAgentStats(agentId, tokens);
 
   console.log(`[save-agent] ${agentId} terminé en ${Date.now() - start}ms`);

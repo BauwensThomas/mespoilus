@@ -38,19 +38,19 @@ const QUICK_TASKS: Record<string, string[]> = {
     'Crée une stratégie de croissance pour doubler le trafic du blog en 3 mois.',
   ],
   marie: [
-    'Écris un article complet sur les meilleurs vétérinaires d\'urgence à Bruxelles.',
-    'Rédige un guide pour adopter un chien en Belgique : démarches légales et conseils pratiques.',
-    'Crée une description de produit pour une croquette premium pour chat senior.',
+    'Écris un article sur les signes de stress chez le chat et comment y remédier.',
+    'Écris un article sur l\'alimentation du chien en été : hydratation et croquettes adaptées.',
+    'Écris un article sur les soins à donner à son lapin en hiver.',
   ],
   lucas: [
     'Recherche les 20 meilleurs mots-clés sur la niche "alimentation chien Belgique".',
-    'Audite le SEO de notre dernier article et propose des optimisations.',
-    'Analyse les tendances de recherche sur les animaux de compagnie en Belgique pour 2025.',
+    'Analyse les tendances de recherche pour les chats en automne et propose 3 sujets d\'articles.',
+    'Trouve le meilleur sujet d\'article pour les reptiles ce printemps.',
   ],
   emma: [
-    'Crée 3 posts pour Instagram, Facebook et TikTok sur la santé des chats en été.',
-    'Génère un calendrier de contenu pour le mois de juin centré sur les chiens.',
-    'Rédige une campagne de storytelling autour de l\'adoption animale en Belgique.',
+    'Crée un post Facebook et Instagram pour le dernier article publié.',
+    'Crée un post engageant sur les conseils estivaux pour les animaux de compagnie.',
+    'Crée un post Facebook et Instagram sur l\'adoption animale en Belgique.',
   ],
   maxime: [
     'Effectue un audit des performances du site et liste les problèmes Core Web Vitals.',
@@ -58,9 +58,9 @@ const QUICK_TASKS: Record<string, string[]> = {
     'Optimise les requêtes Supabase pour améliorer les temps de réponse.',
   ],
   lea: [
-    'Un client se plaint que son guide PDF commandé n\'est pas arrivé, réponds-lui.',
-    'Rédige une réponse type pour les questions sur les délais de livraison.',
-    'Un propriétaire demande des conseils pour son chien qui refuse de manger, aide-le.',
+    'Voici le message d\'un client : "Bonjour, j\'ai commandé un article il y a 2 semaines et je n\'ai rien reçu." — Réponds-lui.',
+    'Voici le message d\'un client : "Mon chien refuse de manger ses croquettes depuis 3 jours, que faire ?" — Réponds-lui.',
+    'Voici le message d\'un client : "Comment puis-je me désabonner de la newsletter ?" — Réponds-lui.',
   ],
   antoine: [
     'Génère le rapport financier mensuel avec revenus, dépenses et marges.',
@@ -69,14 +69,20 @@ const QUICK_TASKS: Record<string, string[]> = {
   ],
   nathalie: [
     'Effectue un audit de sécurité complet de l\'application Next.js.',
-    'Analyse les 10 derniers logs de sécurité et identifie les menaces potentielles.',
+    'Analyse les derniers logs de sécurité et identifie les menaces potentielles.',
     'Génère un rapport sur les bonnes pratiques de sécurité à implémenter en priorité.',
   ],
   sofia: [
-    'Rédige la newsletter hebdomadaire en sélectionnant 3 articles sur les soins des animaux de compagnie.',
-    'Crée une newsletter spéciale "rentrée" avec des conseils pour les propriétaires d\'animaux.',
+    'Rédige la newsletter de cette semaine.',
+    'Crée une newsletter spéciale "été" avec des conseils pour les propriétaires d\'animaux.',
     'Rédige une newsletter de bienvenue pour les nouveaux abonnés de Mes Poilus.',
   ],
+};
+
+const AGENT_HINTS: Record<string, string> = {
+  marie: '💡 Donne-lui un sujet — ex: "écris un article sur l\'alimentation du chien en été"',
+  lucas: '💡 Donne-lui un animal + saison — ex: "meilleurs sujets pour les chats cet automne"',
+  lea:   '💡 Colle-lui le message du client à traiter — elle répondra à sa place',
 };
 
 function getLogLink(log: ActivityLog): string | null {
@@ -170,6 +176,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
   }
 
   const quickTasks = QUICK_TASKS[agent.id] ?? [];
+  const agentHint = AGENT_HINTS[agent.id] ?? null;
   const heroSrc = photo?.url ?? placeholderSrc ?? '/images/agents/thomas.svg';
   const heroAlt = photo?.alt ?? `${agent.name} - ${agent.role}`;
   const isExternalImage = heroSrc.startsWith('http');
@@ -267,6 +274,11 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) runTask(task);
                 }}
               />
+              {agentHint && (
+                <p className="text-[10px] text-amber-400/80 bg-amber-400/5 border border-amber-400/20 rounded-lg px-3 py-2 mb-3 leading-relaxed">
+                  {agentHint}
+                </p>
+              )}
               <button
                 onClick={() => runTask(task)}
                 disabled={isLoading || !task.trim()}
