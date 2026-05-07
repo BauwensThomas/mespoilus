@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPhotoForArticle } from '@/lib/unsplash';
+import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 
 async function dbFetch(path: string, method: string, body?: unknown, params?: string) {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -61,9 +62,26 @@ async function saveEmma(content: string) {
     reptile:'https://images.unsplash.com/photo-1519439050986-9cd34fc28ddc?w=1200&q=80',
     default:'https://images.unsplash.com/photo-1444212477490-ca407925329e?w=1200&q=80',
   };
-  const query = hashtags[0]?.replace('#', '') || 'animaux';
-  const fallbackKey = Object.keys(FALLBACK).find(k => k !== 'default' && query.toLowerCase().includes(k));
-  const imageUrl = FALLBACK[fallbackKey ?? 'default'];
+
+  // 1. Essayer de récupérer l'image de l'article promu (même URL Supabase que le blog)
+  let imageUrl: string | null = null;
+  const slugMatch = postContent.match(/mespoilus\.com\/blog\/([a-z0-9-]+)/);
+  if (slugMatch) {
+    try {
+      const { data } = await dbFetch('articles', 'GET', undefined, `slug=eq.${slugMatch[1]}&select=image_url`);
+      const rows = data as { image_url: string | null }[] | null;
+      imageUrl = rows?.[0]?.image_url ?? null;
+    } catch { /* fallback */ }
+  }
+
+  // 2. Fallback : télécharger + stocker l'image catégorie dans Supabase Storage
+  if (!imageUrl) {
+    const query = hashtags[0]?.replace('#', '') || 'animaux';
+    const fallbackKey = Object.keys(FALLBACK).find(k => k !== 'default' && query.toLowerCase().includes(k));
+    const fallbackUnsplashUrl = FALLBACK[fallbackKey ?? 'default'];
+    imageUrl = await downloadAndStorePhoto(fallbackUnsplashUrl, `fallback-${fallbackKey ?? 'default'}.jpg`)
+      ?? fallbackUnsplashUrl;
+  }
 
   for (const platform of ['facebook', 'instagram']) {
     const r = await dbFetch('social_posts', 'POST', { content: postContent, platform, hashtags, status: 'draft' });
@@ -128,12 +146,17 @@ async function saveMarie(content: string) {
     ]);
   } catch { /* ignore */ }
 
+  let storedImageUrl = imageData?.url ?? null;
+  if (imageData?.url) {
+    storedImageUrl = await downloadAndStorePhoto(imageData.url, `article-${Date.now()}.jpg`) ?? imageData.url;
+  }
+
   const res = await dbFetch('articles', 'POST', {
     title, slug, content: articleContent, excerpt, category, categories,
     seo_keywords: seoKeywords, meta_description: metaDescription,
     reading_time: readingTime, status: 'published',
     published_at: new Date().toISOString(),
-    image_url: imageData?.url ?? null, image_alt: imageData?.alt ?? null,
+    image_url: storedImageUrl, image_alt: imageData?.alt ?? null,
     image_credit: imageData?.credit ?? null, image_credit_url: imageData?.creditUrl ?? null,
   });
   // Si conflict slug → upsert via PATCH
