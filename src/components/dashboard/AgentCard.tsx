@@ -5,13 +5,15 @@ import clsx from 'clsx';
 import { Agent, AgentStat } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { MonthlyAgentStat } from '@/app/(admin)/dashboard/page';
 
 interface AgentCardProps {
   agent: Agent;
   stat?: AgentStat;
+  monthly?: MonthlyAgentStat;
 }
 
-export default function AgentCard({ agent, stat }: AgentCardProps) {
+export default function AgentCard({ agent, stat, monthly }: AgentCardProps) {
   const lastActive = stat?.last_active
     ? formatDistanceToNow(new Date(stat.last_active), { addSuffix: true, locale: fr })
     : 'Jamais';
@@ -67,8 +69,16 @@ export default function AgentCard({ agent, stat }: AgentCardProps) {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 relative">
-          <Stat label="Tâches" value={stat?.tasks_completed ?? 0} />
-          <Stat label="Tokens" value={formatTokens(stat?.total_tokens_used ?? 0)} />
+          <Stat
+            label="Tâches"
+            value={stat?.tasks_completed ?? 0}
+            monthly={monthly?.tasks}
+          />
+          <Stat
+            label="Tokens"
+            value={formatTokens(stat?.total_tokens_used ?? 0)}
+            monthly={monthly?.tokens !== undefined ? formatTokens(monthly.tokens) : undefined}
+          />
           <Stat label="Score" value={`${score.toFixed(0)}%`} highlight={score >= 80} />
         </div>
 
@@ -84,13 +94,23 @@ export default function AgentCard({ agent, stat }: AgentCardProps) {
   );
 }
 
-function Stat({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
+function Stat({ label, value, highlight, monthly }: {
+  label: string;
+  value: string | number;
+  highlight?: boolean;
+  monthly?: string | number;
+}) {
   return (
     <div className="bg-[#1e1e1e] border border-[#3a3a3a] rounded-lg p-2 text-center">
       <div className={clsx('text-sm font-bold', highlight ? 'text-emerald-400' : 'text-white')}>
         {value}
       </div>
       <div className="text-[9px] text-gray-300 uppercase tracking-wide mt-0.5">{label}</div>
+      {monthly !== undefined && (
+        <div className="text-[9px] text-gray-500 mt-1 border-t border-[#2a2a2a] pt-1">
+          <span className="text-amber-400 font-medium">{monthly}</span> ce mois
+        </div>
+      )}
     </div>
   );
 }

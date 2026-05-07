@@ -26,6 +26,21 @@ export async function GET(req: Request) {
   const globalStart = Date.now();
   const supabase = createAdminClient();
 
+  // Éviter les doublons : vérifier si une newsletter a déjà été envoyée dans les 5 derniers jours
+  const since = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: recentSent } = await supabase
+    .from('newsletter_campaigns')
+    .select('id')
+    .eq('status', 'sent')
+    .gte('sent_at', since)
+    .limit(1)
+    .maybeSingle();
+
+  if (recentSent) {
+    console.log('[Cron Newsletter] Newsletter déjà envoyée cette semaine, abandon.');
+    return NextResponse.json({ success: false, reason: 'already_sent_this_week' });
+  }
+
   // Récupérer les 3 derniers articles publiés
   const { data: articles } = await supabase
     .from('articles')
