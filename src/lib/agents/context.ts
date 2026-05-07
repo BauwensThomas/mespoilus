@@ -9,30 +9,76 @@ export async function buildEnrichedPrompt(
 ): Promise<string> {
   try {
     if (agentId === 'antoine') {
-      const [articlesRes, socialRes, statsRes] = await Promise.all([
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+      const lastMonthName = startOfLastMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+      const [articlesRes, socialRes, statsRes, monthlyLogsRes, lastMonthLogsRes, monthlyArticlesRes] = await Promise.all([
         supabase.from('articles').select('id', { count: 'exact', head: true }).eq('status', 'published'),
         supabase.from('social_posts').select('id', { count: 'exact', head: true }),
         supabase.from('agent_stats').select('agent_id, tasks_completed, total_tokens_used'),
+        supabase.from('activity_logs').select('status, tokens_used').gte('created_at', startOfMonth.toISOString()),
+        supabase.from('activity_logs').select('status, tokens_used').gte('created_at', startOfLastMonth.toISOString()).lte('created_at', endOfLastMonth.toISOString()),
+        supabase.from('articles').select('id', { count: 'exact', head: true }).eq('status', 'published').gte('published_at', startOfMonth.toISOString()),
       ]);
+
       const articleCount = articlesRes.count ?? 0;
       const postCount = socialRes.count ?? 0;
       const stats = (statsRes.data ?? []) as Array<{ agent_id: string; tasks_completed: number; total_tokens_used: number }>;
       const totalTokens = stats.reduce((s, r) => s + (r.total_tokens_used ?? 0), 0);
       const totalTasks = stats.reduce((s, r) => s + (r.tasks_completed ?? 0), 0);
-      const apiCostEur = ((totalTokens / 1_000_000) * 3).toFixed(2);
+
+      // Stats mois courant
+      const monthlyLogs = monthlyLogsRes.data ?? [];
+      const monthlyTasks = monthlyLogs.filter((r: { status: string }) => r.status === 'success').length;
+      const monthlyTokens = monthlyLogs.reduce((s: number, r: { tokens_used: number | null }) => s + (r.tokens_used ?? 0), 0);
+      const monthlyCost = ((monthlyTokens / 1_000_000) * 3).toFixed(2);
+      const monthlyArticles = monthlyArticlesRes.count ?? 0;
+
+      // Stats mois précédent
+      const lastMonthLogs = lastMonthLogsRes.data ?? [];
+      const lastMonthTasks = lastMonthLogs.filter((r: { status: string }) => r.status === 'success').length;
+      const lastMonthTokens = lastMonthLogs.reduce((s: number, r: { tokens_used: number | null }) => s + (r.tokens_used ?? 0), 0);
+      const lastMonthCost = ((lastMonthTokens / 1_000_000) * 3).toFixed(2);
+
+      const totalCostEur = ((totalTokens / 1_000_000) * 3).toFixed(2);
+      const tokenTrend = lastMonthTokens > 0
+        ? ((monthlyTokens - lastMonthTokens) / lastMonthTokens * 100).toFixed(0)
+        : null;
 
       return `${baseTask}
 
-Données réelles du système (aujourd'hui) :
-- Articles publiés sur le blog : ${articleCount}
-- Posts réseaux sociaux créés : ${postCount}
-- Tâches complétées par tous les agents : ${totalTasks}
-- Tokens IA consommés total : ${totalTokens.toLocaleString('fr-FR')}
-- Coût API estimé : ~${apiCostEur} €
-- Sources de revenus actives : blog (SEO/affiliation), réseaux sociaux (trafic)
-- Dépenses fixes : Supabase (~25€/mois), Vercel (~20€/mois), API Anthropic (variable)
+Données réelles du système :
 
-Base ces analyses sur ces chiffres réels.`;
+— Total depuis le début —
+- Articles publiés : ${articleCount}
+- Posts réseaux sociaux : ${postCount}
+- Tâches agents total : ${totalTasks}
+- Tokens IA total : ${totalTokens.toLocaleString('fr-FR')}
+- Coût API total estimé : ~${totalCostEur} €
+
+— ${monthName} (mois en cours) —
+- Articles publiés ce mois : ${monthlyArticles}
+- Tâches complétées ce mois : ${monthlyTasks}
+- Tokens consommés ce mois : ${monthlyTokens.toLocaleString('fr-FR')}
+- Coût API ce mois : ~${monthlyCost} €
+
+— ${lastMonthName} (mois précédent) —
+- Tâches complétées : ${lastMonthTasks}
+- Tokens consommés : ${lastMonthTokens.toLocaleString('fr-FR')}
+- Coût API : ~${lastMonthCost} €
+${tokenTrend !== null ? `- Évolution tokens vs mois précédent : ${Number(tokenTrend) >= 0 ? '+' : ''}${tokenTrend}%` : ''}
+
+— Dépenses fixes mensuelles —
+- Supabase : ~25 €/mois
+- Vercel : ~20 €/mois
+- API Anthropic : variable (~${monthlyCost} € ce mois)
+- Sources de revenus actives : blog (SEO/affiliation), réseaux sociaux (trafic)
+
+Base tes analyses et recommandations sur ces chiffres réels mois par mois.`;
     }
 
     if (agentId === 'nathalie') {

@@ -28,6 +28,7 @@ interface AgentPageProps {
   recentLogs: ActivityLog[];
   photo?: UnsplashPhoto | null;
   placeholderSrc?: string;
+  monthly?: { tasks: number; failed: number; tokens: number };
 }
 
 const QUICK_TASKS: Record<string, string[]> = {
@@ -86,7 +87,7 @@ function getLogLink(log: ActivityLog): string | null {
   return null;
 }
 
-export default function AgentPage({ agent, stat, recentLogs, photo, placeholderSrc }: AgentPageProps) {
+export default function AgentPage({ agent, stat, recentLogs, photo, placeholderSrc, monthly }: AgentPageProps) {
   const [task, setTask] = useState('');
   const [response, setResponse] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -229,9 +230,17 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
               <p className="text-gray-200 text-sm mt-2 leading-relaxed">{agent.description}</p>
 
               <div className="flex flex-wrap gap-6 mt-4">
-                <StatInline label="Tâches complétées" value={stat?.tasks_completed ?? 0} />
-                <StatInline label="Tâches échouées" value={stat?.tasks_failed ?? 0} color="text-red-400" />
-                <StatInline label="Tokens utilisés" value={formatTokens(stat?.total_tokens_used ?? 0)} />
+                <StatInline
+                  label="Tâches complétées"
+                  value={stat?.tasks_completed ?? 0}
+                  monthly={monthly?.tasks ?? 0}
+                />
+                <StatInline label="Tâches échouées" value={stat?.tasks_failed ?? 0} color="text-red-400" monthly={monthly?.failed ?? 0} monthlyColor="text-red-400" />
+                <StatInline
+                  label="Tokens utilisés"
+                  value={formatTokens(stat?.total_tokens_used ?? 0)}
+                  monthly={formatTokens(monthly?.tokens ?? 0)}
+                />
                 {stat?.last_active && (
                   <StatInline
                     label="Dernière activité"
@@ -532,11 +541,16 @@ function DelegationCard({ delegation }: { delegation: DelegationResult }) {
   );
 }
 
-function StatInline({ label, value, color }: { label: string; value: string | number; color?: string }) {
+function StatInline({ label, value, color, monthly, monthlyColor }: { label: string; value: string | number; color?: string; monthly?: string | number; monthlyColor?: string }) {
   return (
     <div>
       <div className={clsx('text-sm font-bold', color ?? 'text-white')}>{value}</div>
       <div className="text-[10px] text-gray-300">{label}</div>
+      {monthly !== undefined && (
+        <div className="text-[10px] text-gray-500 mt-0.5">
+          <span className={clsx('font-medium', monthlyColor ?? 'text-amber-400')}>{monthly}</span> ce mois
+        </div>
+      )}
     </div>
   );
 }
