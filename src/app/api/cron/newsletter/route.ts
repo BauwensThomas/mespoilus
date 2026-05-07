@@ -46,9 +46,12 @@ export async function GET(req: Request) {
 
   try {
     // ── Étape 1 : Sofia génère la newsletter ──────────────────────────────────
+    const currentYear = new Date().getFullYear();
     const sofiaPrompt = `Crée la newsletter de Mes Poilus avec les meilleurs articles récents :
 
 ${articlesStr}
+
+Année actuelle : ${currentYear} (utilise cette année dans le footer copyright).
 
 Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": "..." }`;
 

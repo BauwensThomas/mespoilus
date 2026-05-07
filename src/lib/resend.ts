@@ -48,9 +48,14 @@ export async function sendBulkNewsletter({
   let sent = 0;
   let failed = 0;
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mespoilus.com';
+
   for (const email of subscribers) {
     try {
-      await sendEmail({ to: email, subject, html });
+      const token = Buffer.from(email).toString('base64url');
+      const unsubscribeUrl = `${appUrl}/api/newsletter/unsubscribe?t=${token}`;
+      const personalizedHtml = html.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl);
+      await sendEmail({ to: email, subject, html: personalizedHtml });
       sent++;
       await new Promise((r) => setTimeout(r, 120)); // ~8 req/s, sous la limite Resend
     } catch (err) {
