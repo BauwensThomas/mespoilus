@@ -60,6 +60,7 @@ export async function GET(req: Request) {
   let articleSlug = '';
   let articleTitle = '';
   let articleExcerpt = '';
+  let pipelineTokens = 0;
   const errors: string[] = [];
 
   // ─── ÉTAPE 1 : Thomas prépare le contexte ────────────────────────────────
@@ -111,6 +112,7 @@ MOTS_CLES: [mot1, mot2, mot3, mot4, mot5]
 INTENTION: [ce que cherche l'internaute]`;
 
     const lucasResult = await executeAgentTask('lucas', lucasPrompt);
+    pipelineTokens += lucasResult.tokens_used ?? 0;
     if (lucasResult.success) {
       const subjectMatch = lucasResult.content.match(/SUJET:\s*(.+)/i);
       const keywordsMatch = lucasResult.content.match(/MOTS_CLES:\s*(.+)/i);
@@ -146,6 +148,7 @@ Formule ainsi : 'Un [type produit] de qualité peut vraiment aider...' puis renv
 C'est un article de CONSEILS PRATIQUES destiné aux propriétaires francophones. Ton bienveillant, accessible, utile.`;
 
     const marieResult = await executeAgentTask('marie', mariePrompt);
+    pipelineTokens += marieResult.tokens_used ?? 0;
     if (!marieResult.success) throw new Error(marieResult.error ?? 'Marie a échoué');
 
     const slugMatch = marieResult.content.match(/^slug:\s*(.+)/m);
@@ -238,14 +241,14 @@ C'est un article de CONSEILS PRATIQUES destiné aux propriétaires francophones.
 
   // Incrémenter les stats de Thomas (orchestrateur du cron)
   try {
-    const existing = await supabase.from('agent_stats').select('tasks_completed').eq('agent_id', 'thomas').maybeSingle();
+    const existing = await supabase.from('agent_stats').select('tasks_completed,total_tokens_used').eq('agent_id', 'thomas').maybeSingle();
     if (existing.error) console.error('[thomas-stats] select erreur:', existing.error.message);
     const row = existing.data;
     if (!row) {
-      const ins = await supabase.from('agent_stats').insert({ agent_id: 'thomas', tasks_completed: 1, tasks_failed: 0, total_tokens_used: 0, last_active: new Date().toISOString() });
+      const ins = await supabase.from('agent_stats').insert({ agent_id: 'thomas', tasks_completed: 1, tasks_failed: 0, total_tokens_used: pipelineTokens, last_active: new Date().toISOString() });
       console.log('[thomas-stats] insert:', ins.error ? ins.error.message : 'OK');
     } else {
-      const upd = await supabase.from('agent_stats').update({ tasks_completed: (row.tasks_completed ?? 0) + 1, last_active: new Date().toISOString() }).eq('agent_id', 'thomas');
+      const upd = await supabase.from('agent_stats').update({ tasks_completed: (row.tasks_completed ?? 0) + 1, total_tokens_used: (row.total_tokens_used ?? 0) + pipelineTokens, last_active: new Date().toISOString() }).eq('agent_id', 'thomas');
       console.log('[thomas-stats] update:', upd.error ? upd.error.message : 'OK');
     }
   } catch (err) {
