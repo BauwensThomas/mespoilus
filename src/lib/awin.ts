@@ -52,22 +52,30 @@ export async function fetchAwinProducts(
     const res = await fetch(
       `${AWIN_API_BASE}/publishers/${publisherId}/product-search?` +
         new URLSearchParams({
-          accessToken: apiToken,
           searchPhrase: search,
           minPrice: '0',
           maxPrice: '999',
           pageSize: String(limit),
           page: '1',
         }),
-      { next: { revalidate: 86400 } } // Cache 24h
+      {
+        headers: {
+          Authorization: `Bearer ${apiToken}`, // ✅ token en header
+        },
+        next: { revalidate: 86400 },
+      }
     );
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error('Awin API error:', res.status, await res.text());
+      return [];
+    }
 
     const json = await res.json();
     const products: AwinRawProduct[] = json.products ?? [];
     return products.map((p) => mapAwinProduct(p, category));
-  } catch {
+  } catch (err) {
+    console.error('Awin fetch failed:', err);
     return [];
   }
 }
