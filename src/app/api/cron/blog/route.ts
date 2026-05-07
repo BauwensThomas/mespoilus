@@ -32,13 +32,15 @@ function getISOWeek(date: Date): number {
 async function logActivity(
   agentId: string, agentName: string, action: string,
   status: 'success' | 'error', durationMs: number,
-  details: Record<string, unknown> = {}
+  details: Record<string, unknown> = {},
+  tokensUsed = 0
 ) {
   try {
     const supabase = createAdminClient();
     await supabase.from('activity_logs').insert({
       agent_id: agentId, agent_name: agentName,
       action, status, duration_ms: durationMs, details,
+      tokens_used: tokensUsed,
     });
   } catch { /* non-bloquant */ }
 }
@@ -265,6 +267,14 @@ C'est un article de CONSEILS PRATIQUES destiné aux propriétaires francophones.
   } catch (err) {
     console.error('[thomas-stats] exception:', err instanceof Error ? err.message : err);
   }
+
+  await logActivity('thomas', 'Thomas',
+    `[Cron blog] terminé — ${articleSlug || 'échec'}`,
+    errors.length === 0 ? 'success' : 'error',
+    totalDuration,
+    { slug: articleSlug, animal, season, errors },
+    pipelineTokens
+  );
 
   console.log(`[Cron1] Terminé en ${totalDuration}ms — slug=${articleSlug}`);
 
