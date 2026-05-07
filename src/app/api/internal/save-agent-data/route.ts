@@ -65,36 +65,32 @@ async function saveEmma(content: string) {
   const fallbackKey = Object.keys(FALLBACK).find(k => k !== 'default' && query.toLowerCase().includes(k));
   const imageUrl = FALLBACK[fallbackKey ?? 'default'];
 
-  // Instagram non connecté → facebook seulement pour l'instant
-  const platforms = ['facebook'];
-  for (const platform of platforms) {
+  for (const platform of ['facebook', 'instagram']) {
     const r = await dbFetch('social_posts', 'POST', { content: postContent, platform, hashtags, status: 'draft' });
     console.log(`[save-agent] Emma social_posts ${platform}:`, r.ok ? 'OK' : `erreur ${r.status}`);
   }
 
+  // Un seul webhook → Make déclenche Facebook puis Instagram en séquence
   const makeUrl = process.env.MAKE_WEBHOOK_URL;
   if (makeUrl) {
-    for (const platform of platforms) {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 5000);
-      try {
-        const res = await fetch(makeUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            platform,
-            content: postContent.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim(),
-            hashtags: hashtags.join(' '),
-            image_url: imageUrl,
-          }),
-          signal: ctrl.signal,
-        });
-        clearTimeout(t);
-        console.log(`[save-agent] Emma webhook ${platform}:`, res.ok ? 'OK' : `erreur ${res.status}`);
-      } catch (err) {
-        clearTimeout(t);
-        console.log(`[save-agent] Emma webhook ${platform} exception:`, err instanceof Error ? err.message : err);
-      }
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    try {
+      const res = await fetch(makeUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: postContent.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim(),
+          hashtags: hashtags.join(' '),
+          image_url: imageUrl,
+        }),
+        signal: ctrl.signal,
+      });
+      clearTimeout(t);
+      console.log('[save-agent] Emma webhook:', res.ok ? 'OK' : `erreur ${res.status}`);
+    } catch (err) {
+      clearTimeout(t);
+      console.log('[save-agent] Emma webhook exception:', err instanceof Error ? err.message : err);
     }
   }
 }
