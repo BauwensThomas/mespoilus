@@ -4,6 +4,7 @@ import AgentCard from '@/components/dashboard/AgentCard';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
 import GlobalStats from '@/components/dashboard/GlobalStats';
 import CronLauncher from '@/components/dashboard/CronLauncher';
+import AutoRefresh from '@/components/dashboard/AutoRefresh';
 import { AgentStat, ActivityLog } from '@/types';
 
 export const revalidate = 30;
@@ -40,6 +41,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="px-8 py-8 space-y-8 animate-fade-in">
+      <AutoRefresh intervalMs={30000} />
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
