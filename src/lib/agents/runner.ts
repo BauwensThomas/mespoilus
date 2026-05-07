@@ -335,10 +335,13 @@ async function saveSocialPost(content: string) {
   const hashtags = postContent.match(/#[\wÀ-ɏ]+/g) || [];
   console.log('[Emma] hashtags:', hashtags.length);
 
-  // Appel fire-and-forget vers la route interne — son propre timeout Vercel
-  const appUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000');
+  // Préférer NEXT_PUBLIC_APP_URL (domaine custom sans protection Vercel)
+  const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+  const appUrl = (rawAppUrl && !rawAppUrl.startsWith('http://localhost'))
+    ? rawAppUrl
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 3000);
   try {
