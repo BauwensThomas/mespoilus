@@ -19,13 +19,17 @@ async function getDashboardData() {
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const [statsRes, logsRes, articlesRes, securityRes, monthlyRes] = await Promise.all([
+    const [statsRes, logsRes, articlesRes, securityRes, monthlyRes, monthlySecurityRes] = await Promise.all([
       supabase.from('agent_stats').select('*'),
       supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(20),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published'),
       supabase.from('security_logs').select('id', { count: 'exact' }).in('threat_level', ['high', 'critical']),
       supabase.from('activity_logs')
         .select('agent_id, status, tokens_used')
+        .gte('created_at', startOfMonth.toISOString()),
+      supabase.from('security_logs')
+        .select('id', { count: 'exact' })
+        .in('threat_level', ['high', 'critical'])
         .gte('created_at', startOfMonth.toISOString()),
     ]);
 
@@ -38,20 +42,33 @@ async function getDashboardData() {
 
     // Stats mensuelles par agent
     const monthlyByAgent: Record<string, MonthlyAgentStat> = {};
+    let monthlyTasks = 0;
+    let monthlyTokens = 0;
     for (const row of (monthlyRes.data ?? [])) {
       if (!monthlyByAgent[row.agent_id]) monthlyByAgent[row.agent_id] = { tasks: 0, tokens: 0 };
-      if (row.status === 'success') monthlyByAgent[row.agent_id].tasks++;
+      if (row.status === 'success') { monthlyByAgent[row.agent_id].tasks++; monthlyTasks++; }
       monthlyByAgent[row.agent_id].tokens += row.tokens_used ?? 0;
+      monthlyTokens += row.tokens_used ?? 0;
     }
 
-    return { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, monthlyByAgent };
+    // Articles publiés ce mois
+    const monthlyArticlesRes = await supabase
+      .from('articles')
+      .select('id', { count: 'exact' })
+      .eq('status', 'published')
+      .gte('published_at', startOfMonth.toISOString());
+    const monthlyArticles = monthlyArticlesRes.count ?? 0;
+
+    const monthlySecurityAlerts = monthlySecurityRes.count ?? 0;
+
+    return { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts };
   } catch {
-    return { stats: [], logs: [], totalArticles: 0, totalTasks: 0, totalTokens: 0, securityAlerts: 0, monthlyByAgent: {} };
+    return { stats: [], logs: [], totalArticles: 0, totalTasks: 0, totalTokens: 0, securityAlerts: 0, monthlyByAgent: {}, monthlyTasks: 0, monthlyTokens: 0, monthlyArticles: 0, monthlySecurityAlerts: 0 };
   }
 }
 
 export default async function DashboardPage() {
-  const { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, monthlyByAgent } = await getDashboardData();
+  const { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts } = await getDashboardData();
   const agents = getAllAgents();
 
   const statByAgent = Object.fromEntries(stats.map((s) => [s.agent_id, s]));
@@ -76,6 +93,10 @@ export default async function DashboardPage() {
         totalTasks={totalTasks}
         totalTokens={totalTokens}
         securityAlerts={securityAlerts}
+        monthlyArticles={monthlyArticles}
+        monthlyTasks={monthlyTasks}
+        monthlyTokens={monthlyTokens}
+        monthlySecurityAlerts={monthlySecurityAlerts}
       />
 
       {/* Feed d'activité horizontal */}
