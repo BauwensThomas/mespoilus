@@ -97,7 +97,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
               onClick={(e) => e.stopPropagation()}
               className="absolute bottom-2 right-2 text-[9px] text-white/50 hover:text-white/80 transition-colors bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm"
             >
-              📷 {article.image_credit} / Unsplash
+              📷 {article.image_credit} / Pexels
             </a>
           )}
         </div>

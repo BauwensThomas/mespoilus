@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
-import { getPhotoForArticle } from '@/lib/unsplash';
+import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 
 const ANIMAL_CATEGORIES = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
@@ -186,7 +186,7 @@ C'est un article de CONSEILS PRATIQUES destiné aux propriétaires francophones.
         if (!imageUrl) {
           console.log(`[Cron1] Image: téléchargement pour catégorie "${animal}"...`);
           const photo = await Promise.race([
-            getPhotoForArticle(articleTitle || sujet, animal),
+            getPhotoForCategory(animal),
             new Promise<null>(r => setTimeout(() => r(null), 5000)),
           ]);
           if (photo) {
