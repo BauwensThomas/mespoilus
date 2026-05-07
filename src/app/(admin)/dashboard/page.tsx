@@ -3,6 +3,7 @@ import { getAllAgents } from '@/lib/agents/config';
 import AgentCard from '@/components/dashboard/AgentCard';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
 import GlobalStats from '@/components/dashboard/GlobalStats';
+import CronLauncher from '@/components/dashboard/CronLauncher';
 import { AgentStat, ActivityLog } from '@/types';
 
 export const revalidate = 30;
@@ -47,6 +48,7 @@ export default async function DashboardPage() {
             Système multi-agents Mes Poilus
           </p>
         </div>
+        <CronLauncher />
       </div>
 
       {/* Stats globales */}
