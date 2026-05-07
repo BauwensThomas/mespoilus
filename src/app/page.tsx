@@ -373,10 +373,6 @@ export default async function LandingPage() {
             </p>
             <div className="flex items-center gap-4 text-xs text-gray-400">
               <span>Contenu rédigé par IA avec supervision humaine</span>
-              <span>•</span>
-              <Link href="/login" className="hover:text-gray-500 transition-colors">
-                Admin
-              </Link>
             </div>
           </div>
         </div>
