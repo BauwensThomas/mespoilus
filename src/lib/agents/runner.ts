@@ -38,6 +38,12 @@ export async function executeAgentTask(
       await saveFinancialReport(content, task);
     } else if (agentId === 'sofia') {
       await saveNewsletterDraft(content);
+    } else if (agentId === 'lucas') {
+      await saveSeoReport(content, task);
+    } else if (agentId === 'maxime') {
+      await saveTechReport(content, task);
+    } else if (agentId === 'lea') {
+      await saveSupportLog(content, task);
     }
     await logActivity(agentId, agent.name, task.slice(0, 200), 'success', duration, {
       content_length: content.length,
@@ -375,6 +381,54 @@ async function saveFinancialReport(content: string, period: string) {
   } catch {
     // Non-blocking
   }
+}
+
+async function saveSeoReport(content: string, topic: string) {
+  try {
+    const keywordsMatch = content.match(/MOTS_CLES:\s*(.+)/i);
+    const keywords = keywordsMatch?.[1]?.split(',').map((k) => k.trim()).filter(Boolean) ?? [];
+    const scoreMatch = content.match(/SCORE[^:]*:\s*(\d+)/i);
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
+
+    const supabase = createAdminClient();
+    await supabase.from('seo_reports').insert({
+      topic: topic.slice(0, 200),
+      keywords,
+      analysis: content.slice(0, 5000),
+      score,
+    });
+    console.log('[Lucas] SEO report sauvegardé');
+  } catch { /* non-bloquant */ }
+}
+
+async function saveTechReport(content: string, topic: string) {
+  try {
+    const lower = content.toLowerCase();
+    const severity =
+      lower.includes('critique') || lower.includes('critical') ? 'critical' :
+      lower.includes('élevé') || lower.includes('high') ? 'high' :
+      lower.includes('moyen') || lower.includes('medium') ? 'medium' :
+      lower.includes('faible') || lower.includes('low') ? 'low' : 'info';
+
+    const supabase = createAdminClient();
+    await supabase.from('tech_reports').insert({
+      topic: topic.slice(0, 200),
+      severity,
+      report: content.slice(0, 5000),
+    });
+    console.log('[Maxime] Tech report sauvegardé');
+  } catch { /* non-bloquant */ }
+}
+
+async function saveSupportLog(content: string, topic: string) {
+  try {
+    const supabase = createAdminClient();
+    await supabase.from('support_logs').insert({
+      topic: topic.slice(0, 200),
+      response: content.slice(0, 5000),
+    });
+    console.log('[Léa] Support log sauvegardé');
+  } catch { /* non-bloquant */ }
 }
 
 async function saveNewsletterDraft(content: string) {

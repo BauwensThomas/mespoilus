@@ -11,7 +11,7 @@ const navItems = [
   { href: '/orchestrate', label: 'Orchestrer', icon: '🎯' },
   { href: '/moderation', label: 'Modération',  icon: '🛡️' },
   { href: '/blog',       label: 'Blog',        icon: '📝' },
-  { href: '/boutique',   label: 'Boutique',    icon: '' },
+  { href: '/boutique',   label: 'Boutique',    icon: '🛍️' },
 ];
 
 export default function Sidebar() {

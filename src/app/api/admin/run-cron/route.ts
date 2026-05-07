@@ -1,13 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+type CronStep = 'blog' | 'social' | 'finance' | 'security' | 'newsletter';
+
+const CRON_PATHS: Record<CronStep, string> = {
+  blog:       '/api/cron/blog',
+  social:     '/api/cron/social',
+  finance:    '/api/cron/finance',
+  security:   '/api/cron/security',
+  newsletter: '/api/cron/newsletter',
+};
+
+export const maxDuration = 120;
+
 export async function POST(req: NextRequest) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
-  const { step } = await req.json() as { step: 'blog' | 'social' };
-  const cronPath = step === 'social' ? '/api/cron/social' : '/api/cron/blog';
+  const { step } = await req.json() as { step: CronStep };
+  const cronPath = CRON_PATHS[step];
+  if (!cronPath) return NextResponse.json({ error: 'Étape inconnue' }, { status: 400 });
+
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.startsWith('http://localhost'))
     ? process.env.NEXT_PUBLIC_APP_URL
     : process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
