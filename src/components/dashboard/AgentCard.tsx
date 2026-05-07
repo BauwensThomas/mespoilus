@@ -16,7 +16,9 @@ export default function AgentCard({ agent, stat }: AgentCardProps) {
     ? formatDistanceToNow(new Date(stat.last_active), { addSuffix: true, locale: fr })
     : 'Jamais';
 
-  const score = stat?.performance_score ?? 0;
+  const completed = stat?.tasks_completed ?? 0;
+  const failed = stat?.tasks_failed ?? 0;
+  const score = completed + failed > 0 ? (completed / (completed + failed)) * 100 : 0;
 
   return (
     <Link href={`/agents/${agent.id}`} className="block group">
