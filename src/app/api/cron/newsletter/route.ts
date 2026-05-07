@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
+import { sendBulkNewsletter } from '@/lib/resend';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -44,6 +45,7 @@ export async function GET(req: Request) {
     .join('\n\n');
 
   try {
+    // ── Étape 1 : Sofia génère la newsletter ──────────────────────────────────
     const sofiaPrompt = `Crée la newsletter de Mes Poilus avec les meilleurs articles récents :
 
 ${articlesStr}
@@ -53,11 +55,59 @@ Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": 
     const result = await executeAgentTask('sofia', sofiaPrompt);
     if (!result.success) throw new Error(result.error ?? 'Sofia a échoué');
 
-    const duration = Date.now() - globalStart;
-    await logActivity('sofia', 'Sofia', `Newsletter créée — ${articles.length} articles`, 'success', duration);
-    console.log(`[Cron Newsletter] Terminé en ${duration}ms`);
+    // ── Étape 2 : Récupérer le brouillon que Sofia vient de sauvegarder ───────
+    const { data: campaign } = await supabase
+      .from('newsletter_campaigns')
+      .select('id, subject, content_html')
+      .eq('status', 'draft')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
-    return NextResponse.json({ success: true, duration_ms: duration, articles_count: articles.length });
+    if (!campaign?.content_html) throw new Error('Brouillon newsletter introuvable après génération');
+
+    // ── Étape 3 : Récupérer les abonnés actifs ────────────────────────────────
+    const { data: subscribers } = await supabase
+      .from('newsletter_subscribers')
+      .select('email')
+      .eq('status', 'active');
+
+    const emails = (subscribers ?? []).map((s: { email: string }) => s.email);
+
+    if (emails.length === 0) {
+      await logActivity('sofia', 'Sofia', 'Newsletter générée — aucun abonné actif', 'success', Date.now() - globalStart);
+      return NextResponse.json({ success: true, reason: 'no_subscribers', draft_saved: true });
+    }
+
+    // ── Étape 4 : Envoi via Resend ────────────────────────────────────────────
+    const { sent, failed } = await sendBulkNewsletter({
+      subject: campaign.subject,
+      html: campaign.content_html,
+      subscribers: emails,
+    });
+
+    // Marquer la campagne comme envoyée
+    await supabase
+      .from('newsletter_campaigns')
+      .update({
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+        recipients_count: emails.length,
+        sent_count: sent,
+        failed_count: failed,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', campaign.id);
+
+    const duration = Date.now() - globalStart;
+    await logActivity('sofia', 'Sofia',
+      `Newsletter envoyée — ${sent}/${emails.length} abonnés, ${articles.length} articles`,
+      failed === emails.length ? 'error' : 'success',
+      duration, { sent, failed, total: emails.length }
+    );
+    console.log(`[Cron Newsletter] Envoyée à ${sent}/${emails.length} abonnés en ${duration}ms`);
+
+    return NextResponse.json({ success: true, duration_ms: duration, sent, failed, total: emails.length });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erreur inconnue';
     await logActivity('sofia', 'Sofia', `Newsletter erreur: ${msg}`, 'error', Date.now() - globalStart);
