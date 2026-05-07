@@ -36,11 +36,12 @@ export async function GET(req: Request) {
     );
     const nathalieResult = await executeAgentTask('nathalie', nathaliePrompt);
     if (!nathalieResult.success) throw new Error(nathalieResult.error ?? 'Nathalie a échoué');
-    await logActivity('nathalie', 'Nathalie', 'Audit de sécurité complet', 'success', nathalieResult.duration_ms ?? 0);
+    await logActivity('thomas', 'Thomas', 'Cron sécurité : audit Nathalie terminé', 'success', nathalieResult.duration_ms ?? 0);
     console.log('[Cron Security] Nathalie OK');
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erreur inconnue';
     errors.push(`Nathalie: ${msg}`);
+    await logActivity('thomas', 'Thomas', `Cron sécurité erreur Nathalie: ${msg}`, 'error', 0);
     console.error('[Cron Security] Nathalie erreur:', msg);
   }
 
@@ -53,11 +54,12 @@ export async function GET(req: Request) {
     );
     const maximeResult = await executeAgentTask('maxime', maximePrompt);
     if (!maximeResult.success) throw new Error(maximeResult.error ?? 'Maxime a échoué');
-    await logActivity('maxime', 'Maxime', 'Audit technique complet', 'success', maximeResult.duration_ms ?? 0);
+    await logActivity('thomas', 'Thomas', 'Cron sécurité : audit Maxime terminé', 'success', maximeResult.duration_ms ?? 0);
     console.log('[Cron Security] Maxime OK');
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erreur inconnue';
     errors.push(`Maxime: ${msg}`);
+    await logActivity('thomas', 'Thomas', `Cron sécurité erreur Maxime: ${msg}`, 'error', 0);
     console.error('[Cron Security] Maxime erreur:', msg);
   }
 

@@ -28,17 +28,23 @@ export interface CategoryPhoto {
   creditUrl: string;
 }
 
-export async function getPhotoForCategory(category: string): Promise<CategoryPhoto | null> {
+export async function getPhotoForCategory(category: string, title?: string): Promise<CategoryPhoto | null> {
   const key = process.env.PEXELS_API_KEY;
   if (!key) {
     console.log('[pexels] PEXELS_API_KEY absent');
     return null;
   }
 
-  const query = CATEGORY_QUERIES[category] ?? CATEGORY_QUERIES.general;
+  const base = CATEGORY_QUERIES[category] ?? CATEGORY_QUERIES.general;
+  const titleWords = title
+    ? title.toLowerCase().replace(/[^\wÀ-ÿ\s]/g, '').split(/\s+/).filter(w => w.length > 4).slice(0, 2).join(' ')
+    : '';
+  const query = titleWords ? `${base} ${titleWords}` : base;
+  const page = Math.ceil(Math.random() * 5);
+
   try {
     const res = await fetch(
-      `${BASE_URL}/search?query=${encodeURIComponent(query)}&per_page=10&orientation=landscape`,
+      `${BASE_URL}/search?query=${encodeURIComponent(query)}&per_page=15&page=${page}&orientation=landscape`,
       { headers: { Authorization: key }, cache: 'no-store' }
     );
     if (!res.ok) {
