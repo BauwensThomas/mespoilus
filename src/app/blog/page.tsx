@@ -6,6 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
 import AdBanner from '@/components/ui/AdBanner';
+import { permanentRedirect } from 'next/navigation';
+
+const CATEGORY_SLUGS = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
 
 const BLOG_URL = '/blog';
 
@@ -64,6 +67,10 @@ interface Props {
 }
 
 export default async function BlogPage({ searchParams }: Props) {
+  if (searchParams.category && CATEGORY_SLUGS.includes(searchParams.category)) {
+    permanentRedirect(`/blog/${searchParams.category}`);
+  }
+
   const activeCategory = searchParams.category && searchParams.category !== 'all'
     ? searchParams.category
     : undefined;
