@@ -23,13 +23,7 @@ async function unsplashGet<T>(path: string): Promise<T | null> {
 async function trackDownload(downloadLocation: string): Promise<void> {
   const key = getKey();
   if (!key) return;
-  try {
-    await fetch(downloadLocation, {
-      headers: { Authorization: `Client-ID ${key}` },
-    });
-  } catch {
-    // Non-bloquant
-  }
+  fetch(downloadLocation, { headers: { Authorization: `Client-ID ${key}` } }).catch(() => {});
 }
 
 // ─── Types internes Unsplash REST ──────────────────────────────────────────────
