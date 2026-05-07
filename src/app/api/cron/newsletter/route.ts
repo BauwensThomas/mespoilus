@@ -3,7 +3,7 @@ import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 async function logActivity(
   agentId: string, agentName: string, action: string,
