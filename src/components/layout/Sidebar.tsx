@@ -27,7 +27,7 @@ export default function Sidebar() {
           </div>
           <div>
             <div className="font-bold text-white text-sm tracking-wide">Mes Poilus</div>
-            <div className="text-[10px] text-gray-500 uppercase tracking-wider">Multi-Agent System</div>
+            <div className="text-[10px] text-gray-300 uppercase tracking-wider">Multi-Agent System</div>
           </div>
         </Link>
       </div>
@@ -42,7 +42,7 @@ export default function Sidebar() {
               'flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 transition-all duration-150',
               pathname === href
                 ? 'bg-white/10 text-white font-medium'
-                : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                : 'text-gray-200 hover:text-white hover:bg-white/5'
             )}
           >
             <span>{icon}</span>
@@ -53,7 +53,7 @@ export default function Sidebar() {
 
       {/* Séparateur agents */}
       <div className="px-6 py-2">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-600">Agents</p>
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-300">Agents</p>
       </div>
 
       {/* Liste agents */}
@@ -68,15 +68,15 @@ export default function Sidebar() {
                 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 transition-all duration-150',
                 isActive
                   ? 'bg-white/10 text-white font-medium'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                  : 'text-gray-200 hover:text-white hover:bg-white/5'
               )}
             >
               <span className="text-base leading-none">{agent.icon}</span>
               <div className="min-w-0">
-                <div className={clsx('font-medium text-xs truncate', isActive ? 'text-white' : 'text-gray-300')}>
+                <div className={clsx('font-medium text-xs truncate', isActive ? 'text-white' : 'text-gray-100')}>
                   {agent.name}
                 </div>
-                <div className="text-[10px] text-gray-500 truncate">{agent.role}</div>
+                <div className="text-[10px] text-gray-300 truncate">{agent.role}</div>
               </div>
               <div className="ml-auto flex-shrink-0">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 opacity-70" />

@@ -13,8 +13,8 @@ function StatItem({ label, value, sub, icon }: StatItemProps) {
       </div>
       <div>
         <div className="text-2xl font-bold text-white tracking-tight">{value}</div>
-        <div className="text-xs text-gray-500 mt-0.5">{label}</div>
-        {sub && <div className="text-[10px] text-gray-600">{sub}</div>}
+        <div className="text-xs text-gray-200 mt-0.5">{label}</div>
+        {sub && <div className="text-[10px] text-gray-300">{sub}</div>}
       </div>
     </div>
   );

@@ -17,11 +17,11 @@ export default function ActivityFeed({ logs }: ActivityFeedProps) {
     <div className="card p-4">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold text-white">Activité récente</h2>
-        <span className="text-[10px] text-gray-500 uppercase tracking-wide">Live</span>
+        <span className="text-[10px] text-gray-300 uppercase tracking-wide">Live</span>
       </div>
 
       {logs.length === 0 ? (
-        <p className="text-xs text-gray-500 py-2">Aucune activité pour le moment</p>
+        <p className="text-xs text-gray-300 py-2">Aucune activité pour le moment</p>
       ) : (
         <div className="space-y-1.5 max-h-64 overflow-y-auto scrollbar-thin pr-1">
           {logs.slice(0, 20).map((log) => {
@@ -29,17 +29,17 @@ export default function ActivityFeed({ logs }: ActivityFeedProps) {
             return (
               <div
                 key={log.id}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#0d0d0d] transition-colors duration-150"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#333] transition-colors duration-150"
               >
                 <Link
                   href={`/agents/${log.agent_id}`}
-                  className={clsx('text-xs font-semibold flex-shrink-0 w-14 hover:underline', agent?.color ?? 'text-gray-400')}
+                  className={clsx('text-xs font-semibold flex-shrink-0 w-14 hover:underline', agent?.color ?? 'text-gray-200')}
                 >
                   {log.agent_name}
                 </Link>
                 <StatusBadge status={log.status} />
-                <p className="text-[11px] text-gray-400 flex-1 truncate">{log.action}</p>
-                <span className="text-[10px] text-gray-600 flex-shrink-0">
+                <p className="text-[11px] text-gray-100 flex-1 truncate">{log.action}</p>
+                <span className="text-[10px] text-gray-300 flex-shrink-0">
                   {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: fr })}
                 </span>
               </div>

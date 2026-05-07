@@ -136,7 +136,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
   return (
     <div className="animate-fade-in">
       {/* ── Hero photo ambiante ───────────────────────────────────────────── */}
-      <div className="relative w-full h-52 overflow-hidden bg-[#0d0d0d]">
+      <div className="relative w-full h-52 overflow-hidden bg-[#1e1e1e]">
         <Image
           src={heroSrc}
           alt={heroAlt}
@@ -146,12 +146,9 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
           sizes="100vw"
           unoptimized={!isExternalImage}
         />
-        {/* Overlay dégradé profond depuis le bas */}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent" />
-        {/* Overlay couleur de l'agent */}
         <div className={clsx('absolute inset-0 opacity-20', agent.bgColor)} />
 
-        {/* Crédit photo */}
         {photo?.credit && (
           <a
             href={photo.creditUrl}
@@ -166,7 +163,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
 
       {/* ── Contenu principal ─────────────────────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-6 pb-8 space-y-8 -mt-16 relative z-10">
-        {/* Agent Header flottant sur l'image */}
+        {/* Agent Header */}
         <div className={clsx('card p-6 border', agent.borderColor)}>
           <div className="flex items-start gap-5">
             <div
@@ -182,14 +179,14 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
             <div className="flex-1">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className={clsx('text-2xl font-bold', agent.color)}>{agent.name}</h1>
-                <span className="text-gray-500 text-sm">-</span>
-                <span className="text-gray-300 text-sm">{agent.role}</span>
+                <span className="text-gray-300 text-sm">-</span>
+                <span className="text-white text-sm">{agent.role}</span>
                 <div className="flex items-center gap-1.5 ml-auto">
                   <div className="status-dot-online" />
                   <span className="text-xs text-emerald-400">En ligne</span>
                 </div>
               </div>
-              <p className="text-gray-400 text-sm mt-2 leading-relaxed">{agent.description}</p>
+              <p className="text-gray-200 text-sm mt-2 leading-relaxed">{agent.description}</p>
 
               <div className="flex flex-wrap gap-6 mt-4">
                 <StatInline label="Tâches complétées" value={stat?.tasks_completed ?? 0} />
@@ -246,7 +243,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                       key={i}
                       onClick={() => { setTask(qt); runTask(qt); }}
                       disabled={isLoading}
-                      className="w-full text-left text-xs text-gray-400 hover:text-gray-200 bg-[#0d0d0d] hover:bg-[#1a1a1a] border border-[#222] hover:border-[#333] rounded-lg px-3 py-2 transition-all duration-150 disabled:opacity-50"
+                      className="w-full text-left text-xs text-gray-100 hover:text-white bg-[#2a2a2a] hover:bg-[#333] border border-[#484848] hover:border-[#666] rounded-lg px-3 py-2 transition-all duration-150 disabled:opacity-50"
                     >
                       {qt.length > 80 ? qt.slice(0, 80) + '…' : qt}
                     </button>
@@ -268,7 +265,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                   </div>
                 )}
                 {response && !isStreaming && (
-                  <button onClick={() => setResponse('')} className="text-xs text-gray-500 hover:text-gray-300">
+                  <button onClick={() => setResponse('')} className="text-xs text-gray-300 hover:text-white">
                     Effacer
                   </button>
                 )}
@@ -283,7 +280,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
               {response ? (
                 <div
                   ref={responseRef}
-                  className="flex-1 overflow-y-auto scrollbar-thin text-sm text-gray-300 leading-relaxed whitespace-pre-wrap font-mono bg-[#0a0a0a] rounded-lg p-4 border border-[#1a1a1a]"
+                  className="flex-1 overflow-y-auto scrollbar-thin text-sm text-gray-100 leading-relaxed whitespace-pre-wrap font-mono bg-[#1e1e1e] rounded-lg p-4 border border-[#404040]"
                 >
                   {response}
                   {isStreaming && <span className="inline-block w-1 h-4 bg-white/70 ml-0.5 animate-pulse" />}
@@ -291,8 +288,8 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
                   <div className="text-4xl mb-4">{agent.icon}</div>
-                  <p className="text-sm text-gray-500">{agent.name} attend une tâche</p>
-                  <p className="text-xs text-gray-600 mt-1">Tape ta demande ou utilise une tâche rapide</p>
+                  <p className="text-sm text-gray-200">{agent.name} attend une tâche</p>
+                  <p className="text-xs text-gray-300 mt-1">Tape ta demande ou utilise une tâche rapide</p>
                 </div>
               )}
             </div>
@@ -303,9 +300,9 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
         <div className="card p-5">
           <h2 className="text-sm font-semibold text-white mb-4">Historique d'activité</h2>
           {recentLogs.length === 0 ? (
-            <p className="text-xs text-gray-500 py-4 text-center">Aucune activité enregistrée</p>
+            <p className="text-xs text-gray-200 py-4 text-center">Aucune activité enregistrée</p>
           ) : (
-            <div className="divide-y divide-[#1a1a1a]">
+            <div className="divide-y divide-[#3a3a3a]">
               {recentLogs.map((log) => {
                 const link = getLogLink(log);
                 const isExpanded = expandedLog === log.id;
@@ -315,18 +312,18 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                   <div className="flex items-start gap-3">
                     <StatusDot status={log.status} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-300 truncate">{log.action}</p>
+                      <p className="text-xs text-gray-100 truncate">{log.action}</p>
                       {log.duration_ms && (
-                        <p className="text-[10px] text-gray-600 mt-0.5">{log.duration_ms}ms</p>
+                        <p className="text-[10px] text-gray-300 mt-0.5">{log.duration_ms}ms</p>
                       )}
                     </div>
-                    <span className="text-[10px] text-gray-600 flex-shrink-0">
+                    <span className="text-[10px] text-gray-300 flex-shrink-0">
                       {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: fr })}
                     </span>
                     {link
-                      ? <span className="text-[10px] text-blue-500 flex-shrink-0">→</span>
+                      ? <span className="text-[10px] text-blue-400 flex-shrink-0">→</span>
                       : hasDetails && (
-                          <span className="text-[10px] text-gray-500 flex-shrink-0">
+                          <span className="text-[10px] text-gray-300 flex-shrink-0">
                             {isExpanded ? '▲' : '▼'}
                           </span>
                         )
@@ -339,35 +336,34 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                     {link ? (
                       <Link
                         href={link}
-                        className="flex items-start gap-3 hover:bg-[#111] rounded-lg px-2 -mx-2 py-1 transition-colors duration-150"
+                        className="flex items-start gap-3 hover:bg-[#333] rounded-lg px-2 -mx-2 py-1 transition-colors duration-150"
                       >
                         <StatusDot status={log.status} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-300 truncate">{log.action}</p>
+                          <p className="text-xs text-gray-100 truncate">{log.action}</p>
                           {log.duration_ms && (
-                            <p className="text-[10px] text-gray-600 mt-0.5">{log.duration_ms}ms</p>
+                            <p className="text-[10px] text-gray-300 mt-0.5">{log.duration_ms}ms</p>
                           )}
                         </div>
-                        <span className="text-[10px] text-gray-600 flex-shrink-0">
+                        <span className="text-[10px] text-gray-300 flex-shrink-0">
                           {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: fr })}
                         </span>
-                        <span className="text-[10px] text-blue-500 flex-shrink-0">→</span>
+                        <span className="text-[10px] text-blue-400 flex-shrink-0">→</span>
                       </Link>
                     ) : (
                       <button
                         onClick={() => setExpandedLog(isExpanded ? null : log.id)}
                         disabled={!hasDetails}
-                        className="w-full text-left hover:bg-[#111] rounded-lg px-2 -mx-2 py-1 transition-colors duration-150 disabled:cursor-default"
+                        className="w-full text-left hover:bg-[#333] rounded-lg px-2 -mx-2 py-1 transition-colors duration-150 disabled:cursor-default"
                       >
                         {Row}
                       </button>
                     )}
 
-                    {/* Contenu généré expandable */}
                     {isExpanded && hasDetails && (
-                      <div className="mt-2 mb-1 mx-2 bg-[#0a0a0a] border border-[#1e1e1e] rounded-lg p-4 overflow-y-auto max-h-[500px]">
+                      <div className="mt-2 mb-1 mx-2 bg-[#1e1e1e] border border-[#404040] rounded-lg p-4 overflow-y-auto max-h-[500px]">
                         {typeof log.details.content === 'string' ? (
-                          <pre className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap font-mono">
+                          <pre className="text-xs text-gray-100 leading-relaxed whitespace-pre-wrap font-mono">
                             {log.details.content}
                           </pre>
                         ) : (
@@ -392,7 +388,7 @@ function StatInline({ label, value, color }: { label: string; value: string | nu
   return (
     <div>
       <div className={clsx('text-sm font-bold', color ?? 'text-white')}>{value}</div>
-      <div className="text-[10px] text-gray-600">{label}</div>
+      <div className="text-[10px] text-gray-300">{label}</div>
     </div>
   );
 }
