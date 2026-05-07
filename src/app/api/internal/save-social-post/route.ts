@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 
-const FALLBACK_BY_CATEGORY: Record<string, string> = {
-  chiens:   'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200&q=80',
-  chats:    'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&q=80',
-  oiseaux:  'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=1200&q=80',
-  rongeurs: 'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=1200&q=80',
-  reptiles: 'https://images.unsplash.com/photo-1519439050986-9cd34fc28ddc?w=1200&q=80',
-  general:  'https://images.unsplash.com/photo-1444212477490-ca407925329e?w=1200&q=80',
+const CATEGORY_QUERIES: Record<string, string> = {
+  chiens:   'cute dog puppy',
+  chats:    'cute cat kitten',
+  oiseaux:  'pet bird parrot',
+  rongeurs: 'rabbit hamster guinea pig',
+  reptiles: 'lizard reptile gecko',
+  general:  'pet animal cute',
 };
 
 async function supabaseFetch(path: string, method: string, body?: unknown, params?: string) {
@@ -37,36 +37,47 @@ async function supabaseFetch(path: string, method: string, body?: unknown, param
   }
 }
 
-async function getImageUrl(): Promise<string> {
-  // 1. Chercher l'image de l'article le plus récent (créé par le cron blog)
+async function getImageUrl(): Promise<string | null> {
+  // 1. Image de l'article le plus récent déjà stockée dans Supabase
   const res = await supabaseFetch('articles', 'GET', undefined,
-    'status=eq.published&order=published_at.desc&limit=1&select=image_url,category');
-  const rows = res.data as { image_url: string | null; category: string }[] | null;
-  const article = rows?.[0];
+    'status=eq.published&image_url=not.is.null&order=published_at.desc&limit=1&select=image_url,category');
+  const rows = res.data as { image_url: string; category: string }[] | null;
 
-  if (article?.image_url) {
-    console.log('[save-post] image article récent:', article.image_url.slice(0, 60));
-    return article.image_url;
+  if (rows?.[0]?.image_url) {
+    console.log('[save-post] image article récent:', rows[0].image_url.slice(0, 60));
+    return rows[0].image_url;
   }
 
-  // 2. Fallback catégorie : télécharger + stocker dans Supabase Storage
-  const category = article?.category ?? 'general';
-  const fallbackUnsplashUrl = FALLBACK_BY_CATEGORY[category] ?? FALLBACK_BY_CATEGORY.general;
-  const stored = await downloadAndStorePhoto(fallbackUnsplashUrl, `social-fallback-${category}.jpg`);
-  if (stored) {
-    console.log('[save-post] image fallback stockée Supabase:', stored.slice(0, 60));
-    return stored;
+  // 2. Fallback via API Unsplash (si clé disponible) + stockage Supabase
+  const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
+  if (!unsplashKey) {
+    console.log('[save-post] pas de clé Unsplash — post sans image');
+    return null;
   }
 
-  // 3. Dernier recours : URL Unsplash directe
-  console.log('[save-post] image fallback URL directe (Supabase KO)');
-  return fallbackUnsplashUrl;
+  const category = rows?.[0] ? 'general' : 'general';
+  const query = encodeURIComponent(CATEGORY_QUERIES[category] ?? CATEGORY_QUERIES.general);
+  try {
+    const apiRes = await fetch(
+      `https://api.unsplash.com/photos/random?query=${query}&orientation=landscape&content_filter=high`,
+      { headers: { Authorization: `Client-ID ${unsplashKey}` } }
+    );
+    if (!apiRes.ok) return null;
+    const photo = await apiRes.json() as { urls?: { regular?: string } };
+    const photoUrl = photo.urls?.regular;
+    if (!photoUrl) return null;
+
+    const stored = await downloadAndStorePhoto(photoUrl, `social-fallback-${category}.jpg`);
+    console.log('[save-post] image fallback Unsplash:', stored ? 'stockée' : 'échec stockage');
+    return stored ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function POST(req: NextRequest) {
   const { content, hashtags } = await req.json() as { content: string; hashtags: string[] };
 
-  // Récupérer l'image (article récent > fallback Supabase > fallback URL directe)
   const imageUrl = await getImageUrl();
 
   for (const platform of ['facebook', 'instagram']) {
@@ -79,14 +90,16 @@ export async function POST(req: NextRequest) {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 5000);
     try {
+      const body: Record<string, string> = {
+        content: content.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim(),
+        hashtags: hashtags.join(' '),
+      };
+      if (imageUrl) body.image_url = imageUrl;
+
       const res = await fetch(makeUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: content.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim(),
-          hashtags: hashtags.join(' '),
-          image_url: imageUrl,
-        }),
+        body: JSON.stringify(body),
         signal: ctrl.signal,
       });
       clearTimeout(t);
