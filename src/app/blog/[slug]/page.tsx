@@ -7,7 +7,6 @@ import { marked } from 'marked';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { CATEGORY_PLACEHOLDER } from '@/lib/unsplash';
 import AdBanner from '@/components/ui/AdBanner';
 
 interface Props {
@@ -22,7 +21,7 @@ async function getArticle(slug: string): Promise<Article | null> {
       .select('*')
       .eq('slug', slug)
       .eq('status', 'published')
-      .single();
+      .maybeSingle();
     return data as Article | null;
   } catch {
     return null;
@@ -67,6 +66,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+const CATEGORY_GRADIENT: Record<string, string> = {
+  chiens: 'from-amber-900/60 to-amber-950',
+  chats: 'from-purple-900/60 to-purple-950',
+  oiseaux: 'from-blue-900/60 to-blue-950',
+  rongeurs: 'from-orange-900/60 to-orange-950',
+  reptiles: 'from-emerald-900/60 to-emerald-950',
+  general: 'from-gray-800/60 to-gray-900',
+};
+
 const CATEGORY_LABELS: Record<string, string> = {
   chiens: '🐕 Chiens',
   chats: '🐈 Chats',
@@ -85,7 +93,7 @@ export default async function ArticlePage({ params }: Props) {
     ? format(new Date(article.published_at), 'd MMMM yyyy', { locale: fr })
     : '';
 
-  const heroImage = article.image_url || CATEGORY_PLACEHOLDER[article.category] || '/images/categories/general.svg';
+  const heroImage = article.image_url || null;
   const heroAlt = article.image_alt || article.title;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mespoilus.com';
@@ -136,16 +144,17 @@ export default async function ArticlePage({ params }: Props) {
       </div>
 
       {/* Hero image pleine largeur */}
-      <div className="relative w-full h-72 md:h-96 overflow-hidden bg-[#0d0d0d]">
-        <Image
-          src={heroImage}
-          alt={heroAlt}
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-          unoptimized={heroImage.endsWith('.svg')}
-        />
+      <div className={`relative w-full h-72 md:h-96 overflow-hidden bg-gradient-to-br ${CATEGORY_GRADIENT[article.category] ?? CATEGORY_GRADIENT.general}`}>
+        {heroImage && (
+          <Image
+            src={heroImage}
+            alt={heroAlt}
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
+          />
+        )}
         {/* Overlay dégradé profond */}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
 
