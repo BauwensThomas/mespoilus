@@ -9,11 +9,12 @@ export const maxDuration = 120;
 async function logActivity(
   agentId: string, agentName: string, action: string,
   status: 'success' | 'error', durationMs: number,
-  details: Record<string, unknown> = {}
+  details: Record<string, unknown> = {},
+  tokensUsed = 0
 ) {
   try {
     const supabase = createAdminClient();
-    await supabase.from('activity_logs').insert({ agent_id: agentId, agent_name: agentName, action, status, duration_ms: durationMs, details });
+    await supabase.from('activity_logs').insert({ agent_id: agentId, agent_name: agentName, action, status, duration_ms: durationMs, details, tokens_used: tokensUsed });
   } catch { /* non-bloquant */ }
 }
 
@@ -121,7 +122,7 @@ Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": 
     await logActivity('thomas', 'Thomas',
       `Cron newsletter : envoyée à ${sent}/${emails.length} abonnés`,
       failed === emails.length ? 'error' : 'success',
-      duration, { sent, failed, total: emails.length }
+      duration, { sent, failed, total: emails.length }, result.tokens_used ?? 0
     );
     console.log(`[Cron Newsletter] Envoyée à ${sent}/${emails.length} abonnés en ${duration}ms`);
 
