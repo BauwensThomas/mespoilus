@@ -127,6 +127,27 @@ ${recentTitles}
 Fournis une analyse SEO complète avec mots-clés, volumes estimés par marché (BE/FR/CH/CA) et recommandations on-page.`;
     }
 
+    if (agentId === 'emma') {
+      const { data: lastArticle } = await supabase
+        .from('articles')
+        .select('title, slug, excerpt')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (lastArticle) {
+        return `${baseTask}
+
+Dernier article publié sur Mes Poilus :
+- Titre : ${lastArticle.title}
+- Lien : https://mespoilus.com/blog/${lastArticle.slug}
+- Résumé : ${lastArticle.excerpt ?? ''}
+
+Crée un post Facebook et Instagram engageant basé sur cet article.`;
+      }
+    }
+
     if (agentId === 'sofia') {
       const { data: recent } = await supabase
         .from('articles')
