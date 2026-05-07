@@ -49,10 +49,11 @@ export async function GET(req: Request) {
   try {
     const emmaPrompt = `Crée un post Facebook et Instagram pour cet article de conseils :
 Titre : ${title}
-Lien : https://mespoilus.com/blog/${slug}
-Résumé du conseil : ${excerpt || title}
+Résumé : ${excerpt || title}
+
 Le post doit donner envie de lire l'article complet.
-Inclus le lien à la fin.`;
+IMPORTANT : tu dois inclure ce lien EXACT à la fin du post, sans le modifier ni le raccourcir :
+https://mespoilus.com/blog/${slug}`;
 
     const result = await executeAgentTask('emma', emmaPrompt);
     if (!result.success) throw new Error(result.error ?? 'Emma a échoué');
