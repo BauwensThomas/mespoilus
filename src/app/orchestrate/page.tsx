@@ -72,6 +72,12 @@ export default function OrchestratePage() {
           Thomas analyse ton objectif, crée un plan stratégique, délègue les tâches aux agents concernés,
           puis synthétise les résultats.
         </p>
+        <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+          <span className="text-emerald-400 text-sm">🚀</span>
+          <p className="text-emerald-300 text-xs">
+            Pipeline réel — les articles sont publiés sur le blog, les posts envoyés sur Facebook.
+          </p>
+        </div>
       </div>
 
       {/* Input objectif */}

@@ -9,6 +9,19 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { UnsplashPhoto } from '@/lib/unsplash';
 
+interface DelegationResult {
+  agent: string;
+  task: string;
+  success: boolean;
+  result: string;
+  priority: number;
+}
+
+interface DelegationData {
+  thomasDecision: string | null;
+  delegations: DelegationResult[];
+}
+
 interface AgentPageProps {
   agent: Agent;
   stat?: AgentStat;
@@ -80,6 +93,8 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
+  const [delegationState, setDelegationState] = useState<'idle' | 'loading' | 'done'>('idle');
+  const [delegationData, setDelegationData] = useState<DelegationData | null>(null);
   const responseRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -95,6 +110,10 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
     setIsStreaming(true);
     setResponse('');
     setError('');
+    setDelegationState('idle');
+    setDelegationData(null);
+
+    let finalResponse = '';
 
     try {
       const res = await fetch(`/api/agents/${agent.id}`, {
@@ -112,19 +131,40 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let accumulated = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        accumulated += decoder.decode(value, { stream: true });
-        setResponse(accumulated);
+        finalResponse += decoder.decode(value, { stream: true });
+        setResponse(finalResponse);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur inconnue');
+      return;
     } finally {
       setIsLoading(false);
       setIsStreaming(false);
+    }
+
+    // Délégation automatique via Thomas après la réponse principale
+    if (finalResponse.length >= 150) {
+      setDelegationState('loading');
+      try {
+        const delRes = await fetch('/api/agents/delegate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agentId: agent.id,
+            agentResponse: finalResponse,
+            originalTask: taskText,
+          }),
+        });
+        if (delRes.ok) {
+          const data: DelegationData = await delRes.json();
+          setDelegationData(data);
+        }
+      } catch { /* non-bloquant */ }
+      setDelegationState('done');
     }
   }
 
@@ -296,6 +336,62 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
           </div>
         </div>
 
+        {/* ── Délégation Thomas ──────────────────────────────────────────── */}
+        {delegationState !== 'idle' && (
+          <div className="space-y-4">
+            {/* Header Thomas */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-sm">
+                👔
+              </div>
+              <div className="flex-1">
+                <span className="text-sm font-semibold text-amber-400">Thomas analyse</span>
+                {delegationState === 'loading' && (
+                  <span className="ml-2 text-xs text-gray-300">en cours…</span>
+                )}
+              </div>
+              {delegationState === 'loading' && (
+                <span className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+              )}
+            </div>
+
+            {delegationState === 'done' && delegationData && (
+              <>
+                {/* Décision Thomas */}
+                <div className={clsx(
+                  'card p-4 border',
+                  delegationData.delegations.length > 0 ? 'border-amber-400/30' : 'border-[#484848]'
+                )}>
+                  <div className="flex items-start gap-2">
+                    <span className="text-amber-400 text-sm mt-0.5">
+                      {delegationData.delegations.length > 0 ? '📋' : '✅'}
+                    </span>
+                    <div>
+                      <p className="text-xs font-medium text-amber-400 mb-0.5">
+                        {delegationData.delegations.length > 0
+                          ? `Thomas délègue ${delegationData.delegations.length} tâche${delegationData.delegations.length > 1 ? 's' : ''}`
+                          : 'Thomas — Aucune délégation'}
+                      </p>
+                      <p className="text-xs text-gray-200 leading-relaxed">
+                        {delegationData.thomasDecision ?? 'Rapport complet, aucune action supplémentaire nécessaire.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Résultats des agents délégués */}
+                {delegationData.delegations.length > 0 && (
+                  <div className="space-y-3">
+                    {delegationData.delegations.map((d, i) => (
+                      <DelegationCard key={i} delegation={d} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
         {/* Historique */}
         <div className="card p-5">
           <h2 className="text-sm font-semibold text-white mb-4">Historique d'activité</h2>
@@ -380,6 +476,58 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+const AGENT_META: Record<string, { icon: string; color: string; borderColor: string }> = {
+  thomas:   { icon: '👔', color: 'text-amber-400',   borderColor: 'border-amber-400/30' },
+  marie:    { icon: '✍️', color: 'text-purple-400',  borderColor: 'border-purple-400/30' },
+  lucas:    { icon: '🔍', color: 'text-blue-400',    borderColor: 'border-blue-400/30' },
+  emma:     { icon: '📱', color: 'text-pink-400',    borderColor: 'border-pink-400/30' },
+  maxime:   { icon: '💻', color: 'text-emerald-400', borderColor: 'border-emerald-400/30' },
+  lea:      { icon: '💬', color: 'text-orange-400',  borderColor: 'border-orange-400/30' },
+  antoine:  { icon: '📊', color: 'text-teal-400',    borderColor: 'border-teal-400/30' },
+  nathalie: { icon: '🛡️', color: 'text-red-400',     borderColor: 'border-red-400/30' },
+  sofia:    { icon: '💌', color: 'text-rose-400',    borderColor: 'border-rose-400/30' },
+};
+
+function DelegationCard({ delegation }: { delegation: DelegationResult }) {
+  const [expanded, setExpanded] = useState(false);
+  const meta = AGENT_META[delegation.agent] ?? { icon: '🤖', color: 'text-gray-400', borderColor: 'border-[#484848]' };
+
+  return (
+    <div className={clsx('card border', meta.borderColor)}>
+      <button
+        className="w-full p-4 text-left"
+        onClick={() => setExpanded((v) => !v)}
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-lg">{meta.icon}</span>
+          <div className="flex-1 min-w-0">
+            <span className={clsx('text-xs font-semibold', meta.color)}>
+              {delegation.agent.charAt(0).toUpperCase() + delegation.agent.slice(1)}
+            </span>
+            <p className="text-xs text-gray-300 truncate mt-0.5">{delegation.task}</p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className={clsx(
+              'text-[10px] px-2 py-0.5 rounded-full',
+              delegation.success ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+            )}>
+              {delegation.success ? '✓ OK' : '✗ Erreur'}
+            </span>
+            <span className="text-[10px] text-gray-300">{expanded ? '▲' : '▼'}</span>
+          </div>
+        </div>
+      </button>
+      {expanded && (
+        <div className="px-4 pb-4 border-t border-[#3a3a3a]">
+          <pre className="text-xs text-gray-100 leading-relaxed whitespace-pre-wrap font-mono mt-3 max-h-64 overflow-y-auto scrollbar-thin">
+            {delegation.result}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }
