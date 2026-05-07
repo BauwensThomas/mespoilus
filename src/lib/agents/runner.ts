@@ -282,6 +282,7 @@ async function saveMariesArticle(content: string): Promise<string | null> {
     // Récupérer une image Unsplash pertinente (non-bloquant si pas de clé ou erreur)
     let imageData: { url: string; alt: string; credit: string; creditUrl: string } | null = null;
     try {
+      console.log('[Marie] UNSPLASH_ACCESS_KEY présent:', !!process.env.UNSPLASH_ACCESS_KEY);
       const photo = await Promise.race([
         getPhotoForArticle(title, category),
         new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),

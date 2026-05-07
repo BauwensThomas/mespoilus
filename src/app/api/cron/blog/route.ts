@@ -197,14 +197,19 @@ C'est un article de CONSEILS PRATIQUES destiné aux propriétaires francophones.
 
   // Incrémenter les stats de Thomas (orchestrateur du cron)
   try {
-    const existing = await supabase.from('agent_stats').select('tasks_completed,total_tokens_used').eq('agent_id', 'thomas').maybeSingle();
+    const existing = await supabase.from('agent_stats').select('tasks_completed').eq('agent_id', 'thomas').maybeSingle();
+    if (existing.error) console.error('[thomas-stats] select erreur:', existing.error.message);
     const row = existing.data;
     if (!row) {
-      await supabase.from('agent_stats').insert({ agent_id: 'thomas', tasks_completed: 1, tasks_failed: 0, total_tokens_used: 0, last_active: new Date().toISOString() });
+      const ins = await supabase.from('agent_stats').insert({ agent_id: 'thomas', tasks_completed: 1, tasks_failed: 0, total_tokens_used: 0, last_active: new Date().toISOString() });
+      console.log('[thomas-stats] insert:', ins.error ? ins.error.message : 'OK');
     } else {
-      await supabase.from('agent_stats').update({ tasks_completed: (row.tasks_completed ?? 0) + 1, last_active: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('agent_id', 'thomas');
+      const upd = await supabase.from('agent_stats').update({ tasks_completed: (row.tasks_completed ?? 0) + 1, last_active: new Date().toISOString() }).eq('agent_id', 'thomas');
+      console.log('[thomas-stats] update:', upd.error ? upd.error.message : 'OK');
     }
-  } catch { /* non-bloquant */ }
+  } catch (err) {
+    console.error('[thomas-stats] exception:', err instanceof Error ? err.message : err);
+  }
 
   console.log(`[Cron1] Terminé en ${totalDuration}ms — slug=${articleSlug}`);
 
