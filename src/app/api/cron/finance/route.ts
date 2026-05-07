@@ -39,13 +39,13 @@ export async function GET(req: Request) {
     if (!result.success) throw new Error(result.error ?? 'Antoine a échoué');
 
     const duration = Date.now() - globalStart;
-    await logActivity('antoine', 'Antoine', `Rapport financier ${month}`, 'success', duration);
+    await logActivity('thomas', 'Thomas', `Cron finance : rapport ${month} généré`, 'success', duration);
 
     console.log(`[Cron Finance] Terminé en ${duration}ms`);
     return NextResponse.json({ success: true, duration_ms: duration, period: month });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erreur inconnue';
-    await logActivity('antoine', 'Antoine', `Rapport financier erreur: ${msg}`, 'error', Date.now() - globalStart);
+    await logActivity('thomas', 'Thomas', `Cron finance erreur: ${msg}`, 'error', Date.now() - globalStart);
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }

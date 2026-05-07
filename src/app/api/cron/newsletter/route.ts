@@ -78,7 +78,7 @@ Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": 
     const emails = (subscribers ?? []).map((s: { email: string }) => s.email);
 
     if (emails.length === 0) {
-      await logActivity('sofia', 'Sofia', 'Newsletter générée — aucun abonné actif', 'success', Date.now() - globalStart);
+      await logActivity('thomas', 'Thomas', 'Cron newsletter : aucun abonné actif', 'success', Date.now() - globalStart);
       return NextResponse.json({ success: true, reason: 'no_subscribers', draft_saved: true });
     }
 
@@ -103,8 +103,8 @@ Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": 
       .eq('id', campaign.id);
 
     const duration = Date.now() - globalStart;
-    await logActivity('sofia', 'Sofia',
-      `Newsletter envoyée — ${sent}/${emails.length} abonnés, ${articles.length} articles`,
+    await logActivity('thomas', 'Thomas',
+      `Cron newsletter : envoyée à ${sent}/${emails.length} abonnés`,
       failed === emails.length ? 'error' : 'success',
       duration, { sent, failed, total: emails.length }
     );
@@ -113,7 +113,7 @@ Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": 
     return NextResponse.json({ success: true, duration_ms: duration, sent, failed, total: emails.length });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erreur inconnue';
-    await logActivity('sofia', 'Sofia', `Newsletter erreur: ${msg}`, 'error', Date.now() - globalStart);
+    await logActivity('thomas', 'Thomas', `Cron newsletter erreur: ${msg}`, 'error', Date.now() - globalStart);
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
