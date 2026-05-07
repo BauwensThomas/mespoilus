@@ -65,7 +65,7 @@ export default function AgentCard({ agent, stat, monthly }: AgentCardProps) {
         </div>
 
         {/* Description */}
-        <p className="text-xs text-gray-200 leading-relaxed line-clamp-2 relative h-8 overflow-hidden">{agent.description}</p>
+        <p className="text-xs text-gray-200 leading-relaxed line-clamp-2 relative min-h-[2.5rem]">{agent.description}</p>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 relative">
@@ -106,9 +106,11 @@ function Stat({ label, value, highlight, monthly }: {
         {value}
       </div>
       <div className="text-[9px] text-gray-300 uppercase tracking-wide mt-0.5">{label}</div>
+      {monthly !== undefined && (
         <div className="text-[9px] text-gray-500 mt-1 border-t border-[#2a2a2a] pt-1">
           <span className="text-amber-400 font-medium">{monthly}</span> ce mois
         </div>
+      )}
     </div>
   );
 }
