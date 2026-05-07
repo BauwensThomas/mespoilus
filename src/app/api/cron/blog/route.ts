@@ -100,16 +100,27 @@ export async function GET(req: Request) {
     const recentContext = recentTitles.length
       ? recentTitles.slice(0, 15).map(t => `- ${t}`).join('\n')
       : 'Aucun article récent.';
+    const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    const productsForLucas = products.map(p => `- ${p}`).join('\n');
 
-    const lucasPrompt = `Trouve le meilleur sujet de conseil pratique pour les propriétaires de ${animal} en ${season} dans les pays francophones.
-Le sujet doit être un CONSEIL PRATIQUE utile (pas un article générique).
-Exemples : 'comment hydrater son chien en été', 'signes de stress chez le chat', 'alimentation du lapin en hiver'.
-Évite ces sujets déjà couverts :
+    const lucasPrompt = `Trouve le meilleur sujet d'article pour les propriétaires de ${animal} en ce moment (${monthName}, ${season}).
+
+PRIORITÉ 1 — Sujet EN VOGUE cette saison : qu'est-ce que les propriétaires de ${animal} recherchent activement sur Google en ${season} ? Pense aux préoccupations concrètes du moment (parasites, chaleurs, comportements saisonniers, maladies de saison, soins spécifiques...).
+
+PRIORITÉ 2 — Sujet lié à nos produits disponibles (affiliation) :
+${productsForLucas}
+Si un sujet permet de recommander naturellement ces produits, c'est idéal pour notre monétisation.
+
+PRIORITÉ 3 — Si aucun sujet ne semble vraiment en vogue ou pertinent : propose un conseil pratique utile de saison pour les propriétaires de ${animal}.
+
+Articles déjà publiés (à ne pas dupliquer) :
 ${recentContext}
+
 Retourne UNIQUEMENT :
-SUJET: [le sujet]
+SUJET: [le sujet choisi]
 MOTS_CLES: [mot1, mot2, mot3, mot4, mot5]
-INTENTION: [ce que cherche l'internaute]`;
+INTENTION: [ce que cherche l'internaute]
+RAISON: [pourquoi ce sujet est pertinent maintenant]`;
 
     const lucasResult = await executeAgentTask('lucas', lucasPrompt);
     pipelineTokens += lucasResult.tokens_used ?? 0;

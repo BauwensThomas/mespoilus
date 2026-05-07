@@ -77,7 +77,7 @@ https://mespoilus.com/blog/${slug}`;
   const totalDuration = Date.now() - globalStart;
   const dateStr = now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   await logActivity('thomas', 'Thomas',
-    `[Cron social du ${dateStr}] - Emma + Sofia terminés`,
+    `[Cron social du ${dateStr}] - Emma terminée`,
     errors.length === 0 ? 'success' : 'error',
     totalDuration, { slug, errors }
   );

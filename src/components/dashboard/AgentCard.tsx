@@ -5,21 +5,22 @@ import clsx from 'clsx';
 import { Agent, AgentStat } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { MonthlyAgentStat } from '@/app/(admin)/dashboard/page';
+import { MonthlyAgentStat, TotalAgentStat } from '@/app/(admin)/dashboard/page';
 
 interface AgentCardProps {
   agent: Agent;
   stat?: AgentStat;
   monthly?: MonthlyAgentStat;
+  total?: TotalAgentStat;
 }
 
-export default function AgentCard({ agent, stat, monthly }: AgentCardProps) {
+export default function AgentCard({ agent, stat, monthly, total }: AgentCardProps) {
   const lastActive = stat?.last_active
     ? formatDistanceToNow(new Date(stat.last_active), { addSuffix: true, locale: fr })
     : 'Jamais';
 
-  const completed = stat?.tasks_completed ?? 0;
-  const failed = stat?.tasks_failed ?? 0;
+  const completed = total?.tasks ?? stat?.tasks_completed ?? 0;
+  const failed = total?.failed ?? stat?.tasks_failed ?? 0;
   const score = completed + failed > 0 ? (completed / (completed + failed)) * 100 : 0;
 
   return (
@@ -71,12 +72,12 @@ export default function AgentCard({ agent, stat, monthly }: AgentCardProps) {
         <div className="grid grid-cols-3 gap-3 relative">
           <Stat
             label="Tâches"
-            value={stat?.tasks_completed ?? 0}
+            value={total?.tasks ?? stat?.tasks_completed ?? 0}
             monthly={monthly?.tasks ?? 0}
           />
           <Stat
             label="Tokens"
-            value={formatTokens(stat?.total_tokens_used ?? 0)}
+            value={formatTokens(total?.tokens ?? stat?.total_tokens_used ?? 0)}
             monthly={formatTokens(monthly?.tokens ?? 0)}
           />
           <Stat label="Score" value={`${score.toFixed(0)}%`} highlight={score >= 80} />
