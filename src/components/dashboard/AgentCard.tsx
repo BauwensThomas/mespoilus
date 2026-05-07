@@ -65,19 +65,19 @@ export default function AgentCard({ agent, stat, monthly }: AgentCardProps) {
         </div>
 
         {/* Description */}
-        <p className="text-xs text-gray-200 leading-relaxed line-clamp-2 relative">{agent.description}</p>
+        <p className="text-xs text-gray-200 leading-relaxed line-clamp-2 relative h-8 overflow-hidden">{agent.description}</p>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 relative">
           <Stat
             label="Tâches"
             value={stat?.tasks_completed ?? 0}
-            monthly={monthly?.tasks}
+            monthly={monthly?.tasks ?? 0}
           />
           <Stat
             label="Tokens"
             value={formatTokens(stat?.total_tokens_used ?? 0)}
-            monthly={monthly?.tokens !== undefined ? formatTokens(monthly.tokens) : undefined}
+            monthly={formatTokens(monthly?.tokens ?? 0)}
           />
           <Stat label="Score" value={`${score.toFixed(0)}%`} highlight={score >= 80} />
         </div>
@@ -106,11 +106,9 @@ function Stat({ label, value, highlight, monthly }: {
         {value}
       </div>
       <div className="text-[9px] text-gray-300 uppercase tracking-wide mt-0.5">{label}</div>
-      {monthly !== undefined && (
         <div className="text-[9px] text-gray-500 mt-1 border-t border-[#2a2a2a] pt-1">
           <span className="text-amber-400 font-medium">{monthly}</span> ce mois
         </div>
-      )}
     </div>
   );
 }
