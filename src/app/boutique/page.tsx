@@ -62,8 +62,8 @@ export default async function BoutiquePage({ searchParams }: Props) {
   return (
     <div className="px-8 py-8 pb-14 space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Boutique Mes Poilus</h1>
-        <p className="text-gray-400 text-sm mt-1">
+        <h1 className="text-3xl font-bold dark:text-white text-gray-900 tracking-tight">Boutique Mes Poilus</h1>
+        <p className="dark:text-gray-400 text-gray-600 text-sm mt-1">
           Sélection de produits pour vos animaux de compagnie
         </p>
       </div>
@@ -82,7 +82,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
               className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
                 isActive
                   ? 'bg-amber-500 text-black border-amber-500 font-semibold'
-                  : 'bg-transparent text-gray-400 border-[#333] hover:border-amber-500/50 hover:text-amber-400'
+                  : 'bg-transparent dark:text-gray-400 text-gray-600 dark:border-[#333] border-gray-300 hover:border-amber-500/50 hover:text-amber-400'
               }`}
             >
               <span>{cat.emoji}</span>
@@ -93,7 +93,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
       </div>
 
       {/* Bannière */}
-      <div className="relative h-28 rounded-2xl overflow-hidden bg-[#111]">
+      <div className="relative h-28 rounded-2xl overflow-hidden dark:bg-[#111] bg-gray-200">
         {allPhotos[0] && (
           <Image src={allPhotos[0].url} alt={allPhotos[0].alt} fill className="object-cover object-center" />
         )}
@@ -119,7 +119,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
         </div>
       ) : (
         <>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm dark:text-gray-500 text-gray-600">
             {products.length} produit{products.length !== 1 ? 's' : ''}
             {category && category !== 'all' ? ` · ${activeCat.label}` : ''}
             {search ? ` · "${search}"` : ''}
@@ -132,8 +132,8 @@ export default async function BoutiquePage({ searchParams }: Props) {
         </>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 px-4 py-2">
-        <p className="text-xs text-gray-400 text-center">
+      <div className="fixed bottom-0 left-0 right-0 z-50 dark:bg-gray-900/95 bg-white/95 backdrop-blur-sm border-t dark:border-gray-800 border-gray-200 px-4 py-2">
+        <p className="text-xs dark:text-gray-400 text-gray-600 text-center">
           Les liens présents sur cette page sont des liens affiliés. Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
         </p>
       </div>
@@ -143,9 +143,9 @@ export default async function BoutiquePage({ searchParams }: Props) {
 
 function ProductCard({ product }: { product: AwinProduct }) {
   return (
-    <div className="bg-[#111] border border-gray-800 rounded-2xl overflow-hidden flex flex-col hover:border-amber-500/30 transition-colors">
+    <div className="dark:bg-[#111] bg-white border dark:border-gray-800 border-gray-200 rounded-2xl overflow-hidden flex flex-col hover:border-amber-500/30 transition-colors shadow-sm">
       {/* Image */}
-      <div className="relative h-44 bg-gray-800 overflow-hidden">
+      <div className="relative h-44 dark:bg-gray-800 bg-gray-100 overflow-hidden">
         {product.image_url ? (
           <Image
             src={product.image_url}
@@ -155,19 +155,19 @@ function ProductCard({ product }: { product: AwinProduct }) {
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl text-gray-700">🐾</div>
+          <div className="w-full h-full flex items-center justify-center text-4xl dark:text-gray-700 text-gray-400">🐾</div>
         )}
       </div>
 
       {/* Corps */}
       <div className="p-4 flex flex-col gap-2 flex-1">
-        <p className="text-[10px] text-gray-600 uppercase tracking-wide">{product.merchant_name}</p>
-        <h3 className="text-sm font-semibold text-white leading-snug line-clamp-2">{product.name}</h3>
+        <p className="text-[10px] dark:text-gray-600 text-gray-500 uppercase tracking-wide">{product.merchant_name}</p>
+        <h3 className="text-sm font-semibold dark:text-white text-gray-900 leading-snug line-clamp-2">{product.name}</h3>
         {product.description && (
-          <p className="text-xs text-gray-400 leading-relaxed line-clamp-2 flex-1">{product.description}</p>
+          <p className="text-xs dark:text-gray-400 text-gray-600 leading-relaxed line-clamp-2 flex-1">{product.description}</p>
         )}
 
-        <div className="flex items-center justify-between pt-3 mt-auto border-t border-gray-800/60">
+        <div className="flex items-center justify-between pt-3 mt-auto border-t dark:border-gray-800/60 border-gray-200">
           <span className="text-amber-400 font-bold text-base">
             {product.price.toFixed(2)} {product.currency}
           </span>
