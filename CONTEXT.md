@@ -72,6 +72,7 @@ CSRF_SECRET
 RESEND_API_KEY
 AWIN_PUBLISHER_ID
 AWIN_API_TOKEN
+AWIN_FEED_TOKEN          # Token Darwin CSV feeds Awin (même valeur que AWIN_API_TOKEN possible)
 CRON_SECRET
 MAKE_WEBHOOK_URL             # Webhook Make.com — Facebook + Instagram (@mespoilusofficiel)
 NEXT_PUBLIC_APP_URL          # Ex: https://www.mespoilus.com (OBLIGATOIRE pour fetches internes Vercel)
@@ -357,10 +358,25 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Emails : soumission (client + admin), approbation (client), refus (client)
 
 ### Boutique (`/boutique`) — Architecture Awin
-- Filtres par catégorie, bannière Unsplash dynamique
-- `ProductCard` blanc avec lien affilié `rel="sponsored"`
-- Cron sync Awin quotidien 3h UTC
+- Filtres par catégorie, bannière Unsplash dynamique, barre de recherche
+- `ProductCard` client component : image, nom, description, prix + devise, drapeau marchand, bouton "Voir sur le site" affilié `rel="sponsored"`
+- Bouton ✕ "signaler lien cassé" : POST `/api/products/report` → `in_stock=false` en DB → carte disparaît immédiatement
+- Drapeaux via `flagcdn.com` : USD→🇺🇸, CAD→🇨🇦, GBP→🇬🇧, EUR→🇪🇺
+- Cron sync Awin quotidien 3h UTC : **reset complet** de la table `products` puis réinsertion depuis feeds Awin
 - Disclaimer affiliation barre fixe en bas (bg-white/95)
+- Layout : flex gauche (titre/recherche/filtres) + droite (carousel partenaires)
+
+#### Awin Darwin CSV Feeds (source unique de données produits)
+- URL feedList : `https://ui.awin.com/productdata-darwin-download/publisher/{id}/{token}/1/feedList`
+- Retourne un CSV avec colonnes `Advertiser Name`, `Membership Status`, `Feed ID`, `URL`
+- Seulement les feeds `Membership Status === 'active'` sont utilisés
+- Chaque feed est un CSV (parfois `.gz`) téléchargé et décompressé (détection gzip par magic bytes `0x1F 0x8B`)
+- Catégorisation : `google_product_category` en priorité via `GPC_MAP` → fallback mots-clés titre/description
+- Prix extrait par regex `priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/)` (format `'199.00 USD'`)
+- Disponibilité : `in_stock | in stock | 1 | true`
+- `fetchAllAwinProducts` : passage unique sur tous les feeds, max `limitPerCategory` produits par catégorie
+- Filtres : `price > 0`, exclusion pièces détachées (`/\bparts?\b/i`, `/ [A-Z0-9]{5,}$/)`)
+- Cache feeds 1h en mémoire (évite re-téléchargement feedList à chaque appel)
 
 ### Section Partenaires
 
@@ -400,7 +416,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Bing Webmaster Tools vérifié + sitemap soumis
 
 ### next.config.mjs
-- `remotePatterns` : `images.unsplash.com` + `images.pexels.com` + `*.supabase.co`
+- `remotePatterns` : `images.unsplash.com` + `images.pexels.com` + `*.supabase.co` + `cdn.shopify.com` + `flagcdn.com`
 
 ### Déploiement
 - Repo GitHub : `BauwensThomas/mespoilus`
@@ -476,7 +492,11 @@ Aucune action manuelle bloquante en cours.
 - Adoption `/deposer` : converti en thème clair (était dark `bg-gray-900`)
 - Adoption : barre de recherche par race/description/région (`AdoptionSearchBar.tsx`)
 - Partenaires : suppression des 4 faux partenaires test (Zooplus, Royal Canin, Petcube, AquaShop)
-- Landing page : newsletter réduite (py-10), footer compact (pt-8 pb-5, space-y-0.5 liens), AdBanner sans padding vertical
+- Landing page : newsletter réduite (py-10), footer compact (pt-8 pb-5, space-y-0.5 liens), AdBanner sans padding vertical, **transitions de sections droites (sans vagues SVG)**
+- Dashboard + pages agents : timestamps absolus (aujourd'hui/hier à HH:mm, sinon d MMM à HH:mm) via date-fns
+- Boutique : Awin réécrit (Darwin CSV feeds au lieu de keyword API), reset DB complet à chaque sync, bouton "lien cassé" sur ProductCard, drapeaux devises
+- next.config.mjs : `cdn.shopify.com` + `flagcdn.com` ajoutés aux remotePatterns
+- `AWIN_FEED_TOKEN` ajouté aux variables d'environnement Vercel
 
 ---
 
