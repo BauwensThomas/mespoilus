@@ -87,8 +87,9 @@ NEXT_PUBLIC_APP_URL          # Ex: https://www.mespoilus.com (OBLIGATOIRE pour f
 - Nav : logo à gauche, liens Blog / Adoption / Newsletter au centre, bouton 🛍️ Boutique (amber) à droite
 - Section "Derniers articles" : 3 derniers articles de Marie avec cards
 - Section catégories : 5 catégories avec photos Unsplash
-- Section newsletter avec formulaire email (client component `NewsletterForm.tsx`)
-- Footer : navigation, mentions légales, lien **Facebook** réel → page Mes Poilus, **pas de lien Admin ni TikTok**
+- Section newsletter `py-10` (réduit depuis py-20) avec formulaire email (client component `NewsletterForm.tsx`)
+- Footer compact : `pt-8 pb-5`, grille 4 cols, liens `space-y-0.5`, titres `mb-1` — navigation, mentions légales, Instagram + Facebook, **pas de lien Admin ni TikTok**
+- Bloc AdSense entre newsletter et footer : sans padding vertical (vide jusqu'à approbation AdSense)
 - `revalidate = 3600`
 
 ### Authentification admin (Supabase Auth)
@@ -475,6 +476,7 @@ Aucune action manuelle bloquante en cours.
 - Adoption `/deposer` : converti en thème clair (était dark `bg-gray-900`)
 - Adoption : barre de recherche par race/description/région (`AdoptionSearchBar.tsx`)
 - Partenaires : suppression des 4 faux partenaires test (Zooplus, Royal Canin, Petcube, AquaShop)
+- Landing page : newsletter réduite (py-10), footer compact (pt-8 pb-5, space-y-0.5 liens), AdBanner sans padding vertical
 
 ---
 

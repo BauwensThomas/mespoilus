@@ -279,7 +279,7 @@ export default async function LandingPage() {
       {/* ── PARTENAIRES ───────────────────────────────────────────────────── */}
       <PartenairesSection />
       {/* ── NEWSLETTER ────────────────────────────────────────────────────── */}
-      <section id="newsletter" className="py-20 px-6 bg-gradient-to-br from-amber-500 to-orange-500">
+      <section id="newsletter" className="py-10 px-6 bg-gradient-to-br from-amber-500 to-orange-500">
         <div className="max-w-2xl mx-auto text-center">
           <span className="text-4xl mb-4 block">🐾</span>
           <h2 className="text-3xl font-bold text-white mb-3">
@@ -297,88 +297,65 @@ export default async function LandingPage() {
       </section>
 
       {/* ── PUB ───────────────────────────────────────────────────────────── */}
-      <div className="bg-gray-900 px-6 py-6">
+      <div className="bg-gray-900 px-6">
         <div className="max-w-4xl mx-auto">
           <AdBanner slot="2276363485" />
         </div>
       </div>
 
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
-      <footer className="bg-gray-900 text-gray-400 py-14 px-6">
+      <footer className="bg-gray-900 text-gray-400 pt-8 pb-5 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-10 border-b border-gray-800">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pb-3 border-b border-gray-800">
             {/* Brand */}
             <div className="md:col-span-2">
-              <div className="flex items-center gap-2.5 mb-4">
+              <div className="flex items-center gap-2.5 mb-1">
                 <span className="text-2xl">🐾</span>
                 <span className="font-bold text-white text-lg">Mes Poilus</span>
               </div>
               <p className="text-sm leading-relaxed text-gray-400 max-w-xs">
-                Blog de conseils et boutique d'accessoires pour tous les amoureux des animaux
-                de compagnie.
+                Blog de conseils et boutique d'accessoires pour tous les amoureux des animaux de compagnie.
               </p>
-              <div className="flex gap-4 mt-5">
-                <a
-                  href="https://www.instagram.com/mespoilusofficiel"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-gray-400 hover:text-amber-400 transition-colors"
-                >
-                  Instagram
-                </a>
-                <a
-                  href="https://www.facebook.com/profile.php?id=61589487954538"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-gray-400 hover:text-amber-400 transition-colors"
-                >
-                  Facebook
-                </a>
+              <div className="flex gap-4 mt-2">
+                <a href="https://www.instagram.com/mespoilusofficiel" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-amber-400 transition-colors">Instagram</a>
+                <a href="https://www.facebook.com/profile.php?id=61589487954538" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-amber-400 transition-colors">Facebook</a>
               </div>
             </div>
 
             {/* Navigation */}
             <div>
-              <h3 className="text-white text-sm font-semibold mb-4 uppercase tracking-wider">Navigation</h3>
-              <ul className="space-y-2.5">
+              <h3 className="text-white text-sm font-semibold mb-1 uppercase tracking-wider">Navigation</h3>
+              <ul className="space-y-0.5">
                 {[
-                  { href: '/blog',                  label: 'Blog'      },
-                  { href: '/adoption',              label: 'Adoption'  },
-                  { href: '/blog?category=chiens',  label: 'Chiens'    },
-                  { href: '/blog?category=chats',   label: 'Chats'     },
-                  { href: '/blog?category=oiseaux', label: 'Oiseaux'   },
+                  { href: '/blog',                   label: 'Blog'     },
+                  { href: '/adoption',               label: 'Adoption' },
+                  { href: '/blog?category=chiens',   label: 'Chiens'   },
+                  { href: '/blog?category=chats',    label: 'Chats'    },
+                  { href: '/blog?category=oiseaux',  label: 'Oiseaux'  },
                   { href: '/blog?category=rongeurs', label: 'Rongeurs' },
                 ].map(({ href, label }) => (
-                  <li key={href}>
-                    <Link href={href} className="text-sm hover:text-amber-400 transition-colors">
-                      {label}
-                    </Link>
-                  </li>
+                  <li key={href}><Link href={href} className="text-sm hover:text-amber-400 transition-colors">{label}</Link></li>
                 ))}
               </ul>
             </div>
 
             {/* Légal */}
             <div>
-              <h3 className="text-white text-sm font-semibold mb-4 uppercase tracking-wider">Légal</h3>
-              <ul className="space-y-2.5">
+              <h3 className="text-white text-sm font-semibold mb-1 uppercase tracking-wider">Légal</h3>
+              <ul className="space-y-0.5">
                 {[
-                  { href: '/mentions-legales', label: 'Mentions légales' },
+                  { href: '/mentions-legales',          label: 'Mentions légales'             },
                   { href: '/politique-confidentialite', label: 'Politique de confidentialité' },
-                  { href: '/cgu', label: "Conditions d'utilisation" },
-                  { href: '/cookies', label: 'Cookies' },
+                  { href: '/cgu',                       label: "Conditions d'utilisation"     },
+                  { href: '/cookies',                   label: 'Cookies'                      },
                 ].map(({ href, label }) => (
-                  <li key={href}>
-                    <Link href={href} className="text-sm hover:text-amber-400 transition-colors">
-                      {label}
-                    </Link>
-                  </li>
+                  <li key={href}><Link href={href} className="text-sm hover:text-amber-400 transition-colors">{label}</Link></li>
                 ))}
               </ul>
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-2 pt-2">
             <p className="text-xs text-gray-400">
               © 2026 Mes Poilus. Tous droits réservés.
             </p>
