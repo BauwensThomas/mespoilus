@@ -127,6 +127,7 @@ export async function fetchAllAwinProducts(
         const name = p['title'] ?? p['product_name'] ?? '';
         const deepLink = p['aw_deep_link'] ?? p['link'] ?? '';
         if (!id || !deepLink) continue;
+        if (/\bparts?\b/i.test(name) || / \/ [A-Z0-9]{5,}$/.test(name)) continue;
 
         const pid = `awin_${id}`;
         if (seenIds.has(pid)) continue;
@@ -200,6 +201,7 @@ export async function fetchAwinProducts(
         const inStock = availability === 'in_stock' || availability === 'in stock' || availability === '1' || availability === 'true';
 
         if (!id || !deepLink) continue;
+        if (/\bparts?\b/i.test(name) || / \/ [A-Z0-9]{5,}$/.test(name)) continue;
 
         if (category !== 'general' && !matchesCategory(p, category)) continue;
 
