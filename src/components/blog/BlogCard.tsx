@@ -51,13 +51,13 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
   const emoji = CATEGORY_EMOJI[article.category] ?? '🐾';
 
   return (
-    <Link href={`/blog/${article.slug}`} className="block group">
-      <article
-        className={clsx(
-          'card-hover h-full flex flex-col overflow-hidden',
-          featured && 'border-purple-400/20'
-        )}
-      >
+    <article
+      className={clsx(
+        'card-hover h-full flex flex-col overflow-hidden group',
+        featured && 'border-purple-400/20'
+      )}
+    >
+      <Link href={`/blog/${article.slug}`} className="flex flex-col flex-1 overflow-hidden">
         {/* Image de l'article */}
         <div className={clsx('relative w-full h-44 overflow-hidden flex-shrink-0 bg-gradient-to-br', gradient)}>
           {imageSrc ? (
@@ -141,7 +141,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
             </div>
           </div>
         </div>
-      </article>
-    </Link>
+      </Link>
+    </article>
   );
 }
