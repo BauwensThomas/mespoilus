@@ -18,11 +18,7 @@ export async function GET(req: Request) {
   const supabase = createAdminClient();
   const products = await fetchAllAwinProducts(publisherId, feedToken, 30);
 
-  // Supprimer les anciens produits des marchands actifs avant de réinsérer
-  const merchantNames = [...new Set(products.map(p => p.merchant_name).filter(Boolean))];
-  if (merchantNames.length) {
-    await supabase.from('products').delete().in('merchant_name', merchantNames);
-  }
+  await supabase.from('products').delete().neq('id', '');
 
   const { error } = await supabase
     .from('products')
