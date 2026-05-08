@@ -130,7 +130,7 @@ export default async function LandingPage() {
                       src={photo.url}
                       alt={photo.alt}
                       fill
-                      priority={i === 0}
+                      priority
                       className="object-cover"
                       sizes="25vw"
                     />
@@ -149,6 +149,7 @@ export default async function LandingPage() {
                       src={photo.url}
                       alt={photo.alt}
                       fill
+                      priority
                       className="object-cover"
                       sizes="25vw"
                     />
