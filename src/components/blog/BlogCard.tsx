@@ -51,7 +51,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
   const emoji = CATEGORY_EMOJI[article.category] ?? '🐾';
 
   return (
-    <article
+    <div
       className={clsx(
         'card-hover h-full flex flex-col overflow-hidden group',
         featured && 'border-purple-400/20'
@@ -142,6 +142,6 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
           </div>
         </div>
       </Link>
-    </article>
+    </div>
   );
 }
