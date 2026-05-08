@@ -77,13 +77,13 @@ export async function CategoryPageContent({ category }: { category: string }) {
   const [featured, ...rest] = articles;
 
   return (
-    <div className="px-8 py-8 space-y-8 animate-fade-in">
+    <div className="min-h-screen bg-gray-50 px-8 py-8 space-y-8 animate-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
           {meta.icon} {meta.label}
         </h1>
-        <p className="text-gray-400 text-sm mt-1 max-w-2xl">{meta.intro}</p>
+        <p className="text-gray-500 text-sm mt-1 max-w-2xl">{meta.intro}</p>
       </div>
 
       {/* Filtres catégories */}
@@ -95,7 +95,7 @@ export async function CategoryPageContent({ category }: { category: string }) {
             className={`text-xs px-3 py-1.5 rounded-lg border transition-all duration-150 flex items-center gap-1.5 ${
               id === category
                 ? 'bg-amber-500 text-black border-amber-500 font-semibold'
-                : 'bg-transparent text-gray-400 border-[#333] hover:border-amber-500/50 hover:text-amber-400'
+                : 'bg-white text-gray-600 border-gray-300 hover:border-amber-500/50 hover:text-amber-600'
             }`}
           >
             <span>{icon}</span>
@@ -128,14 +128,14 @@ export async function CategoryPageContent({ category }: { category: string }) {
           {featured && (
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs text-amber-400 font-medium uppercase tracking-wide">À la une</span>
+                <span className="text-xs text-amber-600 font-medium uppercase tracking-wide">À la une</span>
               </div>
               <BlogCard article={featured} featured />
             </div>
           )}
           {rest.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-white mb-4">Articles · {meta.label}</h2>
+              <h2 className="text-sm font-semibold text-gray-700 mb-4">Articles · {meta.label}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {rest.map((article) => (
                   <BlogCard key={article.id} article={article} />
