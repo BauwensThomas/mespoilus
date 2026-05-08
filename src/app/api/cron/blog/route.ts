@@ -230,6 +230,7 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       metaDesc = metaDescMatch?.[1]?.trim() ?? '';
 
       // Si affiliation demandée mais Lucas n'a pas retourné de lien → forcer un produit dispo
+      // + adapter le sujet pour que l'article parle vraiment de ce produit
       if (forcedType === 'affiliation' && !lienAffilie) {
         const withLink = productsWithLinks.filter(p => p.affiliate_url);
         if (withLink.length > 0) {
@@ -237,7 +238,8 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
           nomProduit = picked.name;
           lienAffilie = picked.affiliate_url;
           imageProduit = picked.image_url || '';
-          console.log(`[Cron1] Affiliation: Lucas sans lien → produit forcé: ${nomProduit}`);
+          sujet = `${picked.name} : avis, utilisation et conseils pour votre ${animal.replace(/s$/, '')}`;
+          console.log(`[Cron1] Affiliation: Lucas sans lien → produit forcé: ${nomProduit}, sujet adapté`);
         }
       }
 
