@@ -80,10 +80,10 @@ export async function CategoryPageContent({ category }: { category: string }) {
     <div className="px-8 py-8 space-y-8 animate-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold dark:text-white text-gray-900 tracking-tight">
+        <h1 className="text-3xl font-bold text-white tracking-tight">
           {meta.icon} {meta.label}
         </h1>
-        <p className="dark:text-gray-400 text-gray-600 text-sm mt-1 max-w-2xl">{meta.intro}</p>
+        <p className="text-gray-400 text-sm mt-1 max-w-2xl">{meta.intro}</p>
       </div>
 
       {/* Filtres catégories */}
@@ -95,7 +95,7 @@ export async function CategoryPageContent({ category }: { category: string }) {
             className={`text-xs px-3 py-1.5 rounded-lg border transition-all duration-150 flex items-center gap-1.5 ${
               id === category
                 ? 'bg-amber-500 text-black border-amber-500 font-semibold'
-                : 'bg-transparent dark:text-gray-400 text-gray-600 dark:border-[#333] border-gray-300 hover:border-amber-500/50 hover:text-amber-400'
+                : 'bg-transparent text-gray-400 border-[#333] hover:border-amber-500/50 hover:text-amber-400'
             }`}
           >
             <span>{icon}</span>
@@ -105,7 +105,7 @@ export async function CategoryPageContent({ category }: { category: string }) {
       </div>
 
       {/* Bannière */}
-      <div className="relative h-28 rounded-2xl overflow-hidden dark:bg-[#111] bg-gray-200">
+      <div className="relative h-28 rounded-2xl overflow-hidden bg-[#111]">
         {photos[0] && (
           <Image src={photos[0].url} alt={photos[0].alt} fill className="object-cover object-center" />
         )}
@@ -121,7 +121,7 @@ export async function CategoryPageContent({ category }: { category: string }) {
 
       {articles.length === 0 ? (
         <div className="text-center py-16 bg-gray-50 rounded-2xl">
-          <p className="dark:text-gray-400 text-gray-500">Les premiers articles arrivent bientôt !</p>
+          <p className="text-gray-500">Les premiers articles arrivent bientôt !</p>
         </div>
       ) : (
         <>
@@ -135,7 +135,7 @@ export async function CategoryPageContent({ category }: { category: string }) {
           )}
           {rest.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold dark:text-white text-gray-900 mb-4">Articles · {meta.label}</h2>
+              <h2 className="text-sm font-semibold text-white mb-4">Articles · {meta.label}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {rest.map((article) => (
                   <BlogCard key={article.id} article={article} />

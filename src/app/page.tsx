@@ -4,7 +4,6 @@ import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getPhotoForArticle, getHeroPhotos, CATEGORY_PLACEHOLDER } from '@/lib/unsplash';
 import NewsletterForm from '@/components/landing/NewsletterForm';
-import ThemeToggle from '@/components/ui/ThemeToggle';
 import AdBanner from '@/components/ui/AdBanner';
 import type { Article } from '@/types';
 import { format } from 'date-fns';
@@ -72,7 +71,7 @@ export default async function LandingPage() {
   const { heroPhotos, articles, catPhotos } = await getLandingData();
 
   return (
-    <div className="dark:bg-[#111827] bg-white text-gray-900 dark:text-white">
+    <div className="bg-white text-gray-900">
 
       {/* ── NAV ──────────────────────────────────────────────────────────── */}
       <header className="absolute top-0 left-0 right-0 z-20">
@@ -103,7 +102,6 @@ export default async function LandingPage() {
             >
               Boutique
             </Link>
-            <ThemeToggle />
           </div>
         </nav>
       </header>
@@ -202,12 +200,12 @@ export default async function LandingPage() {
       </section>
 
       {/* ── DERNIERS ARTICLES ─────────────────────────────────────────────── */}
-      <section className="py-20 px-6 dark:bg-[#111827] bg-white">
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-end justify-between mb-12">
             <div>
               <span className="text-amber-600 text-sm font-semibold uppercase tracking-widest">Le blog</span>
-              <h2 className="text-3xl font-bold dark:text-white text-gray-900 mt-2">Nos derniers conseils</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mt-2">Nos derniers conseils</h2>
             </div>
             <Link href="/blog" className="hidden md:flex items-center gap-2 text-amber-600 hover:text-amber-700 font-medium text-sm transition-colors">
               Voir tous les articles →
@@ -238,12 +236,12 @@ export default async function LandingPage() {
       </section>
 
       {/* ── CATÉGORIES ────────────────────────────────────────────────────── */}
-      <section id="categories" className="py-20 px-6 dark:bg-[#0f172a] bg-[#faf8f4]">
+      <section id="categories" className="py-20 px-6 bg-[#faf8f4]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <span className="text-amber-600 text-sm font-semibold uppercase tracking-widest">Explorer</span>
-            <h2 className="text-3xl font-bold dark:text-white text-gray-900 mt-2">Par type d'animal</h2>
-            <p className="dark:text-gray-400 text-gray-500 mt-2">Trouvez les conseils adaptés à votre compagnon</p>
+            <h2 className="text-3xl font-bold text-gray-900 mt-2">Par type d'animal</h2>
+            <p className="text-gray-500 mt-2">Trouvez les conseils adaptés à votre compagnon</p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -399,8 +397,8 @@ function ArticleCard({ article }: { article: Article }) {
     : '';
 
   return (
-    <Link href={`/blog/${article.slug}`} className="group block dark:bg-[#1e2a3a] bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md dark:border-[#2a3a4a] border border-gray-100 transition-shadow duration-200">
-      <div className="relative h-52 overflow-hidden dark:bg-[#253347] bg-gray-100">
+    <Link href={`/blog/${article.slug}`} className="group block bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md border border-gray-100 transition-shadow duration-200">
+      <div className="relative h-52 overflow-hidden bg-gray-100">
         <Image
           src={imgSrc}
           alt={article.image_alt ?? article.title}
@@ -416,15 +414,15 @@ function ArticleCard({ article }: { article: Article }) {
         </div>
       </div>
       <div className="p-5">
-        <h3 className="font-bold dark:text-white text-gray-900 text-base leading-snug mb-2 group-hover:text-amber-600 transition-colors line-clamp-2">
+        <h3 className="font-bold text-gray-900 text-base leading-snug mb-2 group-hover:text-amber-600 transition-colors line-clamp-2">
           {article.title}
         </h3>
         {article.excerpt && (
-          <p className="dark:text-gray-400 text-gray-500 text-sm leading-relaxed line-clamp-2 mb-4">
+          <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 mb-4">
             {article.excerpt}
           </p>
         )}
-        <div className="flex items-center justify-between text-xs dark:text-gray-500 text-gray-400">
+        <div className="flex items-center justify-between text-xs text-gray-400">
           <span>{date}</span>
           {article.reading_time && <span>{article.reading_time} min de lecture</span>}
         </div>

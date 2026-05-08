@@ -18,10 +18,9 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 border-r flex flex-col z-40"
-           style={{ background: 'var(--bg-sidebar)', borderColor: 'var(--bg-border)' }}>
+    <aside className="fixed left-0 top-0 h-full w-64 bg-[#0f172a] border-r border-[#2a3a4a] flex flex-col z-40">
       {/* Logo */}
-      <div className="px-6 py-5 border-b" style={{ borderColor: 'var(--bg-border)' }}>
+      <div className="px-6 py-5 border-b border-[#2a3a4a]">
         <Link href="/dashboard" className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-sm">
             🐾
@@ -54,7 +53,7 @@ export default function Sidebar() {
 
       {/* Séparateur agents */}
       <div className="px-6 py-2">
-        <p className="text-[10px] font-semibold uppercase tracking-widest dark:text-gray-300 text-gray-500">Agents</p>
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-300">Agents</p>
       </div>
 
       {/* Liste agents */}
@@ -88,20 +87,18 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer avec déconnexion */}
-      <div className="px-4 py-4 border-t" style={{ borderColor: 'var(--bg-border)' }}>
-        <div className="flex items-center justify-end px-1">
-          <form action={logout}>
-            <button
-              type="submit"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
-                         dark:text-gray-400 text-gray-500 hover:text-red-400 hover:bg-red-400/10
-                         transition-all duration-150"
-            >
-              <span>⎋</span>
-              <span>Déconnexion</span>
-            </button>
-          </form>
-        </div>
+      <div className="px-4 py-4 border-t border-[#2a3a4a] space-y-2">
+        <form action={logout}>
+          <button
+            type="submit"
+            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium
+                       text-gray-400 hover:text-red-400 hover:bg-red-400/10
+                       transition-all duration-150"
+          >
+            <span>⎋</span>
+            <span>Se déconnecter</span>
+          </button>
+        </form>
       </div>
     </aside>
   );

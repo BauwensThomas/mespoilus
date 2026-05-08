@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import ThemeToggle from '@/components/ui/ThemeToggle';
 
 const NAV_LINKS = [
   { href: '/blog',        label: 'Blog'       },
@@ -16,18 +15,18 @@ export default function PublicHeader() {
   if (pathname === '/') return null;
 
   return (
-    <header className="border-b sticky top-0 z-30 dark:bg-[#111827] bg-white dark:border-[#2a3a4a] border-gray-200">
+    <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-30">
       <nav className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-8">
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <span className="text-xl">🐾</span>
-          <span className="font-bold dark:text-white text-gray-900 text-base tracking-tight">Mes Poilus</span>
+          <span className="font-bold text-white text-base tracking-tight">Mes Poilus</span>
         </Link>
         <div className="hidden md:flex items-center gap-6 flex-1">
           {NAV_LINKS.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
-              className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 text-sm font-medium transition-colors duration-150"
+              className="text-gray-400 hover:text-white text-sm font-medium transition-colors duration-150"
             >
               {label}
             </Link>
@@ -38,7 +37,6 @@ export default function PublicHeader() {
           >
             Boutique
           </Link>
-          <ThemeToggle />
         </div>
       </nav>
     </header>

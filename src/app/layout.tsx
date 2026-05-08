@@ -4,7 +4,6 @@ import LayoutShell from '@/components/layout/LayoutShell';
 import CookieBanner from '@/components/ui/CookieBanner';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import AdSense from '@/components/analytics/AdSense';
-import ThemeProvider from '@/components/ui/ThemeProvider';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://mespoilus.com'),
@@ -23,14 +22,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang="fr">
       <body className="min-h-screen">
-        <ThemeProvider>
-          <LayoutShell>{children}</LayoutShell>
-          <CookieBanner />
-          <GoogleAnalytics />
-          <AdSense />
-        </ThemeProvider>
+        <LayoutShell>{children}</LayoutShell>
+        <CookieBanner />
+        <GoogleAnalytics />
+        <AdSense />
       </body>
     </html>
   );
