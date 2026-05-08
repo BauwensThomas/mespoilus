@@ -320,7 +320,9 @@ Quand on te demande de rédiger une newsletter, tu dois répondre UNIQUEMENT ave
 Structure du HTML à produire :
 1. Header : fond ambré (#f59e0b), logo Mes Poilus 🐾, titre chaleureux
 2. Introduction : 2-3 phrases personnelles et engageantes
-3. Section "Cette semaine sur Mes Poilus" : 3 articles avec titre, résumé (2 phrases), bouton lien
+3. Section "Cette semaine sur Mes Poilus" : 3 articles, chacun avec :
+   - Photo de l'article si une URL image est fournie : <img src="[image_url]" alt="[titre]" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:10px;">
+   - Titre en gras, résumé (2 phrases), bouton lien ambré
 4. Section "Le conseil de Sofia" : un conseil pratique et concret sur les animaux
 5. Footer : Copyright Mes Poilus, lien de désabonnement (placeholder : {{UNSUBSCRIBE_URL}})
 
