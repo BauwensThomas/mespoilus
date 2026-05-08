@@ -8,6 +8,7 @@ import AdBanner from '@/components/ui/AdBanner';
 import type { Article } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import PartenairesSection from '@/components/landing/PartenairesSection';
 
 export const revalidate = 3600;
 
@@ -275,6 +276,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ── PARTENAIRES ───────────────────────────────────────────────────── */}
+      <PartenairesSection />
       {/* ── NEWSLETTER ────────────────────────────────────────────────────── */}
       <section id="newsletter" className="py-20 px-6 bg-gradient-to-br from-amber-500 to-orange-500">
         <div className="max-w-2xl mx-auto text-center">

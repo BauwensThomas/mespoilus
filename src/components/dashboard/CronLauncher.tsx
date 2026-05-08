@@ -42,6 +42,17 @@ const CRONS: CronConfig[] = [
     ],
   },
   {
+    id: 'awin',
+    label: 'Sync Boutique Awin',
+    description: 'Synchronise les produits affiliés Awin dans la boutique',
+    icon: '🛍️',
+    color: 'text-amber-400',
+    borderColor: 'border-amber-400/30',
+    steps: [
+      { key: 'awin-sync', label: 'Import produits Awin (toutes catégories)' },
+    ],
+  },
+  {
     id: 'finance',
     label: 'Finance',
     description: 'Antoine génère le rapport financier mensuel',
@@ -81,6 +92,7 @@ interface CronState {
   currentStep: number;
   countdown: number;
   error: string;
+  synced?: number;
 }
 
 function useCronRunner() {
@@ -98,7 +110,7 @@ function useCronRunner() {
     const id = cron.id;
     if (getState(id).status === 'running') return;
 
-    setState(id, { status: 'running', currentStep: 0, error: '' });
+    setState(id, { status: 'running', currentStep: 0, error: '', synced: undefined });
 
     for (let i = 0; i < cron.steps.length; i++) {
       const step = cron.steps[i];
@@ -114,6 +126,11 @@ function useCronRunner() {
         });
         const data = await r.json();
         if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
+
+        // Pour awin-sync, on récupère le nombre de produits synchronisés
+        if (step.key === 'awin-sync' && typeof data.synced === 'number') {
+          setState(id, { synced: data.synced });
+        }
       } catch (err) {
         setState(id, { status: 'error', error: err instanceof Error ? err.message : 'Erreur inconnue' });
         return;
@@ -136,7 +153,7 @@ function useCronRunner() {
   }
 
   function reset(id: string) {
-    setState(id, { status: 'idle', currentStep: 0, countdown: 0, error: '' });
+    setState(id, { status: 'idle', currentStep: 0, countdown: 0, error: '', synced: undefined });
   }
 
   return { getState, run: (cron: CronConfig, animal?: string) => run(cron, animal), reset };
@@ -232,9 +249,14 @@ export default function CronLauncher() {
                     <p className="text-[10px] text-red-400 mt-1.5 ml-6 truncate" title={state.error}>{state.error}</p>
                   )}
                   {state.status === 'done' && (
-                    <button onClick={() => reset(cron.id)} className="text-[10px] text-gray-400 hover:text-gray-200 mt-1 ml-6">
-                      Réinitialiser
-                    </button>
+                    <div className="flex items-center gap-3 mt-1 ml-6">
+                      {cron.id === 'awin' && typeof state.synced === 'number' && (
+                        <p className="text-[10px] text-amber-400">{state.synced} produit{state.synced !== 1 ? 's' : ''} synchronisé{state.synced !== 1 ? 's' : ''}</p>
+                      )}
+                      <button onClick={() => reset(cron.id)} className="text-[10px] text-gray-400 hover:text-gray-200">
+                        Réinitialiser
+                      </button>
+                    </div>
                   )}
                 </div>
               );

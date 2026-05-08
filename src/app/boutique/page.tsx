@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
 import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
-import { PARTENAIRES } from '@/lib/partenaires';
+import { PARTENAIRES, getFlagUrl } from '@/lib/partenaires';
 
 export const metadata: Metadata = {
   title: 'Boutique animaux — Mes Poilus',
@@ -110,6 +110,8 @@ export default async function BoutiquePage({ searchParams }: Props) {
         </div>
       </div>
 
+      <BoutiquePartenaires category={category} />
+
       {!hasSynced ? (
         /* Aucun produit — synchronisation Awin en attente */
         <div className="text-center py-16 bg-gray-50 rounded-2xl">
@@ -132,8 +134,6 @@ export default async function BoutiquePage({ searchParams }: Props) {
           </div>
         </>
       )}
-
-      <BoutiquePartenaires category={category} />
 
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-4 py-2">
         <p className="text-xs text-gray-500 text-center">
@@ -169,7 +169,10 @@ function BoutiquePartenaires({ category }: { category?: string }) {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="font-semibold text-sm text-gray-900 group-hover:text-amber-600 transition-colors">{p.nom}</span>
-                {(p.pays ?? []).map(flag => <span key={flag} className="text-xs">{flag}</span>)}
+                {(p.pays ?? []).map(code => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={code} src={getFlagUrl(code)} alt={code} className="w-4 h-auto inline-block" />
+                ))}
               </div>
               <p className="text-xs text-gray-500 truncate">{[p.pour, p.tag].filter(Boolean).join(' · ')}</p>
             </div>

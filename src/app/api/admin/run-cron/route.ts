@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-type CronStep = 'blog' | 'social' | 'finance' | 'security' | 'newsletter';
+type CronStep = 'blog' | 'social' | 'finance' | 'security' | 'newsletter' | 'awin-sync';
 
 const CRON_PATHS: Record<CronStep, string> = {
-  blog:       '/api/cron/blog',
-  social:     '/api/cron/social',
-  finance:    '/api/cron/finance',
-  security:   '/api/cron/security',
-  newsletter: '/api/cron/newsletter',
+  blog:        '/api/cron/blog',
+  social:      '/api/cron/social',
+  finance:     '/api/cron/finance',
+  security:    '/api/cron/security',
+  newsletter:  '/api/cron/newsletter',
+  'awin-sync': '/api/cron/awin-sync',
 };
 
 export const maxDuration = 120;
