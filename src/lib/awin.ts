@@ -92,6 +92,77 @@ async function getJoinedFeeds(publisherId: string, feedToken: string): Promise<R
   return joined;
 }
 
+const SPECIFIC_CATEGORIES = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'] as const;
+
+function assignCategory(p: Record<string, string>): AwinProduct['category'] {
+  for (const cat of SPECIFIC_CATEGORIES) {
+    if (matchesCategory(p, cat)) return cat;
+  }
+  return 'general';
+}
+
+export async function fetchAllAwinProducts(
+  publisherId: string,
+  feedToken: string,
+  limitPerCategory = 30
+): Promise<AwinProduct[]> {
+  const feeds = await getJoinedFeeds(publisherId, feedToken);
+  if (!feeds.length) return [];
+
+  const countPerCat: Record<string, number> = {};
+  const seenIds = new Set<string>();
+  const allProducts: AwinProduct[] = [];
+
+  for (const feed of feeds) {
+    const feedUrl = feed['URL'];
+    const merchantName = feed['Advertiser Name'];
+    if (!feedUrl) continue;
+
+    try {
+      const csvText = await fetchAndDecompress(feedUrl);
+      const products = parseCSV(csvText);
+
+      for (const p of products) {
+        const id = p['id'] ?? p['aw_product_id'] ?? p['product_id'];
+        const name = p['title'] ?? p['product_name'] ?? '';
+        const deepLink = p['aw_deep_link'] ?? p['link'] ?? '';
+        if (!id || !deepLink) continue;
+
+        const pid = `awin_${id}`;
+        if (seenIds.has(pid)) continue;
+
+        const category = assignCategory(p);
+        if ((countPerCat[category] ?? 0) >= limitPerCategory) continue;
+
+        const desc = p['description'] ?? '';
+        const priceRaw = p['price'] ?? p['search_price'] ?? '0';
+        const priceMatch = priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/);
+        const price = parseFloat(priceMatch?.[1] ?? '0') || 0;
+        const currency = priceMatch?.[2] ?? 'EUR';
+        const availability = p['availability'] ?? p['in_stock'] ?? '';
+        const inStock = availability === 'in_stock' || availability === 'in stock' || availability === '1' || availability === 'true';
+        const imageUrl = p['image_link'] ?? p['aw_image_url'] ?? p['merchant_image_url'] ?? '';
+
+        seenIds.add(pid);
+        countPerCat[category] = (countPerCat[category] ?? 0) + 1;
+
+        allProducts.push({
+          id: pid, name, description: desc.slice(0, 200),
+          price, currency, image_url: imageUrl,
+          affiliate_url: deepLink, merchant_name: merchantName ?? '',
+          category, in_stock: inStock,
+          last_synced: new Date().toISOString(),
+        });
+      }
+    } catch (e) {
+      console.error(`[awin] feed ${merchantName} erreur:`, e);
+    }
+  }
+
+  console.log('[awin] sync terminée:', Object.entries(countPerCat).map(([c, n]) => `${c}:${n}`).join(', '));
+  return allProducts;
+}
+
 export async function fetchAwinProducts(
   publisherId: string,
   feedToken: string,
