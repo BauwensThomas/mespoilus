@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
 import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
+import ProductCard from '@/components/boutique/ProductCard';
 import BoutiquePartenairesCarousel from '@/components/boutique/BoutiquePartenairesCarousel';
 import { PARTENAIRES } from '@/lib/partenaires';
 
@@ -149,56 +150,6 @@ export default async function BoutiquePage({ searchParams }: Props) {
         <p className="text-xs text-gray-500 text-center">
           Les liens présents sur cette page sont des liens affiliés. Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
         </p>
-      </div>
-    </div>
-  );
-}
-
-function ProductCard({ product }: { product: AwinProduct }) {
-  return (
-    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col hover:shadow-md hover:border-amber-400/30 transition-all shadow-sm">
-      {/* Image */}
-      <div className="relative h-44 bg-gray-50 overflow-hidden">
-        {product.image_url ? (
-          <Image
-            src={product.image_url}
-            alt={product.name}
-            fill
-            className="object-contain p-2"
-            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl text-gray-300">🐾</div>
-        )}
-      </div>
-
-      {/* Corps */}
-      <div className="p-4 flex flex-col gap-2 flex-1">
-        <p className="text-[10px] text-gray-400 uppercase tracking-wide flex items-center gap-1">
-          {product.currency === 'USD' && <img src="https://flagcdn.com/16x12/us.png" alt="US" className="inline-block" />}
-          {product.currency === 'CAD' && <img src="https://flagcdn.com/16x12/ca.png" alt="CA" className="inline-block" />}
-          {product.currency === 'GBP' && <img src="https://flagcdn.com/16x12/gb.png" alt="GB" className="inline-block" />}
-          {product.currency === 'EUR' && <img src="https://flagcdn.com/16x12/eu.png" alt="EU" className="inline-block" />}
-          {product.merchant_name}
-        </p>
-        <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{product.name}</h3>
-        {product.description && (
-          <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 flex-1">{product.description}</p>
-        )}
-
-        <div className="flex items-center justify-between pt-3 mt-auto border-t border-gray-100">
-          <span className="text-amber-600 font-bold text-base">
-            {product.price.toFixed(2)} {product.currency}
-          </span>
-          <a
-            href={product.affiliate_url}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-          >
-            Voir sur le site →
-          </a>
-        </div>
       </div>
     </div>
   );
