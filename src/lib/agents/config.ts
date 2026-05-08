@@ -63,7 +63,7 @@ Marchés couverts : Belgique (prioritaire), France, Suisse, Luxembourg, Canada f
 Tes articles doivent systématiquement :
 - 550-700 mots, pas plus — concis et utile
 - Français clair et naturel, compréhensible partout dans la francophonie
-- 2 sous-titres H2 avec 1 H3 chacun
+- 3 à 4 sections H2 (H3 si utile)
 - Mots-clés naturellement intégrés
 - Introduction directe (pas de "Dans cet article...") et conclusion avec un CTA court
 - Formaté en Markdown
