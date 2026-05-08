@@ -1,6 +1,31 @@
 import { gunzipSync } from 'zlib';
 import type { AwinProduct } from '@/types';
 
+const GPC_MAP: Record<string, string[]> = {
+  chiens:   ['dog supplies', 'dog food', 'dog toys', 'dog beds', 'dog treat'],
+  chats:    ['cat supplies', 'cat litter', 'cat furniture', 'cat toys', 'cat food', 'cat treat'],
+  oiseaux:  ['bird supplies', 'bird food'],
+  rongeurs: ['small animal', 'rabbit', 'hamster', 'guinea pig'],
+  reptiles: ['reptile', 'turtle', 'lizard'],
+};
+
+function matchesCategory(p: Record<string, string>, category: string): boolean {
+  const gpc = (p['google_product_category'] ?? '').toLowerCase();
+
+  // Si le GPC correspond à ce category → match
+  if (GPC_MAP[category]?.some(k => gpc.includes(k))) return true;
+
+  // Si le GPC correspond à un AUTRE category → pas un match
+  for (const [cat, keys] of Object.entries(GPC_MAP)) {
+    if (cat !== category && keys.some(k => gpc.includes(k))) return false;
+  }
+
+  // Fallback : mots-clés sur titre + description
+  const keywords = AWIN_CATEGORY_SEARCH[category] ?? [];
+  const text = `${p['title'] ?? ''} ${p['description'] ?? ''}`.toLowerCase();
+  return keywords.some(kw => text.includes(kw.toLowerCase()));
+}
+
 export const AWIN_CATEGORY_SEARCH: Record<string, string[]> = {
   chiens:   ['dog', 'chien', 'canin', 'chiot', 'puppy'],
   chats:    ['cat', 'chat', 'felin', 'chaton', 'kitten', 'litter', 'litière'],
@@ -76,7 +101,6 @@ export async function fetchAwinProducts(
   const feeds = await getJoinedFeeds(publisherId, feedToken);
   if (!feeds.length) return [];
 
-  const keywords = AWIN_CATEGORY_SEARCH[category] ?? ['pet'];
   const allProducts: AwinProduct[] = [];
 
   for (const feed of feeds) {
@@ -106,8 +130,7 @@ export async function fetchAwinProducts(
 
         if (!id || !deepLink) continue;
 
-        const text = `${name} ${desc} ${p['product_type'] ?? ''} ${p['google_product_category'] ?? ''}`.toLowerCase();
-        if (category !== 'general' && !keywords.some(kw => text.includes(kw.toLowerCase()))) continue;
+        if (category !== 'general' && !matchesCategory(p, category)) continue;
 
         const pid = `awin_${id}`;
         if (allProducts.find(x => x.id === pid)) continue;
