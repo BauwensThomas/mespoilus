@@ -64,6 +64,8 @@ export async function GET(req: Request) {
   let season = 'printemps';
   let sujet = '';
   let motsCles: string[] = [];
+  let intention = '';
+  let raison = '';
   let nomProduit = '';
   let lienAffilie = '';
   let imageProduit = '';
@@ -202,6 +204,10 @@ IMAGE_PRODUIT: [URL image du produit, ou AUCUN]`;
       const keywordsMatch = lucasResult.content.match(/MOTS_CLES:\s*(.+)/i);
       sujet = subjectMatch?.[1]?.trim() || `Conseils pratiques pour votre ${animal.replace(/s$/, '')} en ${season}`;
       motsCles = keywordsMatch?.[1]?.split(',').map(k => k.trim()).filter(Boolean) ?? [animal, season, 'conseils', 'bien-être', 'santé'];
+      const intentionMatch = lucasResult.content.match(/INTENTION:\s*(.+)/i);
+      const raisonMatch = lucasResult.content.match(/RAISON:\s*(.+)/i);
+      intention = intentionMatch?.[1]?.trim() ?? '';
+      raison = raisonMatch?.[1]?.trim() ?? '';
       const nomMatch = lucasResult.content.match(/NOM_PRODUIT:\s*(.+)/i);
       const lienMatch = lucasResult.content.match(/LIEN_AFFILIE:\s*(.+)/i);
       const imageMatch = lucasResult.content.match(/IMAGE_PRODUIT:\s*(.+)/i);
@@ -231,14 +237,28 @@ IMAGE_PRODUIT: [URL image du produit, ou AUCUN]`;
     const produitSection = nomProduit && lienAffilie
       ? `\nPRODUIT / PARTENAIRE PRINCIPAL À METTRE EN AVANT :\n- Nom : ${nomProduit}\n- Lien affilié (utilise ce lien EXACT dans le texte, ne l'invente pas) : ${lienAffilie}\n  Ex. dans le texte : [${nomProduit}](${lienAffilie})\n`
       : `\nIntègre naturellement 1-2 recommandations de produits dans le texte avec leurs liens :\n${productsStr}\nSi aucun lien n'est disponible, renvoie vers mespoilus.com/boutique\n`;
-    const saisonLine = forcedType === 'affiliation'
-      ? ''
-      : `Saison : ${season} — adapte les conseils à la saison\n`;
-    const mariePrompt = `Écris un article sur : ${sujet}
-Mots-clés à intégrer naturellement : ${motsCles.join(', ')}
-${saisonLine}Animal : ${animal}
+    const contextLines = [
+      forcedType !== 'affiliation' ? `Saison : ${season}` : '',
+      intention ? `Ce que cherche le lecteur : ${intention}` : '',
+      raison ? `Pourquoi ce sujet maintenant : ${raison}` : '',
+    ].filter(Boolean).join('\n');
+
+    const mariePrompt = `Écris un article de blog sur : ${sujet}
+Animal concerné : ${animal}
+Mots-clés SEO à intégrer naturellement : ${motsCles.join(', ')}
+${contextLines ? `\nContexte :\n${contextLines}\n` : ''}
 ${produitSection}
-Ton bienveillant, accessible, utile. Destiné aux propriétaires francophones.`;
+STRUCTURE OBLIGATOIRE :
+1. Introduction accrocheuse (2-3 phrases qui parlent directement au propriétaire)
+2. 3 à 4 sections avec titres H2 clairs et informatifs
+3. Conclusion avec un appel à l'action vers mespoilus.com/boutique ou mespoilus.com/adoption selon le sujet
+
+CONSIGNES :
+- Entre 550 et 700 mots au total
+- Ton chaleureux, bienveillant, comme un ami expert
+- Public : propriétaires francophones (Belgique, France, Suisse, Canada)
+- Intègre au moins un lien interne : [notre boutique](https://mespoilus.com/boutique) ou [nos annonces d'adoption](https://mespoilus.com/adoption)
+- Ne jamais inventer de faits médicaux ou vétérinaires sans nuance`;
 
     const marieResult = await executeAgentTask('marie', mariePrompt);
     pipelineTokens += marieResult.tokens_used ?? 0;
