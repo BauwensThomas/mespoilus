@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
 import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
-import { PARTENAIRES, getFlagUrl } from '@/lib/partenaires';
+import BoutiquePartenairesCarousel from '@/components/boutique/BoutiquePartenairesCarousel';
+import { PARTENAIRES } from '@/lib/partenaires';
 
 export const metadata: Metadata = {
   title: 'Boutique animaux — Mes Poilus',
@@ -59,38 +60,51 @@ export default async function BoutiquePage({ searchParams }: Props) {
 
   const activeCat = CATEGORIES.find(c => c.id === (category ?? 'all')) ?? CATEGORIES[0];
   const hasSynced = products.length > 0;
+  const filteredPartenaires = PARTENAIRES.filter(p => {
+    const cats = p.categories ?? ['all'];
+    return !category || category === 'all' || cats.includes('all') || cats.includes(category);
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50 px-8 py-8 pb-14 space-y-8 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Boutique Mes Poilus</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Sélection de produits pour vos animaux de compagnie
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 px-8 py-8 pb-14 space-y-4 animate-fade-in">
+      {/* Flex : colonne gauche (titre/recherche/filtres) | colonne droite (carousel) */}
+      <div className="flex items-start gap-8">
 
-      {/* Recherche */}
-      <BoutiqueSearchBar defaultValue={search ?? ''} />
+        {/* Colonne gauche — espacement identique au blog */}
+        <div className="flex flex-col gap-4 flex-1">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Boutique Mes Poilus</h1>
+            <p className="text-gray-500 text-sm mt-1">
+              Sélection de produits pour vos animaux de compagnie
+            </p>
+          </div>
 
-      {/* Filtres */}
-      <div className="flex flex-wrap gap-2">
-        {CATEGORIES.map(cat => {
-          const isActive = (cat.id === 'all' && !category) || cat.id === category;
-          return (
-            <Link
-              key={cat.id}
-              href={cat.id === 'all' ? '/boutique' : `/boutique?category=${cat.id}`}
-              className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
-                isActive
-                  ? 'bg-amber-500 text-black border-amber-500 font-semibold'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-amber-500/50 hover:text-amber-600'
-              }`}
-            >
-              <span>{cat.emoji}</span>
-              <span>{cat.label}</span>
-            </Link>
-          );
-        })}
+          <BoutiqueSearchBar defaultValue={search ?? ''} />
+
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map(cat => {
+              const isActive = (cat.id === 'all' && !category) || cat.id === category;
+              return (
+                <Link
+                  key={cat.id}
+                  href={cat.id === 'all' ? '/boutique' : `/boutique?category=${cat.id}`}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                    isActive
+                      ? 'bg-amber-500 text-black border-amber-500 font-semibold'
+                      : 'bg-white text-gray-600 border-gray-300 hover:border-amber-500/50 hover:text-amber-600'
+                  }`}
+                >
+                  <span>{cat.emoji}</span>
+                  <span>{cat.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Colonne droite — carousel */}
+        <BoutiquePartenairesCarousel partenaires={filteredPartenaires} />
+
       </div>
 
       {/* Bannière */}
@@ -109,8 +123,6 @@ export default async function BoutiquePage({ searchParams }: Props) {
           </div>
         </div>
       </div>
-
-      <BoutiquePartenaires category={category} />
 
       {!hasSynced ? (
         /* Aucun produit — synchronisation Awin en attente */
@@ -139,46 +151,6 @@ export default async function BoutiquePage({ searchParams }: Props) {
         <p className="text-xs text-gray-500 text-center">
           Les liens présents sur cette page sont des liens affiliés. Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
         </p>
-      </div>
-    </div>
-  );
-}
-
-function BoutiquePartenaires({ category }: { category?: string }) {
-  const partenaires = PARTENAIRES.filter(p => {
-    const cats = p.categories ?? ['all'];
-    return !category || category === 'all' || cats.includes('all') || cats.includes(category);
-  });
-  if (!partenaires.length) return null;
-
-  return (
-    <div className="mt-2">
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
-        Partenaires recommandés
-      </p>
-      <div className="flex flex-col sm:flex-row gap-3">
-        {partenaires.map(p => (
-          <a
-            key={p.id}
-            href={p.url}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            className="flex items-center gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 hover:shadow-md hover:border-amber-400/30 transition-all shadow-sm group flex-1 max-w-sm"
-          >
-            <span className="text-2xl">{p.emoji}</span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-sm text-gray-900 group-hover:text-amber-600 transition-colors">{p.nom}</span>
-                {(p.pays ?? []).map(code => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={code} src={getFlagUrl(code)} alt={code} className="w-4 h-auto inline-block" />
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 truncate">{[p.pour, p.tag].filter(Boolean).join(' · ')}</p>
-            </div>
-            <span className="text-amber-500 text-xs font-semibold shrink-0">Voir →</span>
-          </a>
-        ))}
       </div>
     </div>
   );

@@ -348,7 +348,10 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 
 ### Adoption animaux (`/adoption`)
 - Filtres par type d'animal, bannière Unsplash dynamique
+- **Barre de recherche** (`AdoptionSearchBar.tsx`) : recherche par race, description, région (`?q=mot`)
+- `getPosts` accepte `search` → filtre `breed.ilike + description.ilike + region.ilike`
 - Formulaire de dépôt avec upload photos (2-5 photos, Supabase Storage)
+- Page `/adoption/deposer` : thème clair (`bg-gray-50`), formulaire `AdoptionPostForm.tsx` en thème clair (inputs `bg-white`, labels `text-gray-800`)
 - Page modération admin avec approve/reject + emails automatiques Resend
 - Emails : soumission (client + admin), approbation (client), refus (client)
 
@@ -358,13 +361,32 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Cron sync Awin quotidien 3h UTC
 - Disclaimer affiliation barre fixe en bas (bg-white/95)
 
-### Section Partenaires (`PartenairesSection.tsx`)
-- Composant landing page — section "Nos recommandations" placée entre Catégories et Newsletter
-- Interface `Partenaire` : `pays: string[]` (codes ISO : FR, BE, CA, US…), `network: 'awin' | 'cj'`
-- Drapeaux emoji via `FLAGS` record (pas d'img externe)
+### Section Partenaires
+
+#### Landing page (`PartenairesSection.tsx`)
+- Section "Nos recommandations" entre Catégories et Newsletter
+- Affiche toutes les cartes en grille (server component)
+
+#### Boutique — Carrousel coverflow (`BoutiquePartenairesCarousel.tsx`)
+- Carousel animé RAF (requestAnimationFrame) : carte centrale grande (orange-50), côtés plus petites (blanc)
+- Auto-rotation lente (`SPEED = 1/720` ≈ 12s/carte), s'arrête au survol
+- Flèches prev/next affichées **uniquement si ≥ 3 partenaires** — animation démarre aussi à ≥ 3
+- Transition de couleur RGB continue (orange-200 → gray-300 sur les bordures, orange-50 → blanc sur les fonds)
+- Tags en **inline styles CSS** (`tagBg`/`tagText` sur l'interface Partenaire) — Tailwind ne compile pas les classes dynamiques de fichiers `.ts` de données
+- Drapeaux : `flagcdn.com` 16×12px objectFit cover pour uniformiser BE/FR
+- Layout boutique : flex (colonne gauche titre/search/filtres, colonne droite carousel) — `space-y-4`
+
+#### Interface `Partenaire` (`src/lib/partenaires.ts`)
+- `pays: string[]` (codes ISO), `network: 'awin' | 'cj'`
+- `tagColor` (classes Tailwind, pour PartenairesSection et BoutiquePartenairesRotating)
+- `tagBg` / `tagText` (valeurs CSS hex, pour BoutiquePartenairesCarousel — inline styles)
 - Partenaire actuel : **Dogfy Diet** (Awin, FR, chiens, nutrition fraîche)
 - En attente CJ.com : Canada Pet Care, EntirelyPets (CA/US) — à ajouter quand confirmés
-- Bannières promotionnelles Awin déconseillées (codes expirables) → utiliser le lien affilié stable
+- Carousel actif à partir de **3 partenaires** (flèches + animation)
+
+#### Fix Tailwind config
+- `./src/lib/**/*.{js,ts,jsx,tsx}` ajouté au `content` de `tailwind.config.ts`
+- Nécessaire pour que les classes définies dans `partenaires.ts` soient compilées (tagColor pour PartenairesSection)
 
 ### Google Analytics & AdSense
 - GA `G-QE9XSS18YQ` — chargement conditionnel RGPD
@@ -447,6 +469,12 @@ Aucune action manuelle bloquante en cours.
 - Mode jour/nuit/auto (next-themes) : toggle dans header public + admin sidebar, CSS variables, `ThemeToggle.tsx`
 - Filtres catégories blog : OR sur `category` ET `categories[]` — articles visibles sur toutes les pages catégories
 - Barres de recherche blog + boutique : fond `bg-gray-700` (gris visible) au lieu de noir/navy
+- Espacement pages publiques : `space-y-4` sur boutique, blog, adoption (uniformisé)
+- Boutique : carousel coverflow partenaires (RAF, auto-rotate, flèches ≥3, inline styles tags)
+- Tailwind config : `src/lib/` ajouté au content scan
+- Adoption `/deposer` : converti en thème clair (était dark `bg-gray-900`)
+- Adoption : barre de recherche par race/description/région (`AdoptionSearchBar.tsx`)
+- Partenaires : suppression des 4 faux partenaires test (Zooplus, Royal Canin, Petcube, AquaShop)
 
 ---
 
