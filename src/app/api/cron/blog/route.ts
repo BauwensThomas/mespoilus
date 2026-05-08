@@ -120,6 +120,11 @@ export async function GET(req: Request) {
       ? recentTitles.slice(0, 15).map(t => `- ${t}`).join('\n')
       : 'Aucun article récent.';
     const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    // Rotation forcée du type d'article : trending → affiliation → pratique → ...
+    const articleTypeIndex = (week * 3 + postIndex) % 3;
+    const ARTICLE_TYPES = ['trending', 'affiliation', 'pratique'] as const;
+    const forcedType = ARTICLE_TYPES[articleTypeIndex];
+
     const partenairesStr = partenairesAnimal.length
       ? partenairesAnimal.map(p => `- ${p.nom} : ${p.description ?? ''}\n  Lien affilié : ${p.url}`).join('\n')
       : '';
@@ -127,16 +132,30 @@ export async function GET(req: Request) {
       .map(p => p.affiliate_url ? `- ${p.name} | lien : ${p.affiliate_url}${p.image_url ? ` | image : ${p.image_url}` : ''}` : `- ${p.name}`)
       .join('\n');
 
-    const lucasPrompt = `Trouve le meilleur sujet d'article pour les propriétaires de ${animal} en ce moment (${monthName}, ${season}).
+    const typeInstructions: Record<typeof forcedType, string> = {
+      trending: `TYPE IMPOSÉ : TRENDING
+Trouve un sujet que les propriétaires de ${animal} recherchent ACTIVEMENT sur Google EN CE MOMENT.
+Pense au-delà des saisons : comportements étranges, questions santé fréquentes, tendances alimentation,
+questions d'éducation/comportement, actualités vétérinaires, erreurs courantes à éviter.
+NE PAS choisir un sujet saisonnier générique (ex: "printemps avec son chien") — trouve quelque chose de précis et recherché.`,
 
-PRIORITÉ 1 — Sujet EN VOGUE cette saison : qu'est-ce que les propriétaires de ${animal} recherchent activement sur Google en ${season} ? Pense aux préoccupations concrètes du moment (parasites, chaleurs, comportements saisonniers, maladies de saison, soins spécifiques...).
-
-PRIORITÉ 2 — Sujet lié à un PARTENAIRE ou PRODUIT en affiliation :
+      affiliation: `TYPE IMPOSÉ : AFFILIATION
+Tu dois IMPÉRATIVEMENT écrire un article centré sur UN partenaire ou produit ci-dessous.
+Trouve un angle éditorial utile (guide d'achat, comparatif, "pourquoi choisir", avis, bienfaits...).
 ${partenairesStr ? `Partenaires recommandés :\n${partenairesStr}\n` : ''}Produits en boutique :
 ${productsForLucas}
-Si tu choisis un sujet qui met en avant un partenaire ou produit, indique le NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT dans ta réponse.
+Tu DOIS retourner NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT dans ta réponse.`,
 
-PRIORITÉ 3 — Si aucun sujet ne semble vraiment en vogue ou pertinent : propose un conseil pratique utile de saison pour les propriétaires de ${animal}.
+      pratique: `TYPE IMPOSÉ : CONSEIL PRATIQUE
+Propose un guide pratique concret et actionnable pour les propriétaires de ${animal}.
+Exemples : soins à domicile, erreurs à éviter, routine quotidienne, alimentation équilibrée,
+activités, premiers secours, comportement, éducation, hygiène.
+Évite les sujets trop génériques — sois précis et utile.`,
+    };
+
+    const lucasPrompt = `Trouve le meilleur sujet d'article SEO pour les propriétaires de ${animal} (${monthName}).
+
+${typeInstructions[forcedType]}
 
 Articles déjà publiés (à ne pas dupliquer) :
 ${recentContext}
@@ -145,7 +164,7 @@ Retourne UNIQUEMENT :
 SUJET: [le sujet choisi]
 MOTS_CLES: [mot1, mot2, mot3, mot4, mot5]
 INTENTION: [ce que cherche l'internaute]
-RAISON: [pourquoi ce sujet est pertinent maintenant]
+RAISON: [pourquoi ce sujet est pertinent]
 NOM_PRODUIT: [nom exact du produit ou partenaire mis en avant, ou AUCUN]
 LIEN_AFFILIE: [URL affiliée exacte à utiliser dans l'article, ou AUCUN]
 IMAGE_PRODUIT: [URL image du produit, ou AUCUN]`;
