@@ -33,7 +33,7 @@ export default function CookieBanner() {
           <p className="text-white font-semibold text-sm mb-1">🍪 Nous utilisons des cookies</p>
           <p className="text-gray-400 text-xs leading-relaxed">
             Nous utilisons des cookies essentiels (fonctionnement du site) et, avec votre accord, des cookies analytiques (Google Analytics) pour améliorer votre expérience.{' '}
-            <Link href="/cookies" className="text-amber-400 hover:underline">
+            <Link href="/cookies" className="text-amber-400 underline hover:no-underline">
               En savoir plus
             </Link>
           </p>
