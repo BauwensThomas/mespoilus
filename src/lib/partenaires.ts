@@ -6,6 +6,8 @@ export interface Partenaire {
   description?: string;
   tag?: string;
   tagColor?: string;
+  tagBg?: string;   // CSS color pour inline style (carousel)
+  tagText?: string; // CSS color pour inline style (carousel)
   pour?: string;
   network?: 'awin' | 'cj';
   pays?: string[];     // codes ISO: ['FR', 'BE', 'CA', 'US'…]
@@ -25,7 +27,8 @@ export const PARTENAIRES: Partenaire[] = [
     url: 'https://www.awin1.com/cread.php?awinmid=30279&awinaffid=2885973&ued=https%3A%2F%2Fdogfydiet.com%2Ffr',
     emoji: '🍗',
     tag: 'Nutrition fraîche',
-    tagColor: 'bg-orange-100 text-orange-700',
+    tagColor: 'bg-orange-100 text-orange-800',
+    tagBg: '#ffedd5', tagText: '#9a3412',
     pour: 'Pour les chiens',
     network: 'awin',
     pays: ['FR'],

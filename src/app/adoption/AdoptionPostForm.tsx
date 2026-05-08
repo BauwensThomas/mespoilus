@@ -116,18 +116,18 @@ export default function AdoptionPostForm() {
     }
   }
 
-  const inputCls = 'w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30';
+  const inputCls = 'w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30';
 
   if (status === 'success') {
     return (
       <div className="max-w-2xl">
         <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-8 text-center">
           <span className="text-4xl block mb-3">✅</span>
-          <h3 className="text-white font-semibold text-lg mb-2">Annonce envoyée !</h3>
-          <p className="text-gray-400 text-sm">
+          <h3 className="text-gray-900 font-semibold text-lg mb-2">Annonce envoyée !</h3>
+          <p className="text-gray-500 text-sm">
             Votre annonce est en cours de vérification et sera publiée sous 24h après validation.
           </p>
-          <button onClick={() => setStatus('idle')} className="mt-4 text-amber-400 hover:underline text-sm">
+          <button onClick={() => setStatus('idle')} className="mt-4 text-amber-600 hover:underline text-sm">
             Déposer une autre annonce
           </button>
         </div>
@@ -140,18 +140,18 @@ export default function AdoptionPostForm() {
       <form onSubmit={submit} className="space-y-5">
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
-            <p className="text-red-400 text-sm">{error}</p>
+            <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
 
         {/* ── Photos ─────────────────────────────────────────────── */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-xs text-gray-400 font-medium">
-              Photos de l'animal <span className="text-amber-400">*</span>
-              <span className="text-gray-600 ml-1">(2 min · 5 max)</span>
+            <label className="text-xs text-gray-800 font-medium">
+              Photos de l'animal <span className="text-amber-500">*</span>
+              <span className="text-gray-500 ml-1">(2 min · 5 max)</span>
             </label>
-            <span className={`text-xs font-medium ${photos.length >= 2 ? 'text-emerald-400' : 'text-gray-500'}`}>
+            <span className={`text-xs font-medium ${photos.length >= 2 ? 'text-emerald-600' : 'text-gray-500'}`}>
               {photos.length} / 5
             </span>
           </div>
@@ -160,7 +160,7 @@ export default function AdoptionPostForm() {
           {photos.length > 0 && (
             <div className="grid grid-cols-5 gap-2 mb-2">
               {photos.map((p, i) => (
-                <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-800 group">
+                <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.preview} alt="" className="w-full h-full object-cover" />
                   <button
@@ -178,7 +178,7 @@ export default function AdoptionPostForm() {
                 <button
                   type="button"
                   onClick={() => inputRef.current?.click()}
-                  className="aspect-square rounded-lg border border-dashed border-gray-600 hover:border-amber-500/50 flex items-center justify-center text-gray-600 hover:text-amber-400 transition-colors text-xl"
+                  className="aspect-square rounded-lg border border-dashed border-gray-300 hover:border-amber-500/50 flex items-center justify-center text-gray-500 hover:text-amber-500 transition-colors text-xl"
                 >
                   +
                 </button>
@@ -191,10 +191,10 @@ export default function AdoptionPostForm() {
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="w-full border border-dashed border-gray-600 hover:border-amber-500/50 rounded-xl py-8 flex flex-col items-center gap-2 text-gray-500 hover:text-amber-400 transition-colors"
+              className="w-full border border-dashed border-gray-300 hover:border-amber-500/50 rounded-xl py-8 flex flex-col items-center gap-2 text-gray-500 hover:text-amber-500 transition-colors"
             >
               <span className="text-sm font-medium">Cliquez pour ajouter des photos</span>
-              <span className="text-xs text-gray-600">JPG, PNG, WebP · Max 5 Mo par photo</span>
+              <span className="text-xs text-gray-500">JPG, PNG, WebP · Max 5 Mo par photo</span>
             </button>
           )}
 
@@ -211,11 +211,11 @@ export default function AdoptionPostForm() {
         {/* ── Infos déposant ─────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5 font-medium">Votre prénom *</label>
+            <label className="block text-xs text-gray-800 mb-1.5 font-medium">Votre prénom *</label>
             <input type="text" required value={form.poster_name} onChange={e => set('poster_name', e.target.value)} placeholder="Jean" className={inputCls} />
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5 font-medium">Votre email (privé) *</label>
+            <label className="block text-xs text-gray-800 mb-1.5 font-medium">Votre email (privé) *</label>
             <input type="email" required value={form.email} onChange={e => set('email', e.target.value)} placeholder="vous@email.com" className={inputCls} />
           </div>
         </div>
@@ -223,25 +223,25 @@ export default function AdoptionPostForm() {
         {/* ── Animal ─────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5 font-medium">Type d'animal *</label>
+            <label className="block text-xs text-gray-800 mb-1.5 font-medium">Type d'animal *</label>
             <select required value={form.animal_type} onChange={e => set('animal_type', e.target.value)} className={inputCls}>
               <option value="">Choisir...</option>
               {ANIMAL_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5 font-medium">Race / Espèce</label>
+            <label className="block text-xs text-gray-800 mb-1.5 font-medium">Race / Espèce</label>
             <input type="text" value={form.breed} onChange={e => set('breed', e.target.value)} placeholder="ex : Labrador, Siamois…" className={inputCls} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5 font-medium">Âge approximatif</label>
+            <label className="block text-xs text-gray-800 mb-1.5 font-medium">Âge approximatif</label>
             <input type="text" value={form.age} onChange={e => set('age', e.target.value)} placeholder="ex : 2 ans" className={inputCls} />
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5 font-medium">Sexe</label>
+            <label className="block text-xs text-gray-800 mb-1.5 font-medium">Sexe</label>
             <select value={form.gender} onChange={e => set('gender', e.target.value)} className={inputCls}>
               <option value="inconnu">Inconnu</option>
               <option value="mâle">Mâle</option>
@@ -252,19 +252,19 @@ export default function AdoptionPostForm() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5 font-medium">Pays *</label>
+            <label className="block text-xs text-gray-800 mb-1.5 font-medium">Pays *</label>
             <select required value={form.country} onChange={e => set('country', e.target.value)} className={inputCls}>
               {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5 font-medium">Région / Ville *</label>
+            <label className="block text-xs text-gray-800 mb-1.5 font-medium">Région / Ville *</label>
             <input type="text" required value={form.region} onChange={e => set('region', e.target.value)} placeholder="ex : Bruxelles" className={inputCls} />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs text-gray-400 mb-1.5 font-medium">Description *</label>
+          <label className="block text-xs text-gray-800 mb-1.5 font-medium">Description *</label>
           <textarea required value={form.description} onChange={e => set('description', e.target.value)} rows={4}
             placeholder="Décrivez l'animal : comportement, besoins, pourquoi vous le donnez…"
             className={`${inputCls} resize-none`} />
@@ -272,17 +272,17 @@ export default function AdoptionPostForm() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5 font-medium">Email public *</label>
+            <label className="block text-xs text-gray-800 mb-1.5 font-medium">Email public *</label>
             <input type="email" required value={form.contact_email} onChange={e => set('contact_email', e.target.value)}
               placeholder="contact@email.com" className={inputCls} />
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5 font-medium">Téléphone</label>
+            <label className="block text-xs text-gray-800 mb-1.5 font-medium">Téléphone</label>
             <input type="tel" value={form.contact_phone} onChange={e => set('contact_phone', e.target.value)}
               placeholder="ex : 0487 12 34 56" className={inputCls} />
           </div>
         </div>
-        <p className="text-[10px] text-gray-600 -mt-3">Ces coordonnées seront visibles sur l'annonce publiée.</p>
+        <p className="text-[10px] text-gray-500 -mt-3">Ces coordonnées seront visibles sur l'annonce publiée.</p>
 
         <button
           type="submit"

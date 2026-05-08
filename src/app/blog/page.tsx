@@ -88,7 +88,7 @@ export default async function BlogPage({ searchParams }: Props) {
   const [featured, ...rest] = articles;
 
   return (
-    <div className="min-h-screen bg-gray-50 px-8 py-8 space-y-8 animate-fade-in">
+    <div className="min-h-screen bg-gray-50 px-8 py-8 space-y-4 animate-fade-in">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Blog Mes Poilus</h1>

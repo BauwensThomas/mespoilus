@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getHeroPhotos, getBannerPhotos } from '@/lib/unsplash';
 import AdBanner from '@/components/ui/AdBanner';
+import AdoptionSearchBar from '@/components/adoption/AdoptionSearchBar';
 
 export const metadata: Metadata = {
   title: 'Adoption animaux',
@@ -45,7 +46,7 @@ const TYPE_COLOR: Record<string, { border: string; badge: string; bg: string }> 
   autre:   { border: 'border-gray-500/30',    badge: 'text-gray-400',    bg: 'bg-gray-500/10'    },
 };
 
-async function getPosts(animal?: string): Promise<AdoptionPost[]> {
+async function getPosts(animal?: string, search?: string): Promise<AdoptionPost[]> {
   try {
     const supabase = createAdminClient();
     let q = supabase
@@ -55,6 +56,7 @@ async function getPosts(animal?: string): Promise<AdoptionPost[]> {
       .order('created_at', { ascending: false })
       .limit(50);
     if (animal && animal !== 'all') q = q.eq('animal_type', animal);
+    if (search) q = q.or(`breed.ilike.%${search}%,description.ilike.%${search}%,region.ilike.%${search}%`);
     const { data } = await q;
     return (data as AdoptionPost[]) ?? [];
   } catch {
@@ -63,21 +65,22 @@ async function getPosts(animal?: string): Promise<AdoptionPost[]> {
 }
 
 interface Props {
-  searchParams: { animal?: string };
+  searchParams: { animal?: string; q?: string };
 }
 
 export default async function AdoptionPage({ searchParams }: Props) {
   const animal = searchParams.animal;
+  const search = searchParams.q?.trim();
   const bannerQuery = animal && ADOPTION_BANNER_QUERIES[animal];
   const [posts, allPhotos] = await Promise.all([
-    getPosts(animal),
+    getPosts(animal, search),
     bannerQuery ? getBannerPhotos(bannerQuery) : getHeroPhotos(),
   ]);
   const activeType = ANIMAL_TYPES.find(t => t.id === (animal ?? 'all')) ?? ANIMAL_TYPES[0];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="px-8 py-8 space-y-8">
+      <div className="px-8 py-8 space-y-4">
 
         {/* Hero */}
         <div>
@@ -86,6 +89,9 @@ export default async function AdoptionPage({ searchParams }: Props) {
             Trouvez un compagnon près de chez vous, ou aidez un animal à trouver un foyer aimant.
           </p>
         </div>
+
+        {/* Recherche */}
+        <AdoptionSearchBar defaultValue={search ?? ''} />
 
         {/* Filtres + bouton */}
         <div className="relative flex flex-wrap gap-2">
