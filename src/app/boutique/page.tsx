@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
 import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
-import { PARTENAIRES, FLAGS } from '@/lib/partenaires';
+import { PARTENAIRES } from '@/lib/partenaires';
 
 export const metadata: Metadata = {
   title: 'Boutique animaux — Mes Poilus',
@@ -169,7 +169,7 @@ function BoutiquePartenaires({ category }: { category?: string }) {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="font-semibold text-sm text-gray-900 group-hover:text-amber-600 transition-colors">{p.nom}</span>
-                {(p.pays ?? []).map(code => <span key={code} className="text-xs">{FLAGS[code]}</span>)}
+                {(p.pays ?? []).map(flag => <span key={flag} className="text-xs">{flag}</span>)}
               </div>
               <p className="text-xs text-gray-500 truncate">{[p.pour, p.tag].filter(Boolean).join(' · ')}</p>
             </div>

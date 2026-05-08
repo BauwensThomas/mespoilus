@@ -1,4 +1,4 @@
-import { PARTENAIRES, FLAGS } from '@/lib/partenaires';
+import { PARTENAIRES } from '@/lib/partenaires';
 
 export default function PartenairesSection() {
   if (!PARTENAIRES.length) return null;
@@ -33,7 +33,7 @@ export default function PartenairesSection() {
                     <div className="flex items-center gap-2">
                       <p className="font-bold text-gray-900 text-base">{p.nom}</p>
                       {(p.pays ?? []).map(code => (
-                        <span key={code} title={code}>{FLAGS[code]}</span>
+                        <span key={code}>{code}</span>
                       ))}
                     </div>
                     {p.pour && <p className="text-xs text-gray-400">{p.pour}</p>}
