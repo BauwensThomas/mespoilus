@@ -33,8 +33,8 @@ Chaque agent utilise l'API Anthropic (Claude) et fonctionne de façon autonome. 
 | Agent | Rôle | Modèle Claude | maxTokens | Responsabilités |
 |-------|------|--------------|-----------|-----------------|
 | 👔 **Thomas** | CEO Orchestrateur | Opus 4.7 | 3000 | Stratégie globale, priorisation, coordination, rapports |
-| ✍️ **Marie** | Rédactrice de contenu | **Haiku 4.5** | **1200** | Articles de blog (400-600 mots), guides pratiques, conseils |
-| 🔍 **Lucas** | Spécialiste SEO | Sonnet 4.6 | **400** | Recherche mots-clés, optimisation on-page, stratégie francophone |
+| ✍️ **Marie** | Rédactrice de contenu | **Haiku 4.5** | **1400** | Articles de blog (550-700 mots), guides pratiques, conseils |
+| 🔍 **Lucas** | Spécialiste SEO | Sonnet 4.6 | **500** | Recherche mots-clés, optimisation on-page, stratégie francophone |
 | 📱 **Emma** | Réseaux sociaux | Haiku 4.5 | 2000 | Posts Facebook + Instagram (@mespoilusofficiel), hashtags, lien article complet |
 | 💻 **Maxime** | Développeur & Maintenance | Sonnet 4.6 | 6000 | Performances, bugs, Next.js / Supabase, Core Web Vitals |
 | 💬 **Léa** | Support client | Haiku 4.5 | 3000 | Réponses emails clients, commandes, FAQ — à la demande uniquement (pas de cron) |
@@ -177,12 +177,20 @@ NEXT_PUBLIC_APP_URL          # Ex: https://www.mespoilus.com (OBLIGATOIRE pour f
 ### Blog automatique — Pipeline complet
 
 #### Cron 1 : `/api/cron/blog` (Lun/Mer/Ven 9h UTC)
-1. **Thomas** prépare le contexte (animal par rotation, saison, mois exact, produits Supabase)
-   - **Rotation animaux** : `ANIMAL_CATEGORIES[(semaine_ISO * 3 + jourIndex) % 5]` — 3 animaux différents par semaine, combinaisons changeantes chaque semaine. Lundi=0, Mercredi=1, Vendredi=2.
-   - **Override manuel** : `?animal=chiens` via le sélecteur CronLauncher (dropdown dans le pipeline "SEO + Blog + Réseaux")
-2. **Lucas** choisit le meilleur sujet selon priorité : **1) trending de saison** (préoccupations actuelles Google) → **2) lié aux produits AWIN dispo** (meilleure monétisation) → **3) fallback conseil pratique saisonnier**
-3. **Marie** rédige l'article (Haiku 4.5, 1200 tokens, ~400-600 mots, ~10s) → sauvegardé dans Supabase
-4. **Image** : téléchargement Pexels par catégorie animale → stockage dans Supabase Storage `blog-images` → mise à jour `image_url` sur l'article
+1. **Thomas** prépare le contexte (animal par rotation, saison, mois, produits Supabase, 3 articles récents même catégorie)
+   - **Rotation animaux** : `ANIMAL_CATEGORIES[(semaine_ISO * 3 + jourIndex) % 5]` — 3 animaux différents par semaine. Lundi=0, Mercredi=1, Vendredi=2.
+   - **Override manuel** : `?animal=chiens` via le sélecteur CronLauncher
+2. **Lucas** choisit le sujet selon le **type d'article** (rotation forcée ou override manuel) :
+   - **Rotation type** : `(semaine*3+jourIndex) % 3` → trending → affiliation → pratique → ...
+   - **trending** : sujet activement recherché sur Google (hors saisonniers génériques)
+   - **affiliation** : article centré sur un partenaire ou produit Awin avec lien affilié exact ; anti-répétition 30 articles via colonne `featured_partner`
+   - **pratique** : guide concret et actionnable ; fallback si affiliation impossible (tous bloqués + aucun produit dispo)
+   - Retourne : SUJET, MOTS_CLES, INTENTION, RAISON, NOM_PRODUIT, LIEN_AFFILIE, IMAGE_PRODUIT, META_DESC
+3. **Marie** rédige l'article (Haiku 4.5, **1400 tokens**, **550-700 mots**, ~12s) → sauvegardé dans Supabase
+   - Reçoit : sujet + mots-clés + intention + raison + meta description cible + 3 articles récents pour liens internes
+   - Saison injectée uniquement pour trending et pratique (pas pour affiliation → évite "printemps printemps")
+   - Temps de lecture recalculé dynamiquement après génération (`wordCount ÷ 250`, min 1)
+4. **Image** : image produit Awin (téléchargée → Supabase Storage) si affiliation, sinon Pexels → `blog-images`
 5. Résultat écrit dans `cron_state` (slug, title, excerpt) avec status `article_ready`
 6. **Stats Thomas** : tokens = somme Lucas + Marie
 
@@ -216,6 +224,8 @@ NEXT_PUBLIC_APP_URL          # Ex: https://www.mespoilus.com (OBLIGATOIRE pour f
 ### CronLauncher — Pipelines manuels (Dashboard)
 
 Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
+- **Sélecteur animal** : forcer un animal spécifique (chiens, chats, oiseaux, rongeurs, reptiles) ou Auto
+- **Sélecteur type article** : Auto (rotation), Trending, Partenaire/Produit, Conseil pratique
 
 | Pipeline | Agents | Ce qui se passe |
 |----------|--------|-----------------|
@@ -286,7 +296,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Articles sauvegardés automatiquement dans Supabase
 - Images stockées dans Supabase Storage `blog-images`
 - Filtres par catégorie via `?category=chiens`
-- Pages articles avec hero image, rendu Markdown via `marked`
+- Pages articles (`/blog/[slug]`) : **thème clair** (bg-gray-50, texte #111827) — prose Tailwind light + `.article-content` CSS light dans `globals.css`
+- Hero image + gradient overlay + crédit photographe Pexels cliquable
 - SEO complet (meta, OG, Twitter Card, Schema.org JSON-LD)
 - Sitemap dynamique, robots.txt
 
@@ -335,6 +346,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 | `src/lib/supabase/migration_cron_state.sql` | Table `cron_state` |
 | `src/lib/supabase/migration_blog_images.sql` | Policies bucket `blog-images` |
 | `src/lib/supabase/migration_agent_reports.sql` | Tables `seo_reports`, `tech_reports`, `support_logs` ✅ |
+| `src/lib/supabase/migration_featured_partner.sql` | Colonne `featured_partner TEXT` sur `articles` — anti-répétition partenaires 30 articles ✅ |
 
 ### Newsletter (Sofia)
 - `src/lib/resend.ts` — client Resend via fetch natif
@@ -359,8 +371,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 
 ### Boutique (`/boutique`) — Architecture Awin
 - Filtres par catégorie, bannière Unsplash dynamique, barre de recherche
-- `ProductCard` client component : image, nom, description, prix + devise, drapeau marchand, bouton "Voir sur le site" affilié `rel="sponsored"`
-- Bouton ✕ "signaler lien cassé" : POST `/api/products/report` → `in_stock=false` en DB → carte disparaît immédiatement
+- `ProductCard` server component simplifié : image, nom, description, prix + devise, drapeau marchand, bouton "Voir sur le site" affilié `rel="sponsored"`
+- Liens 404 laissés tels quels (1 produit sur 30 acceptable — risque de tout supprimer par erreur > risque d'un 404 isolé)
 - Drapeaux via `flagcdn.com` : USD→🇺🇸, CAD→🇨🇦, GBP→🇬🇧, EUR→🇪🇺
 - Cron sync Awin quotidien 3h UTC : **reset complet** de la table `products` puis réinsertion depuis feeds Awin
 - Disclaimer affiliation barre fixe en bas (bg-white/95)
@@ -469,6 +481,16 @@ Aucune action manuelle bloquante en cours.
 - Léa : mode manuel uniquement (pas d'intégration email automatique prévue)
 - Footer page accueil : lien Admin supprimé, TikTok supprimé, Facebook lié (https://www.facebook.com/profile.php?id=61589487954538) + Instagram lié (https://www.instagram.com/mespoilusofficiel)
 - Lucas cron blog : priorité sujets trending > AWIN affiliés > fallback saisonnier
+- Rotation type d'article cron blog : trending → affiliation → pratique via `(semaine*3+jourIndex)%3` + override manuel CronLauncher
+- Anti-répétition partenaires : colonne `featured_partner` sur `articles`, bloque réutilisation pendant 30 articles
+- Lucas enrichi : output cron inclut INTENTION, RAISON, NOM_PRODUIT, LIEN_AFFILIE, IMAGE_PRODUIT, META_DESC
+- Marie enrichie : reçoit contexte Lucas complet + 3 articles récents même catégorie pour liens internes + meta cible
+- Marie tokens 1200 → 1400, consigne 550-700 mots (était 400-600), structure 3-4 H2 (était 2 H2)
+- Lucas tokens 400 → 500
+- Temps de lecture calculé dynamiquement après génération (wordCount÷250) et mis à jour en DB
+- Pages articles blog `/blog/[slug]` : thème clair (bg-gray-50, texte #111827), `.article-content` CSS light
+- ProductCard simplifié : bouton "lien cassé" supprimé — liens 404 acceptables (1/30)
+- tsconfig target ES2017 : fix compatibilité Set/iteration TypeScript sur Vercel
 - Dashboard totaux : calculés depuis `activity_logs` (même source que mensuels) pour cohérence garantie
 - Cron social log : label corrigé (était "Emma + Sofia terminés", maintenant "Emma terminée")
 - Thomas tokens : logs crons blog/finance/security/newsletter sauvegardent `tokens_used` dans `activity_logs`

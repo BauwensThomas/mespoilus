@@ -319,6 +319,15 @@ CONSIGNES :
       } catch { /* migration non encore appliquée — pas de blocage */ }
     }
 
+    // Temps de lecture calculé depuis le vrai nombre de mots (250 mots/min)
+    if (articleSlug && wordCount > 0) {
+      try {
+        await supabase.from('articles')
+          .update({ reading_time: Math.max(1, Math.ceil(wordCount / 250)) })
+          .eq('slug', articleSlug);
+      } catch { /* non-bloquant */ }
+    }
+
     // ─── IMAGE : télécharger pour l'animal + stocker dans Supabase Storage ───
     let imageUrl: string | null = null;
     if (articleSlug) {
