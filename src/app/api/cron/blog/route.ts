@@ -102,9 +102,9 @@ export async function GET(req: Request) {
         .not('featured_partner', 'is', null)
         .order('published_at', { ascending: false })
         .limit(30);
-      recentlyFeaturedPartners = [...new Set(
+      recentlyFeaturedPartners = Array.from(new Set(
         (partnerRows ?? []).map((a: { featured_partner: string }) => a.featured_partner).filter(Boolean)
-      )];
+      ));
     } catch { /* migration non encore appliquée — pas de blocage */ }
 
     const { data: productRows } = await supabase
