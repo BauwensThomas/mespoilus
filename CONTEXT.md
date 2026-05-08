@@ -491,7 +491,8 @@ Aucune action manuelle bloquante en cours.
 - Pages articles blog `/blog/[slug]` : thème clair (bg-gray-50, texte #111827), `.article-content` CSS light
 - ProductCard simplifié : bouton "lien cassé" supprimé — liens 404 acceptables (1/30)
 - tsconfig target ES2017 : fix compatibilité Set/iteration TypeScript sur Vercel
-- Accessibilité 91→100 : labels amber-600→amber-700, textes gray-400→gray-500, alt="" images catégories décoratives, balise `<main>` dans LayoutShell public
+- Accessibilité 91→96 : labels amber-600→amber-700, textes gray-400→gray-500, alt="" images catégories décoratives, balise `<main>` dans LayoutShell public
+- Accessibilité 96→100 : CookieBanner lien "En savoir plus" underline (identification couleur), flagcdn img width/height explicites
 - PageSpeed Insights : 100 Performances / 100 SEO / 100 Bonnes pratiques / 100 Accessibilité ✅
 - Google Search Console + Bing Webmaster Tools : sitemaps soumis, pages découvertes, indexation en cours
 - ads.txt en ligne (`/public/ads.txt`, pub-3549294158319032) — AdSense en révision
