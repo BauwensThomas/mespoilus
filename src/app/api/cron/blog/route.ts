@@ -130,12 +130,20 @@ export async function GET(req: Request) {
     // Rotation forcée du type d'article : trending → affiliation → pratique → ...
     const ARTICLE_TYPES = ['trending', 'affiliation', 'pratique'] as const;
     const articleTypeIndex = (week * 3 + postIndex) % 3;
-    const forcedType = (urlType && (ARTICLE_TYPES as readonly string[]).includes(urlType))
+    const requestedType = (urlType && (ARTICLE_TYPES as readonly string[]).includes(urlType))
       ? urlType as typeof ARTICLE_TYPES[number]
       : ARTICLE_TYPES[articleTypeIndex];
 
-    const partenairesStr = partenairesAnimal.length
-      ? partenairesAnimal.map(p => `- ${p.nom} : ${p.description ?? ''}\n  Lien affilié : ${p.url}`).join('\n')
+    // Fallback affiliation → pratique si tous les partenaires sont bloqués et aucun produit dispo
+    const availablePartners = partenairesAnimal.filter(p => !recentlyFeaturedPartners.includes(p.nom));
+    const hasAffiliatableProducts = productsWithLinks.some(p => p.affiliate_url);
+    const forcedType = (requestedType === 'affiliation' && availablePartners.length === 0 && !hasAffiliatableProducts)
+      ? 'pratique' as const
+      : requestedType;
+    if (forcedType !== requestedType) console.log('[Cron1] Affiliation: tous bloqués → fallback pratique');
+
+    const partenairesStr = availablePartners.length
+      ? availablePartners.map(p => `- ${p.nom} : ${p.description ?? ''}\n  Lien affilié : ${p.url}`).join('\n')
       : '';
     const productsForLucas = productsWithLinks
       .map(p => p.affiliate_url ? `- ${p.name} | lien : ${p.affiliate_url}${p.image_url ? ` | image : ${p.image_url}` : ''}` : `- ${p.name}`)
