@@ -69,6 +69,8 @@ export async function GET(req: Request) {
   let nomProduit = '';
   let lienAffilie = '';
   let imageProduit = '';
+  let metaDesc = '';
+  let relatedArticles: { slug: string; title: string }[] = [];
   let articleSlug = '';
   let articleTitle = '';
   let articleExcerpt = '';
@@ -120,6 +122,15 @@ export async function GET(req: Request) {
     const productsWithLinks: ProductRow[] = (productRows && productRows.length > 0)
       ? (productRows as ProductRow[])
       : GENERIC_PRODUCTS[animal].map(name => ({ name, affiliate_url: '', image_url: '' }));
+
+    // Derniers articles de la même catégorie pour liens internes dans l'article de Marie
+    try {
+      const { data: relRows } = await supabase
+        .from('articles').select('slug, title')
+        .eq('category', animal).eq('status', 'published')
+        .order('published_at', { ascending: false }).limit(3);
+      relatedArticles = (relRows ?? []) as { slug: string; title: string }[];
+    } catch { /* non-bloquant */ }
 
     const partenairesAnimal = PARTENAIRES.filter(p =>
       !p.categories || p.categories.includes(animal)
@@ -195,7 +206,8 @@ INTENTION: [ce que cherche l'internaute]
 RAISON: [pourquoi ce sujet est pertinent]
 NOM_PRODUIT: [nom exact du produit ou partenaire mis en avant, ou AUCUN]
 LIEN_AFFILIE: [URL affiliée exacte à utiliser dans l'article, ou AUCUN]
-IMAGE_PRODUIT: [URL image du produit, ou AUCUN]`;
+IMAGE_PRODUIT: [URL image du produit, ou AUCUN]
+META_DESC: [meta description SEO optimisée, 155 caractères max]`;
 
     const lucasResult = await executeAgentTask('lucas', lucasPrompt);
     pipelineTokens += lucasResult.tokens_used ?? 0;
@@ -214,6 +226,8 @@ IMAGE_PRODUIT: [URL image du produit, ou AUCUN]`;
       nomProduit = (nomMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (nomMatch?.[1]?.trim() ?? '');
       lienAffilie = (lienMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (lienMatch?.[1]?.trim() ?? '');
       imageProduit = (imageMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (imageMatch?.[1]?.trim() ?? '');
+      const metaDescMatch = lucasResult.content.match(/META_DESC:\s*(.+)/i);
+      metaDesc = metaDescMatch?.[1]?.trim() ?? '';
       console.log(`[Cron1] Lucas : sujet=${sujet}${nomProduit ? `, produit=${nomProduit}` : ''}`);
       await logActivity('thomas', 'Thomas',
         `Cron étape 2 : Lucas → ${sujet}`,
@@ -246,8 +260,9 @@ IMAGE_PRODUIT: [URL image du produit, ou AUCUN]`;
     const mariePrompt = `Écris un article de blog sur : ${sujet}
 Animal concerné : ${animal}
 Mots-clés SEO à intégrer naturellement : ${motsCles.join(', ')}
-${contextLines ? `\nContexte :\n${contextLines}\n` : ''}
+${contextLines ? `\nContexte :\n${contextLines}\n` : ''}${metaDesc ? `Meta description cible (155 chars max) : ${metaDesc}\n` : ''}
 ${produitSection}
+${relatedArticles.length ? `Articles récents ${animal} — intègre 1-2 liens internes si pertinent :\n${relatedArticles.map(a => `- [${a.title}](https://mespoilus.com/blog/${a.slug})`).join('\n')}\n` : ''}
 STRUCTURE OBLIGATOIRE :
 1. Introduction accrocheuse (2-3 phrases qui parlent directement au propriétaire)
 2. 3 à 4 sections avec titres H2 clairs et informatifs
@@ -263,6 +278,13 @@ CONSIGNES :
     const marieResult = await executeAgentTask('marie', mariePrompt);
     pipelineTokens += marieResult.tokens_used ?? 0;
     if (!marieResult.success) throw new Error(marieResult.error ?? 'Marie a échoué');
+
+    // Vérification longueur de l'article (hors frontmatter)
+    const fmEnd = marieResult.content.indexOf('---', 3);
+    const bodyForCount = fmEnd > -1 ? marieResult.content.slice(fmEnd + 3) : marieResult.content;
+    const wordCount = bodyForCount.trim().split(/\s+/).filter(Boolean).length;
+    if (wordCount < 350) console.warn(`[Cron1] Article court: ${wordCount} mots (cible: 550-700)`);
+    else console.log(`[Cron1] Article: ~${wordCount} mots ✓`);
 
     const slugMatch = marieResult.content.match(/^slug:\s*(.+)/m);
     const titleMatch = marieResult.content.match(/^title:\s*(.+)/m);
