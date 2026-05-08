@@ -174,7 +174,12 @@ function ProductCard({ product }: { product: AwinProduct }) {
 
       {/* Corps */}
       <div className="p-4 flex flex-col gap-2 flex-1">
-        <p className="text-[10px] text-gray-400 uppercase tracking-wide">{product.merchant_name}</p>
+        <p className="text-[10px] text-gray-400 uppercase tracking-wide flex items-center gap-1">
+          {product.currency === 'USD' && <img src="https://flagcdn.com/16x12/us.png" alt="US" className="inline-block" />}
+          {product.currency === 'CAD' && <img src="https://flagcdn.com/16x12/ca.png" alt="CA" className="inline-block" />}
+          {product.currency === 'GBP' && <img src="https://flagcdn.com/16x12/gb.png" alt="GB" className="inline-block" />}
+          {product.merchant_name}
+        </p>
         <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{product.name}</h3>
         {product.description && (
           <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 flex-1">{product.description}</p>
