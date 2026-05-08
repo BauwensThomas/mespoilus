@@ -315,7 +315,14 @@ export default async function LandingPage() {
                 de compagnie.
               </p>
               <div className="flex gap-4 mt-5">
-                <span className="text-xs text-gray-400">Instagram</span>
+                <a
+                  href="https://www.instagram.com/mespoilusofficiel"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-gray-400 hover:text-amber-400 transition-colors"
+                >
+                  Instagram
+                </a>
                 <a
                   href="https://www.facebook.com/profile.php?id=61589487954538"
                   target="_blank"

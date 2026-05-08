@@ -55,6 +55,8 @@ export async function GET(req: Request) {
   const now = new Date();
   const supabase = createAdminClient();
 
+  const urlAnimal = new URL(req.url).searchParams.get('animal');
+
   let animal = 'chiens';
   let season = 'printemps';
   let sujet = '';
@@ -71,7 +73,9 @@ export async function GET(req: Request) {
     const month = now.getMonth() + 1;
     season = getSeason(month);
     const week = getISOWeek(now);
-    animal = ANIMAL_CATEGORIES[week % 5];
+    animal = (urlAnimal && ANIMAL_CATEGORIES.includes(urlAnimal))
+      ? urlAnimal
+      : ANIMAL_CATEGORIES[week % 5];
 
     const { data: articles } = await supabase
       .from('articles')

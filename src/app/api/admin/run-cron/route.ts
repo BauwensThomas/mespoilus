@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
-  const { step } = await req.json() as { step: CronStep };
+  const { step, animal } = await req.json() as { step: CronStep; animal?: string };
   const cronPath = CRON_PATHS[step];
   if (!cronPath) return NextResponse.json({ error: 'Étape inconnue' }, { status: 400 });
 
@@ -26,8 +26,13 @@ export async function POST(req: NextRequest) {
     ? process.env.NEXT_PUBLIC_APP_URL
     : process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
 
+  const VALID_ANIMALS = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
+  const queryParams = (step === 'blog' && animal && VALID_ANIMALS.includes(animal))
+    ? `?animal=${animal}`
+    : '';
+
   try {
-    const r = await fetch(`${appUrl}${cronPath}`, {
+    const r = await fetch(`${appUrl}${cronPath}${queryParams}`, {
       headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
     });
     const data = await r.json();
