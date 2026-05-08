@@ -228,6 +228,19 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       imageProduit = (imageMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (imageMatch?.[1]?.trim() ?? '');
       const metaDescMatch = lucasResult.content.match(/META_DESC:\s*(.+)/i);
       metaDesc = metaDescMatch?.[1]?.trim() ?? '';
+
+      // Si affiliation demandée mais Lucas n'a pas retourné de lien → forcer un produit dispo
+      if (forcedType === 'affiliation' && !lienAffilie) {
+        const withLink = productsWithLinks.filter(p => p.affiliate_url);
+        if (withLink.length > 0) {
+          const picked = withLink[Math.floor(Math.random() * withLink.length)];
+          nomProduit = picked.name;
+          lienAffilie = picked.affiliate_url;
+          imageProduit = picked.image_url || '';
+          console.log(`[Cron1] Affiliation: Lucas sans lien → produit forcé: ${nomProduit}`);
+        }
+      }
+
       console.log(`[Cron1] Lucas : sujet=${sujet}${nomProduit ? `, produit=${nomProduit}` : ''}`);
       await logActivity('thomas', 'Thomas',
         `Cron étape 2 : Lucas → ${sujet}`,
