@@ -34,7 +34,7 @@ export default function PartenairesSection() {
                       <p className="font-bold text-gray-900 text-base">{p.nom}</p>
                       {(p.pays ?? []).map(code => (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img key={code} src={getFlagUrl(code)} alt={code} className="w-4 h-auto inline-block" />
+                        <img key={code} src={getFlagUrl(code)} alt={code} width={20} height={14} className="w-4 h-auto inline-block" />
                       ))}
                     </div>
                     {p.pour && <p className="text-xs text-gray-500">{p.pour}</p>}
