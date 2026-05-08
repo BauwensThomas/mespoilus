@@ -231,12 +231,14 @@ IMAGE_PRODUIT: [URL image du produit, ou AUCUN]`;
     const produitSection = nomProduit && lienAffilie
       ? `\nPRODUIT / PARTENAIRE PRINCIPAL À METTRE EN AVANT :\n- Nom : ${nomProduit}\n- Lien affilié (utilise ce lien EXACT dans le texte, ne l'invente pas) : ${lienAffilie}\n  Ex. dans le texte : [${nomProduit}](${lienAffilie})\n`
       : `\nIntègre naturellement 1-2 recommandations de produits dans le texte avec leurs liens :\n${productsStr}\nSi aucun lien n'est disponible, renvoie vers mespoilus.com/boutique\n`;
-    const mariePrompt = `Écris un article de conseil pratique sur : ${sujet}
+    const saisonLine = forcedType === 'affiliation'
+      ? ''
+      : `Saison : ${season} — adapte les conseils à la saison\n`;
+    const mariePrompt = `Écris un article sur : ${sujet}
 Mots-clés à intégrer naturellement : ${motsCles.join(', ')}
-Saison : ${season} — adapte les conseils à la saison
-Animal : ${animal}
+${saisonLine}Animal : ${animal}
 ${produitSection}
-C'est un article de CONSEILS PRATIQUES destiné aux propriétaires francophones. Ton bienveillant, accessible, utile.`;
+Ton bienveillant, accessible, utile. Destiné aux propriétaires francophones.`;
 
     const marieResult = await executeAgentTask('marie', mariePrompt);
     pipelineTokens += marieResult.tokens_used ?? 0;
