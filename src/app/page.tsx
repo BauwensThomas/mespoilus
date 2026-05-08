@@ -96,16 +96,14 @@ export default async function LandingPage() {
                 {label}
               </Link>
             ))}
-            <div className="flex items-center gap-2">
-              <ThemeToggle className="text-white/70 hover:text-white" />
-              <Link
-                href="/boutique"
-                className="bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold px-3 py-1 rounded-lg
-                           transition-colors duration-150 shadow-md"
-              >
-                Boutique
-              </Link>
-            </div>
+            <Link
+              href="/boutique"
+              className="bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold px-3 py-1 rounded-lg
+                         transition-colors duration-150 shadow-md"
+            >
+              Boutique
+            </Link>
+            <ThemeToggle />
           </div>
         </nav>
       </header>

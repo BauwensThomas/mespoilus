@@ -32,15 +32,13 @@ export default function PublicHeader() {
               {label}
             </Link>
           ))}
-          <div className="ml-auto flex items-center gap-2">
-            <ThemeToggle />
-            <Link
-              href="/boutique"
-              className="bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold px-3 py-1 rounded-lg transition-colors duration-150"
-            >
-              Boutique
-            </Link>
-          </div>
+          <Link
+            href="/boutique"
+            className="ml-auto bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold px-3 py-1 rounded-lg transition-colors duration-150"
+          >
+            Boutique
+          </Link>
+          <ThemeToggle />
         </div>
       </nav>
     </header>
