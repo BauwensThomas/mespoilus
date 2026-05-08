@@ -33,6 +33,7 @@ async function getProducts(category?: string, search?: string): Promise<AwinProd
       .from('products')
       .select('*')
       .eq('in_stock', true)
+      .gt('price', 0)
       .order('price', { ascending: true })
       .limit(48);
     if (category && category !== 'all') q = q.eq('category', category);
