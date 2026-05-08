@@ -151,15 +151,15 @@ Crée un post Facebook et Instagram engageant basé sur cet article.`;
     if (agentId === 'sofia') {
       const { data: recent } = await supabase
         .from('articles')
-        .select('title, slug, excerpt, published_at')
+        .select('title, slug, excerpt, image_url, published_at')
         .eq('status', 'published')
         .order('published_at', { ascending: false })
         .limit(3);
 
-      const articles = (recent ?? []) as Array<{ title: string; slug: string; excerpt: string | null; published_at: string }>;
+      const articles = (recent ?? []) as Array<{ title: string; slug: string; excerpt: string | null; image_url: string | null; published_at: string }>;
       const articlesStr = articles.length
         ? articles.map((a) =>
-            `- ${a.title}\n  Lien : https://mespoilus.com/blog/${a.slug}\n  Résumé : ${a.excerpt ?? ''}`
+            `- ${a.title}\n  Lien : https://mespoilus.com/blog/${a.slug}\n  Résumé : ${a.excerpt ?? ''}${a.image_url ? `\n  Image : ${a.image_url}` : ''}`
           ).join('\n\n')
         : '- Aucun article récent';
 
