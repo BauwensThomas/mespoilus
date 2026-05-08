@@ -1,4 +1,4 @@
-import { PARTENAIRES } from '@/lib/partenaires';
+import { PARTENAIRES, getFlagUrl } from '@/lib/partenaires';
 
 export default function PartenairesSection() {
   if (!PARTENAIRES.length) return null;
@@ -33,7 +33,8 @@ export default function PartenairesSection() {
                     <div className="flex items-center gap-2">
                       <p className="font-bold text-gray-900 text-base">{p.nom}</p>
                       {(p.pays ?? []).map(code => (
-                        <span key={code}>{code}</span>
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img key={code} src={getFlagUrl(code)} alt={code} className="w-4 h-auto inline-block" />
                       ))}
                     </div>
                     {p.pour && <p className="text-xs text-gray-400">{p.pour}</p>}

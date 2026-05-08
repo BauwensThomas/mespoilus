@@ -8,8 +8,12 @@ export interface Partenaire {
   tagColor?: string;
   pour?: string;
   network?: 'awin' | 'cj';
-  pays?: string[];     // ex: ['🇫🇷', '🇧🇪'] — défaut : toutes zones
-  categories?: string[]; // défaut : visible partout dans boutique
+  pays?: string[];     // codes ISO: ['FR', 'BE', 'CA', 'US'…]
+  categories?: string[];
+}
+
+export function getFlagUrl(code: string): string {
+  return `https://flagcdn.com/w20/${code.toLowerCase()}.png`;
 }
 
 export const PARTENAIRES: Partenaire[] = [
@@ -24,7 +28,7 @@ export const PARTENAIRES: Partenaire[] = [
     tagColor: 'bg-orange-100 text-orange-700',
     pour: 'Pour les chiens',
     network: 'awin',
-    pays: ['🇫🇷'],
+    pays: ['FR'],
     categories: ['chiens'],
   },
 ];
