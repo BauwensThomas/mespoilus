@@ -36,5 +36,11 @@ export async function GET(req: Request) {
     }
   }
 
+  await supabase.from('activity_logs').insert({
+    agent_id: 'thomas', agent_name: 'Thomas',
+    action: `[Awin sync] ${totalSynced} produits synchronisés`,
+    status: 'success',
+  });
+
   return NextResponse.json({ success: true, synced: totalSynced });
 }
