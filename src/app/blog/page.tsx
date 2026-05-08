@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
 import AdBanner from '@/components/ui/AdBanner';
 import { permanentRedirect } from 'next/navigation';
+import BlogSearchBar from '@/components/blog/BlogSearchBar';
 
 const CATEGORY_SLUGS = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
 
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-async function getArticles(category?: string) {
+async function getArticles(category?: string, search?: string) {
   try {
     const supabase = createAdminClient();
     let query = supabase
@@ -44,6 +45,7 @@ async function getArticles(category?: string) {
       .order('published_at', { ascending: false });
 
     if (category) query = query.contains('categories', [category]);
+    if (search) query = query.or(`title.ilike.%${search}%,excerpt.ilike.%${search}%`);
 
     const { data } = await query.limit(24);
     return (data as Article[]) ?? [];
@@ -63,7 +65,7 @@ const CATEGORIES = [
 ];
 
 interface Props {
-  searchParams: { category?: string };
+  searchParams: { category?: string; q?: string };
 }
 
 export default async function BlogPage({ searchParams }: Props) {
@@ -74,12 +76,13 @@ export default async function BlogPage({ searchParams }: Props) {
   const activeCategory = searchParams.category && searchParams.category !== 'all'
     ? searchParams.category
     : undefined;
+  const search = searchParams.q?.trim();
 
   const activeCat = CATEGORIES.find((c) => c.id === (activeCategory ?? 'all'));
   const bannerQuery = activeCategory && CATEGORY_QUERIES[activeCategory];
 
   const [articles, allPhotos] = await Promise.all([
-    getArticles(activeCategory),
+    getArticles(activeCategory, search),
     bannerQuery ? getBannerPhotos(bannerQuery) : getHeroPhotos(),
   ]);
   const [featured, ...rest] = articles;
@@ -93,6 +96,9 @@ export default async function BlogPage({ searchParams }: Props) {
           Conseils, guides et actualités sur les animaux de compagnie
         </p>
       </div>
+
+      {/* Recherche */}
+      <BlogSearchBar defaultValue={search ?? ''} />
 
       {/* Filtres catégories */}
       <div className="flex flex-wrap gap-2">
@@ -131,7 +137,10 @@ export default async function BlogPage({ searchParams }: Props) {
           <div>
             <p className="text-white/60 text-[10px] uppercase tracking-widest font-medium">Catégorie</p>
             <p className="text-white font-bold text-xl capitalize">{activeCat?.label}</p>
-            <p className="text-white/60 text-xs mt-0.5">{articles.length} article{articles.length !== 1 ? 's' : ''}</p>
+            <p className="text-white/60 text-xs mt-0.5">
+              {articles.length} article{articles.length !== 1 ? 's' : ''}
+              {search ? ` · "${search}"` : ''}
+            </p>
           </div>
         </div>
       </div>
