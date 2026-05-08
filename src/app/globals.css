@@ -4,20 +4,40 @@
 
 @layer base {
   :root {
+    /* Light mode (jour) */
+    --bg-primary: #f9fafb;
+    --bg-card: #ffffff;
+    --bg-hover: #f3f4f6;
+    --bg-sidebar: #f1f5f9;
+    --bg-border: #e2e8f0;
+    --bg-input: #ffffff;
+    --text-primary: #111827;
+    --text-muted: #6b7280;
+    --text-subtle: #9ca3af;
+  }
+
+  .dark {
+    /* Dark mode (nuit) */
     --bg-primary: #111827;
     --bg-card: #1e2a3a;
     --bg-hover: #253347;
+    --bg-sidebar: #0f172a;
     --bg-border: #2a3a4a;
+    --bg-input: #111827;
+    --text-primary: #ffffff;
+    --text-muted: #9ca3af;
+    --text-subtle: #6b7280;
   }
 
   html {
     background-color: var(--bg-primary);
-    color: white;
+    color: var(--text-primary);
     scroll-behavior: smooth;
   }
 
   body {
     background-color: var(--bg-primary);
+    color: var(--text-primary);
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -44,11 +64,20 @@
 
 @layer components {
   .card {
-    @apply bg-[#1e2a3a] border border-[#2a3a4a] rounded-xl;
+    background: var(--bg-card);
+    border: 1px solid var(--bg-border);
+    border-radius: 0.75rem;
   }
 
   .card-hover {
-    @apply card transition-all duration-200 hover:border-[#3a5a6a] hover:bg-[#253347];
+    background: var(--bg-card);
+    border: 1px solid var(--bg-border);
+    border-radius: 0.75rem;
+    transition: all 0.2s;
+  }
+  .card-hover:hover {
+    background: var(--bg-hover);
+    border-color: color-mix(in srgb, var(--bg-border) 70%, #60a5fa 30%);
   }
 
   .badge {
@@ -64,7 +93,10 @@
   }
 
   .badge-idle {
-    @apply badge bg-[#1e2a3a] text-gray-400 border border-[#2a3a4a];
+    background: var(--bg-card);
+    color: var(--text-muted);
+    border: 1px solid var(--bg-border);
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
   }
 
   .badge-offline {
@@ -72,28 +104,46 @@
   }
 
   .btn-primary {
-    @apply px-4 py-2 bg-white text-black rounded-lg font-medium text-sm
-           hover:bg-gray-100 active:bg-gray-200 transition-colors duration-150
+    @apply px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-150
            disabled:opacity-50 disabled:cursor-not-allowed;
+    background: var(--text-primary);
+    color: var(--bg-primary);
+  }
+  .btn-primary:hover:not(:disabled) {
+    opacity: 0.9;
   }
 
   .btn-ghost {
-    @apply px-4 py-2 bg-transparent text-gray-400 rounded-lg font-medium text-sm border border-[#2a3a4a]
-           hover:bg-[#1e2a3a] hover:text-white hover:border-[#3a5a6a] transition-all duration-150;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--bg-border);
+    @apply px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150;
+  }
+  .btn-ghost:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
   }
 
   .input-dark {
-    @apply w-full bg-[#111827] border border-[#2a3a4a] rounded-lg px-3 py-2 text-sm text-white
-           placeholder-gray-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--bg-border);
+    color: var(--text-primary);
+    @apply rounded-lg px-3 py-2 text-sm placeholder-gray-400
+           focus:outline-none focus:ring-1 focus:ring-amber-500/30
            transition-colors duration-150;
+  }
+  .input-dark:focus {
+    border-color: rgba(245, 158, 11, 0.5);
   }
 
   .prose-dark {
-    @apply prose prose-invert prose-sm max-w-none
-           prose-headings:text-white prose-p:text-gray-300
-           prose-a:text-blue-400 prose-strong:text-white
-           prose-code:text-emerald-400 prose-code:bg-[#1e2a3a] prose-code:px-1 prose-code:rounded
-           prose-pre:bg-[#111827] prose-pre:border prose-pre:border-[#2a3a4a];
+    @apply prose prose-sm max-w-none
+           prose-a:text-blue-400
+           prose-code:text-emerald-400 prose-code:px-1 prose-code:rounded;
+  }
+  .dark .prose-dark {
+    @apply prose-invert prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white;
   }
 
   .status-dot {

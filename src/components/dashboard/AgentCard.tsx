@@ -54,7 +54,7 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
             </div>
             <div>
               <h3 className={clsx('font-semibold text-sm', agent.color)}>{agent.name}</h3>
-              <p className="text-xs text-gray-200">{agent.role}</p>
+              <p className="text-xs dark:text-gray-200 text-gray-600">{agent.role}</p>
             </div>
           </div>
 
@@ -66,7 +66,7 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
         </div>
 
         {/* Description */}
-        <p className="text-xs text-gray-200 leading-relaxed line-clamp-2 relative min-h-[2.5rem]">{agent.description}</p>
+        <p className="text-xs dark:text-gray-200 text-gray-600 leading-relaxed line-clamp-2 relative min-h-[2.5rem]">{agent.description}</p>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 relative">
@@ -85,7 +85,7 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
 
         {/* Footer */}
         <div className="flex items-center justify-between relative mt-auto pt-3 border-t border-[#2a3a4a]">
-          <span className="text-[10px] text-gray-300">Actif {lastActive}</span>
+          <span className="text-[10px] dark:text-gray-300 text-gray-500">Actif {lastActive}</span>
           <span className={clsx('text-[10px] font-medium', agent.color, 'group-hover:underline')}>
             Voir le tableau →
           </span>

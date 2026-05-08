@@ -44,7 +44,7 @@ async function getArticles(category?: string, search?: string) {
       .eq('status', 'published')
       .order('published_at', { ascending: false });
 
-    if (category) query = query.contains('categories', [category]);
+    if (category) query = query.or(`category.eq.${category},categories.cs.{${category}}`);
     if (search) query = query.or(`title.ilike.%${search}%,excerpt.ilike.%${search}%`);
 
     const { data } = await query.limit(24);
@@ -91,8 +91,8 @@ export default async function BlogPage({ searchParams }: Props) {
     <div className="px-8 py-8 space-y-8 animate-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Blog Mes Poilus</h1>
-        <p className="text-gray-400 text-sm mt-1">
+        <h1 className="text-3xl font-bold dark:text-white text-gray-900 tracking-tight">Blog Mes Poilus</h1>
+        <p className="dark:text-gray-400 text-gray-600 text-sm mt-1">
           Conseils, guides et actualités sur les animaux de compagnie
         </p>
       </div>
@@ -111,7 +111,7 @@ export default async function BlogPage({ searchParams }: Props) {
               className={`text-xs px-3 py-1.5 rounded-lg border transition-all duration-150 flex items-center gap-1.5 ${
                 isActive
                   ? 'bg-amber-500 text-black border-amber-500 font-semibold'
-                  : 'bg-transparent text-gray-400 border-[#333] hover:border-amber-500/50 hover:text-amber-400'
+                  : 'bg-transparent dark:text-gray-400 text-gray-600 dark:border-[#2a3a4a] border-gray-300 hover:border-amber-500/50 hover:text-amber-400'
               }`}
             >
               <span>{icon}</span>
@@ -122,7 +122,7 @@ export default async function BlogPage({ searchParams }: Props) {
       </div>
 
       {/* Bannière */}
-      <div className="relative h-28 rounded-2xl overflow-hidden bg-[#111]">
+      <div className="relative h-28 rounded-2xl overflow-hidden dark:bg-[#111] bg-gray-200">
 
         {/* Photo plein-format en fond */}
         {allPhotos[0] && (
@@ -146,8 +146,8 @@ export default async function BlogPage({ searchParams }: Props) {
       </div>
 
       {articles.length === 0 ? (
-        <div className="text-center py-16 bg-gray-50 rounded-2xl">
-          <p className="text-gray-500">Les premiers articles arrivent bientôt !</p>
+        <div className="text-center py-16 dark:bg-[#1e2a3a] bg-gray-50 rounded-2xl">
+          <p className="dark:text-gray-400 text-gray-500">Les premiers articles arrivent bientôt !</p>
         </div>
       ) : (
         <>
@@ -165,7 +165,7 @@ export default async function BlogPage({ searchParams }: Props) {
           <div>
             {rest.length > 0 && (
               <>
-                <h2 className="text-sm font-semibold text-white mb-4">
+                <h2 className="text-sm font-semibold dark:text-white text-gray-900 mb-4">
                   {activeCategory ? `Articles · ${activeCat?.label}` : 'Derniers articles'}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">

@@ -13,9 +13,9 @@ function StatItem({ label, value, sub, icon, monthly }: StatItemProps) {
         {icon}
       </div>
       <div className="flex-1">
-        <div className="text-2xl font-bold text-white tracking-tight">{value}</div>
-        <div className="text-xs text-gray-200 mt-0.5">{label}</div>
-        {sub && <div className="text-[10px] text-gray-300">{sub}</div>}
+        <div className="text-2xl font-bold dark:text-white text-gray-900 tracking-tight">{value}</div>
+        <div className="text-xs dark:text-gray-200 text-gray-600 mt-0.5">{label}</div>
+        {sub && <div className="text-[10px] dark:text-gray-300 text-gray-500">{sub}</div>}
         {monthly !== undefined && (
           <div className="text-[10px] text-gray-500 mt-1 pt-1 border-t border-[#2a3a4a]">
             <span className="text-amber-400 font-medium">{monthly}</span> ce mois

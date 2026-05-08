@@ -12,7 +12,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
   if (isAdmin) {
     return (
-      <div className="bg-[#111827] text-white min-h-screen flex">
+      <div className="min-h-screen flex" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         <Sidebar />
         <main className="flex-1 ml-64 min-h-screen overflow-auto">
           {children}
