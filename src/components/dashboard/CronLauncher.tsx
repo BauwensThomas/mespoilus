@@ -12,6 +12,13 @@ const ANIMALS = [
   { value: 'reptiles', label: '🦎 Reptiles' },
 ];
 
+const ARTICLE_TYPES = [
+  { value: '',            label: '🔄 Auto (rotation)' },
+  { value: 'trending',    label: '🔥 Trending / Actualité' },
+  { value: 'affiliation', label: '🛍️ Partenaire / Produit' },
+  { value: 'pratique',    label: '📋 Conseil pratique' },
+];
+
 type StepStatus = 'idle' | 'running' | 'done' | 'error';
 
 interface CronConfig {
@@ -106,7 +113,7 @@ function useCronRunner() {
     setStates((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { status: 'idle', currentStep: 0, countdown: 0, error: '' }), ...patch } }));
   }
 
-  async function run(cron: CronConfig, animal?: string) {
+  async function run(cron: CronConfig, animal?: string, type?: string) {
     const id = cron.id;
     if (getState(id).status === 'running') return;
 
@@ -119,6 +126,7 @@ function useCronRunner() {
       try {
         const body: Record<string, string> = { step: step.key };
         if (step.key === 'blog' && animal) body.animal = animal;
+        if (step.key === 'blog' && type) body.type = type;
         const r = await fetch('/api/admin/run-cron', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -156,12 +164,13 @@ function useCronRunner() {
     setState(id, { status: 'idle', currentStep: 0, countdown: 0, error: '', synced: undefined });
   }
 
-  return { getState, run: (cron: CronConfig, animal?: string) => run(cron, animal), reset };
+  return { getState, run: (cron: CronConfig, animal?: string, type?: string) => run(cron, animal, type), reset };
 }
 
 export default function CronLauncher() {
   const [open, setOpen] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState('');
+  const [selectedType, setSelectedType] = useState('');
   const { getState, run, reset } = useCronRunner();
 
   return (
@@ -191,7 +200,7 @@ export default function CronLauncher() {
               return (
                 <div key={cron.id} className="px-4 py-3">
                   {cron.id === 'content' && (
-                    <div className="mb-2">
+                    <div className="mb-2 flex flex-col gap-1.5">
                       <select
                         value={selectedAnimal}
                         onChange={(e) => setSelectedAnimal(e.target.value)}
@@ -200,6 +209,16 @@ export default function CronLauncher() {
                       >
                         {ANIMALS.map((a) => (
                           <option key={a.value} value={a.value}>{a.label}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={selectedType}
+                        onChange={(e) => setSelectedType(e.target.value)}
+                        disabled={isRunning}
+                        className="w-full bg-[#111827] border border-[#2a3a4a] rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-amber-500/50 disabled:opacity-50"
+                      >
+                        {ARTICLE_TYPES.map((t) => (
+                          <option key={t.value} value={t.value}>{t.label}</option>
                         ))}
                       </select>
                     </div>
@@ -214,7 +233,7 @@ export default function CronLauncher() {
                     </div>
 
                     <button
-                      onClick={() => state.status === 'idle' || state.status === 'error' ? run(cron, cron.id === 'content' ? selectedAnimal : undefined) : undefined}
+                      onClick={() => state.status === 'idle' || state.status === 'error' ? run(cron, cron.id === 'content' ? selectedAnimal : undefined, cron.id === 'content' ? selectedType : undefined) : undefined}
                       disabled={isRunning}
                       className={clsx(
                         'flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors',

@@ -56,7 +56,9 @@ export async function GET(req: Request) {
   const now = new Date();
   const supabase = createAdminClient();
 
-  const urlAnimal = new URL(req.url).searchParams.get('animal');
+  const urlParams = new URL(req.url).searchParams;
+  const urlAnimal = urlParams.get('animal');
+  const urlType = urlParams.get('type');
 
   let animal = 'chiens';
   let season = 'printemps';
@@ -86,10 +88,15 @@ export async function GET(req: Request) {
 
     const { data: articles } = await supabase
       .from('articles')
-      .select('title')
+      .select('title, featured_partner')
       .order('published_at', { ascending: false })
-      .limit(20);
+      .limit(30);
     const recentTitles = (articles ?? []).map((a: { title: string }) => a.title);
+    const recentlyFeaturedPartners = [...new Set(
+      (articles ?? [])
+        .map((a: { featured_partner?: string }) => a.featured_partner)
+        .filter(Boolean) as string[]
+    )];
 
     const { data: productRows } = await supabase
       .from('products')
@@ -121,9 +128,11 @@ export async function GET(req: Request) {
       : 'Aucun article récent.';
     const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
     // Rotation forcée du type d'article : trending → affiliation → pratique → ...
-    const articleTypeIndex = (week * 3 + postIndex) % 3;
     const ARTICLE_TYPES = ['trending', 'affiliation', 'pratique'] as const;
-    const forcedType = ARTICLE_TYPES[articleTypeIndex];
+    const articleTypeIndex = (week * 3 + postIndex) % 3;
+    const forcedType = (urlType && (ARTICLE_TYPES as readonly string[]).includes(urlType))
+      ? urlType as typeof ARTICLE_TYPES[number]
+      : ARTICLE_TYPES[articleTypeIndex];
 
     const partenairesStr = partenairesAnimal.length
       ? partenairesAnimal.map(p => `- ${p.nom} : ${p.description ?? ''}\n  Lien affilié : ${p.url}`).join('\n')
@@ -142,7 +151,7 @@ NE PAS choisir un sujet saisonnier générique (ex: "printemps avec son chien") 
       affiliation: `TYPE IMPOSÉ : AFFILIATION
 Tu dois IMPÉRATIVEMENT écrire un article centré sur UN partenaire ou produit ci-dessous.
 Trouve un angle éditorial utile (guide d'achat, comparatif, "pourquoi choisir", avis, bienfaits...).
-${partenairesStr ? `Partenaires recommandés :\n${partenairesStr}\n` : ''}Produits en boutique :
+${recentlyFeaturedPartners.length ? `PARTENAIRES DÉJÀ UTILISÉS dans les 30 derniers articles — NE PAS réutiliser : ${recentlyFeaturedPartners.join(', ')}\n` : ''}${partenairesStr ? `Partenaires recommandés :\n${partenairesStr}\n` : ''}Produits en boutique :
 ${productsForLucas}
 Tu DOIS retourner NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT dans ta réponse.`,
 
@@ -241,6 +250,11 @@ C'est un article de CONSEILS PRATIQUES destiné aux propriétaires francophones.
     }
 
     console.log(`[Cron1] Marie : slug=${articleSlug}`);
+
+    // Sauvegarder le partenaire mis en avant pour éviter de le réutiliser dans les 30 prochains articles
+    if (nomProduit && articleSlug) {
+      await supabase.from('articles').update({ featured_partner: nomProduit }).eq('slug', articleSlug);
+    }
 
     // ─── IMAGE : télécharger pour l'animal + stocker dans Supabase Storage ───
     let imageUrl: string | null = null;
