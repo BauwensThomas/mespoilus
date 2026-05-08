@@ -8,7 +8,7 @@ export default function PartenairesSection() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-end justify-between mb-12">
           <div>
-            <span className="text-amber-600 text-sm font-semibold uppercase tracking-widest">
+            <span className="text-amber-700 text-sm font-semibold uppercase tracking-widest">
               Partenaires
             </span>
             <h2 className="text-3xl font-bold text-gray-900 mt-2">
@@ -37,7 +37,7 @@ export default function PartenairesSection() {
                         <img key={code} src={getFlagUrl(code)} alt={code} className="w-4 h-auto inline-block" />
                       ))}
                     </div>
-                    {p.pour && <p className="text-xs text-gray-400">{p.pour}</p>}
+                    {p.pour && <p className="text-xs text-gray-500">{p.pour}</p>}
                   </div>
                 </div>
                 {p.tag && (
@@ -65,7 +65,7 @@ export default function PartenairesSection() {
           ))}
         </div>
 
-        <p className="text-xs text-gray-400 text-center mt-8">
+        <p className="text-xs text-gray-500 text-center mt-8">
           Liens affiliés — Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
         </p>
       </div>

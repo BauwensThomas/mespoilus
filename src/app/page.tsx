@@ -206,10 +206,10 @@ export default async function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-end justify-between mb-12">
             <div>
-              <span className="text-amber-600 text-sm font-semibold uppercase tracking-widest">Le blog</span>
+              <span className="text-amber-700 text-sm font-semibold uppercase tracking-widest">Le blog</span>
               <h2 className="text-3xl font-bold text-gray-900 mt-2">Nos derniers conseils</h2>
             </div>
-            <Link href="/blog" className="hidden md:flex items-center gap-2 text-amber-600 hover:text-amber-700 font-medium text-sm transition-colors">
+            <Link href="/blog" className="hidden md:flex items-center gap-2 text-amber-700 hover:text-amber-800 font-medium text-sm transition-colors">
               Voir tous les articles →
             </Link>
           </div>
@@ -230,7 +230,7 @@ export default async function LandingPage() {
           )}
 
           <div className="text-center mt-10 md:hidden">
-            <Link href="/blog" className="inline-flex items-center gap-2 text-amber-600 font-semibold hover:text-amber-700">
+            <Link href="/blog" className="inline-flex items-center gap-2 text-amber-700 font-semibold hover:text-amber-800">
               Voir tous les articles →
             </Link>
           </div>
@@ -241,7 +241,7 @@ export default async function LandingPage() {
       <section id="categories" className="py-20 px-6 bg-[#faf8f4]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <span className="text-amber-600 text-sm font-semibold uppercase tracking-widest">Explorer</span>
+            <span className="text-amber-700 text-sm font-semibold uppercase tracking-widest">Explorer</span>
             <h2 className="text-3xl font-bold text-gray-900 mt-2">Par type d'animal</h2>
             <p className="text-gray-500 mt-2">Trouvez les conseils adaptés à votre compagnon</p>
           </div>
@@ -260,7 +260,7 @@ export default async function LandingPage() {
                 >
                   <Image
                     src={imgSrc}
-                    alt={cat.label}
+                    alt=""
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
@@ -403,7 +403,7 @@ function ArticleCard({ article }: { article: Article }) {
             {article.excerpt}
           </p>
         )}
-        <div className="flex items-center justify-between text-xs text-gray-400">
+        <div className="flex items-center justify-between text-xs text-gray-500">
           <span>{date}</span>
           {article.reading_time && <span>{article.reading_time} min de lecture</span>}
         </div>

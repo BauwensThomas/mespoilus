@@ -24,7 +24,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   return (
     <>
       <PublicHeader />
-      {children}
+      <main>{children}</main>
     </>
   );
 }
