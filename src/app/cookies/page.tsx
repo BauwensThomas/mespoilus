@@ -10,51 +10,51 @@ export const metadata: Metadata = {
 
 export default function CookiesPage() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen">
       <div className="max-w-3xl mx-auto px-6 py-12">
 
-        <h1 className="text-3xl font-bold text-white mt-8 mb-2">Politique de cookies</h1>
+        <h1 className="text-3xl font-bold dark:text-white text-gray-900 mt-8 mb-2">Politique de cookies</h1>
         <p className="text-gray-500 text-sm mb-12">Conforme au RGPD et à la recommandation de l'APD belge - dernière mise à jour : mai 2026</p>
 
-        <div className="space-y-10 text-gray-300 leading-relaxed">
+        <div className="space-y-10 dark:text-gray-300 text-gray-700 leading-relaxed">
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">1. Qu'est-ce qu'un cookie ?</h2>
+            <h2 className="text-lg font-semibold dark:text-white text-gray-900 mb-4 pb-2 border-b dark:border-gray-800 border-gray-200">1. Qu'est-ce qu'un cookie ?</h2>
             <p className="text-sm">Un cookie est un petit fichier texte déposé sur votre terminal (ordinateur, tablette, smartphone) lors de la visite d'un site web. Il permet au site de mémoriser des informations sur votre visite et d'améliorer votre expérience.</p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">2. Cookies que nous utilisons</h2>
+            <h2 className="text-lg font-semibold dark:text-white text-gray-900 mb-4 pb-2 border-b dark:border-gray-800 border-gray-200">2. Cookies que nous utilisons</h2>
             <div className="space-y-6 text-sm">
 
-              <div className="bg-gray-800/50 rounded-xl p-4">
+              <div className="dark:bg-gray-800/50 bg-gray-100 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
-                  <h3 className="font-medium text-white">Cookies essentiels</h3>
+                  <h3 className="font-medium dark:text-white text-gray-900">Cookies essentiels</h3>
                   <span className="ml-auto text-xs bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 px-2 py-0.5 rounded-full">Toujours actifs</span>
                 </div>
                 <p className="text-gray-400 mb-3">Indispensables au fonctionnement du site. Ils ne peuvent pas être désactivés.</p>
                 <table className="w-full text-xs">
                   <thead><tr className="text-gray-500"><th className="text-left py-1">Cookie</th><th className="text-left py-1">Durée</th><th className="text-left py-1">Rôle</th></tr></thead>
                   <tbody className="text-gray-400">
-                    <tr className="border-t border-gray-700/50"><td className="py-1.5 pr-4">sb-access-token</td><td className="py-1.5 pr-4">Session</td><td className="py-1.5">Authentification Supabase</td></tr>
-                    <tr className="border-t border-gray-700/50"><td className="py-1.5 pr-4">mespoilus_cookie_consent</td><td className="py-1.5 pr-4">12 mois</td><td className="py-1.5">Mémorisation de votre choix cookie</td></tr>
+                    <tr className="border-t dark:border-gray-700/50 border-gray-200"><td className="py-1.5 pr-4">sb-access-token</td><td className="py-1.5 pr-4">Session</td><td className="py-1.5">Authentification Supabase</td></tr>
+                    <tr className="border-t dark:border-gray-700/50 border-gray-200"><td className="py-1.5 pr-4">mespoilus_cookie_consent</td><td className="py-1.5 pr-4">12 mois</td><td className="py-1.5">Mémorisation de votre choix cookie</td></tr>
                   </tbody>
                 </table>
               </div>
 
-              <div className="bg-gray-800/50 rounded-xl p-4">
+              <div className="dark:bg-gray-800/50 bg-gray-100 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
-                  <h3 className="font-medium text-white">Cookies analytiques</h3>
+                  <h3 className="font-medium dark:text-white text-gray-900">Cookies analytiques</h3>
                   <span className="ml-auto text-xs bg-blue-400/10 text-blue-400 border border-blue-400/20 px-2 py-0.5 rounded-full">Avec consentement</span>
                 </div>
                 <p className="text-gray-400 mb-3">Nous permettent de comprendre comment vous utilisez le site (pages visitées, durée de visite, provenance). Ces données sont anonymisées.</p>
                 <table className="w-full text-xs">
                   <thead><tr className="text-gray-500"><th className="text-left py-1">Cookie</th><th className="text-left py-1">Durée</th><th className="text-left py-1">Rôle</th></tr></thead>
                   <tbody className="text-gray-400">
-                    <tr className="border-t border-gray-700/50"><td className="py-1.5 pr-4">_ga</td><td className="py-1.5 pr-4">13 mois</td><td className="py-1.5">Google Analytics -identifiant utilisateur</td></tr>
-                    <tr className="border-t border-gray-700/50"><td className="py-1.5 pr-4">_ga_*</td><td className="py-1.5 pr-4">13 mois</td><td className="py-1.5">Google Analytics -session</td></tr>
+                    <tr className="border-t dark:border-gray-700/50 border-gray-200"><td className="py-1.5 pr-4">_ga</td><td className="py-1.5 pr-4">13 mois</td><td className="py-1.5">Google Analytics -identifiant utilisateur</td></tr>
+                    <tr className="border-t dark:border-gray-700/50 border-gray-200"><td className="py-1.5 pr-4">_ga_*</td><td className="py-1.5 pr-4">13 mois</td><td className="py-1.5">Google Analytics -session</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -63,27 +63,27 @@ export default function CookiesPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">3. Gestion de vos préférences</h2>
+            <h2 className="text-lg font-semibold dark:text-white text-gray-900 mb-4 pb-2 border-b dark:border-gray-800 border-gray-200">3. Gestion de vos préférences</h2>
             <div className="text-sm space-y-3">
               <p>Lors de votre première visite, un bandeau vous permet d'accepter ou de refuser les cookies non essentiels.</p>
-              <p>Vous pouvez modifier votre choix à tout moment en cliquant sur le bouton ci-dessous ou en vidant les données de votre navigateur (<code className="bg-gray-800 px-1.5 py-0.5 rounded text-xs">localStorage</code>).</p>
+              <p>Vous pouvez modifier votre choix à tout moment en cliquant sur le bouton ci-dessous ou en vidant les données de votre navigateur (<code className="dark:bg-gray-800 bg-gray-200 px-1.5 py-0.5 rounded text-xs">localStorage</code>).</p>
               <CookieResetButton />
             </div>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">4. Base légale</h2>
+            <h2 className="text-lg font-semibold dark:text-white text-gray-900 mb-4 pb-2 border-b dark:border-gray-800 border-gray-200">4. Base légale</h2>
             <p className="text-sm">Conformément à l'Article 5(3) de la Directive ePrivacy et aux recommandations de l'Autorité de Protection des Données belge (APD), les cookies non essentiels ne sont déposés qu'avec votre consentement préalable, libre, spécifique, éclairé et univoque.</p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-800">5. Contact</h2>
+            <h2 className="text-lg font-semibold dark:text-white text-gray-900 mb-4 pb-2 border-b dark:border-gray-800 border-gray-200">5. Contact</h2>
             <p className="text-sm">Pour toute question relative à notre utilisation des cookies : <a href="mailto:contact@mespoilus.com" className="text-amber-400 hover:underline">contact@mespoilus.com</a></p>
           </section>
 
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-800 flex flex-wrap gap-4 text-xs text-gray-600">
+        <div className="mt-12 pt-8 border-t dark:border-gray-800 border-gray-200 flex flex-wrap gap-4 text-xs text-gray-600">
           <Link href="/mentions-legales" className="hover:text-amber-400 transition-colors">Mentions légales</Link>
           <Link href="/politique-confidentialite" className="hover:text-amber-400 transition-colors">Politique de confidentialité</Link>
           <Link href="/cgu" className="hover:text-amber-400 transition-colors">CGU</Link>

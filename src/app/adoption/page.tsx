@@ -76,13 +76,13 @@ export default async function AdoptionPage({ searchParams }: Props) {
   const activeType = ANIMAL_TYPES.find(t => t.id === (animal ?? 'all')) ?? ANIMAL_TYPES[0];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen">
       <div className="px-8 py-8 space-y-8">
 
         {/* Hero */}
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Animaux à adopter</h1>
-          <p className="text-gray-400 text-sm mt-1">
+          <h1 className="text-3xl font-bold dark:text-white text-gray-900 tracking-tight">Animaux à adopter</h1>
+          <p className="dark:text-gray-400 text-gray-600 text-sm mt-1">
             Trouvez un compagnon près de chez vous, ou aidez un animal à trouver un foyer aimant.
           </p>
         </div>
@@ -98,7 +98,7 @@ export default async function AdoptionPage({ searchParams }: Props) {
                 className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
                   isActive
                     ? 'bg-amber-500 text-black border-amber-500 font-semibold'
-                    : 'bg-transparent text-gray-400 border-[#333] hover:border-amber-500/50 hover:text-amber-400'
+                    : 'bg-transparent dark:text-gray-400 text-gray-600 dark:border-[#333] border-gray-300 hover:border-amber-500/50 hover:text-amber-400'
                 }`}
               >
                 <span>{t.emoji}</span>
@@ -157,9 +157,9 @@ function AdoptionCard({ post }: { post: AdoptionPost }) {
   const date = formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: fr });
 
   return (
-    <div className={`bg-gray-800 rounded-2xl border ${colors.border} overflow-hidden flex flex-col`}>
+    <div className={`dark:bg-gray-800 bg-white rounded-2xl border ${colors.border} overflow-hidden flex flex-col shadow-sm`}>
       {post.photo_urls?.length > 0 ? (
-        <div className="relative h-44 overflow-hidden bg-gray-800">
+        <div className="relative h-44 overflow-hidden dark:bg-gray-800 bg-gray-100">
           <Image
             src={post.photo_urls[0]}
             alt={`${typeInfo?.label ?? post.animal_type} à adopter`}
@@ -180,26 +180,26 @@ function AdoptionCard({ post }: { post: AdoptionPost }) {
           <span>{typeInfo?.emoji ?? '🐾'}</span>
           {typeInfo?.label ?? post.animal_type}
         </span>
-        <span className="text-[10px] text-gray-500">{date}</span>
+        <span className="text-[10px] dark:text-gray-500 text-gray-400">{date}</span>
       </div>
 
       <div className="p-4 flex flex-col gap-3 flex-1">
         <div className="flex flex-wrap gap-1.5">
-          {post.breed  && <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">{post.breed}</span>}
-          {post.age    && <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">{post.age}</span>}
-          {post.gender !== 'inconnu' && <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full capitalize">{post.gender}</span>}
+          {post.breed  && <span className="text-xs dark:bg-gray-700 bg-gray-100 dark:text-gray-300 text-gray-700 px-2 py-0.5 rounded-full">{post.breed}</span>}
+          {post.age    && <span className="text-xs dark:bg-gray-700 bg-gray-100 dark:text-gray-300 text-gray-700 px-2 py-0.5 rounded-full">{post.age}</span>}
+          {post.gender !== 'inconnu' && <span className="text-xs dark:bg-gray-700 bg-gray-100 dark:text-gray-300 text-gray-700 px-2 py-0.5 rounded-full capitalize">{post.gender}</span>}
         </div>
 
-        <p className="text-xs text-gray-400 flex items-center gap-1">
+        <p className="text-xs dark:text-gray-400 text-gray-500 flex items-center gap-1">
           📍 <span>{post.region}</span>
         </p>
 
-        <p className="text-sm text-gray-300 leading-relaxed line-clamp-3 flex-1">
+        <p className="text-sm dark:text-gray-300 text-gray-700 leading-relaxed line-clamp-3 flex-1">
           {post.description}
         </p>
 
-        <div className="pt-3 border-t border-gray-700/60 flex items-center justify-between gap-2">
-          <span className="text-[10px] text-gray-600">Par {post.poster_name}</span>
+        <div className="pt-3 border-t dark:border-gray-700/60 border-gray-200 flex items-center justify-between gap-2">
+          <span className="text-[10px] dark:text-gray-600 text-gray-500">Par {post.poster_name}</span>
           <span className={`text-xs font-medium ${colors.badge} truncate max-w-[140px]`}>
             {post.contact_info}
           </span>
