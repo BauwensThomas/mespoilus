@@ -147,7 +147,7 @@ export default async function ArticlePage({ params }: Props) {
 
       {/* Contenu */}
       <div className="px-6 py-10">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm p-8" style={{ color: '#111827' }}>
 
           <Link
             href="/blog"
@@ -158,10 +158,10 @@ export default async function ArticlePage({ params }: Props) {
 
           {/* Header */}
           <header className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-4">{article.title}</h1>
+            <h1 className="text-3xl font-bold leading-tight mb-4" style={{ color: '#111827' }}>{article.title}</h1>
 
             {article.excerpt && (
-              <p className="text-gray-500 text-base leading-relaxed mb-6">{article.excerpt}</p>
+              <p className="text-base leading-relaxed mb-6" style={{ color: '#4b5563' }}>{article.excerpt}</p>
             )}
 
             <div className="flex items-center gap-4 py-4 border-t border-b border-gray-200">
@@ -170,15 +170,15 @@ export default async function ArticlePage({ params }: Props) {
                   ✍️
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-gray-800">Marie</div>
-                  <div className="text-[10px] text-gray-400">Rédactrice IA</div>
+                  <div className="text-xs font-semibold" style={{ color: '#1f2937' }}>Marie</div>
+                  <div className="text-[10px]" style={{ color: '#9ca3af' }}>Rédactrice IA</div>
                 </div>
               </div>
               {publishedDate && (
-                <div className="text-xs text-gray-400">Publié le {publishedDate}</div>
+                <div className="text-xs" style={{ color: '#9ca3af' }}>Publié le {publishedDate}</div>
               )}
               {article.reading_time && (
-                <div className="text-xs text-gray-400">{article.reading_time} min de lecture</div>
+                <div className="text-xs" style={{ color: '#9ca3af' }}>{article.reading_time} min de lecture</div>
               )}
             </div>
           </header>
@@ -197,31 +197,27 @@ export default async function ArticlePage({ params }: Props) {
           {/* Corps de l'article */}
           <div
             className="article-content prose prose-base max-w-none
-              prose-headings:text-gray-900 prose-headings:font-semibold
+              prose-headings:font-semibold
               prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
               prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
               prose-h4:text-base prose-h4:mt-6 prose-h4:mb-2
-              prose-p:text-gray-700 prose-p:leading-[1.85] prose-p:my-5
+              prose-p:leading-[1.85] prose-p:my-5
               prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline
-              prose-strong:text-gray-900 prose-strong:font-semibold
-              prose-ul:text-gray-700 prose-ul:my-5
-              prose-ol:text-gray-700 prose-ol:my-5
+              prose-strong:font-semibold
+              prose-ul:my-5 prose-ol:my-5
               prose-li:my-1.5 prose-li:leading-relaxed
               prose-hr:border-gray-200 prose-hr:my-8
-              prose-blockquote:border-l-2 prose-blockquote:border-l-amber-400 prose-blockquote:bg-amber-50 prose-blockquote:rounded-r-xl prose-blockquote:py-3 prose-blockquote:px-6 prose-blockquote:my-8 prose-blockquote:text-gray-600
+              prose-blockquote:border-l-2 prose-blockquote:border-l-amber-400 prose-blockquote:bg-amber-50 prose-blockquote:rounded-r-xl prose-blockquote:py-3 prose-blockquote:px-6 prose-blockquote:my-8
               prose-code:text-amber-700 prose-code:bg-amber-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
-              prose-pre:bg-gray-100 prose-pre:border prose-pre:border-gray-200 prose-pre:rounded-xl prose-pre:my-8
-              prose-table:w-full prose-table:my-8
-              prose-thead:border-b prose-thead:border-gray-200
-              prose-th:text-gray-900 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left prose-th:bg-gray-50
-              prose-td:py-3 prose-td:px-4 prose-td:text-gray-700 prose-td:border-b prose-td:border-gray-100"
+              prose-pre:bg-gray-100 prose-pre:border prose-pre:border-gray-200 prose-pre:rounded-xl prose-pre:my-8"
+            style={{ color: '#1f2937' }}
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
 
           <AdBanner slot="1266534148" variant="in-article" className="my-10" />
 
           <footer className="mt-10 pt-6 border-t border-gray-200 flex items-center justify-between flex-wrap gap-4">
-            <div className="text-xs text-gray-400">
+            <div className="text-xs" style={{ color: '#9ca3af' }}>
               Article rédigé par Marie — IA Mes Poilus
             </div>
             <Link href="/blog" className="text-sm text-amber-600 hover:text-amber-500 font-medium transition-colors">
