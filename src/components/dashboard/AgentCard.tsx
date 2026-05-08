@@ -3,8 +3,15 @@
 import Link from 'next/link';
 import clsx from 'clsx';
 import { Agent, AgentStat } from '@/types';
-import { formatDistanceToNow } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  if (isToday(d))     return `aujourd'hui à ${format(d, 'HH:mm')}`;
+  if (isYesterday(d)) return `hier à ${format(d, 'HH:mm')}`;
+  return format(d, 'd MMM à HH:mm', { locale: fr });
+}
 import { MonthlyAgentStat, TotalAgentStat } from '@/app/(admin)/dashboard/page';
 
 interface AgentCardProps {
@@ -16,7 +23,7 @@ interface AgentCardProps {
 
 export default function AgentCard({ agent, stat, monthly, total }: AgentCardProps) {
   const lastActive = stat?.last_active
-    ? formatDistanceToNow(new Date(stat.last_active), { addSuffix: true, locale: fr })
+    ? formatDate(stat.last_active)
     : 'Jamais';
 
   const completed = total?.tasks ?? stat?.tasks_completed ?? 0;

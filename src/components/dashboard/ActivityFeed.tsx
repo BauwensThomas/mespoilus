@@ -2,7 +2,7 @@
 
 import { ActivityLog } from '@/types';
 import { AGENTS } from '@/lib/agents/config';
-import { formatDistanceToNow } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import clsx from 'clsx';
 import Link from 'next/link';
@@ -10,6 +10,13 @@ import Link from 'next/link';
 interface ActivityFeedProps {
   logs: ActivityLog[];
   horizontal?: boolean;
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  if (isToday(d))     return `aujourd'hui à ${format(d, 'HH:mm')}`;
+  if (isYesterday(d)) return `hier à ${format(d, 'HH:mm')}`;
+  return format(d, 'd MMM à HH:mm', { locale: fr });
 }
 
 export default function ActivityFeed({ logs }: ActivityFeedProps) {
@@ -40,7 +47,7 @@ export default function ActivityFeed({ logs }: ActivityFeedProps) {
                 <StatusBadge status={log.status} />
                 <p className="text-[11px] text-gray-100 flex-1 truncate">{log.action}</p>
                 <span className="text-[10px] text-gray-300 flex-shrink-0">
-                  {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: fr })}
+                  {formatDate(log.created_at)}
                 </span>
               </div>
             );
