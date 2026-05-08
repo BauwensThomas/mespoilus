@@ -198,6 +198,7 @@ export default async function LandingPage() {
           <div className="w-0.5 h-6 bg-white/30 rounded" />
           <div className="w-1.5 h-1.5 bg-white/40 rounded-full" />
         </div>
+
       </section>
 
       {/* ── DERNIERS ARTICLES ─────────────────────────────────────────────── */}
