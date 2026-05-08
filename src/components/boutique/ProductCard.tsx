@@ -1,23 +1,7 @@
-'use client';
-
-import { useState } from 'react';
 import Image from 'next/image';
 import type { AwinProduct } from '@/types';
 
 export default function ProductCard({ product }: { product: AwinProduct }) {
-  const [hidden, setHidden] = useState(false);
-
-  if (hidden) return null;
-
-  async function reportBroken() {
-    await fetch('/api/products/report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: product.id }),
-    });
-    setHidden(true);
-  }
-
   return (
     <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col hover:shadow-md hover:border-amber-400/30 transition-all shadow-sm">
       <div className="relative h-44 bg-gray-50 overflow-hidden">
@@ -52,13 +36,6 @@ export default function ProductCard({ product }: { product: AwinProduct }) {
             {product.price.toFixed(2)} {product.currency}
           </span>
           <div className="flex items-center gap-2">
-            <button
-              onClick={reportBroken}
-              title="Signaler un lien cassé"
-              className="text-gray-300 hover:text-red-400 text-xs transition-colors"
-            >
-              ✕
-            </button>
             <a
               href={product.affiliate_url}
               target="_blank"
