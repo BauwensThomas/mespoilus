@@ -3,6 +3,7 @@ import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
+import { PARTENAIRES } from '@/lib/partenaires';
 
 const ANIMAL_CATEGORIES = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
 
@@ -61,6 +62,9 @@ export async function GET(req: Request) {
   let season = 'printemps';
   let sujet = '';
   let motsCles: string[] = [];
+  let nomProduit = '';
+  let lienAffilie = '';
+  let imageProduit = '';
   let articleSlug = '';
   let articleTitle = '';
   let articleExcerpt = '';
@@ -89,19 +93,25 @@ export async function GET(req: Request) {
 
     const { data: productRows } = await supabase
       .from('products')
-      .select('name')
+      .select('name, affiliate_url, image_url')
       .eq('category', animal)
       .eq('in_stock', true)
-      .limit(3);
-    const products = (productRows && productRows.length > 0)
-      ? productRows.map((p: { name: string }) => p.name)
-      : GENERIC_PRODUCTS[animal];
+      .gt('price', 0)
+      .limit(5);
+    type ProductRow = { name: string; affiliate_url: string; image_url: string };
+    const productsWithLinks: ProductRow[] = (productRows && productRows.length > 0)
+      ? (productRows as ProductRow[])
+      : GENERIC_PRODUCTS[animal].map(name => ({ name, affiliate_url: '', image_url: '' }));
+
+    const partenairesAnimal = PARTENAIRES.filter(p =>
+      !p.categories || p.categories.includes(animal)
+    );
 
     console.log(`[Cron1] Thomas : animal=${animal}, saison=${season}`);
     await logActivity('thomas', 'Thomas',
       `Cron étape 1 : contexte préparé — ${animal} en ${season}`,
       'success', Date.now() - step1Start,
-      { animal, season, products, recent_count: recentTitles.length }
+      { animal, season, products: productsWithLinks.map(p => p.name), partenaires: partenairesAnimal.map(p => p.nom), recent_count: recentTitles.length }
     );
 
     // ─── ÉTAPE 2 : Lucas analyse le SEO ──────────────────────────────────
@@ -110,15 +120,21 @@ export async function GET(req: Request) {
       ? recentTitles.slice(0, 15).map(t => `- ${t}`).join('\n')
       : 'Aucun article récent.';
     const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-    const productsForLucas = products.map(p => `- ${p}`).join('\n');
+    const partenairesStr = partenairesAnimal.length
+      ? partenairesAnimal.map(p => `- ${p.nom} : ${p.description ?? ''}\n  Lien affilié : ${p.url}`).join('\n')
+      : '';
+    const productsForLucas = productsWithLinks
+      .map(p => p.affiliate_url ? `- ${p.name} | lien : ${p.affiliate_url}${p.image_url ? ` | image : ${p.image_url}` : ''}` : `- ${p.name}`)
+      .join('\n');
 
     const lucasPrompt = `Trouve le meilleur sujet d'article pour les propriétaires de ${animal} en ce moment (${monthName}, ${season}).
 
 PRIORITÉ 1 — Sujet EN VOGUE cette saison : qu'est-ce que les propriétaires de ${animal} recherchent activement sur Google en ${season} ? Pense aux préoccupations concrètes du moment (parasites, chaleurs, comportements saisonniers, maladies de saison, soins spécifiques...).
 
-PRIORITÉ 2 — Sujet lié à nos produits disponibles (affiliation) :
+PRIORITÉ 2 — Sujet lié à un PARTENAIRE ou PRODUIT en affiliation :
+${partenairesStr ? `Partenaires recommandés :\n${partenairesStr}\n` : ''}Produits en boutique :
 ${productsForLucas}
-Si un sujet permet de recommander naturellement ces produits, c'est idéal pour notre monétisation.
+Si tu choisis un sujet qui met en avant un partenaire ou produit, indique le NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT dans ta réponse.
 
 PRIORITÉ 3 — Si aucun sujet ne semble vraiment en vogue ou pertinent : propose un conseil pratique utile de saison pour les propriétaires de ${animal}.
 
@@ -129,7 +145,10 @@ Retourne UNIQUEMENT :
 SUJET: [le sujet choisi]
 MOTS_CLES: [mot1, mot2, mot3, mot4, mot5]
 INTENTION: [ce que cherche l'internaute]
-RAISON: [pourquoi ce sujet est pertinent maintenant]`;
+RAISON: [pourquoi ce sujet est pertinent maintenant]
+NOM_PRODUIT: [nom exact du produit ou partenaire mis en avant, ou AUCUN]
+LIEN_AFFILIE: [URL affiliée exacte à utiliser dans l'article, ou AUCUN]
+IMAGE_PRODUIT: [URL image du produit, ou AUCUN]`;
 
     const lucasResult = await executeAgentTask('lucas', lucasPrompt);
     pipelineTokens += lucasResult.tokens_used ?? 0;
@@ -138,7 +157,13 @@ RAISON: [pourquoi ce sujet est pertinent maintenant]`;
       const keywordsMatch = lucasResult.content.match(/MOTS_CLES:\s*(.+)/i);
       sujet = subjectMatch?.[1]?.trim() ?? '';
       motsCles = keywordsMatch?.[1]?.split(',').map(k => k.trim()).filter(Boolean) ?? [];
-      console.log(`[Cron1] Lucas : sujet=${sujet}`);
+      const nomMatch = lucasResult.content.match(/NOM_PRODUIT:\s*(.+)/i);
+      const lienMatch = lucasResult.content.match(/LIEN_AFFILIE:\s*(.+)/i);
+      const imageMatch = lucasResult.content.match(/IMAGE_PRODUIT:\s*(.+)/i);
+      nomProduit = (nomMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (nomMatch?.[1]?.trim() ?? '');
+      lienAffilie = (lienMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (lienMatch?.[1]?.trim() ?? '');
+      imageProduit = (imageMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (imageMatch?.[1]?.trim() ?? '');
+      console.log(`[Cron1] Lucas : sujet=${sujet}${nomProduit ? `, produit=${nomProduit}` : ''}`);
       await logActivity('thomas', 'Thomas',
         `Cron étape 2 : Lucas → ${sujet}`,
         'success', Date.now() - step2Start, { sujet, mots_cles: motsCles }
@@ -155,16 +180,17 @@ RAISON: [pourquoi ce sujet est pertinent maintenant]`;
 
     // ─── ÉTAPE 3 : Marie écrit l'article ─────────────────────────────────
     const step3Start = Date.now();
-    const productsStr = products.map(p => `- ${p}`).join('\n');
+    const productsStr = productsWithLinks
+      .map(p => p.affiliate_url ? `- ${p.name} → ${p.affiliate_url}` : `- ${p.name}`)
+      .join('\n');
+    const produitSection = nomProduit && lienAffilie
+      ? `\nPRODUIT / PARTENAIRE PRINCIPAL À METTRE EN AVANT :\n- Nom : ${nomProduit}\n- Lien affilié (utilise ce lien EXACT dans le texte, ne l'invente pas) : ${lienAffilie}\n  Ex. dans le texte : [${nomProduit}](${lienAffilie})\n`
+      : `\nIntègre naturellement 1-2 recommandations de produits dans le texte avec leurs liens :\n${productsStr}\nSi aucun lien n'est disponible, renvoie vers mespoilus.com/boutique\n`;
     const mariePrompt = `Écris un article de conseil pratique sur : ${sujet}
 Mots-clés à intégrer naturellement : ${motsCles.join(', ')}
 Saison : ${season} — adapte les conseils à la saison
 Animal : ${animal}
-
-Intègre naturellement 2-3 recommandations de produits dans le texte :
-${productsStr}
-Formule ainsi : 'Un [type produit] de qualité peut vraiment aider...' puis renvoie vers mespoilus.com/boutique
-
+${produitSection}
 C'est un article de CONSEILS PRATIQUES destiné aux propriétaires francophones. Ton bienveillant, accessible, utile.`;
 
     const marieResult = await executeAgentTask('marie', mariePrompt);
@@ -207,26 +233,38 @@ C'est un article de CONSEILS PRATIQUES destiné aux propriétaires francophones.
         imageUrl = imgCheck?.image_url ?? null;
 
         if (!imageUrl) {
-          console.log(`[Cron1] Image: téléchargement pour catégorie "${animal}"...`);
-          const photo = await Promise.race([
-            getPhotoForCategory(animal, sujet),
-            new Promise<null>(r => setTimeout(() => r(null), 5000)),
-          ]);
-          if (photo) {
+          if (imageProduit) {
+            // Image du produit Awin — on la télécharge et stocke dans Supabase Storage
+            console.log(`[Cron1] Image: produit Awin "${nomProduit}"...`);
             const stored = await Promise.race([
-              downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`),
+              downloadAndStorePhoto(imageProduit, `article-${articleSlug}.jpg`),
               new Promise<null>(r => setTimeout(() => r(null), 5000)),
             ]);
-            imageUrl = stored ?? photo.url;
-            await supabase.from('articles').update({
-              image_url: imageUrl,
-              image_alt: photo.alt,
-              image_credit: photo.credit,
-              image_credit_url: photo.creditUrl,
-            }).eq('slug', articleSlug);
-            console.log('[Cron1] Image:', stored ? `stockée Supabase ✅` : 'URL Unsplash directe');
+            imageUrl = stored ?? imageProduit;
+            await supabase.from('articles').update({ image_url: imageUrl }).eq('slug', articleSlug);
+            console.log('[Cron1] Image produit:', stored ? 'stockée Supabase ✅' : 'URL directe');
           } else {
-            console.log('[Cron1] Image: Unsplash indisponible (clé absente ou timeout)');
+            console.log(`[Cron1] Image: téléchargement Pexels pour catégorie "${animal}"...`);
+            const photo = await Promise.race([
+              getPhotoForCategory(animal, sujet),
+              new Promise<null>(r => setTimeout(() => r(null), 5000)),
+            ]);
+            if (photo) {
+              const stored = await Promise.race([
+                downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`),
+                new Promise<null>(r => setTimeout(() => r(null), 5000)),
+              ]);
+              imageUrl = stored ?? photo.url;
+              await supabase.from('articles').update({
+                image_url: imageUrl,
+                image_alt: photo.alt,
+                image_credit: photo.credit,
+                image_credit_url: photo.creditUrl,
+              }).eq('slug', articleSlug);
+              console.log('[Cron1] Image Pexels:', stored ? 'stockée Supabase ✅' : 'URL directe');
+            } else {
+              console.log('[Cron1] Image: Pexels indisponible (clé absente ou timeout)');
+            }
           }
         } else {
           console.log('[Cron1] Image déjà présente:', imageUrl.slice(0, 60));
