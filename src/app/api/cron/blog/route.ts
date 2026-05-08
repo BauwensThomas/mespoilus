@@ -73,9 +73,12 @@ export async function GET(req: Request) {
     const month = now.getMonth() + 1;
     season = getSeason(month);
     const week = getISOWeek(now);
+    // dayIndex : lundi=0, mercredi=1, vendredi=2 (−1 si run manuel hors-planning)
+    const dayIndex = [1, 3, 5].indexOf(now.getDay());
+    const postIndex = dayIndex >= 0 ? dayIndex : 0;
     animal = (urlAnimal && ANIMAL_CATEGORIES.includes(urlAnimal))
       ? urlAnimal
-      : ANIMAL_CATEGORIES[week % 5];
+      : ANIMAL_CATEGORIES[(week * 3 + postIndex) % 5];
 
     const { data: articles } = await supabase
       .from('articles')
