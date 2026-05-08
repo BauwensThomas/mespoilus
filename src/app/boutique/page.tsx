@@ -61,10 +61,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
 
   const activeCat = CATEGORIES.find(c => c.id === (category ?? 'all')) ?? CATEGORIES[0];
   const hasSynced = products.length > 0;
-  const filteredPartenaires = PARTENAIRES.filter(p => {
-    const cats = p.categories ?? ['all'];
-    return !category || category === 'all' || cats.includes('all') || cats.includes(category);
-  });
+  const filteredPartenaires = PARTENAIRES;
 
   return (
     <div className="min-h-screen bg-gray-50 px-8 py-8 pb-14 space-y-4 animate-fade-in">
