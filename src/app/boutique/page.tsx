@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
 import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
+import { PARTENAIRES, FLAGS } from '@/lib/partenaires';
 
 export const metadata: Metadata = {
   title: 'Boutique animaux — Mes Poilus',
@@ -132,10 +133,48 @@ export default async function BoutiquePage({ searchParams }: Props) {
         </>
       )}
 
+      <BoutiquePartenaires category={category} />
+
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-4 py-2">
         <p className="text-xs text-gray-500 text-center">
           Les liens présents sur cette page sont des liens affiliés. Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
         </p>
+      </div>
+    </div>
+  );
+}
+
+function BoutiquePartenaires({ category }: { category?: string }) {
+  const partenaires = PARTENAIRES.filter(p =>
+    !category || category === 'all' ? true : p.categories.includes(category)
+  );
+  if (!partenaires.length) return null;
+
+  return (
+    <div className="mt-2">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
+        Partenaires recommandés
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3">
+        {partenaires.map(p => (
+          <a
+            key={p.id}
+            href={p.url}
+            target="_blank"
+            rel="noopener noreferrer sponsored"
+            className="flex items-center gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 hover:shadow-md hover:border-amber-400/30 transition-all shadow-sm group flex-1 max-w-sm"
+          >
+            <span className="text-2xl">{p.emoji}</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="font-semibold text-sm text-gray-900 group-hover:text-amber-600 transition-colors">{p.nom}</span>
+                {p.pays.map(code => <span key={code} className="text-xs">{FLAGS[code]}</span>)}
+              </div>
+              <p className="text-xs text-gray-500 truncate">{p.pour} · {p.tag}</p>
+            </div>
+            <span className="text-amber-500 text-xs font-semibold shrink-0">Voir →</span>
+          </a>
+        ))}
       </div>
     </div>
   );

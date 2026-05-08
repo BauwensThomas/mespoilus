@@ -1,35 +1,4 @@
-const FLAGS: Record<string, string> = {
-  FR: '🇫🇷', BE: '🇧🇪', CH: '🇨🇭', CA: '🇨🇦', US: '🇺🇸', LU: '🇱🇺',
-};
-
-interface Partenaire {
-  id: string;
-  nom: string;
-  description: string;
-  url: string;
-  emoji: string;
-  tag: string;
-  tagColor: string;
-  pour: string;
-  network: 'awin' | 'cj';
-  pays: string[];
-}
-
-const PARTENAIRES: Partenaire[] = [
-  {
-    id: 'dogfy-diet',
-    nom: 'Dogfy Diet',
-    description:
-      "Repas 100 % naturels cuisinés à la vapeur. Livraison en France. Portions personnalisées selon le poids, l'âge et l'activité de votre chien.",
-    url: 'https://www.awin1.com/cread.php?awinmid=30279&awinaffid=2885973&ued=https%3A%2F%2Fdogfydiet.com%2Ffr',
-    emoji: '🍗',
-    tag: 'Nutrition fraîche',
-    tagColor: 'bg-orange-100 text-orange-700',
-    pour: 'Pour les chiens',
-    network: 'awin',
-    pays: ['FR'],
-  },
-];
+import { PARTENAIRES, FLAGS } from '@/lib/partenaires';
 
 export default function PartenairesSection() {
   if (!PARTENAIRES.length) return null;
@@ -42,14 +11,11 @@ export default function PartenairesSection() {
             <span className="text-amber-600 text-sm font-semibold uppercase tracking-widest">
               Partenaires
             </span>
-
             <h2 className="text-3xl font-bold text-gray-900 mt-2">
               Nos recommandations
             </h2>
-
             <p className="text-gray-500 mt-2 text-sm">
-              Des marques sélectionnées pour la qualité de leurs produits et
-              services.
+              Des marques sélectionnées pour la qualité de leurs produits et services.
             </p>
           </div>
         </div>
@@ -63,25 +29,17 @@ export default function PartenairesSection() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{p.emoji}</span>
-
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-bold text-gray-900 text-base">
-                        {p.nom}
-                      </p>
-
+                      <p className="font-bold text-gray-900 text-base">{p.nom}</p>
                       {p.pays.map(code => (
                         <span key={code} title={code}>{FLAGS[code]}</span>
                       ))}
                     </div>
-
                     <p className="text-xs text-gray-400">{p.pour}</p>
                   </div>
                 </div>
-
-                <span
-                  className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${p.tagColor}`}
-                >
+                <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${p.tagColor}`}>
                   {p.tag}
                 </span>
               </div>
@@ -103,8 +61,7 @@ export default function PartenairesSection() {
         </div>
 
         <p className="text-xs text-gray-400 text-center mt-8">
-          Liens affiliés — Mes Poilus peut percevoir une commission si vous
-          effectuez un achat, sans surcoût pour vous.
+          Liens affiliés — Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
         </p>
       </div>
     </section>
