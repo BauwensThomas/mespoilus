@@ -5,9 +5,9 @@
 @layer base {
   :root {
     --bg-primary: #111827;
-    --bg-card: #262626;
-    --bg-hover: #2e2e2e;
-    --bg-border: #484848;
+    --bg-card: #1e2a3a;
+    --bg-hover: #253347;
+    --bg-border: #2a3a4a;
   }
 
   html {
@@ -44,11 +44,11 @@
 
 @layer components {
   .card {
-    @apply bg-[#262626] border border-[#484848] rounded-xl;
+    @apply bg-[#1e2a3a] border border-[#2a3a4a] rounded-xl;
   }
 
   .card-hover {
-    @apply card transition-all duration-200 hover:border-[#666] hover:bg-[#2e2e2e];
+    @apply card transition-all duration-200 hover:border-[#3a5a6a] hover:bg-[#253347];
   }
 
   .badge {
@@ -64,7 +64,7 @@
   }
 
   .badge-idle {
-    @apply badge bg-[#222] text-gray-400 border border-[#333];
+    @apply badge bg-[#1e2a3a] text-gray-400 border border-[#2a3a4a];
   }
 
   .badge-offline {
@@ -78,13 +78,13 @@
   }
 
   .btn-ghost {
-    @apply px-4 py-2 bg-transparent text-gray-400 rounded-lg font-medium text-sm border border-[#333]
-           hover:bg-[#1a1a1a] hover:text-white hover:border-[#444] transition-all duration-150;
+    @apply px-4 py-2 bg-transparent text-gray-400 rounded-lg font-medium text-sm border border-[#2a3a4a]
+           hover:bg-[#1e2a3a] hover:text-white hover:border-[#3a5a6a] transition-all duration-150;
   }
 
   .input-dark {
-    @apply w-full bg-[#0d0d0d] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white
-           placeholder-gray-600 focus:outline-none focus:border-[#444] focus:ring-1 focus:ring-[#444]
+    @apply w-full bg-[#111827] border border-[#2a3a4a] rounded-lg px-3 py-2 text-sm text-white
+           placeholder-gray-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30
            transition-colors duration-150;
   }
 
@@ -92,8 +92,8 @@
     @apply prose prose-invert prose-sm max-w-none
            prose-headings:text-white prose-p:text-gray-300
            prose-a:text-blue-400 prose-strong:text-white
-           prose-code:text-emerald-400 prose-code:bg-[#1a1a1a] prose-code:px-1 prose-code:rounded
-           prose-pre:bg-[#0d0d0d] prose-pre:border prose-pre:border-[#222];
+           prose-code:text-emerald-400 prose-code:bg-[#1e2a3a] prose-code:px-1 prose-code:rounded
+           prose-pre:bg-[#111827] prose-pre:border prose-pre:border-[#2a3a4a];
   }
 
   .status-dot {

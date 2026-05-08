@@ -8,7 +8,7 @@ interface StatItemProps {
 
 function StatItem({ label, value, sub, icon, monthly }: StatItemProps) {
   return (
-    <div className="bg-[#262626] border border-[#484848] rounded-xl p-4 flex items-center gap-4">
+    <div className="bg-[#1e2a3a] border border-[#2a3a4a] rounded-xl p-4 flex items-center gap-4">
       <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-xl flex-shrink-0">
         {icon}
       </div>
@@ -17,7 +17,7 @@ function StatItem({ label, value, sub, icon, monthly }: StatItemProps) {
         <div className="text-xs text-gray-200 mt-0.5">{label}</div>
         {sub && <div className="text-[10px] text-gray-300">{sub}</div>}
         {monthly !== undefined && (
-          <div className="text-[10px] text-gray-500 mt-1 pt-1 border-t border-[#3a3a3a]">
+          <div className="text-[10px] text-gray-500 mt-1 pt-1 border-t border-[#2a3a4a]">
             <span className="text-amber-400 font-medium">{monthly}</span> ce mois
           </div>
         )}

@@ -84,7 +84,7 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between relative mt-auto pt-3 border-t border-[#404040]">
+        <div className="flex items-center justify-between relative mt-auto pt-3 border-t border-[#2a3a4a]">
           <span className="text-[10px] text-gray-300">Actif {lastActive}</span>
           <span className={clsx('text-[10px] font-medium', agent.color, 'group-hover:underline')}>
             Voir le tableau →
@@ -102,13 +102,13 @@ function Stat({ label, value, highlight, monthly }: {
   monthly?: string | number;
 }) {
   return (
-    <div className="bg-[#1e1e1e] border border-[#3a3a3a] rounded-lg p-2 text-center">
+    <div className="bg-[#111827] border border-[#2a3a4a] rounded-lg p-2 text-center">
       <div className={clsx('text-sm font-bold', highlight ? 'text-emerald-400' : 'text-white')}>
         {value}
       </div>
       <div className="text-[9px] text-gray-300 uppercase tracking-wide mt-0.5">{label}</div>
       {monthly !== undefined && (
-        <div className="text-[9px] text-gray-500 mt-1 border-t border-[#2a2a2a] pt-1">
+        <div className="text-[9px] text-gray-500 mt-1 border-t border-[#1e2a3a] pt-1">
           <span className="text-amber-400 font-medium">{monthly}</span> ce mois
         </div>
       )}
