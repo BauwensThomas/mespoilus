@@ -3,17 +3,17 @@ export const FLAGS: Record<string, string> = {
 };
 
 export interface Partenaire {
-  id: string;
-  nom: string;
-  description: string;
-  url: string;
-  emoji: string;
-  tag: string;
-  tagColor: string;
-  pour: string;
-  network: 'awin' | 'cj';
-  pays: string[];
-  categories: string[]; // catégories boutique ('all' = toutes)
+  id: string;          // slug unique
+  nom: string;         // nom affiché
+  url: string;         // lien affilié
+  emoji: string;       // icône
+  description?: string;
+  tag?: string;
+  tagColor?: string;
+  pour?: string;
+  network?: 'awin' | 'cj';
+  pays?: string[];     // défaut : toutes zones (pas de filtre)
+  categories?: string[]; // défaut : 'all' (visible partout dans boutique)
 }
 
 export const PARTENAIRES: Partenaire[] = [

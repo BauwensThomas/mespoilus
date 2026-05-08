@@ -32,21 +32,25 @@ export default function PartenairesSection() {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-bold text-gray-900 text-base">{p.nom}</p>
-                      {p.pays.map(code => (
+                      {(p.pays ?? []).map(code => (
                         <span key={code} title={code}>{FLAGS[code]}</span>
                       ))}
                     </div>
-                    <p className="text-xs text-gray-400">{p.pour}</p>
+                    {p.pour && <p className="text-xs text-gray-400">{p.pour}</p>}
                   </div>
                 </div>
-                <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${p.tagColor}`}>
-                  {p.tag}
-                </span>
+                {p.tag && (
+                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${p.tagColor ?? 'bg-gray-100 text-gray-600'}`}>
+                    {p.tag}
+                  </span>
+                )}
               </div>
 
-              <p className="text-sm text-gray-500 leading-relaxed flex-1">
-                {p.description}
-              </p>
+              {p.description && (
+                <p className="text-sm text-gray-500 leading-relaxed flex-1">
+                  {p.description}
+                </p>
+              )}
 
               <a
                 href={p.url}

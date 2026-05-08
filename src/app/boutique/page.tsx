@@ -145,9 +145,10 @@ export default async function BoutiquePage({ searchParams }: Props) {
 }
 
 function BoutiquePartenaires({ category }: { category?: string }) {
-  const partenaires = PARTENAIRES.filter(p =>
-    !category || category === 'all' ? true : p.categories.includes(category)
-  );
+  const partenaires = PARTENAIRES.filter(p => {
+    const cats = p.categories ?? ['all'];
+    return !category || category === 'all' || cats.includes('all') || cats.includes(category);
+  });
   if (!partenaires.length) return null;
 
   return (
@@ -168,9 +169,9 @@ function BoutiquePartenaires({ category }: { category?: string }) {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="font-semibold text-sm text-gray-900 group-hover:text-amber-600 transition-colors">{p.nom}</span>
-                {p.pays.map(code => <span key={code} className="text-xs">{FLAGS[code]}</span>)}
+                {(p.pays ?? []).map(code => <span key={code} className="text-xs">{FLAGS[code]}</span>)}
               </div>
-              <p className="text-xs text-gray-500 truncate">{p.pour} · {p.tag}</p>
+              <p className="text-xs text-gray-500 truncate">{[p.pour, p.tag].filter(Boolean).join(' · ')}</p>
             </div>
             <span className="text-amber-500 text-xs font-semibold shrink-0">Voir →</span>
           </a>
