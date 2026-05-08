@@ -158,13 +158,13 @@ export default function CronLauncher() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-[#262626] border border-[#484848] rounded-xl shadow-xl z-50 overflow-hidden">
-          <div className="px-4 py-3 border-b border-[#484848]">
+        <div className="absolute right-0 top-full mt-2 w-80 bg-[#1e2a3a] border border-[#2a3a4a] rounded-xl shadow-xl z-50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-[#2a3a4a]">
             <p className="text-xs font-semibold text-white">Pipelines manuels</p>
             <p className="text-[10px] text-gray-300 mt-0.5">Déclenche un pipeline immédiatement</p>
           </div>
 
-          <div className="divide-y divide-[#3a3a3a]">
+          <div className="divide-y divide-[#2a3a4a]">
             {CRONS.map((cron) => {
               const state = getState(cron.id);
               const isRunning = state.status === 'running';
@@ -179,7 +179,7 @@ export default function CronLauncher() {
                         value={selectedAnimal}
                         onChange={(e) => setSelectedAnimal(e.target.value)}
                         disabled={isRunning}
-                        className="w-full bg-[#1e1e1e] border border-[#484848] rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-amber-500/50 disabled:opacity-50"
+                        className="w-full bg-[#111827] border border-[#2a3a4a] rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-amber-500/50 disabled:opacity-50"
                       >
                         {ANIMALS.map((a) => (
                           <option key={a.value} value={a.value}>{a.label}</option>
@@ -241,7 +241,7 @@ export default function CronLauncher() {
             })}
           </div>
 
-          <div className="px-4 py-3 border-t border-[#484848] bg-[#1e1e1e]">
+          <div className="px-4 py-3 border-t border-[#2a3a4a] bg-[#111827]">
             <p className="text-[10px] text-gray-400">
               💡 Support client : pas de cron — Léa répond à la demande depuis sa page agent.
             </p>

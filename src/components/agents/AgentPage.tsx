@@ -184,7 +184,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
   return (
     <div className="animate-fade-in">
       {/* ── Hero photo ambiante ───────────────────────────────────────────── */}
-      <div className="relative w-full h-52 overflow-hidden bg-[#1e1e1e]">
+      <div className="relative w-full h-52 overflow-hidden bg-[#111827]">
         <Image
           src={heroSrc}
           alt={heroAlt}
@@ -194,7 +194,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
           sizes="100vw"
           unoptimized={!isExternalImage}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111827] via-[#111827]/60 to-transparent" />
         <div className={clsx('absolute inset-0 opacity-20', agent.bgColor)} />
 
         {photo?.credit && (
@@ -304,7 +304,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                       key={i}
                       onClick={() => { setTask(qt); runTask(qt); }}
                       disabled={isLoading}
-                      className="w-full text-left text-xs text-gray-100 hover:text-white bg-[#2a2a2a] hover:bg-[#333] border border-[#484848] hover:border-[#666] rounded-lg px-3 py-2 transition-all duration-150 disabled:opacity-50"
+                      className="w-full text-left text-xs text-gray-100 hover:text-white bg-[#1e2a3a] hover:bg-[#253347] border border-[#2a3a4a] hover:border-[#3a5a6a] rounded-lg px-3 py-2 transition-all duration-150 disabled:opacity-50"
                     >
                       {qt.length > 80 ? qt.slice(0, 80) + '…' : qt}
                     </button>
@@ -341,7 +341,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
               {response ? (
                 <div
                   ref={responseRef}
-                  className="flex-1 overflow-y-auto scrollbar-thin text-sm text-gray-100 leading-relaxed whitespace-pre-wrap font-mono bg-[#1e1e1e] rounded-lg p-4 border border-[#404040]"
+                  className="flex-1 overflow-y-auto scrollbar-thin text-sm text-gray-100 leading-relaxed whitespace-pre-wrap font-mono bg-[#111827] rounded-lg p-4 border border-[#2a3a4a]"
                 >
                   {response}
                   {isStreaming && <span className="inline-block w-1 h-4 bg-white/70 ml-0.5 animate-pulse" />}
@@ -419,7 +419,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
           {recentLogs.length === 0 ? (
             <p className="text-xs text-gray-200 py-4 text-center">Aucune activité enregistrée</p>
           ) : (
-            <div className="divide-y divide-[#3a3a3a]">
+            <div className="divide-y divide-[#2a3a4a]">
               {recentLogs.map((log) => {
                 const link = getLogLink(log);
                 const isExpanded = expandedLog === log.id;
@@ -453,7 +453,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                     {link ? (
                       <Link
                         href={link}
-                        className="flex items-start gap-3 hover:bg-[#333] rounded-lg px-2 -mx-2 py-1 transition-colors duration-150"
+                        className="flex items-start gap-3 hover:bg-[#253347] rounded-lg px-2 -mx-2 py-1 transition-colors duration-150"
                       >
                         <StatusDot status={log.status} />
                         <div className="flex-1 min-w-0">
@@ -471,14 +471,14 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                       <button
                         onClick={() => setExpandedLog(isExpanded ? null : log.id)}
                         disabled={!hasDetails}
-                        className="w-full text-left hover:bg-[#333] rounded-lg px-2 -mx-2 py-1 transition-colors duration-150 disabled:cursor-default"
+                        className="w-full text-left hover:bg-[#253347] rounded-lg px-2 -mx-2 py-1 transition-colors duration-150 disabled:cursor-default"
                       >
                         {Row}
                       </button>
                     )}
 
                     {isExpanded && hasDetails && (
-                      <div className="mt-2 mb-1 mx-2 bg-[#1e1e1e] border border-[#404040] rounded-lg p-4 overflow-y-auto max-h-[500px]">
+                      <div className="mt-2 mb-1 mx-2 bg-[#111827] border border-[#2a3a4a] rounded-lg p-4 overflow-y-auto max-h-[500px]">
                         {typeof log.details.content === 'string' ? (
                           <pre className="text-xs text-gray-100 leading-relaxed whitespace-pre-wrap font-mono">
                             {log.details.content}
@@ -543,7 +543,7 @@ function DelegationCard({ delegation }: { delegation: DelegationResult }) {
         </div>
       </button>
       {expanded && (
-        <div className="px-4 pb-4 border-t border-[#3a3a3a]">
+        <div className="px-4 pb-4 border-t border-[#2a3a4a]">
           <pre className="text-xs text-gray-100 leading-relaxed whitespace-pre-wrap font-mono mt-3 max-h-64 overflow-y-auto scrollbar-thin">
             {delegation.result}
           </pre>

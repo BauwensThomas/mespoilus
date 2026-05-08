@@ -28,7 +28,7 @@ export default function LoginPage({ searchParams }: Props) {
         </div>
 
         {/* Card */}
-        <div className="bg-[#262626] border border-[#484848] rounded-2xl p-8">
+        <div className="bg-[#1e2a3a] border border-[#2a3a4a] rounded-2xl p-8">
           <h1 className="text-white font-semibold text-lg mb-6">Se connecter</h1>
 
           {hasError && (
@@ -49,7 +49,7 @@ export default function LoginPage({ searchParams }: Props) {
                 required
                 autoComplete="email"
                 placeholder="admin@mespoilus.com"
-                className="w-full bg-[#1e1e1e] border border-[#484848] rounded-lg px-3 py-2.5 text-sm text-white
+                className="w-full bg-[#111827] border border-[#2a3a4a] rounded-lg px-3 py-2.5 text-sm text-white
                            placeholder-gray-600 focus:outline-none focus:border-amber-500/50 focus:ring-1
                            focus:ring-amber-500/30 transition-colors duration-150"
               />
@@ -66,7 +66,7 @@ export default function LoginPage({ searchParams }: Props) {
                 required
                 autoComplete="current-password"
                 placeholder="••••••••"
-                className="w-full bg-[#1e1e1e] border border-[#484848] rounded-lg px-3 py-2.5 text-sm text-white
+                className="w-full bg-[#111827] border border-[#2a3a4a] rounded-lg px-3 py-2.5 text-sm text-white
                            placeholder-gray-600 focus:outline-none focus:border-amber-500/50 focus:ring-1
                            focus:ring-amber-500/30 transition-colors duration-150"
               />
