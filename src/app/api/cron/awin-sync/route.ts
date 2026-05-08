@@ -11,9 +11,9 @@ export async function GET(req: Request) {
   }
 
   const publisherId = process.env.AWIN_PUBLISHER_ID;
-  const apiToken    = process.env.AWIN_API_TOKEN;
+  const feedToken   = process.env.AWIN_FEED_TOKEN ?? process.env.AWIN_API_TOKEN;
 
-  if (!publisherId || !apiToken) {
+  if (!publisherId || !feedToken) {
     return NextResponse.json({ error: 'Clés Awin manquantes' }, { status: 503 });
   }
 
@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   let totalSynced = 0;
 
   for (const category of categories) {
-    const products = await fetchAwinProducts(publisherId, apiToken, category, 30);
+    const products = await fetchAwinProducts(publisherId, feedToken, category, 30);
     if (!products.length) continue;
 
     const { error } = await supabase

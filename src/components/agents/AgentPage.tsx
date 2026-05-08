@@ -2,8 +2,15 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Agent, AgentStat, ActivityLog } from '@/types';
-import { formatDistanceToNow } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  if (isToday(d))     return `aujourd'hui à ${format(d, 'HH:mm')}`;
+  if (isYesterday(d)) return `hier à ${format(d, 'HH:mm')}`;
+  return format(d, 'd MMM à HH:mm', { locale: fr });
+}
 import clsx from 'clsx';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -251,7 +258,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                 {stat?.last_active && (
                   <StatInline
                     label="Dernière activité"
-                    value={formatDistanceToNow(new Date(stat.last_active), { addSuffix: true, locale: fr })}
+                    value={formatDate(stat.last_active)}
                   />
                 )}
               </div>
@@ -435,7 +442,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                       )}
                     </div>
                     <span className="text-[10px] text-gray-300 flex-shrink-0">
-                      {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: fr })}
+                      {formatDate(log.created_at)}
                     </span>
                     {link
                       ? <span className="text-[10px] text-blue-400 flex-shrink-0">→</span>
@@ -463,7 +470,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                           )}
                         </div>
                         <span className="text-[10px] text-gray-300 flex-shrink-0">
-                          {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: fr })}
+                          {formatDate(log.created_at)}
                         </span>
                         <span className="text-[10px] text-blue-400 flex-shrink-0">→</span>
                       </Link>
