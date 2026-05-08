@@ -1,3 +1,4 @@
+import { gunzipSync } from 'zlib';
 import type { AwinProduct } from '@/types';
 
 export const AWIN_CATEGORY_SEARCH: Record<string, string[]> = {
@@ -9,10 +10,7 @@ export const AWIN_CATEGORY_SEARCH: Record<string, string[]> = {
   general:  ['pet', 'animal', 'animaux'],
 };
 
-export interface AwinAdvertiser {
-  id: number;
-  name: string;
-}
+export interface AwinAdvertiser { id: number; name: string; }
 
 function parseCSVLine(line: string): string[] {
   const result: string[] = [];
@@ -40,66 +38,90 @@ function parseCSV(text: string): Record<string, string>[] {
   });
 }
 
+async function fetchAndDecompress(url: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const buffer = Buffer.from(await res.arrayBuffer());
+  // Détecter gzip par magic bytes \x1F\x8B
+  const isGzip = buffer[0] === 0x1f && buffer[1] === 0x8b;
+  return isGzip ? gunzipSync(buffer).toString('utf-8') : buffer.toString('utf-8');
+}
+
+let cachedFeeds: Record<string, string>[] | null = null;
+let cacheTime = 0;
+
+async function getJoinedFeeds(publisherId: string, feedToken: string): Promise<Record<string, string>[]> {
+  const now = Date.now();
+  if (cachedFeeds && now - cacheTime < 3_600_000) return cachedFeeds;
+
+  const url = `https://ui.awin.com/productdata-darwin-download/publisher/${publisherId}/${feedToken}/1/feedList`;
+  const res = await fetch(url);
+  if (!res.ok) { console.error('[awin] feedList error:', res.status); return []; }
+
+  const all = parseCSV(await res.text());
+  const joined = all.filter(f => f['Membership Status'] === 'active');
+  console.log(`[awin] marchands actifs: ${joined.map(f => f['Advertiser Name']).join(', ') || 'aucun'}`);
+
+  cachedFeeds = joined;
+  cacheTime = now;
+  return joined;
+}
+
 export async function fetchAwinProducts(
   publisherId: string,
   feedToken: string,
   category: AwinProduct['category'],
   limit = 30
 ): Promise<AwinProduct[]> {
-  const base = `https://ui.awin.com/productdata-darwin-download/publisher/${publisherId}/${feedToken}/1`;
-
-  let feeds: Record<string, string>[] = [];
-  try {
-    const res = await fetch(`${base}/feedList`, { next: { revalidate: 86400 } });
-    if (!res.ok) { console.error('[awin] feedList error:', res.status); return []; }
-    feeds = parseCSV(await res.text());
-    console.log(`[awin] ${feeds.length} feed(s) disponibles:`, feeds.map(f => f.merchant_name ?? f.advertiser_name ?? f.aw_feed_id));
-  } catch (e) {
-    console.error('[awin] feedList exception:', e);
-    return [];
-  }
+  const feeds = await getJoinedFeeds(publisherId, feedToken);
+  if (!feeds.length) return [];
 
   const keywords = AWIN_CATEGORY_SEARCH[category] ?? ['pet'];
   const allProducts: AwinProduct[] = [];
 
   for (const feed of feeds) {
     if (allProducts.length >= limit) break;
-    const feedId = feed.aw_feed_id ?? feed.feed_id ?? feed.id;
-    if (!feedId) continue;
+    const feedUrl = feed['URL'];
+    const merchantName = feed['Advertiser Name'];
+    if (!feedUrl) continue;
 
     try {
-      const res = await fetch(`${base}/${feedId}`, { next: { revalidate: 86400 } });
-      console.log(`[awin] feed ${feedId}: HTTP ${res.status}`);
-      if (!res.ok) continue;
-
-      const products = parseCSV(await res.text());
+      const csvText = await fetchAndDecompress(feedUrl);
+      const products = parseCSV(csvText);
 
       for (const p of products) {
         if (allProducts.length >= limit) break;
-        if (!p.aw_product_id || !p.aw_deep_link) continue;
 
-        const text = `${p.product_name} ${p.description ?? ''} ${p.category_name ?? ''}`.toLowerCase();
+        const id = p['id'] ?? p['aw_product_id'] ?? p['product_id'];
+        const name = p['title'] ?? p['product_name'] ?? '';
+        const deepLink = p['aw_deep_link'] ?? p['link'] ?? '';
+        const imageUrl = p['image_link'] ?? p['aw_image_url'] ?? p['merchant_image_url'] ?? '';
+        const desc = p['description'] ?? '';
+        const priceRaw = p['price'] ?? p['search_price'] ?? '0';
+        const priceMatch = priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/);
+        const price = parseFloat(priceMatch?.[1] ?? '0') || 0;
+        const currency = priceMatch?.[2] ?? 'EUR';
+        const availability = p['availability'] ?? p['in_stock'] ?? '';
+        const inStock = availability === 'in_stock' || availability === 'in stock' || availability === '1' || availability === 'true';
+
+        if (!id || !deepLink) continue;
+
+        const text = `${name} ${desc} ${p['product_type'] ?? ''} ${p['google_product_category'] ?? ''}`.toLowerCase();
         if (category !== 'general' && !keywords.some(kw => text.includes(kw.toLowerCase()))) continue;
 
-        const id = `awin_${p.aw_product_id}`;
-        if (allProducts.find(x => x.id === id)) continue;
+        const pid = `awin_${id}`;
+        if (allProducts.find(x => x.id === pid)) continue;
 
         allProducts.push({
-          id,
-          name: p.product_name ?? '',
-          description: (p.description ?? '').slice(0, 200),
-          price: parseFloat(p.search_price ?? '0') || 0,
-          currency: p.currency_symbol ?? 'EUR',
-          image_url: p.aw_image_url ?? p.merchant_image_url ?? '',
-          affiliate_url: p.aw_deep_link,
-          merchant_name: p.merchant_name ?? '',
-          category,
-          in_stock: p.in_stock === '1' || p.in_stock === 'true',
+          id: pid, name, description: desc.slice(0, 200),
+          price, currency, image_url: imageUrl,
+          affiliate_url: deepLink, merchant_name: merchantName ?? '',
+          category, in_stock: inStock,
           last_synced: new Date().toISOString(),
         });
       }
     } catch (e) {
-      console.error(`[awin] feed ${feedId} exception:`, e);
+      console.error(`[awin] feed ${merchantName} erreur:`, e);
     }
   }
 
