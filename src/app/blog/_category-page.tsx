@@ -59,7 +59,7 @@ async function getArticles(category: string): Promise<Article[]> {
       .from('articles')
       .select('*')
       .eq('status', 'published')
-      .contains('categories', [category])
+      .or(`category.eq.${category},categories.cs.{${category}}`)
       .order('published_at', { ascending: false })
       .limit(24);
     return (data as Article[]) ?? [];
