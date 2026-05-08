@@ -178,6 +178,7 @@ function ProductCard({ product }: { product: AwinProduct }) {
           {product.currency === 'USD' && <img src="https://flagcdn.com/16x12/us.png" alt="US" className="inline-block" />}
           {product.currency === 'CAD' && <img src="https://flagcdn.com/16x12/ca.png" alt="CA" className="inline-block" />}
           {product.currency === 'GBP' && <img src="https://flagcdn.com/16x12/gb.png" alt="GB" className="inline-block" />}
+          {product.currency === 'EUR' && <img src="https://flagcdn.com/16x12/eu.png" alt="EU" className="inline-block" />}
           {product.merchant_name}
         </p>
         <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{product.name}</h3>
