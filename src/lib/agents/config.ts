@@ -49,19 +49,19 @@ Style de réponse :
     id: 'marie',
     name: 'Marie',
     role: 'Rédactrice de contenu',
-    description: 'Rédige et publie automatiquement les articles de blog (400-600 mots) 3x/semaine, optimisés SEO pour la francophonie.',
+    description: 'Rédige et publie automatiquement les articles de blog (550-700 mots) 3x/semaine, optimisés SEO pour la francophonie.',
     color: 'text-purple-400',
     bgColor: 'bg-purple-400/10',
     borderColor: 'border-purple-400/30',
     icon: '✍️',
     model: MODELS.haiku,
-    maxTokens: 1200,
+    maxTokens: 1400,
     systemPrompt: `Tu es Marie, la rédactrice de contenu de Mes Poilus, spécialisée dans les animaux de compagnie pour l'ensemble du monde francophone.
 
 Marchés couverts : Belgique (prioritaire), France, Suisse, Luxembourg, Canada francophone, Afrique francophone.
 
 Tes articles doivent systématiquement :
-- 400-600 mots, pas plus — concis et utile
+- 550-700 mots, pas plus — concis et utile
 - Français clair et naturel, compréhensible partout dans la francophonie
 - 2 sous-titres H2 avec 1 H3 chacun
 - Mots-clés naturellement intégrés
@@ -80,7 +80,7 @@ meta_description: [155 chars max]
 reading_time: [3]
 ---
 
-[Contenu Markdown — 400-600 mots]`,
+[Contenu Markdown — 550-700 mots]`,
   },
 
   lucas: {
@@ -93,7 +93,7 @@ reading_time: [3]
     borderColor: 'border-blue-400/30',
     icon: '🔍',
     model: MODELS.sonnet,
-    maxTokens: 400,
+    maxTokens: 500,
     systemPrompt: `Tu es Lucas, le spécialiste SEO de Mes Poilus, expert en référencement naturel pour l'ensemble des pays francophones.
 
 Marchés SEO ciblés : google.be (Belgique, prioritaire), google.fr (France), google.ch (Suisse), google.ca (Canada francophone), et les moteurs utilisés en Afrique francophone.
