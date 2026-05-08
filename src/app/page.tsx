@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getPhotoForArticle, getHeroPhotos, CATEGORY_PLACEHOLDER } from '@/lib/unsplash';
 import NewsletterForm from '@/components/landing/NewsletterForm';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 import AdBanner from '@/components/ui/AdBanner';
 import type { Article } from '@/types';
 import { format } from 'date-fns';
@@ -95,13 +96,16 @@ export default async function LandingPage() {
                 {label}
               </Link>
             ))}
-            <Link
-              href="/boutique"
-              className="bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold px-3 py-1 rounded-lg
-                         transition-colors duration-150 shadow-md"
-            >
-              Boutique
-            </Link>
+            <div className="flex items-center gap-2">
+              <ThemeToggle className="text-white/70 hover:text-white" />
+              <Link
+                href="/boutique"
+                className="bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold px-3 py-1 rounded-lg
+                           transition-colors duration-150 shadow-md"
+              >
+                Boutique
+              </Link>
+            </div>
           </div>
         </nav>
       </header>
