@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { AGENTS } from '@/lib/agents/config';
 import { logout } from '@/app/actions/auth';
 import clsx from 'clsx';
-import ThemeToggle from '@/components/ui/ThemeToggle';
 
 const navItems = [
   { href: '/dashboard',  label: 'Dashboard',   icon: '⚡' },
@@ -88,10 +87,9 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer avec déconnexion + toggle */}
-      <div className="px-4 py-4 border-t space-y-2" style={{ borderColor: 'var(--bg-border)' }}>
-        <div className="flex items-center justify-between px-1">
-          <ThemeToggle />
+      {/* Footer avec déconnexion */}
+      <div className="px-4 py-4 border-t" style={{ borderColor: 'var(--bg-border)' }}>
+        <div className="flex items-center justify-end px-1">
           <form action={logout}>
             <button
               type="submit"
