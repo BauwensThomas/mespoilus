@@ -1,19 +1,15 @@
-export const FLAGS: Record<string, string> = {
-  FR: '🇫🇷', BE: '🇧🇪', CH: '🇨🇭', CA: '🇨🇦', US: '🇺🇸', LU: '🇱🇺',
-};
-
 export interface Partenaire {
-  id: string;          // slug unique
-  nom: string;         // nom affiché
-  url: string;         // lien affilié
-  emoji: string;       // icône
+  id: string;
+  nom: string;
+  url: string;
+  emoji: string;
   description?: string;
   tag?: string;
   tagColor?: string;
   pour?: string;
   network?: 'awin' | 'cj';
-  pays?: string[];     // défaut : toutes zones (pas de filtre)
-  categories?: string[]; // défaut : 'all' (visible partout dans boutique)
+  pays?: string[];     // ex: ['🇫🇷', '🇧🇪'] — défaut : toutes zones
+  categories?: string[]; // défaut : visible partout dans boutique
 }
 
 export const PARTENAIRES: Partenaire[] = [
@@ -28,7 +24,7 @@ export const PARTENAIRES: Partenaire[] = [
     tagColor: 'bg-orange-100 text-orange-700',
     pour: 'Pour les chiens',
     network: 'awin',
-    pays: ['FR'],
+    pays: ['🇫🇷'],
     categories: ['chiens'],
   },
 ];
