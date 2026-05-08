@@ -88,15 +88,24 @@ export async function GET(req: Request) {
 
     const { data: articles } = await supabase
       .from('articles')
-      .select('title, featured_partner')
+      .select('title')
       .order('published_at', { ascending: false })
       .limit(30);
     const recentTitles = (articles ?? []).map((a: { title: string }) => a.title);
-    const recentlyFeaturedPartners = [...new Set(
-      (articles ?? [])
-        .map((a: { featured_partner?: string }) => a.featured_partner)
-        .filter(Boolean) as string[]
-    )];
+
+    // Partenaires déjà mis en avant (colonne featured_partner — requiert migration_featured_partner.sql)
+    let recentlyFeaturedPartners: string[] = [];
+    try {
+      const { data: partnerRows } = await supabase
+        .from('articles')
+        .select('featured_partner')
+        .not('featured_partner', 'is', null)
+        .order('published_at', { ascending: false })
+        .limit(30);
+      recentlyFeaturedPartners = [...new Set(
+        (partnerRows ?? []).map((a: { featured_partner: string }) => a.featured_partner).filter(Boolean)
+      )];
+    } catch { /* migration non encore appliquée — pas de blocage */ }
 
     const { data: productRows } = await supabase
       .from('products')
@@ -124,7 +133,7 @@ export async function GET(req: Request) {
     // ─── ÉTAPE 2 : Lucas analyse le SEO ──────────────────────────────────
     const step2Start = Date.now();
     const recentContext = recentTitles.length
-      ? recentTitles.slice(0, 15).map(t => `- ${t}`).join('\n')
+      ? recentTitles.map(t => `- ${t}`).join('\n')
       : 'Aucun article récent.';
     const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
     // Rotation forcée du type d'article : trending → affiliation → pratique → ...
@@ -191,8 +200,8 @@ IMAGE_PRODUIT: [URL image du produit, ou AUCUN]`;
     if (lucasResult.success) {
       const subjectMatch = lucasResult.content.match(/SUJET:\s*(.+)/i);
       const keywordsMatch = lucasResult.content.match(/MOTS_CLES:\s*(.+)/i);
-      sujet = subjectMatch?.[1]?.trim() ?? '';
-      motsCles = keywordsMatch?.[1]?.split(',').map(k => k.trim()).filter(Boolean) ?? [];
+      sujet = subjectMatch?.[1]?.trim() || `Conseils pratiques pour votre ${animal.replace(/s$/, '')} en ${season}`;
+      motsCles = keywordsMatch?.[1]?.split(',').map(k => k.trim()).filter(Boolean) ?? [animal, season, 'conseils', 'bien-être', 'santé'];
       const nomMatch = lucasResult.content.match(/NOM_PRODUIT:\s*(.+)/i);
       const lienMatch = lucasResult.content.match(/LIEN_AFFILIE:\s*(.+)/i);
       const imageMatch = lucasResult.content.match(/IMAGE_PRODUIT:\s*(.+)/i);
@@ -259,9 +268,11 @@ C'est un article de CONSEILS PRATIQUES destiné aux propriétaires francophones.
 
     console.log(`[Cron1] Marie : slug=${articleSlug}`);
 
-    // Sauvegarder le partenaire mis en avant pour éviter de le réutiliser dans les 30 prochains articles
+    // Sauvegarder le partenaire mis en avant (requiert migration_featured_partner.sql)
     if (nomProduit && articleSlug) {
-      await supabase.from('articles').update({ featured_partner: nomProduit }).eq('slug', articleSlug);
+      try {
+        await supabase.from('articles').update({ featured_partner: nomProduit }).eq('slug', articleSlug);
+      } catch { /* migration non encore appliquée — pas de blocage */ }
     }
 
     // ─── IMAGE : télécharger pour l'animal + stocker dans Supabase Storage ───
