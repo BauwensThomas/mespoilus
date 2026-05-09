@@ -4,7 +4,7 @@ import type { AwinProduct } from '@/types';
 import Link from 'next/link';
 import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
 import ProductCard from '@/components/boutique/ProductCard';
-import { PawPrint, Dog, Cat, Bird, Mouse, Zap } from 'lucide-react';
+import { PawPrint, Dog, Cat, Bird, Mouse, Zap, BookOpen } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Boutique animaux -Mes Poilus',
@@ -22,6 +22,7 @@ const CATEGORIES = [
   { id: 'oiseaux',  label: 'Oiseaux',  icon: Bird },
   { id: 'rongeurs', label: 'Rongeurs', icon: Mouse },
   { id: 'reptiles', label: 'Reptiles', icon: Zap },
+  { id: 'livres',   label: 'Livres',   icon: BookOpen },
 ];
 
 async function getProducts(category?: string, search?: string): Promise<AwinProduct[]> {
