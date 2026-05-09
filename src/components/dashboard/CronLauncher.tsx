@@ -5,7 +5,6 @@ import { RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard, R
 import clsx from 'clsx';
 
 const ANIMALS = [
-  { value: '',            label: 'Auto (rotation)', icon: RefreshCw },
   { value: 'auto-smart',  label: 'Auto (moins utilisée)', icon: Sparkles },
   { value: 'chiens',      label: 'Chiens', icon: Dog },
   { value: 'chats',       label: 'Chats', icon: Cat },
@@ -187,7 +186,7 @@ function useCronRunner() {
 
 export default function CronLauncher() {
   const [open, setOpen] = useState(false);
-  const [selectedAnimal, setSelectedAnimal] = useState('');
+  const [selectedAnimal, setSelectedAnimal] = useState('auto-smart');
   const [selectedType, setSelectedType] = useState('');
   const { getState, run, reset } = useCronRunner();
 
