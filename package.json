@@ -23,6 +23,12 @@
     "recharts": "^2.12.7",
     "uuid": "^14.0.0"
   },
+  "browserslist": [
+    "chrome >= 93",
+    "safari >= 15",
+    "firefox >= 90",
+    "edge >= 93"
+  ],
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
