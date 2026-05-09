@@ -113,12 +113,13 @@ export async function GET(req: Request) {
     const month = now.getMonth() + 1;
     season = getSeason(month);
     const week = getISOWeek(now);
+    const dayIndex = [1, 3, 5].indexOf(now.getDay());
+    const postIndex = dayIndex >= 0 ? dayIndex : 0;
+
     // Mode auto : catégorie la moins utilisée, sinon rotation par semaine
     if (urlAuto) {
       animal = await selectLeastUsedCategory(supabase);
     } else {
-      const dayIndex = [1, 3, 5].indexOf(now.getDay());
-      const postIndex = dayIndex >= 0 ? dayIndex : 0;
       animal = (urlAnimal && ANIMAL_CATEGORIES.includes(urlAnimal))
         ? urlAnimal
         : ANIMAL_CATEGORIES[(week * 3 + postIndex) % 5];

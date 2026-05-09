@@ -126,7 +126,7 @@ function useCronRunner() {
     setStates((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { status: 'idle', currentStep: 0, countdown: 0, error: '' }), ...patch } }));
   }
 
-  async function run(cron: CronConfig) {
+  async function run(cron: CronConfig, selectedAnimal: string, selectedType: string) {
     const id = cron.id;
     if (getState(id).status === 'running') return;
 
@@ -182,7 +182,7 @@ function useCronRunner() {
     setState(id, { status: 'idle', currentStep: 0, countdown: 0, error: '', synced: undefined });
   }
 
-  return { getState, run: (cron: CronConfig) => run(cron), reset };
+  return { getState, run: (cron: CronConfig, animal: string, type: string) => run(cron, animal, type), reset };
 }
 
 export default function CronLauncher() {
@@ -252,7 +252,7 @@ export default function CronLauncher() {
                     </div>
 
                     <button
-                      onClick={() => state.status === 'idle' || state.status === 'error' ? run(cron) : undefined}
+                      onClick={() => state.status === 'idle' || state.status === 'error' ? run(cron, cron.id === 'content' ? selectedAnimal : '', cron.id === 'content' ? selectedType : '') : undefined}
                       disabled={isRunning}
                       className={clsx(
                         'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1',
