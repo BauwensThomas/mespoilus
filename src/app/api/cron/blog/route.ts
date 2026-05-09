@@ -41,8 +41,7 @@ async function selectLeastUsedCategory(supabase: ReturnType<typeof createAdminCl
           .select('published_at', { count: 'exact' })
           .eq('category', cat)
           .eq('status', 'published')
-          .order('published_at', { ascending: true })
-          .limit(1);
+          .order('published_at', { ascending: true });
 
         const oldestDate = data?.[0]?.published_at ? new Date(data[0].published_at).getTime() : Infinity;
         return { category: cat, count: count ?? 0, oldestTime: oldestDate };
