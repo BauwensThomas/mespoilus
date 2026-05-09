@@ -123,7 +123,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
               alt={imageAlt}
               fill
               className="object-cover object-center transition-smooth group-hover:scale-105"
-              sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center opacity-30">

@@ -500,7 +500,7 @@ function ArticleCard({ article }: { article: Article }) {
             alt={article.image_alt ?? article.title}
             fill
             className="object-cover group-hover:scale-105 transition-smooth"
-            sizes="(max-width: 768px) 100vw, 33vw"
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         )}
         <div className="absolute top-3 left-3">
