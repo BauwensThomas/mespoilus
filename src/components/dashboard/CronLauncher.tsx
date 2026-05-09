@@ -5,12 +5,13 @@ import { RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard, R
 import clsx from 'clsx';
 
 const ANIMALS = [
-  { value: '',         label: 'Auto (rotation)', icon: RefreshCw },
-  { value: 'chiens',   label: 'Chiens', icon: Dog },
-  { value: 'chats',    label: 'Chats', icon: Cat },
-  { value: 'oiseaux',  label: 'Oiseaux', icon: Bird },
-  { value: 'rongeurs', label: 'Rongeurs', icon: Mouse },
-  { value: 'reptiles', label: 'Reptiles', icon: Zap },
+  { value: '',            label: 'Auto (rotation)', icon: RefreshCw },
+  { value: 'auto-smart',  label: 'Auto (moins utilisée)', icon: Sparkles },
+  { value: 'chiens',      label: 'Chiens', icon: Dog },
+  { value: 'chats',       label: 'Chats', icon: Cat },
+  { value: 'oiseaux',     label: 'Oiseaux', icon: Bird },
+  { value: 'rongeurs',    label: 'Rongeurs', icon: Mouse },
+  { value: 'reptiles',    label: 'Reptiles', icon: Zap },
 ];
 
 const ARTICLE_TYPES = [
@@ -125,7 +126,7 @@ function useCronRunner() {
     setStates((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { status: 'idle', currentStep: 0, countdown: 0, error: '' }), ...patch } }));
   }
 
-  async function run(cron: CronConfig, animal?: string, type?: string) {
+  async function run(cron: CronConfig) {
     const id = cron.id;
     if (getState(id).status === 'running') return;
 
@@ -137,8 +138,14 @@ function useCronRunner() {
 
       try {
         const body: Record<string, string> = { step: step.key };
-        if (step.key === 'blog' && animal) body.animal = animal;
-        if (step.key === 'blog' && type) body.type = type;
+        if (step.key === 'blog') {
+          if (selectedAnimal === 'auto-smart') {
+            body.auto = 'true';
+          } else if (selectedAnimal) {
+            body.animal = selectedAnimal;
+          }
+          if (selectedType) body.type = selectedType;
+        }
         const r = await fetch('/api/admin/run-cron', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -175,7 +182,7 @@ function useCronRunner() {
     setState(id, { status: 'idle', currentStep: 0, countdown: 0, error: '', synced: undefined });
   }
 
-  return { getState, run: (cron: CronConfig, animal?: string, type?: string) => run(cron, animal, type), reset };
+  return { getState, run: (cron: CronConfig) => run(cron), reset };
 }
 
 export default function CronLauncher() {
@@ -245,7 +252,7 @@ export default function CronLauncher() {
                     </div>
 
                     <button
-                      onClick={() => state.status === 'idle' || state.status === 'error' ? run(cron, cron.id === 'content' ? selectedAnimal : undefined, cron.id === 'content' ? selectedType : undefined) : undefined}
+                      onClick={() => state.status === 'idle' || state.status === 'error' ? run(cron) : undefined}
                       disabled={isRunning}
                       className={clsx(
                         'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1',
