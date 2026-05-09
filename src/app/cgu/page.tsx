@@ -11,7 +11,7 @@ export default function CGUPage() {
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <div className="max-w-3xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Conditions Générales d'Utilisation</h1>
-        <p className="text-gray-500 text-sm mb-12">Applicables au site Mes Poilus — dernière mise à jour : mai 2026</p>
+        <p className="text-gray-500 text-sm mb-12">Applicables au site Mes Poilus -dernière mise à jour : mai 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 

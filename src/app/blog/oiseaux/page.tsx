@@ -21,6 +21,6 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-export default function OiseauxPage() {
-  return <CategoryPageContent category="oiseaux" />;
+export default function OiseauxPage({ searchParams }: { searchParams: { q?: string } }) {
+  return <CategoryPageContent category="oiseaux" search={searchParams.q?.trim()} />;
 }

@@ -2,15 +2,12 @@ import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
 import type { AwinProduct } from '@/types';
 import Link from 'next/link';
-import Image from 'next/image';
-import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
 import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
 import ProductCard from '@/components/boutique/ProductCard';
-import BoutiquePartenairesCarousel from '@/components/boutique/BoutiquePartenairesCarousel';
-import { PARTENAIRES } from '@/lib/partenaires';
+import { PawPrint, Dog, Cat, Bird, Mouse, Zap } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Boutique animaux — Mes Poilus',
+  title: 'Boutique animaux -Mes Poilus',
   description: 'Accessoires, alimentation et produits pour animaux de compagnie. Sélection de produits pour chiens, chats, oiseaux, rongeurs et reptiles.',
   robots: { index: true, follow: true },
   alternates: { canonical: '/boutique' },
@@ -19,12 +16,12 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 const CATEGORIES = [
-  { id: 'all',      label: 'Tous',     emoji: '🐾' },
-  { id: 'chiens',   label: 'Chiens',   emoji: '🐕' },
-  { id: 'chats',    label: 'Chats',    emoji: '🐈' },
-  { id: 'oiseaux',  label: 'Oiseaux',  emoji: '🦜' },
-  { id: 'rongeurs', label: 'Rongeurs', emoji: '🐹' },
-  { id: 'reptiles', label: 'Reptiles', emoji: '🦎' },
+  { id: 'all',      label: 'Tous',     icon: PawPrint },
+  { id: 'chiens',   label: 'Chiens',   icon: Dog },
+  { id: 'chats',    label: 'Chats',    icon: Cat },
+  { id: 'oiseaux',  label: 'Oiseaux',  icon: Bird },
+  { id: 'rongeurs', label: 'Rongeurs', icon: Mouse },
+  { id: 'reptiles', label: 'Reptiles', icon: Zap },
 ];
 
 async function getProducts(category?: string, search?: string): Promise<AwinProduct[]> {
@@ -53,101 +50,79 @@ interface Props {
 export default async function BoutiquePage({ searchParams }: Props) {
   const category = searchParams.category;
   const search = searchParams.search?.trim();
-  const bannerQuery = category && category !== 'all' ? CATEGORY_QUERIES[category] : undefined;
-
-  const [products, allPhotos] = await Promise.all([
-    getProducts(category, search),
-    bannerQuery ? getBannerPhotos(bannerQuery) : getHeroPhotos(),
-  ]);
-
+  const products = await getProducts(category, search);
   const activeCat = CATEGORIES.find(c => c.id === (category ?? 'all')) ?? CATEGORIES[0];
   const hasSynced = products.length > 0;
-  const filteredPartenaires = PARTENAIRES;
 
   return (
-    <div className="min-h-screen bg-gray-50 px-8 py-8 pb-14 space-y-4 animate-fade-in">
-      {/* Flex : colonne gauche (titre/recherche/filtres) | colonne droite (carousel) */}
-      <div className="flex items-start gap-8">
-
-        {/* Colonne gauche — espacement identique au blog */}
-        <div className="flex flex-col gap-4 flex-1">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Boutique Mes Poilus</h1>
-            <p className="text-gray-500 text-sm mt-1">
-              Sélection de produits pour vos animaux de compagnie
-            </p>
-          </div>
-
-          <BoutiqueSearchBar defaultValue={search ?? ''} />
-
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map(cat => {
-              const isActive = (cat.id === 'all' && !category) || cat.id === category;
-              return (
-                <Link
-                  key={cat.id}
-                  href={cat.id === 'all' ? '/boutique' : `/boutique?category=${cat.id}`}
-                  className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
-                    isActive
-                      ? 'bg-amber-500 text-black border-amber-500 font-semibold'
-                      : 'bg-white text-gray-600 border-gray-300 hover:border-amber-500/50 hover:text-amber-600'
-                  }`}
-                >
-                  <span>{cat.emoji}</span>
-                  <span>{cat.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Colonne droite — carousel */}
-        <BoutiquePartenairesCarousel partenaires={filteredPartenaires} />
-
+    <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5 pb-20">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Boutique</h1>
+        <p className="text-sm text-gray-500">Sélection de produits pour vos animaux de compagnie</p>
       </div>
+
+      {/* Filtres catégories */}
+      <div className="flex flex-wrap gap-3">
+        {CATEGORIES.map(cat => {
+          const isActive = (cat.id === 'all' && !category) || cat.id === category;
+          const IconComponent = cat.icon;
+          return (
+            <Link
+              key={cat.id}
+              href={cat.id === 'all' ? '/boutique' : `/boutique?category=${cat.id}`}
+              className={`text-sm px-3 py-1.5 rounded-lg border transition-all duration-200 flex items-center gap-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                isActive
+                  ? 'bg-orange-600 text-white border-orange-600 focus:ring-orange-300'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 hover:shadow-md focus:ring-orange-300'
+              }`}
+            >
+              <IconComponent size={18} strokeWidth={1.5} />
+              <span>{cat.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Recherche */}
+      <BoutiqueSearchBar defaultValue={search ?? ''} />
 
       {/* Bannière */}
-      <div className="relative h-28 rounded-2xl overflow-hidden bg-[#111]">
-        {allPhotos[0] && (
-          <Image src={allPhotos[0].url} alt={allPhotos[0].alt} fill className="object-cover object-center" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-600 from-30% via-amber-500/80 via-55% to-transparent pointer-events-none" />
-        <div className="absolute inset-0 flex items-center px-6 z-10">
-          <div>
-            <p className="text-white/60 text-[10px] uppercase tracking-widest font-medium">Catégorie</p>
-            <p className="text-white font-bold text-xl">{activeCat.label}</p>
-            <p className="text-white/60 text-xs mt-0.5">
-              {hasSynced ? `${products.length} produit${products.length !== 1 ? 's' : ''}` : 'Bientôt disponible'}
-            </p>
-          </div>
+      <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
+        <div>
+          <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Catégorie</p>
+          <p className="text-white font-bold text-lg md:text-xl capitalize">{activeCat.label}</p>
         </div>
+        <p className="text-white/60 text-sm">
+          {hasSynced ? `${products.length} produit${products.length !== 1 ? 's' : ''}` : 'Bientôt disponible'}
+          {search ? ` · "${search}"` : ''}
+        </p>
       </div>
 
+      {/* Produits */}
       {!hasSynced ? (
-        /* Aucun produit — synchronisation Awin en attente */
-        <div className="text-center py-16 bg-gray-50 rounded-2xl">
-          <p className="text-gray-500 font-medium">Les produits arrivent bientôt !</p>
-          <p className="text-gray-400 text-sm mt-1">
-            Notre catalogue est en cours de synchronisation avec nos partenaires affiliés.
-          </p>
+        <div className="text-center py-20 bg-orange-50 rounded-3xl border border-orange-100">
+          <p className="text-gray-700 font-medium text-lg">Les produits arrivent bientôt !</p>
+          <p className="text-gray-600 text-base mt-2">Notre catalogue est en cours de synchronisation.</p>
         </div>
       ) : (
-        <>
-          <p className="text-sm text-gray-600">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
             {products.length} produit{products.length !== 1 ? 's' : ''}
             {category && category !== 'all' ? ` · ${activeCat.label}` : ''}
             {search ? ` · "${search}"` : ''}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {products.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-        </>
+        </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-4 py-2">
-        <p className="text-xs text-gray-500 text-center">
+      {/* Footer disclaimer */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-6 py-3">
+        <p className="text-xs text-gray-600 text-center max-w-6xl mx-auto">
           Les liens présents sur cette page sont des liens affiliés. Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
         </p>
       </div>

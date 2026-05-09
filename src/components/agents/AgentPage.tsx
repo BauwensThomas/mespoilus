@@ -4,6 +4,11 @@ import { useState, useRef, useEffect } from 'react';
 import { Agent, AgentStat, ActivityLog } from '@/types';
 import { format, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { PawPrint, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Shield, Mail, Clipboard, CheckCircle2, XCircle } from 'lucide-react';
+import clsx from 'clsx';
+import Image from 'next/image';
+import Link from 'next/link';
+import type { UnsplashPhoto } from '@/lib/unsplash';
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
@@ -11,10 +16,21 @@ function formatDate(dateStr: string) {
   if (isYesterday(d)) return `hier à ${format(d, 'HH:mm')}`;
   return format(d, 'd MMM à HH:mm', { locale: fr });
 }
-import clsx from 'clsx';
-import Image from 'next/image';
-import Link from 'next/link';
-import type { UnsplashPhoto } from '@/lib/unsplash';
+
+function getAgentIcon(iconId: string) {
+  const icons: Record<string, typeof PawPrint> = {
+    briefcase: Briefcase,
+    'pen-tool': PenTool,
+    search: Search,
+    smartphone: Smartphone,
+    code: Code,
+    'message-circle': MessageCircle,
+    'bar-chart-3': BarChart3,
+    shield: Shield,
+    mail: Mail,
+  };
+  return icons[iconId] || PawPrint;
+}
 
 interface DelegationResult {
   agent: string;
@@ -65,9 +81,9 @@ const QUICK_TASKS: Record<string, string[]> = {
     'Optimise les requêtes Supabase pour améliorer les temps de réponse.',
   ],
   lea: [
-    'Voici le message d\'un client : "Bonjour, j\'ai commandé un article il y a 2 semaines et je n\'ai rien reçu." — Réponds-lui.',
-    'Voici le message d\'un client : "Mon chien refuse de manger ses croquettes depuis 3 jours, que faire ?" — Réponds-lui.',
-    'Voici le message d\'un client : "Comment puis-je me désabonner de la newsletter ?" — Réponds-lui.',
+    'Voici le message d\'un client : "Bonjour, j\'ai commandé un article il y a 2 semaines et je n\'ai rien reçu." -Réponds-lui.',
+    'Voici le message d\'un client : "Mon chien refuse de manger ses croquettes depuis 3 jours, que faire ?" -Réponds-lui.',
+    'Voici le message d\'un client : "Comment puis-je me désabonner de la newsletter ?" -Réponds-lui.',
   ],
   antoine: [
     'Génère le rapport financier mensuel avec revenus, dépenses et marges.',
@@ -87,9 +103,9 @@ const QUICK_TASKS: Record<string, string[]> = {
 };
 
 const AGENT_HINTS: Record<string, string> = {
-  marie: '💡 Donne-lui un sujet — ex: "écris un article sur l\'alimentation du chien en été"',
-  lucas: '💡 Donne-lui un animal + saison — ex: "meilleurs sujets pour les chats cet automne"',
-  lea:   '💡 Colle-lui le message du client à traiter — elle répondra à sa place',
+  marie: 'Donne-lui un sujet -ex: "écris un article sur l\'alimentation du chien en été"',
+  lucas: 'Donne-lui un animal + saison -ex: "meilleurs sujets pour les chats cet automne"',
+  lea:   'Colle-lui le message du client à traiter -elle répondra à sa place',
 };
 
 function getLogLink(log: ActivityLog): string | null {
@@ -160,7 +176,6 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
       setIsStreaming(false);
     }
 
-    // Délégation automatique via Thomas après la réponse principale
     if (finalResponse.length >= 150) {
       setDelegationState('loading');
       try {
@@ -190,8 +205,8 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
 
   return (
     <div className="animate-fade-in">
-      {/* ── Hero photo ambiante ───────────────────────────────────────────── */}
-      <div className="relative w-full h-52 overflow-hidden bg-[#111827]">
+      {/* Hero */}
+      <div className="relative w-full h-52 overflow-hidden bg-white">
         <Image
           src={heroSrc}
           alt={heroAlt}
@@ -201,7 +216,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
           sizes="100vw"
           unoptimized={!isExternalImage}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#111827] via-[#111827]/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/60 to-transparent" />
         <div className={clsx('absolute inset-0 opacity-20', agent.bgColor)} />
 
         {photo?.credit && (
@@ -209,69 +224,57 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
             href={photo.creditUrl}
             target="_blank"
             rel="noopener noreferrer nofollow"
-            className="absolute bottom-3 right-4 text-[9px] text-white/40 hover:text-white/70 transition-colors bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm"
+            className="absolute bottom-3 right-4 text-[9px] text-gray-600/40 hover:text-gray-600/70 transition-colors bg-black/10 px-1.5 py-0.5 rounded backdrop-blur-sm"
           >
-            📷 {photo.credit} / Unsplash
+            © {photo.credit} / Unsplash
           </a>
         )}
       </div>
 
-      {/* ── Contenu principal ─────────────────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto px-6 pb-8 space-y-8 -mt-16 relative z-10">
+      {/* Contenu */}
+      <div className="max-w-5xl mx-auto px-6 pb-8 space-y-6 -mt-16 relative z-10">
+
         {/* Agent Header */}
         <div className={clsx('card p-6 border', agent.borderColor)}>
           <div className="flex items-start gap-5">
-            <div
-              className={clsx(
-                'w-16 h-16 rounded-2xl flex items-center justify-center text-3xl border-2 flex-shrink-0',
-                agent.bgColor,
-                agent.borderColor
-              )}
-            >
-              {agent.icon}
+            <div className={clsx('w-16 h-16 rounded-2xl flex items-center justify-center border-2 flex-shrink-0', agent.bgColor, agent.borderColor)}>
+              {(() => {
+                const IconComponent = getAgentIcon(agent.icon);
+                return <IconComponent size={32} strokeWidth={1.5} />;
+              })()}
             </div>
 
             <div className="flex-1">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className={clsx('text-2xl font-bold', agent.color)}>{agent.name}</h1>
-                <span className="text-gray-300 text-sm">-</span>
-                <span className="text-white text-sm">{agent.role}</span>
+                <span className="text-gray-400">—</span>
+                <span className="text-gray-700 text-base">{agent.role}</span>
                 <div className="flex items-center gap-1.5 ml-auto">
                   <div className="status-dot-online" />
-                  <span className="text-xs text-emerald-400">En ligne</span>
+                  <span className="text-sm text-emerald-600 font-medium">En ligne</span>
                 </div>
               </div>
-              <p className="text-gray-200 text-sm mt-2 leading-relaxed">{agent.description}</p>
+              <p className="text-gray-600 text-sm mt-2 leading-relaxed">{agent.description}</p>
 
               <div className="flex flex-wrap gap-6 mt-4">
-                <StatInline
-                  label="Tâches complétées"
-                  value={stat?.tasks_completed ?? 0}
-                  monthly={monthly?.tasks ?? 0}
-                />
-                <StatInline label="Tâches échouées" value={stat?.tasks_failed ?? 0} color="text-red-400" monthly={monthly?.failed ?? 0} monthlyColor="text-red-400" />
-                <StatInline
-                  label="Tokens utilisés"
-                  value={formatTokens(stat?.total_tokens_used ?? 0)}
-                  monthly={formatTokens(monthly?.tokens ?? 0)}
-                />
+                <StatInline label="Tâches complétées" value={stat?.tasks_completed ?? 0} monthly={monthly?.tasks ?? 0} />
+                <StatInline label="Tâches échouées" value={stat?.tasks_failed ?? 0} color="text-red-500" monthly={monthly?.failed ?? 0} monthlyColor="text-red-500" />
+                <StatInline label="Tokens utilisés" value={formatTokens(stat?.total_tokens_used ?? 0)} monthly={formatTokens(monthly?.tokens ?? 0)} />
                 {stat?.last_active && (
-                  <StatInline
-                    label="Dernière activité"
-                    value={formatDate(stat.last_active)}
-                  />
+                  <StatInline label="Dernière activité" value={formatDate(stat.last_active)} />
                 )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── Zone d'exécution ─────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Zone d'exécution */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
           {/* Panneau gauche */}
           <div className="lg:col-span-1 space-y-4">
             <div className="card p-5">
-              <h2 className="text-sm font-semibold text-white mb-3">Nouvelle tâche</h2>
+              <h2 className="text-base font-semibold text-gray-900 mb-3">Nouvelle tâche</h2>
               <textarea
                 className="input-dark resize-none h-32 mb-3"
                 placeholder={`Demande quelque chose à ${agent.name}…`}
@@ -282,7 +285,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                 }}
               />
               {agentHint && (
-                <p className="text-[10px] text-amber-400/80 bg-amber-400/5 border border-amber-400/20 rounded-lg px-3 py-2 mb-3 leading-relaxed">
+                <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 leading-relaxed">
                   {agentHint}
                 </p>
               )}
@@ -297,21 +300,21 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                     En cours…
                   </span>
                 ) : (
-                  'Exécuter (⌘+Entrée)'
+                  'Exécuter'
                 )}
               </button>
             </div>
 
             {quickTasks.length > 0 && (
               <div className="card p-5">
-                <h2 className="text-sm font-semibold text-white mb-3">Tâches rapides</h2>
+                <h2 className="text-base font-semibold text-gray-900 mb-3">Tâches rapides</h2>
                 <div className="space-y-2">
                   {quickTasks.map((qt, i) => (
                     <button
                       key={i}
                       onClick={() => { setTask(qt); runTask(qt); }}
                       disabled={isLoading}
-                      className="w-full text-left text-xs text-gray-100 hover:text-white bg-[#1e2a3a] hover:bg-[#253347] border border-[#2a3a4a] hover:border-[#3a5a6a] rounded-lg px-3 py-2 transition-all duration-150 disabled:opacity-50"
+                      className="w-full text-left text-sm text-gray-700 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-lg px-3 py-2.5 transition-all duration-150 disabled:opacity-50"
                     >
                       {qt.length > 80 ? qt.slice(0, 80) + '…' : qt}
                     </button>
@@ -325,89 +328,92 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
           <div className="lg:col-span-2">
             <div className="card p-5 h-full min-h-[400px] flex flex-col">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-white">Réponse de {agent.name}</h2>
+                <h2 className="text-base font-semibold text-gray-900">Réponse de {agent.name}</h2>
                 {isStreaming && (
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                    <span className="text-xs text-emerald-400">Génération…</span>
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-sm text-emerald-600">Génération…</span>
                   </div>
                 )}
                 {response && !isStreaming && (
-                  <button onClick={() => setResponse('')} className="text-xs text-gray-300 hover:text-white">
+                  <button onClick={() => setResponse('')} className="text-sm text-gray-500 hover:text-gray-900">
                     Effacer
                   </button>
                 )}
               </div>
 
               {error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4">
-                  <p className="text-red-400 text-xs">{error}</p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <p className="text-red-600 text-sm">{error}</p>
                 </div>
               )}
 
               {response ? (
                 <div
                   ref={responseRef}
-                  className="flex-1 overflow-y-auto scrollbar-thin text-sm text-gray-100 leading-relaxed whitespace-pre-wrap font-mono bg-[#111827] rounded-lg p-4 border border-[#2a3a4a]"
+                  className="flex-1 overflow-y-auto scrollbar-thin text-sm text-gray-900 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 rounded-lg p-4 border border-gray-200"
                 >
                   {response}
-                  {isStreaming && <span className="inline-block w-1 h-4 bg-white/70 ml-0.5 animate-pulse" />}
+                  {isStreaming && <span className="inline-block w-1 h-4 bg-gray-900/70 ml-0.5 animate-pulse" />}
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
-                  <div className="text-4xl mb-4">{agent.icon}</div>
-                  <p className="text-sm text-gray-200">{agent.name} attend une tâche</p>
-                  <p className="text-xs text-gray-300 mt-1">Tape ta demande ou utilise une tâche rapide</p>
+                  <div className="mb-4 text-gray-300">
+                    {(() => {
+                      const IconComponent = getAgentIcon(agent.icon);
+                      return <IconComponent size={48} strokeWidth={1.5} />;
+                    })()}
+                  </div>
+                  <p className="text-base text-gray-600">{agent.name} attend une tâche</p>
+                  <p className="text-sm text-gray-500 mt-1">Tape ta demande ou utilise une tâche rapide</p>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* ── Délégation Thomas ──────────────────────────────────────────── */}
+        {/* Délégation Thomas */}
         {delegationState !== 'idle' && (
           <div className="space-y-4">
-            {/* Header Thomas */}
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-sm">
-                👔
+              <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center">
+                <Briefcase size={16} strokeWidth={1.5} className="text-orange-600" />
               </div>
               <div className="flex-1">
-                <span className="text-sm font-semibold text-amber-400">Thomas analyse</span>
+                <span className="text-sm font-semibold text-orange-600">Thomas analyse</span>
                 {delegationState === 'loading' && (
-                  <span className="ml-2 text-xs text-gray-300">en cours…</span>
+                  <span className="ml-2 text-sm text-gray-500">en cours…</span>
                 )}
               </div>
               {delegationState === 'loading' && (
-                <span className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                <span className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
               )}
             </div>
 
             {delegationState === 'done' && delegationData && (
               <>
-                {/* Décision Thomas */}
-                <div className={clsx(
-                  'card p-4 border',
-                  delegationData.delegations.length > 0 ? 'border-amber-400/30' : 'border-[#484848]'
-                )}>
+                <div className={clsx('card p-4 border', delegationData.delegations.length > 0 ? 'border-amber-300' : 'border-gray-200')}>
                   <div className="flex items-start gap-2">
-                    <span className="text-amber-400 text-sm mt-0.5">
-                      {delegationData.delegations.length > 0 ? '📋' : '✅'}
-                    </span>
+                    <div className="mt-0.5">
+                      {delegationData.delegations.length > 0 ? (
+                        <Clipboard size={18} strokeWidth={1.5} className="text-orange-600" />
+                      ) : (
+                        <CheckCircle2 size={18} strokeWidth={1.5} className="text-orange-600" />
+                      )}
+                    </div>
                     <div>
-                      <p className="text-xs font-medium text-amber-400 mb-0.5">
+                      <p className="text-sm font-medium text-orange-600 mb-1">
                         {delegationData.delegations.length > 0
                           ? `Thomas délègue ${delegationData.delegations.length} tâche${delegationData.delegations.length > 1 ? 's' : ''}`
-                          : 'Thomas — Aucune délégation'}
+                          : 'Thomas -Aucune délégation'}
                       </p>
-                      <p className="text-xs text-gray-200 leading-relaxed">
+                      <p className="text-sm text-gray-700 leading-relaxed">
                         {delegationData.thomasDecision ?? 'Rapport complet, aucune action supplémentaire nécessaire.'}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Résultats des agents délégués */}
                 {delegationData.delegations.length > 0 && (
                   <div className="space-y-3">
                     {delegationData.delegations.map((d, i) => (
@@ -422,32 +428,32 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
 
         {/* Historique */}
         <div className="card p-5">
-          <h2 className="text-sm font-semibold text-white mb-4">Historique d'activité</h2>
+          <h2 className="text-base font-semibold text-gray-900 mb-4">Historique d'activité</h2>
           {recentLogs.length === 0 ? (
-            <p className="text-xs text-gray-200 py-4 text-center">Aucune activité enregistrée</p>
+            <p className="text-sm text-gray-500 py-4 text-center">Aucune activité enregistrée</p>
           ) : (
-            <div className="divide-y divide-[#2a3a4a]">
+            <div className="divide-y divide-gray-100">
               {recentLogs.map((log) => {
                 const link = getLogLink(log);
                 const isExpanded = expandedLog === log.id;
                 const hasDetails = log.details && Object.keys(log.details).length > 0;
 
-                const Row = (
+                const RowContent = (
                   <div className="flex items-start gap-3">
                     <StatusDot status={log.status} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-100 truncate">{log.action}</p>
+                      <p className="text-sm text-gray-900 truncate">{log.action}</p>
                       {log.duration_ms && (
-                        <p className="text-[10px] text-gray-300 mt-0.5">{log.duration_ms}ms</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{log.duration_ms}ms</p>
                       )}
                     </div>
-                    <span className="text-[10px] text-gray-300 flex-shrink-0">
+                    <span className="text-xs text-gray-500 flex-shrink-0">
                       {formatDate(log.created_at)}
                     </span>
                     {link
-                      ? <span className="text-[10px] text-blue-400 flex-shrink-0">→</span>
+                      ? <span className="text-xs text-blue-500 flex-shrink-0">→</span>
                       : hasDetails && (
-                          <span className="text-[10px] text-gray-300 flex-shrink-0">
+                          <span className="text-xs text-gray-400 flex-shrink-0">
                             {isExpanded ? '▲' : '▼'}
                           </span>
                         )
@@ -460,38 +466,38 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                     {link ? (
                       <Link
                         href={link}
-                        className="flex items-start gap-3 hover:bg-[#253347] rounded-lg px-2 -mx-2 py-1 transition-colors duration-150"
+                        className="flex items-start gap-3 hover:bg-gray-50 rounded-lg px-2 -mx-2 py-1.5 transition-colors duration-150"
                       >
                         <StatusDot status={log.status} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-100 truncate">{log.action}</p>
+                          <p className="text-sm text-gray-900 truncate">{log.action}</p>
                           {log.duration_ms && (
-                            <p className="text-[10px] text-gray-300 mt-0.5">{log.duration_ms}ms</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{log.duration_ms}ms</p>
                           )}
                         </div>
-                        <span className="text-[10px] text-gray-300 flex-shrink-0">
+                        <span className="text-xs text-gray-500 flex-shrink-0">
                           {formatDate(log.created_at)}
                         </span>
-                        <span className="text-[10px] text-blue-400 flex-shrink-0">→</span>
+                        <span className="text-xs text-blue-500 flex-shrink-0">→</span>
                       </Link>
                     ) : (
                       <button
                         onClick={() => setExpandedLog(isExpanded ? null : log.id)}
                         disabled={!hasDetails}
-                        className="w-full text-left hover:bg-[#253347] rounded-lg px-2 -mx-2 py-1 transition-colors duration-150 disabled:cursor-default"
+                        className="w-full text-left hover:bg-gray-50 rounded-lg px-2 -mx-2 py-1.5 transition-colors duration-150 disabled:cursor-default"
                       >
-                        {Row}
+                        {RowContent}
                       </button>
                     )}
 
                     {isExpanded && hasDetails && (
-                      <div className="mt-2 mb-1 mx-2 bg-[#111827] border border-[#2a3a4a] rounded-lg p-4 overflow-y-auto max-h-[500px]">
+                      <div className="mt-2 mb-1 mx-2 bg-gray-50 border border-gray-200 rounded-lg p-4 overflow-y-auto max-h-[500px]">
                         {typeof log.details.content === 'string' ? (
-                          <pre className="text-xs text-gray-100 leading-relaxed whitespace-pre-wrap font-mono">
+                          <pre className="text-sm text-gray-900 leading-relaxed whitespace-pre-wrap font-mono">
                             {log.details.content}
                           </pre>
                         ) : (
-                          <pre className="text-[11px] text-emerald-400 leading-relaxed whitespace-pre-wrap">
+                          <pre className="text-xs text-emerald-700 leading-relaxed whitespace-pre-wrap">
                             {JSON.stringify(log.details, null, 2)}
                           </pre>
                         )}
@@ -509,49 +515,55 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
 }
 
 const AGENT_META: Record<string, { icon: string; color: string; borderColor: string }> = {
-  thomas:   { icon: '👔', color: 'text-amber-400',   borderColor: 'border-amber-400/30' },
-  marie:    { icon: '✍️', color: 'text-purple-400',  borderColor: 'border-purple-400/30' },
-  lucas:    { icon: '🔍', color: 'text-blue-400',    borderColor: 'border-blue-400/30' },
-  emma:     { icon: '📱', color: 'text-pink-400',    borderColor: 'border-pink-400/30' },
-  maxime:   { icon: '💻', color: 'text-emerald-400', borderColor: 'border-emerald-400/30' },
-  lea:      { icon: '💬', color: 'text-orange-400',  borderColor: 'border-orange-400/30' },
-  antoine:  { icon: '📊', color: 'text-teal-400',    borderColor: 'border-teal-400/30' },
-  nathalie: { icon: '🛡️', color: 'text-red-400',     borderColor: 'border-red-400/30' },
-  sofia:    { icon: '💌', color: 'text-rose-400',    borderColor: 'border-rose-400/30' },
+  thomas:   { icon: 'briefcase',     color: 'text-orange-600',  borderColor: 'border-orange-300' },
+  marie:    { icon: 'pen-tool',      color: 'text-purple-600',  borderColor: 'border-purple-300' },
+  lucas:    { icon: 'search',        color: 'text-blue-600',    borderColor: 'border-blue-300' },
+  emma:     { icon: 'smartphone',    color: 'text-pink-600',    borderColor: 'border-pink-300' },
+  maxime:   { icon: 'code',          color: 'text-emerald-600', borderColor: 'border-emerald-300' },
+  lea:      { icon: 'message-circle', color: 'text-orange-600', borderColor: 'border-orange-300' },
+  antoine:  { icon: 'bar-chart-3',   color: 'text-teal-600',    borderColor: 'border-teal-300' },
+  nathalie: { icon: 'shield',        color: 'text-red-500',     borderColor: 'border-red-300' },
+  sofia:    { icon: 'mail',          color: 'text-rose-600',    borderColor: 'border-rose-300' },
 };
 
 function DelegationCard({ delegation }: { delegation: DelegationResult }) {
   const [expanded, setExpanded] = useState(false);
-  const meta = AGENT_META[delegation.agent] ?? { icon: '🤖', color: 'text-gray-400', borderColor: 'border-[#484848]' };
+  const meta = AGENT_META[delegation.agent] ?? { icon: 'user', color: 'text-gray-500', borderColor: 'border-gray-200' };
 
   return (
     <div className={clsx('card border', meta.borderColor)}>
-      <button
-        className="w-full p-4 text-left"
-        onClick={() => setExpanded((v) => !v)}
-      >
+      <button className="w-full p-4 text-left" onClick={() => setExpanded((v) => !v)}>
         <div className="flex items-center gap-3">
-          <span className="text-lg">{meta.icon}</span>
+          <div>
+            {(() => {
+              const IconComponent = getAgentIcon(meta.icon);
+              return <IconComponent size={18} strokeWidth={1.5} />;
+            })()}
+          </div>
           <div className="flex-1 min-w-0">
-            <span className={clsx('text-xs font-semibold', meta.color)}>
+            <span className={clsx('text-sm font-semibold', meta.color)}>
               {delegation.agent.charAt(0).toUpperCase() + delegation.agent.slice(1)}
             </span>
-            <p className="text-xs text-gray-300 truncate mt-0.5">{delegation.task}</p>
+            <p className="text-sm text-gray-600 truncate mt-0.5">{delegation.task}</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className={clsx(
-              'text-[10px] px-2 py-0.5 rounded-full',
-              delegation.success ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+            <div className={clsx(
+              'flex items-center gap-1 text-xs px-2 py-0.5 rounded-full',
+              delegation.success ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-500'
             )}>
-              {delegation.success ? '✓ OK' : '✗ Erreur'}
-            </span>
-            <span className="text-[10px] text-gray-300">{expanded ? '▲' : '▼'}</span>
+              {delegation.success ? (
+                <><CheckCircle2 size={12} strokeWidth={1.5} />OK</>
+              ) : (
+                <><XCircle size={12} strokeWidth={1.5} />Erreur</>
+              )}
+            </div>
+            <span className="text-xs text-gray-400">{expanded ? '▲' : '▼'}</span>
           </div>
         </div>
       </button>
       {expanded && (
-        <div className="px-4 pb-4 border-t border-[#2a3a4a]">
-          <pre className="text-xs text-gray-100 leading-relaxed whitespace-pre-wrap font-mono mt-3 max-h-64 overflow-y-auto scrollbar-thin">
+        <div className="px-4 pb-4 border-t border-gray-200">
+          <pre className="text-sm text-gray-900 leading-relaxed whitespace-pre-wrap font-mono mt-3 max-h-64 overflow-y-auto scrollbar-thin">
             {delegation.result}
           </pre>
         </div>
@@ -560,14 +572,20 @@ function DelegationCard({ delegation }: { delegation: DelegationResult }) {
   );
 }
 
-function StatInline({ label, value, color, monthly, monthlyColor }: { label: string; value: string | number; color?: string; monthly?: string | number; monthlyColor?: string }) {
+function StatInline({ label, value, color, monthly, monthlyColor }: {
+  label: string;
+  value: string | number;
+  color?: string;
+  monthly?: string | number;
+  monthlyColor?: string;
+}) {
   return (
     <div>
-      <div className={clsx('text-sm font-bold', color ?? 'text-white')}>{value}</div>
-      <div className="text-[10px] text-gray-300">{label}</div>
+      <div className={clsx('text-base font-bold', color ?? 'text-gray-900')}>{value}</div>
+      <div className="text-sm text-gray-500">{label}</div>
       {monthly !== undefined && (
-        <div className="text-[10px] text-gray-500 mt-0.5">
-          <span className={clsx('font-medium', monthlyColor ?? 'text-amber-400')}>{monthly}</span> ce mois
+        <div className="text-sm text-gray-500 mt-0.5">
+          <span className={clsx('font-medium', monthlyColor ?? 'text-amber-600')}>{monthly}</span> ce mois
         </div>
       )}
     </div>
@@ -575,8 +593,8 @@ function StatInline({ label, value, color, monthly, monthlyColor }: { label: str
 }
 
 function StatusDot({ status }: { status: ActivityLog['status'] }) {
-  const map = { success: 'bg-emerald-400', error: 'bg-red-400', pending: 'bg-amber-400' };
-  return <div className={clsx('w-2 h-2 rounded-full flex-shrink-0 mt-1', map[status])} />;
+  const map = { success: 'bg-emerald-500', error: 'bg-red-500', pending: 'bg-amber-500' };
+  return <div className={clsx('w-2 h-2 rounded-full flex-shrink-0 mt-1.5', map[status])} />;
 }
 
 function formatTokens(n: number): string {

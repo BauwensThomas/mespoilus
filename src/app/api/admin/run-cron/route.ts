@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-type CronStep = 'blog' | 'social' | 'finance' | 'security' | 'newsletter' | 'awin-sync';
+type CronStep = 'blog' | 'social' | 'finance' | 'security' | 'newsletter' | 'awin-sync' | 'prenoms';
 
 const CRON_PATHS: Record<CronStep, string> = {
   blog:        '/api/cron/blog',
@@ -10,6 +10,7 @@ const CRON_PATHS: Record<CronStep, string> = {
   security:    '/api/cron/security',
   newsletter:  '/api/cron/newsletter',
   'awin-sync': '/api/cron/awin-sync',
+  prenoms:     '/api/cron/prenoms',
 };
 
 export const maxDuration = 120;

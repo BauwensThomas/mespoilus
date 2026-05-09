@@ -21,6 +21,6 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-export default function RongeursPage() {
-  return <CategoryPageContent category="rongeurs" />;
+export default function RongeursPage({ searchParams }: { searchParams: { q?: string } }) {
+  return <CategoryPageContent category="rongeurs" search={searchParams.q?.trim()} />;
 }

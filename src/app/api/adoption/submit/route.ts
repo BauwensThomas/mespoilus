@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
             <p>Votre annonce d'adoption pour votre <strong>${animal_type}</strong> (${region.trim()}) a bien été soumise.</p>
             <p>Elle sera vérifiée par notre équipe et publiée sous <strong>24h</strong> si elle respecte nos conditions.</p>
             <p style="color:#6b7280;font-size:13px">Si vous avez des questions, répondez simplement à cet email.</p>
-            <p>— L'équipe Mes Poilus 🐾</p>
+            <p>-L'équipe Mes Poilus 🐾</p>
           </div>
         `,
       });
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     try {
       await sendEmail({
         to: 'contact@mespoilus.com',
-        subject: `Nouvelle annonce d'adoption à vérifier — ${animal_type} (${region.trim()})`,
+        subject: `Nouvelle annonce d'adoption à vérifier -${animal_type} (${region.trim()})`,
         html: `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111">
             <h2 style="color:#f59e0b">Nouvelle annonce à modérer</h2>

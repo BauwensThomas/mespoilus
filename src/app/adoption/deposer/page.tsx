@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import AdoptionPostForm from '../AdoptionPostForm';
 
 export const metadata: Metadata = {
-  title: 'Déposer une annonce — Adoption Mes Poilus',
+  title: 'Déposer une annonce -Adoption Mes Poilus',
   description: "Déposez gratuitement une annonce pour donner votre animal à adopter. Votre annonce sera vérifiée avant publication.",
   robots: { index: false, follow: false },
 };

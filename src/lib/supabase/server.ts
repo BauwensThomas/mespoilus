@@ -27,7 +27,7 @@ export function createClient() {
   );
 }
 
-// Client admin sans cookies — utilise le service role key directement
+// Client admin sans cookies -utilise le service role key directement
 export function createAdminClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

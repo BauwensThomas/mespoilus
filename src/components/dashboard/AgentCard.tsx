@@ -5,6 +5,8 @@ import clsx from 'clsx';
 import { Agent, AgentStat } from '@/types';
 import { format, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { PawPrint, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Shield, Mail } from 'lucide-react';
+import { MonthlyAgentStat, TotalAgentStat } from '@/app/(admin)/dashboard/page';
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
@@ -12,7 +14,21 @@ function formatDate(dateStr: string) {
   if (isYesterday(d)) return `hier à ${format(d, 'HH:mm')}`;
   return format(d, 'd MMM à HH:mm', { locale: fr });
 }
-import { MonthlyAgentStat, TotalAgentStat } from '@/app/(admin)/dashboard/page';
+
+function getAgentIcon(iconId: string) {
+  const icons: Record<string, typeof PawPrint> = {
+    briefcase: Briefcase,
+    'pen-tool': PenTool,
+    search: Search,
+    smartphone: Smartphone,
+    code: Code,
+    'message-circle': MessageCircle,
+    'bar-chart-3': BarChart3,
+    shield: Shield,
+    mail: Mail,
+  };
+  return icons[iconId] || PawPrint;
+}
 
 interface AgentCardProps {
   agent: Agent;
@@ -34,7 +50,7 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
     <Link href={`/agents/${agent.id}`} className="block group">
       <div
         className={clsx(
-          'card-hover p-5 h-full flex flex-col gap-4 relative overflow-hidden',
+          'card-hover p-4 h-full flex flex-col gap-3 relative overflow-hidden',
           'group-hover:shadow-lg transition-all duration-200'
         )}
       >
@@ -52,28 +68,31 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
           <div className="flex items-center gap-3">
             <div
               className={clsx(
-                'w-10 h-10 rounded-xl flex items-center justify-center text-xl border',
+                'w-11 h-11 rounded-xl flex items-center justify-center border',
                 agent.bgColor,
                 agent.borderColor
               )}
             >
-              {agent.icon}
+              {(() => {
+                const IconComponent = getAgentIcon(agent.icon);
+                return <IconComponent size={20} strokeWidth={1.5} />;
+              })()}
             </div>
             <div>
-              <h3 className={clsx('font-semibold text-sm', agent.color)}>{agent.name}</h3>
-              <p className="text-xs dark:text-gray-200 text-gray-600">{agent.role}</p>
+              <h3 className={clsx('font-semibold text-base', agent.color)}>{agent.name}</h3>
+              <p className="text-sm text-gray-600">{agent.role}</p>
             </div>
           </div>
 
           {/* Status */}
           <div className="flex items-center gap-1.5">
             <div className="status-dot-online" />
-            <span className="text-xs text-emerald-400 font-medium">En ligne</span>
+            <span className="text-xs text-emerald-600 font-medium">En ligne</span>
           </div>
         </div>
 
         {/* Description */}
-        <p className="text-xs dark:text-gray-200 text-gray-600 leading-relaxed line-clamp-2 relative min-h-[2.5rem]">{agent.description}</p>
+        <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 relative min-h-[2.5rem]">{agent.description}</p>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 relative">
@@ -91,9 +110,9 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between relative mt-auto pt-3 border-t border-[#2a3a4a]">
-          <span className="text-[10px] dark:text-gray-300 text-gray-500">Actif {lastActive}</span>
-          <span className={clsx('text-[10px] font-medium', agent.color, 'group-hover:underline')}>
+        <div className="flex items-center justify-between relative mt-auto pt-3 border-t border-gray-100">
+          <span className="text-xs text-gray-500">Actif {lastActive}</span>
+          <span className={clsx('text-xs font-medium', agent.color, 'group-hover:underline')}>
             Voir le tableau →
           </span>
         </div>
@@ -109,14 +128,14 @@ function Stat({ label, value, highlight, monthly }: {
   monthly?: string | number;
 }) {
   return (
-    <div className="bg-[#111827] border border-[#2a3a4a] rounded-lg p-2 text-center">
-      <div className={clsx('text-sm font-bold', highlight ? 'text-emerald-400' : 'text-white')}>
+    <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 text-center">
+      <div className={clsx('text-base font-bold', highlight ? 'text-emerald-600' : 'text-gray-900')}>
         {value}
       </div>
-      <div className="text-[9px] text-gray-300 uppercase tracking-wide mt-0.5">{label}</div>
+      <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-0.5">{label}</div>
       {monthly !== undefined && (
-        <div className="text-[9px] text-gray-500 mt-1 border-t border-[#1e2a3a] pt-1">
-          <span className="text-amber-400 font-medium">{monthly}</span> ce mois
+        <div className="text-[10px] text-gray-400 mt-1 border-t border-gray-200 pt-1">
+          <span className="text-amber-600 font-medium">{monthly}</span> ce mois
         </div>
       )}
     </div>

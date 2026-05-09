@@ -13,10 +13,10 @@ export const AGENTS: Record<AgentId, Agent> = {
     name: 'Thomas',
     role: 'CEO Orchestrateur',
     description: 'Orchestre les crons automatiques, coordonne les agents et prend les décisions stratégiques pour Mes Poilus.',
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-400/10',
-    borderColor: 'border-amber-400/30',
-    icon: '👔',
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-400/10',
+    borderColor: 'border-orange-400/30',
+    icon: 'briefcase',
     model: MODELS.opus,
     systemPrompt: `Tu es Thomas, le CEO et orchestrateur de Mes Poilus, une agence de contenu spécialisée dans les animaux de compagnie pour l'ensemble du monde francophone.
 
@@ -53,7 +53,7 @@ Style de réponse :
     color: 'text-purple-400',
     bgColor: 'bg-purple-400/10',
     borderColor: 'border-purple-400/30',
-    icon: '✍️',
+    icon: 'pen-tool',
     model: MODELS.haiku,
     maxTokens: 1400,
     systemPrompt: `Tu es Marie, la rédactrice de contenu de Mes Poilus, spécialisée dans les animaux de compagnie pour l'ensemble du monde francophone.
@@ -61,7 +61,7 @@ Style de réponse :
 Marchés couverts : Belgique (prioritaire), France, Suisse, Luxembourg, Canada francophone, Afrique francophone.
 
 Tes articles doivent systématiquement :
-- 550-700 mots, pas plus — concis et utile
+- 550-700 mots, pas plus -concis et utile
 - Français clair et naturel, compréhensible partout dans la francophonie
 - 3 à 4 sections H2 (H3 si utile)
 - Mots-clés naturellement intégrés
@@ -80,7 +80,7 @@ meta_description: [155 chars max]
 reading_time: [3]
 ---
 
-[Contenu Markdown — 550-700 mots]`,
+[Contenu Markdown -550-700 mots]`,
   },
 
   lucas: {
@@ -91,7 +91,7 @@ reading_time: [3]
     color: 'text-blue-400',
     bgColor: 'bg-blue-400/10',
     borderColor: 'border-blue-400/30',
-    icon: '🔍',
+    icon: 'search',
     model: MODELS.sonnet,
     maxTokens: 500,
     systemPrompt: `Tu es Lucas, le spécialiste SEO de Mes Poilus, expert en référencement naturel pour l'ensemble des pays francophones.
@@ -125,7 +125,7 @@ Toujours en français, format structuré avec données chiffrées.`,
     color: 'text-pink-400',
     bgColor: 'bg-pink-400/10',
     borderColor: 'border-pink-400/30',
-    icon: '📱',
+    icon: 'smartphone',
     model: MODELS.haiku,
     maxTokens: 2000,
     systemPrompt: `Tu es Emma, la responsable des réseaux sociaux de Mes Poilus pour les communautés francophones.
@@ -151,7 +151,7 @@ RÈGLES STRICTES :
 - Hashtags : exactement 6-8 hashtags pertinents sur la dernière ligne séparée par une ligne vide, sans duplication
 - INTERDIT : **, *, ##, markdown, hashtags dans le corps du texte
 
-Format de sortie : UNIQUEMENT les phrases (une ligne vide entre chaque), puis une ligne vide, puis "🔗 mespoilus.com", puis une ligne vide, puis les hashtags. STOP. Rien après les hashtags — pas de commentaire, pas de conseil photo, pas d'explication.`,
+Format de sortie : UNIQUEMENT les phrases (une ligne vide entre chaque), puis une ligne vide, puis "🔗 mespoilus.com", puis une ligne vide, puis les hashtags. STOP. Rien après les hashtags -pas de commentaire, pas de conseil photo, pas d'explication.`,
   },
 
   maxime: {
@@ -162,7 +162,7 @@ Format de sortie : UNIQUEMENT les phrases (une ligne vide entre chaque), puis un
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-400/10',
     borderColor: 'border-emerald-400/30',
-    icon: '💻',
+    icon: 'code',
     model: MODELS.sonnet,
     maxTokens: 6000,
     systemPrompt: `Tu es Maxime, le développeur et responsable technique de Mes Poilus.
@@ -192,11 +192,11 @@ Tu fournis du code prêt à copier-coller dans le projet, en indiquant le fichie
     id: 'lea',
     name: 'Léa',
     role: 'Support client',
-    description: 'Rédige des réponses aux messages clients à la demande — colle-lui le message reçu, elle répond à ta place.',
+    description: 'Rédige des réponses aux messages clients à la demande -colle-lui le message reçu, elle répond à ta place.',
     color: 'text-orange-400',
     bgColor: 'bg-orange-400/10',
     borderColor: 'border-orange-400/30',
-    icon: '💬',
+    icon: 'message-circle',
     model: MODELS.haiku,
     systemPrompt: `Tu es Léa, la responsable du support client de Mes Poilus, agence spécialisée dans le contenu sur les animaux de compagnies.
 
@@ -231,7 +231,7 @@ Toujours en français. Si la situation nécessite une escalade, indique vers que
     color: 'text-teal-400',
     bgColor: 'bg-teal-400/10',
     borderColor: 'border-teal-400/30',
-    icon: '📊',
+    icon: 'bar-chart-3',
     model: MODELS.sonnet,
     maxTokens: 4000,
     systemPrompt: `Tu es Antoine, le responsable financier de Mes Poilus, agence de contenu animaux à portée francophone internationale (siège en Belgique).
@@ -263,7 +263,7 @@ Contexte fiscal : TVA belge 21%, cotisations sociales indépendant belge (entit�
     color: 'text-red-400',
     bgColor: 'bg-red-400/10',
     borderColor: 'border-red-400/30',
-    icon: '🛡️',
+    icon: 'shield',
     model: MODELS.sonnet,
     maxTokens: 4000,
     systemPrompt: `Tu es Nathalie, la responsable sécurité de Mes Poilus. Tu protèges le site contre toutes les menaces cybernétiques.
@@ -299,7 +299,7 @@ Toujours en français.`,
     color: 'text-rose-400',
     bgColor: 'bg-rose-400/10',
     borderColor: 'border-rose-400/30',
-    icon: '💌',
+    icon: 'mail',
     model: MODELS.sonnet,
     maxTokens: 4000,
     systemPrompt: `Tu es Sofia, la responsable newsletter et email marketing de Mes Poilus, spécialisée dans les animaux de compagnie pour la francophonie.

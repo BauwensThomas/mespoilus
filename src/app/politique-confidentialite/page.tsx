@@ -90,11 +90,11 @@ export default function PolitiqueConfidentialitePage() {
               <p>Nous ne vendons jamais vos données personnelles à des tiers.</p>
               <p>Vos données peuvent être partagées avec :</p>
               <ul className="list-disc list-inside space-y-1 text-gray-600 ml-2">
-                <li>Nos partenaires affiliés (Amazon, Zooplus, etc.) — aucune donnée personnelle transmise, simple redirection</li>
-                <li>Google Analytics — données de navigation anonymisées (si consentement accordé)</li>
-                <li>Resend — service d'envoi d'emails transactionnels (confirmation d'annonce, notifications)</li>
-                <li>Vercel — hébergeur du site (infrastructure technique)</li>
-                <li>Supabase — base de données et stockage des photos (hébergement EU disponible)</li>
+                <li>Nos partenaires affiliés (Amazon, Zooplus, etc.) -aucune donnée personnelle transmise, simple redirection</li>
+                <li>Google Analytics -données de navigation anonymisées (si consentement accordé)</li>
+                <li>Resend -service d'envoi d'emails transactionnels (confirmation d'annonce, notifications)</li>
+                <li>Vercel -hébergeur du site (infrastructure technique)</li>
+                <li>Supabase -base de données et stockage des photos (hébergement EU disponible)</li>
               </ul>
               <p>Tout transfert hors UE est encadré par les clauses contractuelles types de la Commission européenne.</p>
             </div>

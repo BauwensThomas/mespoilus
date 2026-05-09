@@ -157,7 +157,7 @@ export async function getPhotoForAgent(agentId: string): Promise<UnsplashPhoto |
 }
 
 export async function getBannerPhotos(query: string): Promise<(UnsplashPhoto | null)[]> {
-  // per_page=5 matches getHeroPhotos — shares the Next.js fetch cache for the same query
+  // per_page=5 matches getHeroPhotos -shares the Next.js fetch cache for the same query
   const data = await unsplashGet<SearchResponse>(
     `/search/photos?query=${encodeURIComponent(query)}&per_page=5&content_filter=high`
   );
