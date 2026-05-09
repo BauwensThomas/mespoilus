@@ -2,18 +2,10 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { FileText, Download, Dog, Cat, Rat, Bird, Shell } from 'lucide-react';
-import type { PdfGuide } from '@/app/guides/page';
+import { FileText, Download } from 'lucide-react';
+import type { PdfGuide } from '@/lib/guides';
+import { CATEGORY_CONFIG } from '@/lib/guides';
 import GuideDownloadModal from '@/components/guides/GuideDownloadModal';
-
-const CATEGORY_CONFIG: Record<string, { label: string; badge: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }> = {
-  chiens:   { label: 'Chiens',   badge: 'bg-orange-100 text-orange-700 border-orange-200', icon: Dog      },
-  chats:    { label: 'Chats',    badge: 'bg-pink-100 text-pink-700 border-pink-200',       icon: Cat      },
-  rongeurs: { label: 'Rongeurs', badge: 'bg-green-100 text-green-700 border-green-200',    icon: Rat      },
-  oiseaux:  { label: 'Oiseaux',  badge: 'bg-blue-100 text-blue-700 border-blue-200',       icon: Bird     },
-  reptiles: { label: 'Reptiles', badge: 'bg-teal-100 text-teal-700 border-teal-200',       icon: Shell    },
-  general:  { label: 'Général',  badge: 'bg-purple-100 text-purple-700 border-purple-200', icon: FileText },
-};
 
 interface GuidesGridProps {
   guides: PdfGuide[];
