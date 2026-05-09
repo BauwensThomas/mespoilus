@@ -1,22 +1,23 @@
 'use client';
 
 import { useState } from 'react';
+import { RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard, Rocket, CheckCircle2, XCircle, Clock, BookOpen, Mail, Sparkles } from 'lucide-react';
 import clsx from 'clsx';
 
 const ANIMALS = [
-  { value: '',         label: '🔄 Auto (rotation)' },
-  { value: 'chiens',   label: '🐕 Chiens' },
-  { value: 'chats',    label: '🐈 Chats' },
-  { value: 'oiseaux',  label: '🦜 Oiseaux' },
-  { value: 'rongeurs', label: '🐹 Rongeurs' },
-  { value: 'reptiles', label: '🦎 Reptiles' },
+  { value: '',         label: 'Auto (rotation)', icon: RefreshCw },
+  { value: 'chiens',   label: 'Chiens', icon: Dog },
+  { value: 'chats',    label: 'Chats', icon: Cat },
+  { value: 'oiseaux',  label: 'Oiseaux', icon: Bird },
+  { value: 'rongeurs', label: 'Rongeurs', icon: Mouse },
+  { value: 'reptiles', label: 'Reptiles', icon: Zap },
 ];
 
 const ARTICLE_TYPES = [
-  { value: '',            label: '🔄 Auto (rotation)' },
-  { value: 'trending',    label: '🔥 Trending / Actualité' },
-  { value: 'affiliation', label: '🛍️ Partenaire / Produit' },
-  { value: 'pratique',    label: '📋 Conseil pratique' },
+  { value: '',            label: 'Auto (rotation)', icon: RefreshCw },
+  { value: 'trending',    label: 'Trending / Actualité', icon: Flame },
+  { value: 'affiliation', label: 'Partenaire / Produit', icon: ShoppingBag },
+  { value: 'pratique',    label: 'Conseil pratique', icon: Clipboard },
 ];
 
 type StepStatus = 'idle' | 'running' | 'done' | 'error';
@@ -25,7 +26,7 @@ interface CronConfig {
   id: string;
   label: string;
   description: string;
-  icon: string;
+  icon: typeof Rocket;
   color: string;
   borderColor: string;
   steps: Array<{
@@ -40,8 +41,8 @@ const CRONS: CronConfig[] = [
     id: 'content',
     label: 'SEO + Blog + Réseaux',
     description: 'Lucas (mots-clés) → Marie (article) → Emma (post Facebook)',
-    icon: '📝',
-    color: 'text-purple-400',
+    icon: BookOpen,
+    color: 'text-purple-600',
     borderColor: 'border-purple-400/30',
     steps: [
       { key: 'blog',   label: 'Blog (Lucas + Marie)', waitAfterMs: 35000 },
@@ -52,8 +53,8 @@ const CRONS: CronConfig[] = [
     id: 'awin',
     label: 'Sync Boutique Awin',
     description: 'Synchronise les produits affiliés Awin dans la boutique',
-    icon: '🛍️',
-    color: 'text-amber-400',
+    icon: ShoppingBag,
+    color: 'text-amber-600',
     borderColor: 'border-amber-400/30',
     steps: [
       { key: 'awin-sync', label: 'Import produits Awin (toutes catégories)' },
@@ -63,8 +64,8 @@ const CRONS: CronConfig[] = [
     id: 'finance',
     label: 'Finance',
     description: 'Antoine génère le rapport financier mensuel',
-    icon: '📊',
-    color: 'text-teal-400',
+    icon: Clipboard,
+    color: 'text-teal-600',
     borderColor: 'border-teal-400/30',
     steps: [
       { key: 'finance', label: 'Rapport financier (Antoine)' },
@@ -74,8 +75,8 @@ const CRONS: CronConfig[] = [
     id: 'security',
     label: 'Sécurité & Maintenance',
     description: 'Nathalie (audit sécurité) + Maxime (audit technique)',
-    icon: '🛡️',
-    color: 'text-red-400',
+    icon: Zap,
+    color: 'text-red-500',
     borderColor: 'border-red-400/30',
     steps: [
       { key: 'security', label: 'Audit sécurité + technique (Nathalie + Maxime)' },
@@ -85,11 +86,22 @@ const CRONS: CronConfig[] = [
     id: 'newsletter',
     label: 'Newsletter',
     description: 'Sofia crée la newsletter avec les derniers articles',
-    icon: '💌',
-    color: 'text-rose-400',
+    icon: Mail,
+    color: 'text-rose-600',
     borderColor: 'border-rose-400/30',
     steps: [
       { key: 'newsletter', label: 'Newsletter (Sofia)' },
+    ],
+  },
+  {
+    id: 'prenoms',
+    label: 'Prénoms animaux',
+    description: 'Thomas génère les 50 meilleurs prénoms par catégorie (Haiku)',
+    icon: Sparkles,
+    color: 'text-orange-500',
+    borderColor: 'border-orange-400/30',
+    steps: [
+      { key: 'prenoms', label: 'Génération prénoms (Thomas × 5 animaux)' },
     ],
   },
 ];
@@ -135,7 +147,6 @@ function useCronRunner() {
         const data = await r.json();
         if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
 
-        // Pour awin-sync, on récupère le nombre de produits synchronisés
         if (step.key === 'awin-sync' && typeof data.synced === 'number') {
           setState(id, { synced: data.synced });
         }
@@ -177,20 +188,21 @@ export default function CronLauncher() {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-amber-500 hover:bg-amber-400 text-black transition-colors"
+        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-orange-600 hover:bg-orange-500 text-white transition-colors"
       >
-        🚀 Lancer un cron
+        <Rocket size={16} strokeWidth={1.5} />
+        Lancer un cron
         <span className="text-xs opacity-70">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-[#1e2a3a] border border-[#2a3a4a] rounded-xl shadow-xl z-50 overflow-hidden">
-          <div className="px-4 py-3 border-b border-[#2a3a4a]">
-            <p className="text-xs font-semibold text-white">Pipelines manuels</p>
-            <p className="text-[10px] text-gray-300 mt-0.5">Déclenche un pipeline immédiatement</p>
+        <div className="absolute right-0 top-full mt-2 w-96 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-200">
+            <p className="text-sm font-semibold text-gray-900">Pipelines manuels</p>
+            <p className="text-xs text-gray-500 mt-0.5">Déclenche un pipeline immédiatement</p>
           </div>
 
-          <div className="divide-y divide-[#2a3a4a]">
+          <div className="divide-y divide-gray-100">
             {CRONS.map((cron) => {
               const state = getState(cron.id);
               const isRunning = state.status === 'running';
@@ -198,14 +210,14 @@ export default function CronLauncher() {
               const isWaiting = isRunning && state.countdown > 0;
 
               return (
-                <div key={cron.id} className="px-4 py-3">
+                <div key={cron.id} className="px-4 py-3.5">
                   {cron.id === 'content' && (
-                    <div className="mb-2 flex flex-col gap-1.5">
+                    <div className="mb-2.5 flex flex-col gap-2">
                       <select
                         value={selectedAnimal}
                         onChange={(e) => setSelectedAnimal(e.target.value)}
                         disabled={isRunning}
-                        className="w-full bg-[#111827] border border-[#2a3a4a] rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-amber-500/50 disabled:opacity-50"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-50"
                       >
                         {ANIMALS.map((a) => (
                           <option key={a.value} value={a.value}>{a.label}</option>
@@ -215,7 +227,7 @@ export default function CronLauncher() {
                         value={selectedType}
                         onChange={(e) => setSelectedType(e.target.value)}
                         disabled={isRunning}
-                        className="w-full bg-[#111827] border border-[#2a3a4a] rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-amber-500/50 disabled:opacity-50"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-50"
                       >
                         {ARTICLE_TYPES.map((t) => (
                           <option key={t.value} value={t.value}>{t.label}</option>
@@ -224,11 +236,11 @@ export default function CronLauncher() {
                     </div>
                   )}
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-2 flex-1 min-w-0">
-                      <span className="text-base mt-0.5">{cron.icon}</span>
+                    <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                      <cron.icon size={18} strokeWidth={1.5} className={clsx('mt-0.5 flex-shrink-0', cron.color)} />
                       <div className="min-w-0">
-                        <p className={clsx('text-xs font-semibold', cron.color)}>{cron.label}</p>
-                        <p className="text-[10px] text-gray-300 leading-relaxed mt-0.5">{cron.description}</p>
+                        <p className={clsx('text-sm font-semibold', cron.color)}>{cron.label}</p>
+                        <p className="text-xs text-gray-500 leading-relaxed mt-0.5">{cron.description}</p>
                       </div>
                     </div>
 
@@ -236,43 +248,58 @@ export default function CronLauncher() {
                       onClick={() => state.status === 'idle' || state.status === 'error' ? run(cron, cron.id === 'content' ? selectedAnimal : undefined, cron.id === 'content' ? selectedType : undefined) : undefined}
                       disabled={isRunning}
                       className={clsx(
-                        'flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors',
+                        'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1',
                         state.status === 'done'
-                          ? 'bg-emerald-500/15 text-emerald-400 cursor-default'
+                          ? 'bg-emerald-100 text-emerald-600 cursor-default'
                           : state.status === 'error'
-                          ? 'bg-red-500/15 text-red-400 hover:bg-red-500/25 cursor-pointer'
+                          ? 'bg-red-100 text-red-500 hover:bg-red-200 cursor-pointer'
                           : isRunning
-                          ? 'bg-white/5 text-gray-400 cursor-not-allowed'
-                          : 'bg-white/10 text-white hover:bg-white/20 cursor-pointer'
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'
                       )}
                     >
-                      {state.status === 'done' && '✅ OK'}
-                      {state.status === 'error' && '❌ Retry'}
-                      {isRunning && isWaiting && `⏳ ${state.countdown}s`}
+                      {state.status === 'done' && (
+                        <>
+                          <CheckCircle2 size={14} strokeWidth={1.5} />
+                          OK
+                        </>
+                      )}
+                      {state.status === 'error' && (
+                        <>
+                          <XCircle size={14} strokeWidth={1.5} />
+                          Retry
+                        </>
+                      )}
+                      {isRunning && isWaiting && (
+                        <>
+                          <Clock size={14} strokeWidth={1.5} />
+                          {state.countdown}s
+                        </>
+                      )}
                       {isRunning && !isWaiting && (
-                        <span className="flex items-center gap-1">
+                        <>
                           <span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />
                           En cours
-                        </span>
+                        </>
                       )}
                       {state.status === 'idle' && 'Lancer'}
                     </button>
                   </div>
 
                   {isRunning && (
-                    <p className="text-[10px] text-amber-400 mt-1.5 ml-6">
+                    <p className="text-xs text-amber-600 mt-1.5 ml-7">
                       {isWaiting ? `Pause ${state.countdown}s avant la prochaine étape…` : `${step?.label ?? '…'}`}
                     </p>
                   )}
                   {state.status === 'error' && (
-                    <p className="text-[10px] text-red-400 mt-1.5 ml-6 truncate" title={state.error}>{state.error}</p>
+                    <p className="text-xs text-red-500 mt-1.5 ml-7 truncate" title={state.error}>{state.error}</p>
                   )}
                   {state.status === 'done' && (
-                    <div className="flex items-center gap-3 mt-1 ml-6">
+                    <div className="flex items-center gap-3 mt-1 ml-7">
                       {cron.id === 'awin' && typeof state.synced === 'number' && (
-                        <p className="text-[10px] text-amber-400">{state.synced} produit{state.synced !== 1 ? 's' : ''} synchronisé{state.synced !== 1 ? 's' : ''}</p>
+                        <p className="text-xs text-amber-600">{state.synced} produit{state.synced !== 1 ? 's' : ''} synchronisé{state.synced !== 1 ? 's' : ''}</p>
                       )}
-                      <button onClick={() => reset(cron.id)} className="text-[10px] text-gray-400 hover:text-gray-200">
+                      <button onClick={() => reset(cron.id)} className="text-xs text-gray-400 hover:text-gray-700">
                         Réinitialiser
                       </button>
                     </div>
@@ -282,9 +309,10 @@ export default function CronLauncher() {
             })}
           </div>
 
-          <div className="px-4 py-3 border-t border-[#2a3a4a] bg-[#111827]">
-            <p className="text-[10px] text-gray-400">
-              💡 Support client : pas de cron — Léa répond à la demande depuis sa page agent.
+          <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 flex items-start gap-2">
+            <Rocket size={14} strokeWidth={1.5} className="text-gray-400 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-gray-500">
+              Support client : pas de cron -Léa répond à la demande depuis sa page agent.
             </p>
           </div>
         </div>

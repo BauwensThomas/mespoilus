@@ -1,4 +1,4 @@
--- Mes Poilus — Table annonces d'adoption
+-- Mes Poilus -Table annonces d'adoption
 
 CREATE TABLE IF NOT EXISTS adoption_posts (
   id            UUID        DEFAULT gen_random_uuid() PRIMARY KEY,

@@ -21,6 +21,6 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-export default function ChatsPage() {
-  return <CategoryPageContent category="chats" />;
+export default function ChatsPage({ searchParams }: { searchParams: { q?: string } }) {
+  return <CategoryPageContent category="chats" search={searchParams.q?.trim()} />;
 }

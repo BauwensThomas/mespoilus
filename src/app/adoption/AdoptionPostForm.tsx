@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 
 const ANIMAL_TYPES = [
   { id: 'chien',   label: 'Chien'   },
@@ -122,12 +123,14 @@ export default function AdoptionPostForm() {
     return (
       <div className="max-w-2xl">
         <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-8 text-center">
-          <span className="text-4xl block mb-3">✅</span>
+          <div className="flex justify-center mb-3">
+            <CheckCircle2 size={48} strokeWidth={1.5} className="text-emerald-600" />
+          </div>
           <h3 className="text-gray-900 font-semibold text-lg mb-2">Annonce envoyée !</h3>
           <p className="text-gray-500 text-sm">
             Votre annonce est en cours de vérification et sera publiée sous 24h après validation.
           </p>
-          <button onClick={() => setStatus('idle')} className="mt-4 text-amber-600 hover:underline text-sm">
+          <button onClick={() => setStatus('idle')} className="mt-4 text-orange-600 hover:underline text-sm">
             Déposer une autre annonce
           </button>
         </div>

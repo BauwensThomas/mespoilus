@@ -80,16 +80,19 @@ export default function BoutiquePartenairesCarousel({ partenaires }: { partenair
   if (!partenaires.length) return null;
 
   return (
-    <div className="shrink-0 flex flex-col gap-1.5">
-      <span className="text-[9px] font-semibold text-gray-900 uppercase tracking-widest">
-        Partenaires recommandés
-      </span>
+    <div className="shrink-0 flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-6 bg-gradient-to-b from-orange-600 to-orange-400 rounded-full" />
+        <span className="text-xs font-bold text-gray-900 uppercase tracking-widest">
+          Partenaires
+        </span>
+      </div>
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         {n >= 3 && (
           <button
             onClick={() => go('prev')}
-            className="shrink-0 w-6 h-6 bg-white rounded-full shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-amber-500 hover:border-amber-300 transition-all text-sm z-20"
+            className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-50 shadow-md border border-gray-200 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:border-orange-300 hover:shadow-lg transition-all text-base font-light z-20"
             aria-label="Précédent"
           >‹</button>
         )}
@@ -119,31 +122,31 @@ export default function BoutiquePartenairesCarousel({ partenaires }: { partenair
                 backgroundColor: '#ffffff',
                 borderColor: '#d1d5db',
               }}
-              className="flex flex-col gap-1.5 border rounded-2xl px-3 py-2 shadow-sm cursor-pointer"
+              className="flex flex-col gap-2 border rounded-xl px-4 py-3 shadow-md hover:shadow-xl cursor-pointer transition-all duration-200 backdrop-blur-sm"
             >
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-bold text-base text-gray-900 leading-tight">{p.nom}</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-sm text-gray-900 leading-tight">{p.nom}</span>
                 {(p.pays ?? []).map(code => (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     key={code}
                     src={getFlagUrl(code)}
                     alt={code}
-                    style={{ width: 16, height: 12, objectFit: 'cover' }}
-                    className="shrink-0 rounded-[2px]"
+                    style={{ width: 18, height: 13, objectFit: 'cover' }}
+                    className="shrink-0 rounded-[2px] border border-gray-200"
                   />
                 ))}
               </div>
               {p.tag && (
                 <span
-                  className="self-start text-xs font-bold px-2 py-0.5 rounded-full"
+                  className="self-start text-[11px] font-bold px-2.5 py-1 rounded-lg"
                   style={{ backgroundColor: p.tagBg ?? '#e2e8f0', color: p.tagText ?? '#1e293b' }}
                 >
                   {p.tag}
                 </span>
               )}
               {p.description && (
-                <p className="text-xs text-gray-800 leading-snug line-clamp-2">{p.description}</p>
+                <p className="text-xs text-gray-700 leading-snug line-clamp-2">{p.description}</p>
               )}
             </a>
           ))}
@@ -152,7 +155,7 @@ export default function BoutiquePartenairesCarousel({ partenaires }: { partenair
         {n >= 3 && (
           <button
             onClick={() => go('next')}
-            className="shrink-0 w-6 h-6 bg-white rounded-full shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-amber-500 hover:border-amber-300 transition-all text-sm z-20"
+            className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-50 shadow-md border border-gray-200 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:border-orange-300 hover:shadow-lg transition-all text-base font-light z-20"
             aria-label="Suivant"
           >›</button>
         )}

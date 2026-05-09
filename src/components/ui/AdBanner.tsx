@@ -38,7 +38,8 @@ export default function AdBanner({ slot, variant = 'display', className = '' }: 
 
   if (variant === 'in-article') {
     return (
-      <div className={className}>
+      <div className={`py-6 my-8 border-y border-gray-200 ${className}`}>
+        <p className="text-xs text-gray-500 text-center mb-3 uppercase tracking-widest font-semibold">Annonce</p>
         <ins
           className="adsbygoogle"
           style={{ display: 'block', textAlign: 'center' }}
@@ -52,7 +53,8 @@ export default function AdBanner({ slot, variant = 'display', className = '' }: 
   }
 
   return (
-    <div className={className}>
+    <div className={`py-8 bg-gray-50 rounded-2xl border border-gray-200 ${className}`}>
+      <p className="text-xs text-gray-500 text-center mb-4 uppercase tracking-widest font-semibold">Contenu sponsorisé</p>
       <ins
         className="adsbygoogle"
         style={{ display: 'block' }}

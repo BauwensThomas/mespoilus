@@ -5,6 +5,7 @@ import type { AdoptionPost } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
+import { CheckCircle2, XCircle, MapPin } from 'lucide-react';
 
 export const revalidate = 0;
 
@@ -31,11 +32,11 @@ async function updateStatus(id: string, status: 'approved' | 'rejected') {
           subject: 'Votre annonce est en ligne sur Mes Poilus !',
           html: `
             <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111">
-              <h2 style="color:#f59e0b">Annonce publiée !</h2>
+              <h2 style="color:#f97316">Annonce publiée !</h2>
               <p>Bonjour <strong>${post.poster_name}</strong>,</p>
               <p>Bonne nouvelle ! Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) a été validée et est désormais visible sur Mes Poilus.</p>
-              <p><a href="https://mespoilus.com/adoption" style="color:#f59e0b">→ Voir les annonces</a></p>
-              <p>— L'équipe Mes Poilus 🐾</p>
+              <p><a href="https://mespoilus.com/adoption" style="color:#f97316">→ Voir les annonces</a></p>
+              <p>-L'équipe Mes Poilus</p>
             </div>
           `,
         });
@@ -49,7 +50,7 @@ async function updateStatus(id: string, status: 'approved' | 'rejected') {
               <p>Bonjour <strong>${post.poster_name}</strong>,</p>
               <p>Après vérification, votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) n'a pas pu être publiée car elle ne respecte pas nos conditions d'utilisation.</p>
               <p style="color:#6b7280;font-size:13px">Si vous pensez qu'il s'agit d'une erreur, répondez simplement à cet email.</p>
-              <p>— L'équipe Mes Poilus 🐾</p>
+              <p>-L'équipe Mes Poilus</p>
             </div>
           `,
         });
@@ -81,8 +82,13 @@ async function getData(status: string) {
   };
 }
 
-const ANIMAL_EMOJIS: Record<string, string> = {
-  chien: '🐕', chat: '🐈', oiseau: '🦜', rongeur: '🐹', reptile: '🦎', autre: '🐾',
+const ANIMAL_LABELS: Record<string, string> = {
+  chien: 'Chien',
+  chat: 'Chat',
+  oiseau: 'Oiseau',
+  rongeur: 'Rongeur',
+  reptile: 'Reptile',
+  autre: 'Autre',
 };
 
 const TABS = [
@@ -102,8 +108,8 @@ export default async function ModerationPage({ searchParams }: Props) {
   return (
     <div className="px-8 py-8 space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Modération</h1>
-        <p className="text-gray-500 text-sm mt-1">Annonces d'adoption à valider</p>
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Modération</h1>
+        <p className="text-gray-500 text-base mt-1">Annonces d'adoption à valider</p>
       </div>
 
       {/* Tabs */}
@@ -116,14 +122,14 @@ export default async function ModerationPage({ searchParams }: Props) {
               href={`/moderation?status=${tab.id}`}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                 isActive
-                  ? 'bg-amber-500 text-black'
-                  : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
+                  ? 'bg-orange-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200'
               }`}
             >
               {tab.label}
               {tab.id === 'pending' && pendingCount > 0 && (
                 <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-                  isActive ? 'bg-black/20 text-black' : 'bg-amber-500/20 text-amber-400'
+                  isActive ? 'bg-white/20 text-white' : 'bg-orange-100 text-orange-600'
                 }`}>
                   {pendingCount}
                 </span>
@@ -135,7 +141,7 @@ export default async function ModerationPage({ searchParams }: Props) {
 
       {/* Liste */}
       {posts.length === 0 ? (
-        <div className="text-center py-16 bg-gray-800/30 rounded-2xl border border-gray-800">
+        <div className="text-center py-16 bg-gray-50 rounded-2xl border border-gray-200">
           <p className="text-gray-500">Aucune annonce dans cette catégorie.</p>
         </div>
       ) : (
@@ -144,38 +150,43 @@ export default async function ModerationPage({ searchParams }: Props) {
             const approve = updateStatus.bind(null, post.id, 'approved');
             const reject  = updateStatus.bind(null, post.id, 'rejected');
             const date    = formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: fr });
-            const emoji   = ANIMAL_EMOJIS[post.animal_type] ?? '🐾';
+            const animalLabel = ANIMAL_LABELS[post.animal_type] ?? post.animal_type;
 
             return (
-              <div key={post.id} className="bg-[#111] border border-gray-800 rounded-2xl p-4 space-y-3">
+              <div key={post.id} className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-white flex items-center gap-2">
-                    {emoji} <span className="capitalize">{post.animal_type}</span>
+                  <span className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <span className="capitalize">{animalLabel}</span>
                     {post.breed && <span className="text-gray-500 font-normal">· {post.breed}</span>}
                   </span>
-                  <span className="text-[10px] text-gray-600">{date}</span>
+                  <span className="text-[10px] text-gray-400">{date}</span>
                 </div>
 
-                <div className="text-xs text-gray-400 space-y-0.5">
+                <div className="text-xs text-gray-500 space-y-0.5">
                   {post.age    && <p>Âge : {post.age} {post.gender !== 'inconnu' ? `· ${post.gender}` : ''}</p>}
-                  <p>📍 {post.region}</p>
-                  <p className="text-gray-500">Par : {post.poster_name} · {post.email}</p>
+                  <div className="flex items-center gap-1.5">
+                    <MapPin size={14} strokeWidth={1.5} />
+                    <span>{post.region}</span>
+                  </div>
+                  <p className="text-gray-400">Par : {post.poster_name} · {post.email}</p>
                 </div>
 
-                <p className="text-sm text-gray-300 leading-relaxed line-clamp-3">{post.description}</p>
+                <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">{post.description}</p>
 
-                <p className="text-xs text-amber-400/80">Contact public : {post.contact_info}</p>
+                <p className="text-xs text-orange-600">Contact public : {post.contact_info}</p>
 
                 {post.status === 'pending' && (
                   <div className="flex gap-2 pt-1">
                     <form action={approve}>
-                      <button type="submit" className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-xs font-medium transition-colors">
-                        ✓ Approuver
+                      <button type="submit" className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 rounded-lg text-xs font-medium transition-colors flex items-center gap-1">
+                        <CheckCircle2 size={14} strokeWidth={1.5} />
+                        Approuver
                       </button>
                     </form>
                     <form action={reject}>
-                      <button type="submit" className="px-3 py-1.5 bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 rounded-lg text-xs font-medium transition-colors">
-                        ✗ Rejeter
+                      <button type="submit" className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 rounded-lg text-xs font-medium transition-colors flex items-center gap-1">
+                        <XCircle size={14} strokeWidth={1.5} />
+                        Rejeter
                       </button>
                     </form>
                   </div>

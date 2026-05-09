@@ -3,11 +3,10 @@ import BlogCard from '@/components/blog/BlogCard';
 import { Article } from '@/types';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
-import { getHeroPhotos, getBannerPhotos, CATEGORY_QUERIES } from '@/lib/unsplash';
 import AdBanner from '@/components/ui/AdBanner';
 import { permanentRedirect } from 'next/navigation';
 import BlogSearchBar from '@/components/blog/BlogSearchBar';
+import { PawPrint, Dog, Cat, Bird, Mouse, Zap } from 'lucide-react';
 
 const CATEGORY_SLUGS = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
 
@@ -15,7 +14,7 @@ const BLOG_URL = '/blog';
 
 export const metadata: Metadata = {
   title: 'Blog - Conseils & guides animaux de compagnie',
-  description: 'Articles, guides et conseils sur les animaux de compagnie, rédigés par Marie notre IA rédactrice.',
+  description: 'Articles, guides et conseils pratiques sur les animaux de compagnie.',
   robots: { index: true, follow: true },
   alternates: { canonical: BLOG_URL },
   openGraph: {
@@ -55,13 +54,12 @@ async function getArticles(category?: string, search?: string) {
 }
 
 const CATEGORIES = [
-  { id: 'all',      label: 'Tous',     icon: '🐾' },
-  { id: 'chiens',   label: 'Chiens',   icon: '🐕' },
-  { id: 'chats',    label: 'Chats',    icon: '🐈' },
-  { id: 'oiseaux',  label: 'Oiseaux',  icon: '🦜' },
-  { id: 'rongeurs', label: 'Rongeurs', icon: '🐹' },
-  { id: 'reptiles', label: 'Reptiles', icon: '🦎' },
-  { id: 'general',  label: 'Général',  icon: '📝' },
+  { id: 'all',      label: 'Tous',     icon: PawPrint, href: '/blog' },
+  { id: 'chiens',   label: 'Chiens',   icon: Dog,      href: '/blog/chiens' },
+  { id: 'chats',    label: 'Chats',    icon: Cat,      href: '/blog/chats' },
+  { id: 'oiseaux',  label: 'Oiseaux',  icon: Bird,     href: '/blog/oiseaux' },
+  { id: 'rongeurs', label: 'Rongeurs', icon: Mouse,    href: '/blog/rongeurs' },
+  { id: 'reptiles', label: 'Reptiles', icon: Zap,      href: '/blog/reptiles' },
 ];
 
 interface Props {
@@ -77,99 +75,76 @@ export default async function BlogPage({ searchParams }: Props) {
     ? searchParams.category
     : undefined;
   const search = searchParams.q?.trim();
-
   const activeCat = CATEGORIES.find((c) => c.id === (activeCategory ?? 'all'));
-  const bannerQuery = activeCategory && CATEGORY_QUERIES[activeCategory];
-
-  const [articles, allPhotos] = await Promise.all([
-    getArticles(activeCategory, search),
-    bannerQuery ? getBannerPhotos(bannerQuery) : getHeroPhotos(),
-  ]);
+  const articles = await getArticles(activeCategory, search);
   const [featured, ...rest] = articles;
 
   return (
-    <div className="min-h-screen bg-gray-50 px-8 py-8 space-y-4 animate-fade-in">
+    <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Blog Mes Poilus</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Conseils, guides et actualités sur les animaux de compagnie
-        </p>
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Blog</h1>
+        <p className="text-sm text-gray-500">Conseils, guides et actualités sur les animaux de compagnie</p>
       </div>
 
-      {/* Recherche */}
-      <BlogSearchBar defaultValue={search ?? ''} />
-
       {/* Filtres catégories */}
-      <div className="flex flex-wrap gap-2">
-        {CATEGORIES.map(({ id, label, icon }) => {
+      <div className="flex flex-wrap gap-3">
+        {CATEGORIES.map(({ id, label, icon: IconComponent, href }) => {
           const isActive = (id === 'all' && !activeCategory) || id === activeCategory;
           return (
             <Link
               key={id}
-              href={id === 'all' ? '/blog' : `/blog?category=${id}`}
-              className={`text-xs px-3 py-1.5 rounded-lg border transition-all duration-150 flex items-center gap-1.5 ${
+              href={href}
+              className={`text-sm px-3 py-1.5 rounded-lg border transition-all duration-200 flex items-center gap-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                 isActive
-                  ? 'bg-amber-500 text-black border-amber-500 font-semibold'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-amber-500/50 hover:text-amber-600'
+                  ? 'bg-orange-600 text-white border-orange-600 focus:ring-orange-300'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 hover:shadow-md focus:ring-orange-300'
               }`}
             >
-              <span>{icon}</span>
+              <IconComponent size={18} strokeWidth={1.5} />
               <span>{label}</span>
             </Link>
           );
         })}
       </div>
 
+      {/* Recherche */}
+      <BlogSearchBar defaultValue={search ?? ''} />
+
       {/* Bannière */}
-      <div className="relative h-28 rounded-2xl overflow-hidden bg-[#111]">
-
-        {/* Photo plein-format en fond */}
-        {allPhotos[0] && (
-          <Image src={allPhotos[0].url} alt={allPhotos[0].alt} fill className="object-cover object-center" />
-        )}
-
-        {/* Dégradé amber recouvrant 65% à gauche */}
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-600 from-30% via-amber-500/80 via-55% to-transparent pointer-events-none" />
-
-        {/* Texte */}
-        <div className="absolute inset-0 flex items-center px-6 z-10">
-          <div>
-            <p className="text-white/60 text-[10px] uppercase tracking-widest font-medium">Catégorie</p>
-            <p className="text-white font-bold text-xl capitalize">{activeCat?.label}</p>
-            <p className="text-white/60 text-xs mt-0.5">
-              {articles.length} article{articles.length !== 1 ? 's' : ''}
-              {search ? ` · "${search}"` : ''}
-            </p>
-          </div>
+      <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
+        <div>
+          <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Catégorie</p>
+          <p className="text-white font-bold text-lg md:text-xl capitalize">{activeCat?.label ?? 'Tous'}</p>
         </div>
+        <p className="text-white/60 text-sm">
+          {articles.length} article{articles.length !== 1 ? 's' : ''}
+          {search ? ` · "${search}"` : ''}
+        </p>
       </div>
 
       {articles.length === 0 ? (
-        <div className="text-center py-16 bg-gray-50 rounded-2xl">
-          <p className="text-gray-500">Les premiers articles arrivent bientôt !</p>
+        <div className="text-center py-20 bg-orange-50 rounded-3xl border border-orange-100">
+          <p className="text-gray-600 font-medium text-lg">Les premiers articles arrivent bientôt !</p>
         </div>
       ) : (
         <>
-          {/* Article vedette */}
-          {featured && !activeCategory && (
+          {featured && !activeCategory && !search && (
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs text-amber-600 font-medium uppercase tracking-wide">À la une</span>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-xs text-orange-600 font-semibold uppercase tracking-widest">À la une</span>
               </div>
               <BlogCard article={featured} featured />
             </div>
           )}
-
-          {/* Grille articles */}
           <div>
-            {rest.length > 0 && (
+            {(activeCategory || search ? articles : rest).length > 0 && (
               <>
-                <h2 className="text-sm font-semibold text-gray-700 mb-4">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
                   {activeCategory ? `Articles · ${activeCat?.label}` : 'Derniers articles'}
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {(featured && !activeCategory ? rest : articles).map((article) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {(activeCategory || search ? articles : rest).map((article) => (
                     <BlogCard key={article.id} article={article} />
                   ))}
                 </div>

@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import AdBanner from '@/components/ui/AdBanner';
+import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool } from 'lucide-react';
 
 interface Props {
   params: { slug: string };
@@ -66,13 +67,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+const CATEGORY_ICONS: Record<string, typeof Dog> = {
+  chiens: Dog,
+  chats: Cat,
+  oiseaux: Bird,
+  rongeurs: Mouse,
+  reptiles: Zap,
+  general: PawPrint,
+};
+
 const CATEGORY_LABELS: Record<string, string> = {
-  chiens: '🐕 Chiens',
-  chats: '🐈 Chats',
-  oiseaux: '🦜 Oiseaux',
-  rongeurs: '🐹 Rongeurs',
-  reptiles: '🦎 Reptiles',
-  general: '🐾 Général',
+  chiens: 'Chiens',
+  chats: 'Chats',
+  oiseaux: 'Oiseaux',
+  rongeurs: 'Rongeurs',
+  reptiles: 'Reptiles',
+  general: 'Général',
 };
 
 export default async function ArticlePage({ params }: Props) {
@@ -106,8 +116,10 @@ export default async function ArticlePage({ params }: Props) {
     url: articleUrl,
   };
 
+  const CategoryIcon = CATEGORY_ICONS[article.category] || PawPrint;
+
   return (
-    <div className="min-h-screen bg-gray-50 animate-fade-in">
+    <div className="min-h-screen bg-white animate-fade-in">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -134,12 +146,13 @@ export default async function ArticlePage({ params }: Props) {
             rel="noopener noreferrer nofollow"
             className="absolute bottom-3 right-4 text-[10px] text-white/60 hover:text-white/90 transition-colors bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm"
           >
-            📷 {article.image_credit} / Pexels
+            © {article.image_credit} / Pexels
           </a>
         )}
 
-        <div className="absolute bottom-4 left-6">
-          <span className="text-xs text-white bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">
+        <div className="absolute bottom-4 left-6 flex items-center gap-2">
+          <CategoryIcon size={18} strokeWidth={1.5} className="text-white" />
+          <span className="text-xs text-white bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
             {CATEGORY_LABELS[article.category] ?? article.category}
           </span>
         </div>
@@ -151,7 +164,7 @@ export default async function ArticlePage({ params }: Props) {
 
           <Link
             href="/blog"
-            className="inline-flex items-center gap-1.5 text-gray-500 hover:text-amber-600 text-sm font-medium transition-colors mb-8"
+            className="inline-flex items-center gap-1.5 text-gray-500 hover:text-orange-600 text-sm font-medium transition-colors mb-8"
           >
             ← Retour au blog
           </Link>
@@ -166,12 +179,12 @@ export default async function ArticlePage({ params }: Props) {
 
             <div className="flex items-center gap-4 py-4 border-t border-b border-gray-200">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-sm">
-                  ✍️
+                <div className="w-8 h-8 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center text-sm">
+                  <PenTool size={16} strokeWidth={1.5} className="text-orange-600" />
                 </div>
                 <div>
                   <div className="text-xs font-semibold" style={{ color: '#1f2937' }}>Marie</div>
-                  <div className="text-[10px]" style={{ color: '#9ca3af' }}>Rédactrice IA</div>
+                  <div className="text-[10px]" style={{ color: '#9ca3af' }}>Rédactrice</div>
                 </div>
               </div>
               {publishedDate && (
@@ -187,7 +200,7 @@ export default async function ArticlePage({ params }: Props) {
           {article.seo_keywords.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-8">
               {article.seo_keywords.map((kw) => (
-                <span key={kw} className="text-[10px] bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full border border-amber-200">
+                <span key={kw} className="text-[10px] bg-orange-50 text-orange-700 px-2.5 py-1 rounded-full border border-orange-200">
                   #{kw}
                 </span>
               ))}
@@ -202,13 +215,13 @@ export default async function ArticlePage({ params }: Props) {
               prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
               prose-h4:text-base prose-h4:mt-6 prose-h4:mb-2
               prose-p:leading-[1.85] prose-p:my-5
-              prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline
+              prose-a:text-orange-600 prose-a:no-underline hover:prose-a:underline
               prose-strong:font-semibold
               prose-ul:my-5 prose-ol:my-5
               prose-li:my-1.5 prose-li:leading-relaxed
               prose-hr:border-gray-200 prose-hr:my-8
-              prose-blockquote:border-l-2 prose-blockquote:border-l-amber-400 prose-blockquote:bg-amber-50 prose-blockquote:rounded-r-xl prose-blockquote:py-3 prose-blockquote:px-6 prose-blockquote:my-8
-              prose-code:text-amber-700 prose-code:bg-amber-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+              prose-blockquote:border-l-2 prose-blockquote:border-l-orange-400 prose-blockquote:bg-orange-50 prose-blockquote:rounded-r-xl prose-blockquote:py-3 prose-blockquote:px-6 prose-blockquote:my-8
+              prose-code:text-orange-700 prose-code:bg-orange-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
               prose-pre:bg-gray-100 prose-pre:border prose-pre:border-gray-200 prose-pre:rounded-xl prose-pre:my-8"
             style={{ color: '#1f2937' }}
             dangerouslySetInnerHTML={{ __html: htmlContent }}
@@ -218,9 +231,9 @@ export default async function ArticlePage({ params }: Props) {
 
           <footer className="mt-10 pt-6 border-t border-gray-200 flex items-center justify-between flex-wrap gap-4">
             <div className="text-xs" style={{ color: '#9ca3af' }}>
-              Article rédigé par Marie — IA Mes Poilus
+              Article rédigé par Marie
             </div>
-            <Link href="/blog" className="text-sm text-amber-600 hover:text-amber-500 font-medium transition-colors">
+            <Link href="/blog" className="text-sm text-orange-600 hover:text-orange-500 font-medium transition-colors">
               ← Retour au blog
             </Link>
           </footer>

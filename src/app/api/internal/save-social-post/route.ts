@@ -44,7 +44,7 @@ async function getImageUrl(): Promise<string | null> {
   const category = rows?.[0]?.category ?? 'general';
   try {
     const photo = await getPhotoForCategory(category);
-    if (!photo) { console.log('[save-post] Pexels aucun résultat — post sans image'); return null; }
+    if (!photo) { console.log('[save-post] Pexels aucun résultat -post sans image'); return null; }
     const stored = await downloadAndStorePhoto(photo.url, `social-fallback-${category}.jpg`);
     console.log('[save-post] image fallback Pexels:', stored ? 'stockée' : 'URL directe');
     return stored ?? photo.url;

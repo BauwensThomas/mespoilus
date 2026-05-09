@@ -4,12 +4,12 @@ Plateforme de contenu et de services pour animaux de compagnie, ciblant l'ensemb
 
 ## Fonctionnalités
 
-- **Blog** — Articles SEO générés par Marie (IA), filtrables par catégorie, avec images Unsplash automatiques
-- **Adoption** — Annonces de particuliers pour donner un animal, avec photos, modération admin et emails automatiques
-- **Newsletter** — Inscription + envoi de campagnes via Resend
-- **Boutique** — Placeholder affiliation (Amazon, Zooplus, etc.) — pas de vente directe
-- **Agents IA** — 9 agents Claude avec dashboard admin, streaming en temps réel et historique
-- **Sécurité** — Middleware Edge : rate limiting, détection SQLi/XSS, blocage IP automatique
+- **Blog** -Articles SEO générés par Marie (IA), filtrables par catégorie, avec images Unsplash automatiques
+- **Adoption** -Annonces de particuliers pour donner un animal, avec photos, modération admin et emails automatiques
+- **Newsletter** -Inscription + envoi de campagnes via Resend
+- **Boutique** -Placeholder affiliation (Amazon, Zooplus, etc.) -pas de vente directe
+- **Agents IA** -9 agents Claude avec dashboard admin, streaming en temps réel et historique
+- **Sécurité** -Middleware Edge : rate limiting, détection SQLi/XSS, blocage IP automatique
 
 ---
 
@@ -18,10 +18,10 @@ Plateforme de contenu et de services pour animaux de compagnie, ciblant l'ensemb
 | Couche | Technologie |
 |--------|------------|
 | Framework | Next.js 14 (App Router, TypeScript) |
-| Style | Tailwind CSS — thème sombre `gray-900` |
+| Style | Tailwind CSS -thème sombre `gray-900` |
 | Base de données | Supabase (PostgreSQL) |
 | Storage | Supabase Storage (photos adoption) |
-| IA | API Anthropic — Claude Opus 4.7 / Sonnet 4.6 / Haiku 4.5 |
+| IA | API Anthropic -Claude Opus 4.7 / Sonnet 4.6 / Haiku 4.5 |
 | Images | Unsplash API (50 req/h gratuit) |
 | Emails | Resend (3 000 emails/mois gratuit) |
 | Déploiement prévu | Vercel |
@@ -165,7 +165,7 @@ src/
 | Route | Description |
 |-------|-------------|
 | `/login` | Connexion admin |
-| `/dashboard` | Dashboard agents IA — statuts, stats, activité |
+| `/dashboard` | Dashboard agents IA -statuts, stats, activité |
 | `/agents/[agent]` | Interface par agent avec streaming temps réel |
 | `/orchestrate` | Orchestration Thomas multi-agents |
 | `/moderation` | Modération des annonces adoption |
@@ -176,15 +176,15 @@ src/
 
 | Agent | Modèle | Rôle |
 |-------|--------|------|
-| 👔 Thomas | Opus 4.7 | CEO Orchestrateur — stratégie, coordination |
+| 👔 Thomas | Opus 4.7 | CEO Orchestrateur -stratégie, coordination |
 | ✍️ Marie | Sonnet 4.6 | Rédactrice blog (articles SEO 800–1500 mots) |
 | 🔍 Lucas | Sonnet 4.6 | SEO multi-pays francophones |
 | 📱 Emma | Sonnet 4.6 | Réseaux sociaux (Instagram, Facebook, TikTok) |
 | 💻 Maxime | Sonnet 4.6 | Dev & maintenance Next.js / Supabase |
 | 💬 Léa | Haiku 4.5 | Support client |
-| 📊 Antoine | Sonnet 4.6 | Finance — marges, rapports, projections |
-| 🛡️ Nathalie | Sonnet 4.6 | Sécurité — détection, blocage IP, audits |
-| 💌 Sofia | Sonnet 4.6 | Newsletter — rédaction HTML + envoi via Resend |
+| 📊 Antoine | Sonnet 4.6 | Finance -marges, rapports, projections |
+| 🛡️ Nathalie | Sonnet 4.6 | Sécurité -détection, blocage IP, audits |
+| 💌 Sofia | Sonnet 4.6 | Newsletter -rédaction HTML + envoi via Resend |
 
 Chaque agent a son propre post-processing : Marie sauvegarde les articles en BDD, Emma enregistre les posts sociaux, Antoine les rapports financiers, Sofia les drafts de newsletter, etc.
 
@@ -257,10 +257,10 @@ Chaque agent a son propre post-processing : Marie sauvegarde les articles en BDD
 
 ## Sécurité
 
-- **Middleware Edge** — protège toutes les routes admin, redirige vers `/login`
-- **Rate limiting** — 60 req/min global, 10/min par agent, 5 soumissions adoption/h, 25 uploads/h
-- **Détection** — SQL injection, XSS, path traversal, LFI
-- **Blocage IP** — automatique en mémoire + persistance dans `blocked_ips`
-- **Headers** — CSP, X-Frame-Options, etc. sur toutes les routes
+- **Middleware Edge** -protège toutes les routes admin, redirige vers `/login`
+- **Rate limiting** -60 req/min global, 10/min par agent, 5 soumissions adoption/h, 25 uploads/h
+- **Détection** -SQL injection, XSS, path traversal, LFI
+- **Blocage IP** -automatique en mémoire + persistance dans `blocked_ips`
+- **Headers** -CSP, X-Frame-Options, etc. sur toutes les routes
 
 > En production : remplacer le rate limiting mémoire par Redis (Upstash) pour supporter plusieurs instances.

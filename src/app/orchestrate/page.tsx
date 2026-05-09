@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import { AGENTS } from '@/lib/agents/config';
+import { Rocket, Clipboard, CheckCircle2, XCircle, Briefcase } from 'lucide-react';
 
 interface AgentResult {
   agent: string;
@@ -60,8 +61,8 @@ export default function OrchestratePage() {
       {/* Header */}
       <div>
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-xl">
-            👔
+          <div className="w-10 h-10 rounded-xl bg-orange-600/20 border border-orange-600/30 flex items-center justify-center">
+            <Briefcase size={20} strokeWidth={1.5} className="text-orange-400" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">Orchestration Thomas</h1>
@@ -73,9 +74,9 @@ export default function OrchestratePage() {
           puis synthétise les résultats.
         </p>
         <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-          <span className="text-emerald-400 text-sm">🚀</span>
+          <Rocket size={16} strokeWidth={1.5} className="text-emerald-400" />
           <p className="text-emerald-300 text-xs">
-            Pipeline réel — les articles sont publiés sur le blog, les posts envoyés sur Facebook.
+            Pipeline réel -les articles sont publiés sur le blog, les posts envoyés sur Facebook.
           </p>
         </div>
       </div>
@@ -102,7 +103,10 @@ export default function OrchestratePage() {
                 Orchestration en cours…
               </>
             ) : (
-              '⚡ Lancer l\'orchestration'
+              <>
+                <Rocket size={16} strokeWidth={1.5} />
+                Lancer l'orchestration
+              </>
             )}
           </button>
           {isLoading && (
@@ -139,7 +143,10 @@ export default function OrchestratePage() {
         <div className="space-y-5 animate-slide-up">
           {/* Stratégie */}
           <div className="card p-5">
-            <h2 className="text-sm font-semibold text-amber-400 mb-3">📋 Stratégie de Thomas</h2>
+            <div className="flex items-center gap-2 mb-3">
+              <Clipboard size={16} strokeWidth={1.5} className="text-orange-400" />
+              <h2 className="text-sm font-semibold text-orange-400">Stratégie de Thomas</h2>
+            </div>
             <p className="text-sm text-gray-300 leading-relaxed">{result.strategy}</p>
           </div>
 
@@ -164,16 +171,26 @@ export default function OrchestratePage() {
                       <span className={clsx('text-sm font-medium', agent?.color ?? 'text-gray-400')}>
                         {agent?.name ?? r.agent}
                       </span>
-                      <span
+                      <div
                         className={clsx(
-                          'ml-auto text-[10px] px-2 py-0.5 rounded-full',
+                          'ml-auto flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full',
                           r.success
                             ? 'bg-emerald-500/15 text-emerald-400'
                             : 'bg-red-500/15 text-red-400'
                         )}
                       >
-                        {r.success ? '✓ OK' : '✗ Erreur'}
-                      </span>
+                        {r.success ? (
+                          <>
+                            <CheckCircle2 size={12} strokeWidth={1.5} />
+                            OK
+                          </>
+                        ) : (
+                          <>
+                            <XCircle size={12} strokeWidth={1.5} />
+                            Erreur
+                          </>
+                        )}
+                      </div>
                     </div>
                     <p className="text-xs text-gray-400 leading-relaxed line-clamp-4">{r.preview}</p>
                   </div>
@@ -183,8 +200,11 @@ export default function OrchestratePage() {
           </div>
 
           {/* Synthèse Thomas */}
-          <div className="card p-5 border border-amber-400/20">
-            <h2 className="text-sm font-semibold text-amber-400 mb-3">✅ Synthèse de Thomas</h2>
+          <div className="card p-5 border border-orange-600/20">
+            <div className="flex items-center gap-2 mb-3">
+              <CheckCircle2 size={16} strokeWidth={1.5} className="text-orange-400" />
+              <h2 className="text-sm font-semibold text-orange-400">Synthèse de Thomas</h2>
+            </div>
             <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
               {result.synthesis}
             </p>

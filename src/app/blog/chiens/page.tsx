@@ -21,6 +21,6 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-export default function ChiensPage() {
-  return <CategoryPageContent category="chiens" />;
+export default function ChiensPage({ searchParams }: { searchParams: { q?: string } }) {
+  return <CategoryPageContent category="chiens" search={searchParams.q?.trim()} />;
 }

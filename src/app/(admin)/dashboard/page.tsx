@@ -79,8 +79,8 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold dark:text-white text-gray-900 tracking-tight">Tableau de bord</h1>
-          <p className="dark:text-gray-300 text-gray-600 text-sm mt-1">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Tableau de bord</h1>
+          <p className="text-gray-600 text-base mt-1">
             Système multi-agents Mes Poilus
           </p>
         </div>
@@ -105,8 +105,8 @@ export default async function DashboardPage() {
       {/* Grille agents */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold dark:text-white text-gray-900">Équipe d'agents</h2>
-          <span className="text-xs dark:text-gray-500 text-gray-400">{agents.length} membres</span>
+          <h2 className="text-base font-semibold text-gray-900">Équipe d'agents</h2>
+          <span className="text-sm text-gray-400">{agents.length} membres</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {agents.map((agent) => (

@@ -97,7 +97,7 @@ export async function GET(req: Request) {
       .limit(30);
     const recentTitles = (articles ?? []).map((a: { title: string }) => a.title);
 
-    // Partenaires déjà mis en avant (colonne featured_partner — requiert migration_featured_partner.sql)
+    // Partenaires déjà mis en avant (colonne featured_partner -requiert migration_featured_partner.sql)
     let recentlyFeaturedPartners: string[] = [];
     try {
       const { data: partnerRows } = await supabase
@@ -109,7 +109,7 @@ export async function GET(req: Request) {
       recentlyFeaturedPartners = Array.from(new Set(
         (partnerRows ?? []).map((a: { featured_partner: string }) => a.featured_partner).filter(Boolean)
       ));
-    } catch { /* migration non encore appliquée — pas de blocage */ }
+    } catch { /* migration non encore appliquée -pas de blocage */ }
 
     const { data: productRows } = await supabase
       .from('products')
@@ -138,7 +138,7 @@ export async function GET(req: Request) {
 
     console.log(`[Cron1] Thomas : animal=${animal}, saison=${season}`);
     await logActivity('thomas', 'Thomas',
-      `Cron étape 1 : contexte préparé — ${animal} en ${season}`,
+      `Cron étape 1 : contexte préparé -${animal} en ${season}`,
       'success', Date.now() - step1Start,
       { animal, season, products: productsWithLinks.map(p => p.name), partenaires: partenairesAnimal.map(p => p.nom), recent_count: recentTitles.length }
     );
@@ -176,12 +176,12 @@ export async function GET(req: Request) {
 Trouve un sujet que les propriétaires de ${animal} recherchent ACTIVEMENT sur Google EN CE MOMENT.
 Pense au-delà des saisons : comportements étranges, questions santé fréquentes, tendances alimentation,
 questions d'éducation/comportement, actualités vétérinaires, erreurs courantes à éviter.
-NE PAS choisir un sujet saisonnier générique (ex: "printemps avec son chien") — trouve quelque chose de précis et recherché.`,
+NE PAS choisir un sujet saisonnier générique (ex: "printemps avec son chien") -trouve quelque chose de précis et recherché.`,
 
       affiliation: `TYPE IMPOSÉ : AFFILIATION
 Tu dois IMPÉRATIVEMENT écrire un article centré sur UN partenaire ou produit ci-dessous.
 Trouve un angle éditorial utile (guide d'achat, comparatif, "pourquoi choisir", avis, bienfaits...).
-${recentlyFeaturedPartners.length ? `PARTENAIRES DÉJÀ UTILISÉS dans les 30 derniers articles — NE PAS réutiliser : ${recentlyFeaturedPartners.join(', ')}\n` : ''}${partenairesStr ? `Partenaires recommandés :\n${partenairesStr}\n` : ''}Produits en boutique :
+${recentlyFeaturedPartners.length ? `PARTENAIRES DÉJÀ UTILISÉS dans les 30 derniers articles -NE PAS réutiliser : ${recentlyFeaturedPartners.join(', ')}\n` : ''}${partenairesStr ? `Partenaires recommandés :\n${partenairesStr}\n` : ''}Produits en boutique :
 ${productsForLucas}
 Tu DOIS retourner NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT dans ta réponse.`,
 
@@ -189,7 +189,7 @@ Tu DOIS retourner NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT dans ta réponse.`,
 Propose un guide pratique concret et actionnable pour les propriétaires de ${animal}.
 Exemples : soins à domicile, erreurs à éviter, routine quotidienne, alimentation équilibrée,
 activités, premiers secours, comportement, éducation, hygiène.
-Évite les sujets trop génériques — sois précis et utile.`,
+Évite les sujets trop génériques -sois précis et utile.`,
     };
 
     const lucasPrompt = `Trouve le meilleur sujet d'article SEO pour les propriétaires de ${animal} (${monthName}).
@@ -253,7 +253,7 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       motsCles = [animal, season, 'conseils', 'bien-être', 'santé'];
       errors.push(`Étape 2: ${lucasResult.error}`);
       await logActivity('thomas', 'Thomas',
-        `Cron étape 2 erreur Lucas — fallback sujet utilisé`,
+        `Cron étape 2 erreur Lucas -fallback sujet utilisé`,
         'error', Date.now() - step2Start
       );
     }
@@ -277,7 +277,7 @@ Animal concerné : ${animal}
 Mots-clés SEO à intégrer naturellement : ${motsCles.join(', ')}
 ${contextLines ? `\nContexte :\n${contextLines}\n` : ''}${metaDesc ? `Meta description cible (155 chars max) : ${metaDesc}\n` : ''}
 ${produitSection}
-${relatedArticles.length ? `Articles récents ${animal} — intègre 1-2 liens internes si pertinent :\n${relatedArticles.map(a => `- [${a.title}](https://mespoilus.com/blog/${a.slug})`).join('\n')}\n` : ''}
+${relatedArticles.length ? `Articles récents ${animal} -intègre 1-2 liens internes si pertinent :\n${relatedArticles.map(a => `- [${a.title}](https://mespoilus.com/blog/${a.slug})`).join('\n')}\n` : ''}
 STRUCTURE OBLIGATOIRE :
 1. Introduction accrocheuse (2-3 phrases qui parlent directement au propriétaire)
 2. 3 à 4 sections avec titres H2 clairs et informatifs
@@ -331,7 +331,7 @@ CONSIGNES :
     if (nomProduit && articleSlug) {
       try {
         await supabase.from('articles').update({ featured_partner: nomProduit }).eq('slug', articleSlug);
-      } catch { /* migration non encore appliquée — pas de blocage */ }
+      } catch { /* migration non encore appliquée -pas de blocage */ }
     }
 
     // Temps de lecture calculé depuis le vrai nombre de mots (250 mots/min)
@@ -354,7 +354,7 @@ CONSIGNES :
 
         if (!imageUrl) {
           if (imageProduit) {
-            // Image du produit Awin — on la télécharge et stocke dans Supabase Storage
+            // Image du produit Awin -on la télécharge et stocke dans Supabase Storage
             console.log(`[Cron1] Image: produit Awin "${nomProduit}"...`);
             const stored = await Promise.race([
               downloadAndStorePhoto(imageProduit, `article-${articleSlug}.jpg`),
@@ -434,14 +434,14 @@ CONSIGNES :
   }
 
   await logActivity('thomas', 'Thomas',
-    `[Cron blog] terminé — ${articleSlug || 'échec'}`,
+    `[Cron blog] terminé -${articleSlug || 'échec'}`,
     errors.length === 0 ? 'success' : 'error',
     totalDuration,
     { slug: articleSlug, animal, season, errors },
     pipelineTokens
   );
 
-  console.log(`[Cron1] Terminé en ${totalDuration}ms — slug=${articleSlug}`);
+  console.log(`[Cron1] Terminé en ${totalDuration}ms -slug=${articleSlug}`);
 
   return NextResponse.json({
     success: !!articleSlug,

@@ -30,7 +30,7 @@ export async function sendEmail({
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Resend: ${res.status} — ${err}`);
+    throw new Error(`Resend: ${res.status} -${err}`);
   }
 
   return res.json() as Promise<{ id: string }>;

@@ -5,34 +5,52 @@ import Image from 'next/image';
 import { Article } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Dog, Cat, Bird, Mouse, Zap, PawPrint } from 'lucide-react';
 import clsx from 'clsx';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  chiens: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
-  chats: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
-  oiseaux: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
-  rongeurs: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
-  reptiles: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
-  general: 'text-gray-400 bg-gray-400/10 border-gray-400/20',
+  chiens: 'text-orange-600 bg-orange-100 border-orange-200',
+  chats: 'text-pink-600 bg-pink-100 border-pink-200',
+  oiseaux: 'text-blue-600 bg-blue-100 border-blue-200',
+  rongeurs: 'text-teal-600 bg-teal-100 border-teal-200',
+  reptiles: 'text-green-600 bg-green-100 border-green-200',
+  general: 'text-gray-600 bg-gray-100 border-gray-200',
 };
 
 const CATEGORY_GRADIENT: Record<string, string> = {
-  chiens: 'from-amber-900/40 to-amber-950/80',
-  chats: 'from-purple-900/40 to-purple-950/80',
-  oiseaux: 'from-blue-900/40 to-blue-950/80',
-  rongeurs: 'from-orange-900/40 to-orange-950/80',
-  reptiles: 'from-emerald-900/40 to-emerald-950/80',
-  general: 'from-gray-800/40 to-gray-900/80',
+  chiens: 'from-orange-600 to-orange-700',
+  chats: 'from-pink-600 to-pink-700',
+  oiseaux: 'from-blue-600 to-blue-700',
+  rongeurs: 'from-teal-600 to-teal-700',
+  reptiles: 'from-green-600 to-green-700',
+  general: 'from-gray-600 to-gray-700',
 };
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  chiens: '🐕',
-  chats: '🐈',
-  oiseaux: '🦜',
-  rongeurs: '🐹',
-  reptiles: '🦎',
-  general: '🐾',
+const CATEGORY_ICONS: Record<string, typeof PawPrint> = {
+  chiens: Dog,
+  chats: Cat,
+  oiseaux: Bird,
+  rongeurs: Mouse,
+  reptiles: Zap,
+  general: PawPrint,
 };
+
+function getTeaser(raw: string, max = 650): string {
+  const plain = raw
+    .replace(/<[^>]+>/g, ' ')   // HTML tags
+    .replace(/#{1,6}\s+/g, ' ') // ## headings
+    .replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1') // **bold** / *italic*
+    .replace(/_{1,2}([^_]+)_{1,2}/g, '$1')   // __bold__ / _italic_
+    .replace(/`{1,3}[^`]*`{1,3}/g, ' ')      // `code`
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [link](url)
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, ' ')   // ![img](url)
+    .replace(/^\s*[-*>]\s+/gm, ' ')          // list items / blockquotes
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (plain.length <= max) return plain;
+  const cut = plain.slice(0, max);
+  return cut.slice(0, cut.lastIndexOf(' ')) + '…';
+}
 
 interface BlogCardProps {
   article: Article;
@@ -48,100 +66,152 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
   const imageSrc = article.image_url || null;
   const imageAlt = article.image_alt || article.title;
   const gradient = CATEGORY_GRADIENT[article.category] ?? CATEGORY_GRADIENT.general;
-  const emoji = CATEGORY_EMOJI[article.category] ?? '🐾';
+  const IconComponent = CATEGORY_ICONS[article.category] ?? PawPrint;
 
   return (
-    <Link href={`/blog/${article.slug}`} className="block group">
-      <div
-        className={clsx(
-          'bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md border border-gray-100 transition-all duration-200 h-full flex flex-col',
-          featured && 'ring-1 ring-amber-400/30'
-        )}
-      >
-        {/* Image de l'article */}
-        <div className={clsx('relative w-full h-44 overflow-hidden flex-shrink-0 bg-gradient-to-br', gradient)}>
+    <Link
+      href={`/blog/${article.slug}`}
+      className={clsx(
+        'block group focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 rounded-2xl',
+        'bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-gray-200 transition-all duration-300 h-full',
+        featured ? 'flex flex-col md:flex-row ring-2 ring-orange-400/50' : 'flex flex-col'
+      )}
+      aria-label={`Lire l'article: ${article.title}`}
+    >
+      {/* Image de l'article */}
+      {featured ? (
+        /* Vedette : conteneur carré = image carrée → 0 bord gris */
+        <div className="relative w-full h-64 md:w-96 md:h-96 flex-shrink-0 overflow-hidden bg-gray-50">
+          {imageSrc ? (
+            <>
+              <Image
+                src={imageSrc}
+                alt={imageAlt}
+                fill
+                className="object-cover object-center"
+                sizes="(max-width: 768px) 100vw, 384px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
+            </>
+          ) : (
+            <div className={clsx('absolute inset-0 flex items-center justify-center bg-gradient-to-br opacity-80', gradient)}>
+              <IconComponent size={64} className="text-white" strokeWidth={1} />
+            </div>
+          )}
+          <div className="absolute top-3 left-3 flex items-center gap-2 flex-wrap">
+            <span className={clsx('badge border text-xs font-semibold px-3 py-1.5', categoryStyle)}>{article.category}</span>
+            <span className="badge bg-orange-500 text-white border border-orange-400 text-xs font-semibold px-3 py-1.5">À la une</span>
+          </div>
+          {article.image_credit && (
+            <span
+              role="link"
+              tabIndex={0}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(article.image_credit_url ?? '#', '_blank', 'noopener,noreferrer'); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); window.open(article.image_credit_url ?? '#', '_blank', 'noopener,noreferrer'); } }}
+              className="absolute bottom-2 right-2 text-[10px] text-white/70 hover:text-white transition-colors cursor-pointer"
+            >
+              © {article.image_credit}
+            </span>
+          )}
+        </div>
+      ) : (
+        /* Carte normale : hauteur fixe, object-cover */
+        <div className={clsx('relative w-full h-48 overflow-hidden flex-shrink-0 bg-gradient-to-br', gradient)}>
           {imageSrc ? (
             <Image
               src={imageSrc}
               alt={imageAlt}
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-cover object-center transition-smooth group-hover:scale-105"
               sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-20 select-none">
-              {emoji}
+            <div className="absolute inset-0 flex items-center justify-center opacity-30">
+              <IconComponent size={64} className="text-white" strokeWidth={1} />
             </div>
           )}
-          {/* Overlay dégradé */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent to-transparent opacity-60" />
-
-          {/* Badge catégorie en overlay */}
-          <div className="absolute top-3 left-3 flex items-center gap-2">
-            <span className={clsx('badge border backdrop-blur-sm bg-black/40', categoryStyle)}>
-              {article.category}
-            </span>
-            {featured && (
-              <span className="badge bg-purple-500/80 text-white border border-purple-400/30 backdrop-blur-sm">
-                ✨ À la une
-              </span>
-            )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          <div className="absolute top-3 left-3 flex items-center gap-2 flex-wrap">
+            <span className={clsx('badge border text-xs font-semibold px-3 py-1.5', categoryStyle)}>{article.category}</span>
           </div>
-
-          {/* Crédit photo Unsplash (attribution requise) */}
           {article.image_credit && (
-            <a
-              href={article.image_credit_url ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              onClick={(e) => e.stopPropagation()}
-              className="absolute bottom-2 right-2 text-[9px] text-white/50 hover:text-white/80 transition-colors bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm"
+            <span
+              role="link"
+              tabIndex={0}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(article.image_credit_url ?? '#', '_blank', 'noopener,noreferrer'); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); window.open(article.image_credit_url ?? '#', '_blank', 'noopener,noreferrer'); } }}
+              className="absolute bottom-2 right-2 text-[10px] text-white/70 hover:text-white transition-colors cursor-pointer"
             >
-              📷 {article.image_credit} / Pexels
-            </a>
+              © {article.image_credit}
+            </span>
           )}
         </div>
+      )}
 
         {/* Contenu */}
-        <div className="flex flex-col gap-2 p-4 flex-1 bg-white">
-          {/* Title */}
-          <h2 className="text-sm font-semibold text-gray-900 group-hover:text-amber-600 transition-colors leading-snug line-clamp-2">
-            {article.title}
-          </h2>
-
-          {/* Excerpt */}
-          {article.excerpt && (
-            <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 flex-1">
-              {article.excerpt}
-            </p>
-          )}
-
-          {/* Keywords */}
-          {article.seo_keywords.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {article.seo_keywords.slice(0, 3).map((kw) => (
-                <span key={kw} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">
-                  #{kw}
-                </span>
-              ))}
+        {featured ? (
+          <div className="flex flex-col justify-between p-7 md:p-10 flex-1 bg-white">
+            {/* Haut */}
+            <div className="flex flex-col gap-3">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors leading-snug">
+                {article.title}
+              </h2>
+              {article.excerpt && (
+                <p className="text-sm md:text-base text-gray-600 leading-relaxed">
+                  {article.excerpt}
+                </p>
+              )}
+              {article.content && (
+                <p className="text-sm text-gray-500 leading-relaxed italic border-l-2 border-orange-200 pl-3 mt-2">
+                  {getTeaser(article.content)}
+                </p>
+              )}
+              {article.seo_keywords.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-6">
+                  {article.seo_keywords.slice(0, 5).map((kw) => (
+                    <span key={kw} className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full border border-gray-200">
+                      #{kw}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-
-          {/* Footer */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100 mt-auto">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-[10px]">
-                ✍️
+            {/* Bas */}
+            <div className="flex items-center gap-3 pt-4 border-t border-orange-100 mt-4">
+              <span className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+                Lire l'article →
+              </span>
+              <div className="flex flex-col text-xs text-gray-400">
+                <time dateTime={article.published_at ?? ''}>{publishedDate}</time>
+                <span>{article.reading_time} min de lecture</span>
               </div>
-              <span className="text-[10px] text-gray-500">Marie</span>
-            </div>
-            <div className="flex items-center gap-3 text-[10px] text-gray-400">
-              {publishedDate && <span>{publishedDate}</span>}
-              <span>{article.reading_time} min</span>
             </div>
           </div>
-        </div>
-      </div>
+        ) : (
+          <div className="flex flex-col gap-3 p-5 flex-1 bg-white">
+            <h2 className="text-base font-bold text-gray-900 group-hover:text-orange-600 transition-colors leading-snug line-clamp-2">
+              {article.title}
+            </h2>
+            {article.excerpt && (
+              <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 flex-1">
+                {article.excerpt}
+              </p>
+            )}
+            {article.seo_keywords.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {article.seo_keywords.slice(0, 2).map((kw) => (
+                  <span key={kw} className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full border border-gray-200">
+                    #{kw}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
+              <time dateTime={article.published_at ?? ''} className="text-xs text-gray-500">{publishedDate}</time>
+              <span className="text-xs text-gray-500 font-medium">{article.reading_time} min</span>
+            </div>
+          </div>
+        )}
     </Link>
   );
 }

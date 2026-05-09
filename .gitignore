@@ -37,8 +37,14 @@ next-env.d.ts
 Thumbs.db
 
 # Claude Code
-.claude/settings.local.json
+.claude/
 *.jsonl
 CONTEXT.md
 AGENTS.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 
