@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Shuffle } from 'lucide-react';
+import AdBanner from '@/components/ui/AdBanner';
 
 // Fallback statique si la DB est vide (avant le premier cron)
 const PRENOMS_FALLBACK: Record<string, Record<string, string[]>> = {
@@ -164,6 +165,8 @@ export default function PrenomPage() {
             </div>
           )}
         </div>
+
+        <AdBanner slot="2276363485" className="mt-10" />
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Dog, Cat, Rabbit, Bird, Rat, RotateCcw } from 'lucide-react';
+import AdBanner from '@/components/ui/AdBanner';
 
 type AnimalKey = 'chien' | 'chat' | 'lapin' | 'oiseau' | 'rongeur';
 
@@ -210,6 +211,8 @@ export default function QuizPage() {
             <RotateCcw size={16} strokeWidth={1.5} />
             Recommencer le quiz
           </button>
+
+          <AdBanner slot="2276363485" className="mt-8" />
         </div>
       </div>
     );
@@ -257,6 +260,8 @@ export default function QuizPage() {
             ))}
           </div>
         </div>
+
+        <AdBanner slot="2276363485" className="mt-8" />
       </div>
     </div>
   );

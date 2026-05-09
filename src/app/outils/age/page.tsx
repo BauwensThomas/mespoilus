@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Dog, Cat, Bird, Rat, Shell } from 'lucide-react';
+import AdBanner from '@/components/ui/AdBanner';
 
 type Animal = 'chien' | 'chat' | 'oiseau' | 'rongeur' | 'reptile';
 type DogSize = 'petit' | 'moyen' | 'grand' | 'geant';
@@ -157,6 +158,8 @@ export default function AgePage() {
         <p className="text-xs text-gray-400 text-center mt-4">
           Les conversions sont des approximations basées sur les moyennes scientifiques pour chaque espèce.
         </p>
+
+        <AdBanner slot="2276363485" className="mt-8" />
       </div>
     </div>
   );
