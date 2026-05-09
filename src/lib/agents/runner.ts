@@ -2,6 +2,7 @@ import { AgentId, AgentTaskResult } from '@/types';
 import { runAgent, streamAgent } from '@/lib/anthropic';
 import { getAgent } from './config';
 import { createAdminClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 
 export async function executeAgentTask(
   agentId: AgentId,
@@ -306,6 +307,9 @@ async function saveMariesArticle(content: string): Promise<string | null> {
       return null;
     } else {
       console.log('[Marie] ✅ Article sauvegardé:', slug);
+      revalidatePath('/');
+      revalidatePath('/blog');
+      console.log('[Marie] Cache invalidated for / and /blog');
       return slug;
     }
   } catch (err) {
