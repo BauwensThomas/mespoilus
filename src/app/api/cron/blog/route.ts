@@ -30,6 +30,35 @@ function getISOWeek(date: Date): number {
   return 1 + Math.round(((tmp.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
 }
 
+async function selectLeastUsedCategory(supabase: ReturnType<typeof createAdminClient>): Promise<string> {
+  const categories = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
+
+  try {
+    const stats = await Promise.all(
+      categories.map(async (cat) => {
+        const { data, count } = await supabase
+          .from('articles')
+          .select('published_at', { count: 'exact' })
+          .eq('category', cat)
+          .eq('status', 'published')
+          .order('published_at', { ascending: true })
+          .limit(1);
+
+        const oldestDate = data?.[0]?.published_at ? new Date(data[0].published_at).getTime() : Infinity;
+        return { category: cat, count: count ?? 0, oldestTime: oldestDate };
+      })
+    );
+
+    stats.sort((a, b) => a.count - b.count || a.oldestTime - b.oldestTime);
+    const selected = stats[0].category;
+    console.log(`[Cron-Blog] Auto: ${stats.map(s => `${s.category}=${s.count}`).join(', ')} → ${selected}`);
+    return selected;
+  } catch (err) {
+    console.error('[Cron-Blog] selectLeastUsedCategory erreur:', err);
+    return 'chiens';
+  }
+}
+
 async function logActivity(
   agentId: string, agentName: string, action: string,
   status: 'success' | 'error', durationMs: number,
@@ -59,6 +88,7 @@ export async function GET(req: Request) {
   const urlParams = new URL(req.url).searchParams;
   const urlAnimal = urlParams.get('animal');
   const urlType = urlParams.get('type');
+  const urlAuto = urlParams.get('auto') === 'true';
 
   let animal = 'chiens';
   let season = 'printemps';
@@ -83,12 +113,16 @@ export async function GET(req: Request) {
     const month = now.getMonth() + 1;
     season = getSeason(month);
     const week = getISOWeek(now);
-    // dayIndex : lundi=0, mercredi=1, vendredi=2 (−1 si run manuel hors-planning)
-    const dayIndex = [1, 3, 5].indexOf(now.getDay());
-    const postIndex = dayIndex >= 0 ? dayIndex : 0;
-    animal = (urlAnimal && ANIMAL_CATEGORIES.includes(urlAnimal))
-      ? urlAnimal
-      : ANIMAL_CATEGORIES[(week * 3 + postIndex) % 5];
+    // Mode auto : catégorie la moins utilisée, sinon rotation par semaine
+    if (urlAuto) {
+      animal = await selectLeastUsedCategory(supabase);
+    } else {
+      const dayIndex = [1, 3, 5].indexOf(now.getDay());
+      const postIndex = dayIndex >= 0 ? dayIndex : 0;
+      animal = (urlAnimal && ANIMAL_CATEGORIES.includes(urlAnimal))
+        ? urlAnimal
+        : ANIMAL_CATEGORIES[(week * 3 + postIndex) % 5];
+    }
 
     const { data: articles } = await supabase
       .from('articles')

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
-  const { step, animal, type } = await req.json() as { step: CronStep; animal?: string; type?: string };
+  const { step, animal, type, auto } = await req.json() as { step: CronStep; animal?: string; type?: string; auto?: string };
   const cronPath = CRON_PATHS[step];
   if (!cronPath) return NextResponse.json({ error: 'Étape inconnue' }, { status: 400 });
 
@@ -31,7 +31,8 @@ export async function POST(req: NextRequest) {
   const VALID_ANIMALS = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
   const VALID_TYPES = ['trending', 'affiliation', 'pratique'];
   const params = new URLSearchParams();
-  if (step === 'blog' && animal && VALID_ANIMALS.includes(animal)) params.set('animal', animal);
+  if (step === 'blog' && auto === 'true') params.set('auto', 'true');
+  else if (step === 'blog' && animal && VALID_ANIMALS.includes(animal)) params.set('animal', animal);
   if (step === 'blog' && type && VALID_TYPES.includes(type)) params.set('type', type);
   const queryParams = params.toString() ? `?${params.toString()}` : '';
 
