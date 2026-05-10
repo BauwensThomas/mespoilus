@@ -432,6 +432,7 @@ export default async function LandingPage() {
               <div className="flex gap-4 mt-4">
                 <a href="https://www.instagram.com/mespoilusofficiel" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-orange-400 transition-colors focus-ring" aria-label="Suivez-nous sur Instagram">Instagram</a>
                 <a href="https://www.facebook.com/profile.php?id=61589487954538" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-orange-400 transition-colors focus-ring" aria-label="Suivez-nous sur Facebook">Facebook</a>
+                <a href="https://www.pinterest.com/mespoilus_officiel/" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-orange-400 transition-colors focus-ring" aria-label="Suivez-nous sur Pinterest">Pinterest</a>
               </div>
             </div>
 
