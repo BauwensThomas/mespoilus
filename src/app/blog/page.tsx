@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import Head from 'next/head';
 import BlogCard from '@/components/blog/BlogCard';
 import { Article } from '@/types';
 import type { Metadata } from 'next';
@@ -80,7 +81,11 @@ export default async function BlogPage({ searchParams }: Props) {
   const [featured, ...rest] = articles;
 
   return (
-    <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5">
+    <>
+      <Head>
+        <link rel="canonical" href="https://www.mespoilus.com/blog" />
+      </Head>
+      <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Blog</h1>
@@ -156,5 +161,6 @@ export default async function BlogPage({ searchParams }: Props) {
 
       <AdBanner slot="1266534148" variant="in-article" className="mt-6" />
     </div>
+    </>
   );
 }
