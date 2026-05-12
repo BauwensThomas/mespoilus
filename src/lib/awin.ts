@@ -65,15 +65,6 @@ function parseCSV(text: string): Record<string, string>[] {
   });
 }
 
-function isRelevantForCategory(p: Record<string, string>, targetCategory: AwinSyncCategory): boolean {
-  if (targetCategory === 'general') {
-    const text = `${p['title'] ?? ''} ${p['description'] ?? ''} ${p['google_product_category'] ?? ''}`.toLowerCase();
-    const allKeywords = Object.values(AWIN_CATEGORY_SEARCH).flat();
-    return allKeywords.some(kw => text.includes(kw.toLowerCase()));
-  }
-  return matchesCategory(p, targetCategory);
-}
-
 /**
  * Parse le CSV ligne par ligne et flush via onFlush tous les `batchSize` produits.
  * Filtre uniquement les produits de la catégorie cible.
@@ -115,12 +106,10 @@ async function parseCSVStreamingWithFlush(
     const pid = `awin_${id}`;
     if (seenIds.has(pid)) continue;
 
-    if (!isRelevantForCategory(p, targetCategory)) continue;
+    const { primary, all: cats } = assignCategories(p);
 
-    // Vérifier que la catégorie assignée correspond bien à la cible
-    // (évite d'importer un produit chien dans le cron chats)
-    const assignedCat = assignCategory(p);
-    if (assignedCat !== targetCategory) continue;
+    // Ce cron ne traite que les produits dont la catégorie primaire correspond
+    if (primary !== targetCategory) continue;
 
     const desc = p['description'] ?? '';
     const priceRaw = p['price'] ?? p['search_price'] ?? '0';
@@ -138,7 +127,7 @@ async function parseCSVStreamingWithFlush(
       id: pid, name, description: desc.slice(0, 200),
       price, currency, image_url: imageUrl,
       affiliate_url: deepLink, merchant_name: merchantName ?? '',
-      category: targetCategory as AwinProduct['category'], in_stock: inStock,
+      category: primary, categories: cats, in_stock: inStock,
       last_synced: new Date().toISOString(),
     });
 
@@ -221,14 +210,23 @@ export async function getJoinedFeeds(publisherId: string, feedToken: string): Pr
   return joined;
 }
 
-// 'livres' en premier : un livre sur les chiens reste dans livres, pas dans chiens
-const SPECIFIC_CATEGORIES = ['livres', 'chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'] as const;
+const ANIMAL_CATEGORIES = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'] as const;
 
-function assignCategory(p: Record<string, string>): AwinProduct['category'] {
-  for (const cat of SPECIFIC_CATEGORIES) {
-    if (matchesCategory(p, cat)) return cat as AwinProduct['category'];
+function assignCategories(p: Record<string, string>): { primary: AwinProduct['category']; all: string[] } {
+  const all: string[] = [];
+
+  const isBook = matchesCategory(p, 'livres');
+  if (isBook) all.push('livres');
+
+  for (const cat of ANIMAL_CATEGORIES) {
+    if (matchesCategory(p, cat)) all.push(cat);
   }
-  return 'general';
+
+  if (all.length === 0) all.push('general');
+
+  // Catégorie primaire = premier animal trouvé, ou livres, ou general
+  const primary = (all.find(c => c !== 'livres') ?? all[0] ?? 'general') as AwinProduct['category'];
+  return { primary, all };
 }
 
 /**
@@ -348,7 +346,7 @@ export async function fetchAwinProducts(
           id: pid, name, description: desc.slice(0, 200),
           price, currency, image_url: imageUrl,
           affiliate_url: deepLink, merchant_name: merchantName ?? '',
-          category, in_stock: inStock,
+          category, categories: [category], in_stock: inStock,
           last_synced: new Date().toISOString(),
         });
       }

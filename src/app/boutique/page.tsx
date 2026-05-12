@@ -35,7 +35,7 @@ async function getProducts(category?: string, search?: string): Promise<AwinProd
       .gt('price', 0)
       .order('price', { ascending: true })
       .limit(48);
-    if (category && category !== 'all') q = q.eq('category', category);
+    if (category && category !== 'all') q = q.contains('categories', [category]);
     if (search) q = q.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
     const { data } = await q;
     return (data as AwinProduct[]) ?? [];

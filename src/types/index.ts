@@ -155,7 +155,8 @@ export interface AwinProduct {
   image_url: string;
   affiliate_url: string;
   merchant_name: string;
-  category: 'chiens' | 'chats' | 'oiseaux' | 'rongeurs' | 'reptiles' | 'general';
+  category: 'chiens' | 'chats' | 'oiseaux' | 'rongeurs' | 'reptiles' | 'livres' | 'general';
+  categories: string[];
   in_stock: boolean;
   last_synced: string;
 }
