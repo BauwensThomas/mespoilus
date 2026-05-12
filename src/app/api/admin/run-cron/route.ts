@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
-type CronStep = 'blog' | 'social' | 'finance' | 'security' | 'newsletter' | 'awin-sync' | 'prenoms';
-
-const CRON_PATHS: Record<CronStep, string> = {
-  blog:        '/api/cron/blog',
-  social:      '/api/cron/social',
-  finance:     '/api/cron/finance',
-  security:    '/api/cron/security',
-  newsletter:  '/api/cron/newsletter',
-  'awin-sync': '/api/cron/awin-sync',
-  prenoms:     '/api/cron/prenoms',
+const CRON_PATHS: Record<string, string> = {
+  blog:                 '/api/cron/blog',
+  social:               '/api/cron/social',
+  finance:              '/api/cron/finance',
+  security:             '/api/cron/security',
+  newsletter:           '/api/cron/newsletter',
+  'awin-sync':          '/api/cron/awin-sync',
+  prenoms:              '/api/cron/prenoms',
+  'awin-sync-chiens':   '/api/cron/awin-sync/chiens',
+  'awin-sync-chats':    '/api/cron/awin-sync/chats',
+  'awin-sync-oiseaux':  '/api/cron/awin-sync/oiseaux',
+  'awin-sync-rongeurs': '/api/cron/awin-sync/rongeurs',
+  'awin-sync-reptiles': '/api/cron/awin-sync/reptiles',
+  'awin-sync-livres':   '/api/cron/awin-sync/livres',
+  'awin-sync-general':  '/api/cron/awin-sync/general',
 };
 
 export const maxDuration = 120;
@@ -20,7 +25,24 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
-  const { step, animal, type, auto } = await req.json() as { step: CronStep; animal?: string; type?: string; auto?: string };
+  const { step, animal, type, auto } = await req.json() as {
+    step: string;
+    animal?: string;
+    type?: string;
+    auto?: string;
+  };
+
+  // ─── Lecture progression Awin (pas d'appel cron, lecture directe Supabase) ──
+  if (step === 'awin-progress') {
+    const adminSupabase = createAdminClient();
+    const { data, error } = await adminSupabase
+      .from('awin_sync_progress')
+      .select('category, status, synced, current_feed, error, started_at, updated_at, finished_at');
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const progress = Object.fromEntries((data ?? []).map(r => [r.category, r]));
+    return NextResponse.json({ progress });
+  }
+
   const cronPath = CRON_PATHS[step];
   if (!cronPath) return NextResponse.json({ error: 'Étape inconnue' }, { status: 400 });
 
