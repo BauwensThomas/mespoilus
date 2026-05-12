@@ -34,18 +34,4 @@ export const PARTENAIRES: Partenaire[] = [
     pays: ['FR'],
     categories: ['chiens'],
   },
-  {
-    id: 'fnac-fr',
-    nom: 'Fnac FR',
-    description: 'Produits high-tech, culture, jouets, maison, et plus. Livraison en France.',
-    url: 'https://www.awin1.com/cread.php?awinmid=12345&awinaffid=XXXXX&ued=https%3A%2F%2Fwww.fnac.com', // Remplace par tes vrais paramètres
-    emoji: '📚',
-    tag: 'Marketplace',
-    tagColor: 'bg-blue-100 text-blue-800',
-    tagBg: '#dbeafe', tagText: '#1e40af',
-    pour: 'Pour tous',
-    network: 'awin',
-    pays: ['FR'],
-    categories: ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles', 'general'],
-  },
 ];
