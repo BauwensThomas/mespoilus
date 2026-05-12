@@ -37,11 +37,14 @@ interface GlobalStatsProps {
   monthlyTasks: number;
   monthlyTokens: number;
   monthlySecurityAlerts: number;
+  totalProducts: number;
+  lastAwinSync?: string | null;
 }
 
 export default function GlobalStats({
   totalArticles, totalTasks, totalTokens, securityAlerts,
   monthlyArticles, monthlyTasks, monthlyTokens, monthlySecurityAlerts,
+  totalProducts, lastAwinSync,
 }: GlobalStatsProps) {
   const fmt = (n: number) => {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -50,7 +53,7 @@ export default function GlobalStats({
   };
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
       <StatItem icon={<BookOpen size={22} strokeWidth={1.5} className="text-purple-600" />} label="Articles publiés" value={totalArticles} sub="par Marie" monthly={monthlyArticles} />
       <StatItem icon={<Zap size={22} strokeWidth={1.5} className="text-amber-600" />} label="Tâches exécutées" value={totalTasks} sub="tous agents" monthly={monthlyTasks} />
       <StatItem icon={<Brain size={22} strokeWidth={1.5} className="text-cyan-600" />} label="Tokens utilisés" value={fmt(totalTokens)} sub="API Anthropic" monthly={fmt(monthlyTokens)} />
@@ -60,6 +63,21 @@ export default function GlobalStats({
         value={securityAlerts}
         sub={securityAlerts > 0 ? 'voir Nathalie' : 'aucune menace'}
         monthly={monthlySecurityAlerts}
+      />
+      <StatItem
+        icon={<span className="text-green-600 text-xl">🛒</span>}
+        label="Articles boutique"
+        value={totalProducts}
+        sub={
+          <>
+            <span>produits en stock</span>
+            {lastAwinSync && (
+              <div className="text-xs text-gray-400 mt-1 pt-1 border-t border-gray-200">
+                Dernier sync : {new Date(lastAwinSync).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+              </div>
+            )}
+          </>
+        }
       />
     </div>
   );

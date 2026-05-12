@@ -20,7 +20,7 @@ async function getDashboardData() {
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const [statsRes, logsRes, articlesRes, securityRes, allActivityRes, monthlySecurityRes, monthlyArticlesRes] = await Promise.all([
+    const [statsRes, logsRes, articlesRes, securityRes, allActivityRes, monthlySecurityRes, monthlyArticlesRes, productsRes, lastAwinSyncRes] = await Promise.all([
       supabase.from('agent_stats').select('*'),
       supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(20),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published'),
@@ -28,6 +28,12 @@ async function getDashboardData() {
       supabase.from('activity_logs').select('agent_id, status, tokens_used, created_at'),
       supabase.from('security_logs').select('id', { count: 'exact' }).in('threat_level', ['high', 'critical']).gte('created_at', startOfMonth.toISOString()),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published').gte('published_at', startOfMonth.toISOString()),
+      supabase.from('products').select('id', { count: 'exact' }).eq('in_stock', true),
+      supabase.from('activity_logs')
+        .select('created_at')
+        .ilike('action', '[Awin sync]%')
+        .order('created_at', { ascending: false })
+        .limit(1),
     ]);
 
     const stats: AgentStat[] = statsRes.data ?? [];
@@ -36,6 +42,11 @@ async function getDashboardData() {
     const securityAlerts = securityRes.count ?? 0;
     const monthlyArticles = monthlyArticlesRes.count ?? 0;
     const monthlySecurityAlerts = monthlySecurityRes.count ?? 0;
+    const totalProducts = productsRes.count ?? 0;
+    let lastAwinSync: string | null = null;
+    if (lastAwinSyncRes.data && lastAwinSyncRes.data.length > 0) {
+      lastAwinSync = lastAwinSyncRes.data[0].created_at;
+    }
 
     // Calcul totaux + mensuels depuis activity_logs (source unique)
     const totalByAgent: Record<string, TotalAgentStat> = {};
@@ -61,14 +72,14 @@ async function getDashboardData() {
       if (isThisMonth) { monthlyByAgent[row.agent_id].tokens += tokens; monthlyTokens += tokens; }
     }
 
-    return { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, totalByAgent, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts };
+    return { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, totalByAgent, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts, totalProducts, lastAwinSync };
   } catch {
     return { stats: [], logs: [], totalArticles: 0, totalTasks: 0, totalTokens: 0, securityAlerts: 0, totalByAgent: {}, monthlyByAgent: {}, monthlyTasks: 0, monthlyTokens: 0, monthlyArticles: 0, monthlySecurityAlerts: 0 };
   }
 }
 
 export default async function DashboardPage() {
-  const { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, totalByAgent, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts } = await getDashboardData();
+  const { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, totalByAgent, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts, totalProducts, lastAwinSync } = await getDashboardData();
   const agents = getAllAgents();
 
   const statByAgent = Object.fromEntries(stats.map((s) => [s.agent_id, s]));
@@ -97,6 +108,8 @@ export default async function DashboardPage() {
         monthlyTasks={monthlyTasks}
         monthlyTokens={monthlyTokens}
         monthlySecurityAlerts={monthlySecurityAlerts}
+        totalProducts={totalProducts}
+        lastAwinSync={lastAwinSync}
       />
 
       {/* Feed d'activité horizontal */}
