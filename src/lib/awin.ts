@@ -10,6 +10,19 @@ const GPC_MAP: Record<string, string[]> = {
   livres:   ['books', 'book', 'livre', 'livres', 'media > book', 'books & magazine', 'literatura'],
 };
 
+// Mots simples : vérifiés uniquement dans le titre avec limite de mots (évite "chat en direct", "catalogue", "pochette")
+// Expressions multi-mots : vérifiées dans titre ET description (la phrase est déjà spécifique)
+function keywordsMatchProduct(p: Record<string, string>, keywords: string[]): boolean {
+  const title = (p['title'] ?? '').toLowerCase();
+  const desc = (p['description'] ?? '').toLowerCase();
+  return keywords.some(kw => {
+    const k = kw.toLowerCase();
+    if (k.includes(' ')) return title.includes(k) || desc.includes(k);
+    const esc = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?<![a-zA-ZÀ-ÿ])${esc}(?![a-zA-ZÀ-ÿ])`).test(title);
+  });
+}
+
 function matchesCategory(p: Record<string, string>, category: string): boolean {
   const gpc = (p['google_product_category'] ?? '').toLowerCase();
 
@@ -19,9 +32,7 @@ function matchesCategory(p: Record<string, string>, category: string): boolean {
     if (cat !== category && keys.some(k => gpc.includes(k))) return false;
   }
 
-  const keywords = AWIN_CATEGORY_SEARCH[category] ?? [];
-  const text = `${p['title'] ?? ''} ${p['description'] ?? ''}`.toLowerCase();
-  return keywords.some(kw => text.includes(kw.toLowerCase()));
+  return keywordsMatchProduct(p, AWIN_CATEGORY_SEARCH[category] ?? []);
 }
 
 export const AWIN_CATEGORY_SEARCH: Record<string, string[]> = {
@@ -106,10 +117,9 @@ async function parseCSVStreamingWithFlush(
     const pid = `awin_${id}`;
     if (seenIds.has(pid)) continue;
 
-    const { primary, all: cats } = assignCategories(p);
-
-    // Ce cron ne traite que les produits dont la catégorie primaire correspond
-    if (primary !== targetCategory) continue;
+    const assigned = assignCategories(p);
+    if (!assigned || assigned.primary !== targetCategory) continue;
+    const { primary, all: cats } = assigned;
 
     const desc = p['description'] ?? '';
     const priceRaw = p['price'] ?? p['search_price'] ?? '0';
@@ -212,7 +222,7 @@ export async function getJoinedFeeds(publisherId: string, feedToken: string): Pr
 
 const ANIMAL_CATEGORIES = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'] as const;
 
-function assignCategories(p: Record<string, string>): { primary: AwinProduct['category']; all: string[] } {
+function assignCategories(p: Record<string, string>): { primary: AwinProduct['category']; all: string[] } | null {
   const all: string[] = [];
 
   const isBook = matchesCategory(p, 'livres');
@@ -221,16 +231,18 @@ function assignCategories(p: Record<string, string>): { primary: AwinProduct['ca
   for (const cat of ANIMAL_CATEGORIES) {
     if (isBook) {
       // Pour les livres : bypass l'anti-match GPC, vérification directe par mots-clés
-      // (sinon le GPC 'livres' bloque la détection 'chiens' etc.)
-      const keywords = AWIN_CATEGORY_SEARCH[cat] ?? [];
-      const text = `${p['title'] ?? ''} ${p['description'] ?? ''}`.toLowerCase();
-      if (keywords.some(kw => text.includes(kw.toLowerCase()))) all.push(cat);
+      if (keywordsMatchProduct(p, AWIN_CATEGORY_SEARCH[cat] ?? [])) all.push(cat);
     } else {
       if (matchesCategory(p, cat)) all.push(cat);
     }
   }
 
-  if (all.length === 0) all.push('general');
+  if (all.length === 0) {
+    // Pas de catch-all : general requiert un match explicite sur ses mots-clés
+    // Les produits sans rapport avec les animaux (amplis, platines, etc.) sont ignorés
+    if (!matchesCategory(p, 'general')) return null;
+    all.push('general');
+  }
 
   // Catégorie primaire = premier animal trouvé (cron qui prend ownership), sinon livres, sinon general
   const primary = (all.find(c => c !== 'livres') ?? all[0] ?? 'general') as AwinProduct['category'];

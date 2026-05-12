@@ -75,6 +75,7 @@ AWIN_FEED_TOKEN # Token Darwin CSV feeds Awin (même valeur que AWIN_API_TOKEN p
 CRON_SECRET
 MAKE_WEBHOOK_URL # Webhook Make.com -Facebook + Instagram (@mespoilusofficiel)
 NEXT_PUBLIC_APP_URL # Ex: https://www.mespoilus.com (OBLIGATOIRE pour fetches internes Vercel)
+NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'false')
 
 ---
 ## Ce qui est fait
@@ -209,7 +210,13 @@ NEXT_PUBLIC_APP_URL # Ex: https://www.mespoilus.com (OBLIGATOIRE pour fetches in
 ### Crons automatiques complets (`vercel.json`)
 | Route | Fréquence | Heure UTC | Agents | Sauvegarde |
 |-------|-----------|-----------|--------|------------|
-| `/api/cron/awin-sync` | Tous les jours | 3h00 | -| `products` |
+| `/api/cron/awin-sync/chiens` | Tous les jours | 2h00 | -| `products` |
+| `/api/cron/awin-sync/chats` | Tous les jours | 2h20 | -| `products` |
+| `/api/cron/awin-sync/oiseaux` | Tous les jours | 2h40 | -| `products` |
+| `/api/cron/awin-sync/rongeurs` | Tous les jours | 3h00 | -| `products` |
+| `/api/cron/awin-sync/reptiles` | Tous les jours | 3h20 | -| `products` |
+| `/api/cron/awin-sync/livres` | Tous les jours | 3h40 | -| `products` |
+| `/api/cron/awin-sync/general` | Tous les jours | 4h00 | -| `products` |
 | `/api/cron/blog` | Lun / Mer / Ven | 9h00 | Lucas + Marie | `articles` + Pexels Storage |
 | `/api/cron/social` | Lun / Mer / Ven | 9h30 | Emma | `social_posts` + webhook Facebook |
 | `/api/cron/finance` | **1er de chaque mois** | 8h00 | Antoine | `financial_reports` |
@@ -330,6 +337,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 | `src/lib/supabase/migration_blog_images.sql` | Policies bucket `blog-images` |
 | `src/lib/supabase/migration_agent_reports.sql` | Tables `seo_reports`, `tech_reports`, `support_logs` ✅ |
 | `src/lib/supabase/migration_featured_partner.sql` | Colonne `featured_partner TEXT` sur `articles` -anti-répétition partenaires 30 articles ✅ |
+| `src/lib/supabase/migration_awin_categories.sql` | Colonne `categories TEXT[]` sur `products` + GIN index (⚠️ à exécuter) |
+| `src/lib/supabase/migration_rls_awin_progress.sql` | RLS sur `awin_sync_progress` (⚠️ à exécuter) |
 ### Newsletter (Sofia)
 - `src/lib/resend.ts` -client Resend via fetch natif
 - Sofia génère HTML en JSON `{ subject, preview_text, content_html }`, sauvegardé en `draft`
@@ -357,25 +366,40 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - **Boutique** : `BoutiquePartenairesCarousel` supprimé -partenaires gérés uniquement via `PartenairesBandeau` dans LayoutShell
 ### Boutique (`/boutique`) -Architecture Awin
 - **Thème clair** (`bg-gray-50`, cards `bg-white`)
-- Filtres par catégorie, barre de recherche, disclaimer affiliation barre fixe en bas
-
-- `ProductCard` server component simplifié : image, nom, description, prix + devise, drapeau marchand, bouton "Voir sur le site" affilié `rel="sponsored"`
+- Filtres par catégorie (chiens, chats, oiseaux, rongeurs, reptiles, **livres**), barre de recherche, disclaimer affiliation barre fixe en bas
+- `ProductCard` server component simplifié : image `unoptimized` (CDN Awin externe), nom, description, prix + devise, drapeau marchand, bouton "Voir sur le site" affilié `rel="sponsored"`
 - Liens 404 laissés tels quels (1 produit sur 30 acceptable -risque de tout supprimer par erreur > risque d'un 404 isolé)
 - Drapeaux via `flagcdn.com` : USD→🇺🇸, CAD→🇨🇦, GBP→🇬🇧, EUR→🇪🇺
-- Cron sync Awin quotidien 3h UTC : **reset complet** de la table `products` puis réinsertion depuis feeds Awin
+- Cron sync Awin : **7 crons par catégorie** (2h-4h UTC, 20min d'écart), reset catégorie + réinsertion depuis feeds Awin
 - Disclaimer affiliation barre fixe en bas (bg-white/95)
-- Layout : flex gauche (titre/recherche/filtres) + droite (carousel partenaires)
+- Filtre boutique : `.contains('categories', [category])` (array containment) -un livre sur chien apparaît dans "Tous", "Chiens" ET "Livres"
+#### Système multi-catégories produits
+- Colonne `categories TEXT[]` sur la table `products` (GIN index) en plus de `category TEXT` (primaire)
+- `assignCategories(p)` dans `src/lib/awin.ts` : attribue une catégorie primaire + tableau `categories[]`
+  - Primaire = premier animal trouvé (propriétaire cron), sinon livres, sinon general
+  - Livre sur chien → `category: 'livres'`, `categories: ['livres', 'chiens']`
+  - **Anti-match GPC bypass pour livres** : si GPC détecte 'livres', le check animal ignore le GPC et passe directement par mots-clés
+- Cron livres (`/api/cron/awin-sync/livres`) : prend ownership des produits où `primary === 'livres'`
+- Boutique filtre avec `.contains('categories', [category])` → multi-appartenance
 #### Awin Darwin CSV Feeds (source unique de données produits)
 - URL feedList : `https://ui.awin.com/productdata-darwin-download/publisher/{id}/{token}/1/feedList`
 - Retourne un CSV avec colonnes `Advertiser Name`, `Membership Status`, `Feed ID`, `URL`
 - Seulement les feeds `Membership Status === 'active'` sont utilisés
+- **Déduplication par marchand** : 1 seul feed par marchand (URL la plus longue = flux complet)
 - Chaque feed est un CSV (parfois `.gz`) téléchargé et décompressé (détection gzip par magic bytes `0x1F 0x8B`)
+- **Streaming pur** : `parseCSVStreamingWithFlush` -jamais plus de 100 produits en RAM, flush+upsert immédiat
 - Catégorisation : `google_product_category` en priorité via `GPC_MAP` → fallback mots-clés titre/description
 - Prix extrait par regex `priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/)` (format `'199.00 USD'`)
 - Disponibilité : `in_stock | in stock | 1 | true`
-- `fetchAllAwinProducts` : passage unique sur tous les feeds, max `limitPerCategory` produits par catégorie
-- Filtres : `price > 0`, exclusion pièces détachées (`/\bparts?\b/i`, `/ [A-Z0-9]{5,}$/)`)
+- Filtres : `price > 0`, exclusion pièces détachées (`/\bparts?\b/i`, `/ [A-Z0-9]{5,}$/`)
 - Cache feeds 1h en mémoire (évite re-téléchargement feedList à chaque appel)
+#### Table `awin_sync_progress`
+- Tracker de progression des crons Awin (1 ligne par catégorie)
+- Colonnes : `category`, `status` (`running`/`done`/`error`), `synced` (compteur), `current_feed`, `error`, `started_at`, `finished_at`, `updated_at`
+- Mise à jour pendant la sync (chaque batch) + finale (done/error)
+- **Ne se met PAS à jour automatiquement** entre deux syncs -garde le dernier résultat jusqu'au prochain cron
+- RLS activé : service_role bypass automatique, accès anon bloqué
+- CronLauncher lit cette table via `/api/admin/run-cron?step=awin-progress` pour afficher la progression
 ### Section Partenaires
 #### Landing page (`PartenairesSection.tsx`)
 - Section "Nos recommandations" entre Catégories et Newsletter
@@ -435,6 +459,11 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
   - `rongeurs/premiers-achats-lapin.pdf`
   - `reptiles/checklist-adoption-reptile.pdf`
   - `oiseaux/alimentation-perroquet.pdf`
+### Migrations Supabase en attente ⚠️
+- [ ] Exécuter `src/lib/supabase/migration_awin_categories.sql` (ajoute `categories TEXT[]` + GIN index sur `products`)
+- [ ] Exécuter `src/lib/supabase/migration_rls_awin_progress.sql` (active RLS sur `awin_sync_progress`)
+- Après migration : relancer tous les crons Awin pour re-sync avec le nouveau champ `categories[]`
+
 ### Actions déjà effectuées ✅
 - Site public (blog, adoption, boutique, pages légales) : **thème clair complet** ✅
 - Landing page catégories : **icônes en bas des images** ✅
@@ -493,9 +522,21 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - tsconfig target ES2017 : fix compatibilité Set/iteration TypeScript sur Vercel
 - Accessibilité 91→96 : labels amber-600→amber-700, textes gray-400→gray-500, alt="" images catégories décoratives, balise `<main>` dans LayoutShell public
 - Accessibilité 96→100 : CookieBanner lien "En savoir plus" underline (identification couleur), flagcdn img width/height explicites
-- PageSpeed Insights : 100 Performances / 100 SEO / 100 Bonnes pratiques / 100 Accessibilité ✅
+- PageSpeed Insights (après corrections session 2) : mobile **99/96/100/100**, bureau **100/96/100/100** ✅
+  - Google Fonts supprimé de `globals.css` (CSP violation + render-blocking)
+  - `browserslist` ajouté dans `package.json` (élimine polyfills JS legacy)
+  - Image `sizes` corrigés sur landing + BlogCard (50vw/33vw selon breakpoint)
+  - Contraste orange-600 conservé volontairement (choix utilisateur)
 - Google Search Console + Bing Webmaster Tools : sitemaps soumis, pages découvertes, indexation en cours
 - ads.txt en ligne (`/public/ads.txt`, pub-3549294158319032) -AdSense en révision
+- AdBanner : gardé par `NEXT_PUBLIC_ADSENSE_ENABLED` (false = invisible, zéro impact layout). Deux hooks `useEffect` en premier (règle React hooks). Label unifié "Annonce". Ajouté sur `/outils/age`, `/outils/prenom`, `/outils/quiz`
+- `src/lib/guides.ts` créé : `PdfGuide` interface + `CATEGORY_CONFIG` extraits de `guides/page.tsx` (exports invalides en Next.js App Router)
+- Sitemap : pages `/outils/age`, `/outils/prenom`, `/outils/quiz` ajoutées (priority 0.7)
+- Partenaires : Fnac retiré de `src/lib/partenaires.ts` (flux produit Awin ≠ partenaire éditorial). Seul Dogfy Diet reste
+- Boutique : colonne `categories TEXT[]` + GIN index + filtre `.contains()`. Catégorie "Livres" ajoutée
+- Boutique : `unoptimized` sur `<Image>` de `ProductCard` (CDN Awin non listé dans `remotePatterns`)
+- Awin sync : refactoring complet vers 7 crons par catégorie, streaming pur, `assignCategories()` multi-catégories
+- CronLauncher : panel Awin avec 7 catégories, étendu par défaut, progress merge sans écraser les catégories idle
 - Dashboard totaux : calculés depuis `activity_logs` (même source que mensuels) pour cohérence garantie
 - Cron social log : label corrigé (était "Emma + Sofia terminés", maintenant "Emma terminée")
 - Thomas tokens : logs crons blog/finance/security/newsletter sauvegardent `tokens_used` dans `activity_logs`
