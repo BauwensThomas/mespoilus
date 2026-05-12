@@ -74,7 +74,22 @@ async function getDashboardData() {
 
     return { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, totalByAgent, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts, totalProducts, lastAwinSync };
   } catch {
-    return { stats: [], logs: [], totalArticles: 0, totalTasks: 0, totalTokens: 0, securityAlerts: 0, totalByAgent: {}, monthlyByAgent: {}, monthlyTasks: 0, monthlyTokens: 0, monthlyArticles: 0, monthlySecurityAlerts: 0 };
+    return {
+      stats: [],
+      logs: [],
+      totalArticles: 0,
+      totalTasks: 0,
+      totalTokens: 0,
+      securityAlerts: 0,
+      totalByAgent: {} as Record<string, TotalAgentStat>,
+      monthlyByAgent: {} as Record<string, MonthlyAgentStat>,
+      monthlyTasks: 0,
+      monthlyTokens: 0,
+      monthlyArticles: 0,
+      monthlySecurityAlerts: 0,
+      totalProducts: 0,
+      lastAwinSync: null
+    };
   }
 }
 
