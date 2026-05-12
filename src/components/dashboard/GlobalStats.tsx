@@ -1,9 +1,11 @@
 import { BookOpen, Zap, Brain, Shield } from 'lucide-react';
 
+import { ReactNode } from 'react';
+
 interface StatItemProps {
   label: string;
   value: string | number;
-  sub?: string;
+  sub?: string | ReactNode;
   icon: React.ReactNode;
   monthly?: string | number;
 }
