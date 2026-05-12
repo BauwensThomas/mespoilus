@@ -219,12 +219,20 @@ function assignCategories(p: Record<string, string>): { primary: AwinProduct['ca
   if (isBook) all.push('livres');
 
   for (const cat of ANIMAL_CATEGORIES) {
-    if (matchesCategory(p, cat)) all.push(cat);
+    if (isBook) {
+      // Pour les livres : bypass l'anti-match GPC, vérification directe par mots-clés
+      // (sinon le GPC 'livres' bloque la détection 'chiens' etc.)
+      const keywords = AWIN_CATEGORY_SEARCH[cat] ?? [];
+      const text = `${p['title'] ?? ''} ${p['description'] ?? ''}`.toLowerCase();
+      if (keywords.some(kw => text.includes(kw.toLowerCase()))) all.push(cat);
+    } else {
+      if (matchesCategory(p, cat)) all.push(cat);
+    }
   }
 
   if (all.length === 0) all.push('general');
 
-  // Catégorie primaire = premier animal trouvé, ou livres, ou general
+  // Catégorie primaire = premier animal trouvé (cron qui prend ownership), sinon livres, sinon general
   const primary = (all.find(c => c !== 'livres') ?? all[0] ?? 'general') as AwinProduct['category'];
   return { primary, all };
 }
