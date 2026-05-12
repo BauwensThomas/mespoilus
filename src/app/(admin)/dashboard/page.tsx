@@ -108,7 +108,7 @@ export default async function DashboardPage() {
         monthlyTasks={monthlyTasks}
         monthlyTokens={monthlyTokens}
         monthlySecurityAlerts={monthlySecurityAlerts}
-        totalProducts={totalProducts}
+        totalProducts={totalProducts ?? 0}
         lastAwinSync={lastAwinSync}
       />
 
