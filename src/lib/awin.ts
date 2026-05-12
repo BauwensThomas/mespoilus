@@ -271,10 +271,14 @@ export async function fetchAwinProductsByCategory(
   feedToken: string,
   targetCategory: AwinSyncCategory,
   onBatch: (products: AwinProduct[]) => Promise<void>,
-  onProgress?: (synced: number, currentFeed: string) => Promise<void>
+  onProgress?: (synced: number, currentFeed: string) => Promise<void>,
+  onFeedError?: (merchantName: string, error: string) => void
 ): Promise<number> {
   const feeds = await getJoinedFeeds(publisherId, feedToken);
-  if (!feeds.length) return 0;
+  if (!feeds.length) {
+    console.error(`[awin:${targetCategory}] Aucun feed actif trouvé — vérifie AWIN_PUBLISHER_ID / AWIN_FEED_TOKEN`);
+    return 0;
+  }
 
   const seenIds = new Set<string>();
   let grandTotal = 0;
@@ -302,11 +306,11 @@ export async function fetchAwinProductsByCategory(
         }
       );
 
-      if (count > 0) {
-        console.log(`[awin:${targetCategory}] ${merchantName}: ${count} produits`);
-      }
+      console.log(`[awin:${targetCategory}] ${merchantName}: ${count} produits matchés`);
     } catch (e) {
-      console.error(`[awin:${targetCategory}] feed ${merchantName} erreur:`, e);
+      const errMsg = e instanceof Error ? e.message : String(e);
+      console.error(`[awin:${targetCategory}] feed ${merchantName} ERREUR: ${errMsg}`);
+      if (onFeedError) onFeedError(merchantName, errMsg);
     }
   }
 

@@ -19,59 +19,74 @@ export async function runAwinSyncForCategory(
   }
 
   const supabase = createAdminClient();
+  const syncStart = new Date().toISOString();
 
-  // Marquer comme "running" avec remise à zéro du compteur
   await supabase.from('awin_sync_progress').upsert({
     category,
     status: 'running',
     synced: 0,
     current_feed: null,
     error: null,
-    started_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    started_at: syncStart,
+    updated_at: syncStart,
     finished_at: null,
   });
 
-  // Vider les anciens produits de cette catégorie avant la sync
-  await supabase.from('products').delete().eq('category', category);
+  // NE PAS supprimer les produits avant la sync — si les feeds échouent,
+  // on conserve les anciens produits. Nettoyage post-sync uniquement si succès.
 
   let lastError: string | null = null;
   let totalSynced = 0;
+  const feedErrors: string[] = [];
 
   try {
     totalSynced = await fetchAwinProductsByCategory(
       publisherId,
       feedToken,
       category,
-      // onBatch : upsert immédiat, libère la RAM
       async (batch) => {
         const { error } = await supabase
           .from('products')
           .upsert(batch, { onConflict: 'id' });
         if (error) {
-          console.error(`[awin:${category}] upsert error:`, error);
+          const msg = `upsert error: ${error.message}`;
+          console.error(`[awin:${category}] ${msg}`);
+          feedErrors.push(msg);
           lastError = error.message;
         }
       },
-      // onProgress : mise à jour de la progression en BDD
       async (synced, currentFeed) => {
         await supabase.from('awin_sync_progress').update({
           synced,
           current_feed: currentFeed,
           updated_at: new Date().toISOString(),
         }).eq('category', category);
+      },
+      (merchantName, errMsg) => {
+        feedErrors.push(`${merchantName}: ${errMsg}`);
+        lastError = errMsg;
       }
     );
   } catch (e) {
     lastError = e instanceof Error ? e.message : 'Erreur inconnue';
+    feedErrors.push(lastError);
   }
 
-  // Marquer comme done ou error
+  if (totalSynced > 0 && !lastError) {
+    // Supprimer les produits de cette catégorie qui n'ont PAS été mis à jour lors de ce sync
+    await supabase.from('products')
+      .delete()
+      .eq('category', category)
+      .lt('last_synced', syncStart);
+  }
+
+  const finalError = feedErrors.length > 0 ? feedErrors.join(' | ') : null;
+
   await supabase.from('awin_sync_progress').update({
-    status: lastError ? 'error' : 'done',
+    status: finalError ? 'error' : (totalSynced === 0 ? 'done' : 'done'),
     synced: totalSynced,
     current_feed: null,
-    error: lastError,
+    error: finalError,
     updated_at: new Date().toISOString(),
     finished_at: new Date().toISOString(),
   }).eq('category', category);
@@ -79,8 +94,9 @@ export async function runAwinSyncForCategory(
   await supabase.from('activity_logs').insert({
     agent_id: 'thomas', agent_name: 'Thomas',
     action: `[Awin sync:${category}] ${totalSynced} produits synchronisés`,
-    status: lastError ? 'error' : 'success',
+    details: feedErrors.length > 0 ? { feedErrors } : {},
+    status: finalError ? 'error' : 'success',
   });
 
-  return NextResponse.json({ success: !lastError, category, synced: totalSynced });
+  return NextResponse.json({ success: !finalError, category, synced: totalSynced, feedErrors });
 }
