@@ -17,8 +17,8 @@ function isAlphaChar(c: number): boolean {
 }
 
 function keywordsMatchProduct(p: Record<string, string>, keywords: string[]): boolean {
-  const title = (p['title'] ?? '').toLowerCase();
-  const desc  = (p['description'] ?? '').toLowerCase();
+  const title = (p['title'] ?? p['product_name'] ?? '').toLowerCase();
+  const desc  = (p['description'] ?? p['product_short_description'] ?? '').toLowerCase();
   return keywords.some(kw => {
     const k = kw.toLowerCase();
     if (k.includes(' ')) return title.includes(k) || desc.includes(k);
@@ -35,7 +35,10 @@ function keywordsMatchProduct(p: Record<string, string>, keywords: string[]): bo
 }
 
 function matchesCategory(p: Record<string, string>, category: string): boolean {
-  const gpc = (p['google_product_category'] ?? '').toLowerCase();
+  // Un produit avec un ISBN est forcément un livre
+  if (category === 'livres' && p['isbn']?.trim()) return true;
+
+  const gpc = (p['google_product_category'] ?? p['category_name'] ?? p['merchant_category'] ?? '').toLowerCase();
 
   if (GPC_MAP[category]?.some(k => gpc.includes(k))) return true;
 
@@ -137,8 +140,8 @@ async function parseCSVStreamingWithFlush(
     const priceMatch = priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/);
     const price = parseFloat(priceMatch?.[1] ?? '0') || 0;
     const currency = priceMatch?.[2] ?? 'EUR';
-    const availability = p['availability'] ?? p['in_stock'] ?? '';
-    const inStock = ['in_stock', 'in stock', '1', 'true'].includes(availability);
+    const availability = (p['availability'] ?? p['in_stock'] ?? p['stock_status'] ?? '').toLowerCase();
+    const inStock = ['in_stock', 'in stock', 'in-stock', 'available', '1', 'true', 'yes', 'instock'].includes(availability);
     const imageUrl = p['image_link'] ?? p['aw_image_url'] ?? p['merchant_image_url'] ?? '';
 
     seenIds.add(pid);
@@ -291,7 +294,9 @@ export async function fetchAwinProductsByCategory(
     if (onProgress) await onProgress(grandTotal, merchantName);
 
     try {
+      console.log(`[awin:${targetCategory}] Téléchargement feed ${merchantName}...`);
       const csvText = await fetchAndDecompress(feedUrl);
+      console.log(`[awin:${targetCategory}] Feed ${merchantName} téléchargé — ${csvText.split('\n').length} lignes`);
 
       const count = await parseCSVStreamingWithFlush(
         csvText,
