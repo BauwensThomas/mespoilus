@@ -65,11 +65,22 @@ function parseCSV(text: string): Record<string, string>[] {
 
 async function fetchAndDecompress(url: string): Promise<string> {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    const text = await res.text();
+    console.error(`[awin] Erreur HTTP ${res.status} sur ${url} :`, text.slice(0, 500));
+    throw new Error(`HTTP ${res.status}`);
+  }
   const buffer = Buffer.from(await res.arrayBuffer());
   // Détecter gzip par magic bytes \x1F\x8B
   const isGzip = buffer[0] === 0x1f && buffer[1] === 0x8b;
-  return isGzip ? gunzipSync(buffer).toString('utf-8') : buffer.toString('utf-8');
+  try {
+    return isGzip ? gunzipSync(buffer).toString('utf-8') : buffer.toString('utf-8');
+  } catch (e) {
+    // Si ce n'est pas du gzip ou du texte valide, log le contenu pour debug
+    const preview = buffer.toString('utf-8').slice(0, 500);
+    console.error(`[awin] Erreur de décompression ou parsing sur ${url} :`, preview);
+    throw e;
+  }
 }
 
 let cachedFeeds: Record<string, string>[] | null = null;
