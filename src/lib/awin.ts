@@ -7,20 +7,18 @@ const GPC_MAP: Record<string, string[]> = {
   oiseaux:  ['bird supplies', 'bird food'],
   rongeurs: ['small animal', 'rabbit', 'hamster', 'guinea pig'],
   reptiles: ['reptile', 'turtle', 'lizard'],
+  livres:   ['books', 'book', 'livre', 'livres', 'media > book', 'books & magazine', 'literatura'],
 };
 
 function matchesCategory(p: Record<string, string>, category: string): boolean {
   const gpc = (p['google_product_category'] ?? '').toLowerCase();
 
-  // Si le GPC correspond à ce category → match
   if (GPC_MAP[category]?.some(k => gpc.includes(k))) return true;
 
-  // Si le GPC correspond à un AUTRE category → pas un match
   for (const [cat, keys] of Object.entries(GPC_MAP)) {
     if (cat !== category && keys.some(k => gpc.includes(k))) return false;
   }
 
-  // Fallback : mots-clés sur titre + description
   const keywords = AWIN_CATEGORY_SEARCH[category] ?? [];
   const text = `${p['title'] ?? ''} ${p['description'] ?? ''}`.toLowerCase();
   return keywords.some(kw => text.includes(kw.toLowerCase()));
@@ -32,8 +30,12 @@ export const AWIN_CATEGORY_SEARCH: Record<string, string[]> = {
   oiseaux:  ['bird', 'oiseau', 'perroquet', 'canari'],
   rongeurs: ['rabbit', 'hamster', 'rongeur', 'lapin', 'cobaye', 'guinea'],
   reptiles: ['reptile', 'serpent', 'lézard', 'tortue', 'turtle'],
-  general:  ['pet', 'animal', 'animaux'],
+  livres:   ['livre', 'book', 'broché', 'relié', 'poche', 'paperback', 'hardcover', 'isbn', 'éditions', 'auteur', 'encyclopédie', 'guide pratique animal', 'manuel vétérinaire'],
+  general:  ['animaux de compagnie', 'animal domestique', 'pet food', 'pet supplies', 'animalerie', 'petshop', 'vétérinaire', 'aquarium', 'terrarium', 'accessoire animal'],
 };
+
+export type AwinSyncCategory = 'chiens' | 'chats' | 'oiseaux' | 'rongeurs' | 'reptiles' | 'livres' | 'general';
+export const AWIN_SYNC_CATEGORIES: AwinSyncCategory[] = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles', 'livres', 'general'];
 
 export interface AwinAdvertiser { id: number; name: string; }
 
@@ -54,13 +56,103 @@ function parseCSVLine(line: string): string[] {
 function parseCSV(text: string): Record<string, string>[] {
   const lines = text.trim().split('\n').filter(Boolean);
   if (lines.length < 2) return [];
-  const headers = parseCSVLine(lines[0]).map(h => h.trim().replace(/^﻿/, ''));
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().replace(/^\uFEFF/, ''));
   return lines.slice(1).map(line => {
     const vals = parseCSVLine(line);
     const obj: Record<string, string> = {};
     headers.forEach((h, i) => { obj[h] = (vals[i] ?? '').trim(); });
     return obj;
   });
+}
+
+function isRelevantForCategory(p: Record<string, string>, targetCategory: AwinSyncCategory): boolean {
+  if (targetCategory === 'general') {
+    const text = `${p['title'] ?? ''} ${p['description'] ?? ''} ${p['google_product_category'] ?? ''}`.toLowerCase();
+    const allKeywords = Object.values(AWIN_CATEGORY_SEARCH).flat();
+    return allKeywords.some(kw => text.includes(kw.toLowerCase()));
+  }
+  return matchesCategory(p, targetCategory);
+}
+
+/**
+ * Parse le CSV ligne par ligne et flush via onFlush tous les `batchSize` produits.
+ * Filtre uniquement les produits de la catégorie cible.
+ */
+async function parseCSVStreamingWithFlush(
+  text: string,
+  merchantName: string,
+  targetCategory: AwinSyncCategory,
+  seenIds: Set<string>,
+  batchSize: number,
+  onFlush: (batch: AwinProduct[]) => Promise<void>,
+  onProgress?: (parsed: number) => void
+): Promise<number> {
+  const lines = text.split('\n');
+  if (lines.length < 2) return 0;
+
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().replace(/^\uFEFF/, ''));
+  let batch: AwinProduct[] = [];
+  let totalFromFeed = 0;
+  let parsedLines = 0;
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    parsedLines++;
+
+    if (onProgress && parsedLines % 500 === 0) onProgress(parsedLines);
+
+    const vals = parseCSVLine(line);
+    const p: Record<string, string> = {};
+    headers.forEach((h, idx) => { p[h] = (vals[idx] ?? '').trim(); });
+
+    const id = p['id'] ?? p['aw_product_id'] ?? p['product_id'];
+    const name = p['title'] ?? p['product_name'] ?? '';
+    const deepLink = p['aw_deep_link'] ?? p['link'] ?? '';
+    if (!id || !deepLink) continue;
+    if (/\bparts?\b/i.test(name) || / \/ [A-Z0-9]{5,}$/.test(name)) continue;
+
+    const pid = `awin_${id}`;
+    if (seenIds.has(pid)) continue;
+
+    if (!isRelevantForCategory(p, targetCategory)) continue;
+
+    // Vérifier que la catégorie assignée correspond bien à la cible
+    // (évite d'importer un produit chien dans le cron chats)
+    const assignedCat = assignCategory(p);
+    if (assignedCat !== targetCategory) continue;
+
+    const desc = p['description'] ?? '';
+    const priceRaw = p['price'] ?? p['search_price'] ?? '0';
+    const priceMatch = priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/);
+    const price = parseFloat(priceMatch?.[1] ?? '0') || 0;
+    const currency = priceMatch?.[2] ?? 'EUR';
+    const availability = p['availability'] ?? p['in_stock'] ?? '';
+    const inStock = ['in_stock', 'in stock', '1', 'true'].includes(availability);
+    const imageUrl = p['image_link'] ?? p['aw_image_url'] ?? p['merchant_image_url'] ?? '';
+
+    seenIds.add(pid);
+    totalFromFeed++;
+
+    batch.push({
+      id: pid, name, description: desc.slice(0, 200),
+      price, currency, image_url: imageUrl,
+      affiliate_url: deepLink, merchant_name: merchantName ?? '',
+      category: targetCategory as AwinProduct['category'], in_stock: inStock,
+      last_synced: new Date().toISOString(),
+    });
+
+    if (batch.length >= batchSize) {
+      await onFlush(batch);
+      batch = [];
+    }
+  }
+
+  if (batch.length > 0) {
+    await onFlush(batch);
+  }
+
+  return totalFromFeed;
 }
 
 async function fetchAndDecompress(url: string): Promise<string> {
@@ -71,12 +163,10 @@ async function fetchAndDecompress(url: string): Promise<string> {
     throw new Error(`HTTP ${res.status}`);
   }
   const buffer = Buffer.from(await res.arrayBuffer());
-  // Détecter gzip par magic bytes \x1F\x8B
   const isGzip = buffer[0] === 0x1f && buffer[1] === 0x8b;
   try {
     return isGzip ? gunzipSync(buffer).toString('utf-8') : buffer.toString('utf-8');
   } catch (e) {
-    // Si ce n'est pas du gzip ou du texte valide, log le contenu pour debug
     const preview = buffer.toString('utf-8').slice(0, 500);
     console.error(`[awin] Erreur de décompression ou parsing sur ${url} :`, preview);
     throw e;
@@ -86,7 +176,7 @@ async function fetchAndDecompress(url: string): Promise<string> {
 let cachedFeeds: Record<string, string>[] | null = null;
 let cacheTime = 0;
 
-async function getJoinedFeeds(publisherId: string, feedToken: string): Promise<Record<string, string>[]> {
+export async function getJoinedFeeds(publisherId: string, feedToken: string): Promise<Record<string, string>[]> {
   const now = Date.now();
   if (cachedFeeds && now - cacheTime < 3_600_000) return cachedFeeds;
 
@@ -95,16 +185,35 @@ async function getJoinedFeeds(publisherId: string, feedToken: string): Promise<R
   if (!res.ok) { console.error('[awin] feedList error:', res.status); return []; }
 
   const all = parseCSV(await res.text());
-  // Filtrer actifs
+
   let joined = all.filter(f => f['Membership Status'] === 'active');
-  // Déduplication stricte sur URL (un flux = une URL)
+
   const seenUrls = new Set<string>();
   joined = joined.filter(f => {
-    const url = f['URL'];
-    if (!url || seenUrls.has(url)) return false;
-    seenUrls.add(url);
+    const u = f['URL'];
+    if (!u || seenUrls.has(u)) return false;
+    seenUrls.add(u);
     return true;
   });
+
+  // ─── DÉDUPLICATION PAR MARCHAND ───────────────────────────────────────────
+  // Fnac FR a 62 flux → on garde 1 seul par marchand (l'URL la plus longue
+  // correspond généralement au flux complet plutôt qu'un flux partiel)
+  const byMerchant = new Map<string, Record<string, string>>();
+  for (const f of joined) {
+    const name = (f['Advertiser Name'] ?? '').trim().toLowerCase();
+    if (!byMerchant.has(name)) {
+      byMerchant.set(name, f);
+    } else {
+      const existing = byMerchant.get(name)!;
+      if ((f['URL']?.length ?? 0) > (existing['URL']?.length ?? 0)) {
+        byMerchant.set(name, f);
+      }
+    }
+  }
+  joined = Array.from(byMerchant.values());
+  // ──────────────────────────────────────────────────────────────────────────
+
   console.log(`[awin] marchands actifs: ${joined.map(f => f['Advertiser Name']).join(', ') || 'aucun'} | flux uniques: ${joined.length}`);
 
   cachedFeeds = joined;
@@ -112,76 +221,83 @@ async function getJoinedFeeds(publisherId: string, feedToken: string): Promise<R
   return joined;
 }
 
-const SPECIFIC_CATEGORIES = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'] as const;
+// 'livres' en premier : un livre sur les chiens reste dans livres, pas dans chiens
+const SPECIFIC_CATEGORIES = ['livres', 'chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'] as const;
 
 function assignCategory(p: Record<string, string>): AwinProduct['category'] {
   for (const cat of SPECIFIC_CATEGORIES) {
-    if (matchesCategory(p, cat)) return cat;
+    if (matchesCategory(p, cat)) return cat as AwinProduct['category'];
   }
   return 'general';
 }
 
-export async function fetchAllAwinProducts(
+/**
+ * Sync d'UNE seule catégorie — appelée par chaque cron dédié.
+ * Streaming pur, jamais plus de 100 produits en RAM à la fois.
+ * onBatch est appelé pour chaque batch → upsert immédiat en BDD.
+ * onProgress est appelé régulièrement avec le nb de produits trouvés.
+ */
+export async function fetchAwinProductsByCategory(
   publisherId: string,
   feedToken: string,
-  limitPerCategory = 30
-): Promise<AwinProduct[]> {
+  targetCategory: AwinSyncCategory,
+  onBatch: (products: AwinProduct[]) => Promise<void>,
+  onProgress?: (synced: number, currentFeed: string) => Promise<void>
+): Promise<number> {
   const feeds = await getJoinedFeeds(publisherId, feedToken);
-  if (!feeds.length) return [];
+  if (!feeds.length) return 0;
 
-  const countPerCat: Record<string, number> = {};
   const seenIds = new Set<string>();
-  const allProducts: AwinProduct[] = [];
+  let grandTotal = 0;
 
   for (const feed of feeds) {
     const feedUrl = feed['URL'];
     const merchantName = feed['Advertiser Name'];
     if (!feedUrl) continue;
 
+    if (onProgress) await onProgress(grandTotal, merchantName);
+
     try {
       const csvText = await fetchAndDecompress(feedUrl);
-      const products = parseCSV(csvText);
 
-      for (const p of products) {
-        const id = p['id'] ?? p['aw_product_id'] ?? p['product_id'];
-        const name = p['title'] ?? p['product_name'] ?? '';
-        const deepLink = p['aw_deep_link'] ?? p['link'] ?? '';
-        if (!id || !deepLink) continue;
-        if (/\bparts?\b/i.test(name) || / \/ [A-Z0-9]{5,}$/.test(name)) continue;
+      const count = await parseCSVStreamingWithFlush(
+        csvText,
+        merchantName,
+        targetCategory,
+        seenIds,
+        100,
+        async (batch) => {
+          await onBatch(batch);
+          grandTotal += batch.length;
+          if (onProgress) await onProgress(grandTotal, merchantName);
+        }
+      );
 
-        const pid = `awin_${id}`;
-        if (seenIds.has(pid)) continue;
-
-        const category = assignCategory(p);
-        if ((countPerCat[category] ?? 0) >= limitPerCategory) continue;
-
-        const desc = p['description'] ?? '';
-        const priceRaw = p['price'] ?? p['search_price'] ?? '0';
-        const priceMatch = priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/);
-        const price = parseFloat(priceMatch?.[1] ?? '0') || 0;
-        const currency = priceMatch?.[2] ?? 'EUR';
-        const availability = p['availability'] ?? p['in_stock'] ?? '';
-        const inStock = availability === 'in_stock' || availability === 'in stock' || availability === '1' || availability === 'true';
-        const imageUrl = p['image_link'] ?? p['aw_image_url'] ?? p['merchant_image_url'] ?? '';
-
-        seenIds.add(pid);
-        countPerCat[category] = (countPerCat[category] ?? 0) + 1;
-
-        allProducts.push({
-          id: pid, name, description: desc.slice(0, 200),
-          price, currency, image_url: imageUrl,
-          affiliate_url: deepLink, merchant_name: merchantName ?? '',
-          category, in_stock: inStock,
-          last_synced: new Date().toISOString(),
-        });
+      if (count > 0) {
+        console.log(`[awin:${targetCategory}] ${merchantName}: ${count} produits`);
       }
     } catch (e) {
-      console.error(`[awin] feed ${merchantName} erreur:`, e);
+      console.error(`[awin:${targetCategory}] feed ${merchantName} erreur:`, e);
     }
   }
 
-  console.log('[awin] sync terminée:', Object.entries(countPerCat).map(([c, n]) => `${c}:${n}`).join(', '));
-  return allProducts;
+  console.log(`[awin:${targetCategory}] sync terminée — total: ${grandTotal}`);
+  return grandTotal;
+}
+
+// ─── Fonctions conservées pour compatibilité ──────────────────────────────────
+
+export async function fetchAllAwinProducts(
+  publisherId: string,
+  feedToken: string,
+  _limitPerCategory = 0,
+  onBatch?: (products: AwinProduct[]) => Promise<void>
+): Promise<AwinProduct[]> {
+  // Redirige vers la sync par catégorie pour chiens par défaut (usage legacy)
+  if (onBatch) {
+    await fetchAwinProductsByCategory(publisherId, feedToken, 'chiens', onBatch);
+  }
+  return [];
 }
 
 export async function fetchAwinProducts(
@@ -218,7 +334,7 @@ export async function fetchAwinProducts(
         const price = parseFloat(priceMatch?.[1] ?? '0') || 0;
         const currency = priceMatch?.[2] ?? 'EUR';
         const availability = p['availability'] ?? p['in_stock'] ?? '';
-        const inStock = availability === 'in_stock' || availability === 'in stock' || availability === '1' || availability === 'true';
+        const inStock = ['in_stock', 'in stock', '1', 'true'].includes(availability);
 
         if (!id || !deepLink) continue;
         if (/\bparts?\b/i.test(name) || / \/ [A-Z0-9]{5,}$/.test(name)) continue;

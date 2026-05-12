@@ -11,6 +11,7 @@ export default function ProductCard({ product }: { product: AwinProduct }) {
             src={product.image_url}
             alt={product.name}
             fill
+            unoptimized
             className="object-contain p-4 group-hover:scale-105 transition-smooth"
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
           />
