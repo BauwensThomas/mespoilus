@@ -10,16 +10,27 @@ const GPC_MAP: Record<string, string[]> = {
   livres:   ['books', 'book', 'livre', 'livres', 'media > book', 'books & magazine', 'literatura'],
 };
 
-// Mots simples : vérifiés uniquement dans le titre avec limite de mots (évite "chat en direct", "catalogue", "pochette")
-// Expressions multi-mots : vérifiées dans titre ET description (la phrase est déjà spécifique)
+// Mots simples : titre uniquement, bornes de mot (évite "chat en direct", "catalogue", "pochette")
+// Expressions multi-mots : titre ET description (phrase déjà spécifique, faux positifs rares)
+function isAlphaChar(c: number): boolean {
+  return (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 192 && c <= 255);
+}
+
 function keywordsMatchProduct(p: Record<string, string>, keywords: string[]): boolean {
   const title = (p['title'] ?? '').toLowerCase();
-  const desc = (p['description'] ?? '').toLowerCase();
+  const desc  = (p['description'] ?? '').toLowerCase();
   return keywords.some(kw => {
     const k = kw.toLowerCase();
     if (k.includes(' ')) return title.includes(k) || desc.includes(k);
-    const esc = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp(`(?<![a-zA-ZÀ-ÿ])${esc}(?![a-zA-ZÀ-ÿ])`).test(title);
+    // Mot simple : titre uniquement + vérification bornes manuelle (pas de regex lookbehind)
+    let i = title.indexOf(k);
+    while (i !== -1) {
+      const before = i > 0 ? title.charCodeAt(i - 1) : 0;
+      const after  = i + k.length < title.length ? title.charCodeAt(i + k.length) : 0;
+      if (!isAlphaChar(before) && !isAlphaChar(after)) return true;
+      i = title.indexOf(k, i + 1);
+    }
+    return false;
   });
 }
 
