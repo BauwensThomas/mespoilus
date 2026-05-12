@@ -84,8 +84,17 @@ async function getJoinedFeeds(publisherId: string, feedToken: string): Promise<R
   if (!res.ok) { console.error('[awin] feedList error:', res.status); return []; }
 
   const all = parseCSV(await res.text());
-  const joined = all.filter(f => f['Membership Status'] === 'active');
-  console.log(`[awin] marchands actifs: ${joined.map(f => f['Advertiser Name']).join(', ') || 'aucun'}`);
+  // Filtrer actifs
+  let joined = all.filter(f => f['Membership Status'] === 'active');
+  // Déduplication stricte sur URL (un flux = une URL)
+  const seenUrls = new Set<string>();
+  joined = joined.filter(f => {
+    const url = f['URL'];
+    if (!url || seenUrls.has(url)) return false;
+    seenUrls.add(url);
+    return true;
+  });
+  console.log(`[awin] marchands actifs: ${joined.map(f => f['Advertiser Name']).join(', ') || 'aucun'} | flux uniques: ${joined.length}`);
 
   cachedFeeds = joined;
   cacheTime = now;
