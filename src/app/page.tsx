@@ -474,6 +474,9 @@ export default async function LandingPage() {
             <p className="text-xs text-gray-500">
               © 2026 Mes Poilus. Tous droits réservés.
             </p>
+            <p className="text-xs text-gray-600 mt-1">
+              En tant que Partenaire Amazon, je réalise un bénéfice sur les achats remplissant les conditions requises.
+            </p>
           </div>
         </div>
       </footer>
