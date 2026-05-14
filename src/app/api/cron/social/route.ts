@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 async function logActivity(
   agentId: string, agentName: string, action: string,
   status: 'success' | 'error', durationMs: number,
