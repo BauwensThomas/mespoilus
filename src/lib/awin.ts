@@ -212,34 +212,41 @@ export async function getJoinedFeeds(publisherId: string, feedToken: string): Pr
   });
 
   // ─── DÉDUPLICATION PAR MARCHAND (seulement si ≥5 feeds) ─────────────────
-  // Fnac FR a 62 flux → cap à 1 (URL la plus longue = flux le plus complet)
-  // Marchands avec peu de feeds (ex: Tuft & Paw avec feed USD + feed EUR) → tous conservés
-  const feedCountByMerchant = new Map<string, number>();
+  // Fnac FR a 62 flux → on garde au max les feeds pertinents (livres, animaux)
+  // ou l'URL la plus longue en fallback. Marchands avec <5 feeds → tous conservés.
+  const RELEVANT_FEED_KEYWORDS = ['livre', 'book', 'animal', 'pet', 'chien', 'chat', 'oiseau', 'rongeur', 'reptile'];
+  const feedsByMerchant = new Map<string, Record<string, string>[]>();
   for (const f of joined) {
     const name = (f['Advertiser Name'] ?? '').trim().toLowerCase();
-    feedCountByMerchant.set(name, (feedCountByMerchant.get(name) ?? 0) + 1);
+    if (!feedsByMerchant.has(name)) feedsByMerchant.set(name, []);
+    feedsByMerchant.get(name)!.push(f);
   }
-  const byMerchant = new Map<string, Record<string, string>>();
-  const multiFeeds: Record<string, string>[] = [];
-  for (const f of joined) {
-    const name = (f['Advertiser Name'] ?? '').trim().toLowerCase();
-    if ((feedCountByMerchant.get(name) ?? 1) < 5) {
-      multiFeeds.push(f);
+
+  const selected: Record<string, string>[] = [];
+  for (const [, feeds] of feedsByMerchant) {
+    if (feeds.length < 5) {
+      // Peu de feeds → tous conservés (ex: Tuft & Paw USD + EUR)
+      selected.push(...feeds);
     } else {
-      if (!byMerchant.has(name)) {
-        byMerchant.set(name, f);
+      // Gros marchand (ex: Fnac 62 feeds) → filtrer par mots-clés dans l'URL
+      const relevant = feeds.filter(f =>
+        RELEVANT_FEED_KEYWORDS.some(kw => (f['URL'] ?? '').toLowerCase().includes(kw))
+      );
+      if (relevant.length > 0) {
+        selected.push(...relevant);
+        console.log(`[awin] ${feeds[0]['Advertiser Name']}: ${feeds.length} feeds → ${relevant.length} retenus (mots-clés pertinents)`);
       } else {
-        const existing = byMerchant.get(name)!;
-        if ((f['URL']?.length ?? 0) > (existing['URL']?.length ?? 0)) {
-          byMerchant.set(name, f);
-        }
+        // Aucun feed pertinent par URL → garder l'URL la plus longue (fallback)
+        const best = feeds.reduce((a, b) => (b['URL']?.length ?? 0) > (a['URL']?.length ?? 0) ? b : a);
+        selected.push(best);
+        console.log(`[awin] ${feeds[0]['Advertiser Name']}: ${feeds.length} feeds → 1 retenu (fallback URL longue)`);
       }
     }
   }
-  joined = [...multiFeeds, ...Array.from(byMerchant.values())];
+  joined = selected;
   // ──────────────────────────────────────────────────────────────────────────
 
-  console.log(`[awin] marchands actifs: ${joined.map(f => f['Advertiser Name']).join(', ') || 'aucun'} | flux uniques: ${joined.length}`);
+  console.log(`[awin] marchands actifs: ${[...new Set(joined.map(f => f['Advertiser Name']))].join(', ') || 'aucun'} | flux retenus: ${joined.length}`);
 
   cachedFeeds = joined;
   cacheTime = now;
