@@ -197,6 +197,13 @@ export default async function BoutiquePage({ searchParams }: Props) {
       <div className="flex flex-wrap items-center gap-3">
         <BoutiqueSearchBar defaultValue={search ?? ''} />
         <BoutiqueSortSelect defaultValue={sort} />
+        {!search && (
+          <p className="text-xs text-gray-700">
+            Vous ne trouvez pas ce que vous cherchez ?{' '}
+            <Link href="/boutique" className="text-orange-500 hover:underline">Voir tous les produits</Link>
+            {' '}et recherchez par mot-clé (ex&nbsp;: aquarium, nourriture, laisse…)
+          </p>
+        )}
       </div>
 
       {/* Bannière */}
