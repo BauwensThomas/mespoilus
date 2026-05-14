@@ -47,7 +47,7 @@ const GPC_MAP: Record<string, string[]> = {
     // allemand
     'reptil', 'reptilien', 'schildkröte',
   ],
-  livres:   ['books', 'book', 'livre', 'livres', 'media > book', 'books & magazine', 'literatura', 'roman', 'bd', 'bande dessinée', 'manga', 'littérature', 'comics', 'jeunesse', 'encyclopédie', 'biographie', 'poche', 'broché', 'relié'],
+  livres:   ['books', 'book', 'livre', 'livres', 'media > book', 'books & magazine', 'literatura', 'roman', 'bd', 'bande dessinée', 'manga', 'littérature', 'comics', 'jeunesse', 'encyclopédie', 'biographie'],
 };
 
 // Mots simples : titre uniquement, bornes de mot (évite "chat en direct", "catalogue", "pochette")
