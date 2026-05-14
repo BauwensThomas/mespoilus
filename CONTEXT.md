@@ -58,7 +58,7 @@ Chaque agent utilise l'API Anthropic (Claude) et fonctionne de façon autonome. 
 | Stockage images | Supabase Storage `blog-images` (articles) + `hero-photos` (hero & catégories) |
 | Sécurité | Middleware Edge : rate limiting, détection SQLi/XSS, blocage IP |
 | Déploiement | Vercel (crons configurés dans `vercel.json`) |
-| Affiliation | Awin (EU) + CJ.com (CA/US, en attente confirmation) |
+| Affiliation | Awin (EU) + Amazon Associates FR (en cours, catégorie Livres) + CJ.com (CA/US, en attente confirmation) |
 
 ### Variables d'environnement requises
 ANTHROPIC_API_KEY
@@ -393,7 +393,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - **Streaming pur** : `parseCSVStreamingWithFlush` -jamais plus de 100 produits en RAM, flush+upsert immédiat
 - **Colonnes Darwin (noms réels)** : `product_name` (titre), `category_name` (catégorie GPC), `stock_status` (dispo), `isbn` (livres). Fallbacks dans le code : `title ?? product_name`, `google_product_category ?? category_name ?? merchant_category`, `availability ?? in_stock ?? stock_status`
 - Catégorisation : `category_name` / `google_product_category` en priorité via `GPC_MAP` → fallback mots-clés titre
-- **Détection livres** : ISBN non vide (`p['isbn']?.trim()`) = livre garanti (fiable pour Fnac)
+- **Détection livres** : ISBN non vide (`p['isbn']?.trim()`) = livre garanti
 - **Mots-clés : titre uniquement + bornes de mot** pour mots simples (évite "pochette"→poche, "catalogue"→chat), titre+description pour expressions multi-mots
 - **Anti-faux-positifs** : produits sans correspondance animal/livre → retournés `null` par `assignCategories()`, non importés
 - Prix extrait par regex `priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/)` (format `'199.00 USD'`). Fallback devise : colonne `currency` ou `currency_code` du CSV, puis EUR
@@ -541,7 +541,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - AdBanner : gardé par `NEXT_PUBLIC_ADSENSE_ENABLED` (false = invisible, zéro impact layout). Deux hooks `useEffect` en premier (règle React hooks). Label unifié "Annonce". Ajouté sur `/outils/age`, `/outils/prenom`, `/outils/quiz`
 - `src/lib/guides.ts` créé : `PdfGuide` interface + `CATEGORY_CONFIG` extraits de `guides/page.tsx` (exports invalides en Next.js App Router)
 - Sitemap : pages `/outils/age`, `/outils/prenom`, `/outils/quiz` ajoutées (priority 0.7)
-- Partenaires : Fnac retiré de `src/lib/partenaires.ts` (flux produit Awin ≠ partenaire éditorial). Seul Dogfy Diet reste
+- Partenaires : Fnac retiré du projet (Awin + partenaires) — hors-sujet pour un site animalier. Seul Dogfy Diet reste
+- Amazon Associates FR : en cours d'affiliation — prévu pour la catégorie Livres (animaux). Intégration à faire quand accès obtenus (API Product Advertising ou liens manuels, pas de feed CSV Awin)
 - Boutique : colonne `categories TEXT[]` + GIN index + filtre `.contains()`. Catégorie "Livres" ajoutée
 - Boutique : `unoptimized` sur `<Image>` de `ProductCard` (CDN Awin non listé dans `remotePatterns`)
 - Awin sync : refactoring complet vers 7 crons par catégorie, streaming pur, `assignCategories()` multi-catégories
@@ -636,7 +637,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - **Comparateur croquettes** : comparer 2-3 marques sur critères (protéines, prix/kg, note)
 - **Suivi vaccination** : calendrier des vaccins par animal + rappels
 ### Boutique / Monétisation
-- Vérifier que les produits Awin s'affichent correctement sur `/boutique` -**en attente validation affiliation Awin**
+- **Amazon Associates FR** : intégration livres animaux à faire une fois le compte approuvé (API Product Advertising ou liens manuels — pas de feed CSV Awin)
 - Barre de recherche produits ajoutée (`?search=mot`) -filtre par nom et description via `ilike`
 ### Marketing
 - Stratégie backlinks francophones
