@@ -5,7 +5,7 @@ import Link from 'next/link';
 import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
 import BoutiqueSortSelect, { type SortValue } from '@/components/boutique/BoutiqueSortSelect';
 import ProductCard from '@/components/boutique/ProductCard';
-import { PawPrint, Dog, Cat, Bird, Mouse, Zap, BookOpen, ChevronLeft, ChevronRight, Store } from 'lucide-react';
+import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronLeft, ChevronRight, Store } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Boutique animaux -Mes Poilus',
@@ -25,7 +25,7 @@ const CATEGORIES = [
   { id: 'oiseaux',  label: 'Oiseaux',  icon: Bird },
   { id: 'rongeurs', label: 'Rongeurs', icon: Mouse },
   { id: 'reptiles', label: 'Reptiles', icon: Zap },
-  { id: 'livres',   label: 'Livres',   icon: BookOpen },
+  // Livres masqué jusqu'à intégration Amazon Associates
 ];
 
 async function getMerchants(category?: string): Promise<string[]> {
