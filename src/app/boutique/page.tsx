@@ -31,11 +31,21 @@ const CATEGORIES = [
 async function getMerchants(category?: string): Promise<string[]> {
   try {
     const supabase = createAdminClient();
-    let q = supabase.from('products').select('merchant_name').limit(10000);
+
+    // Marchands Awin (hors Amazon)
+    let q = supabase.from('products').select('merchant_name').neq('merchant_name', 'Amazon FR').limit(20000);
     if (category && category !== 'all') q = q.contains('categories', [category]);
     const { data } = await q;
     const names = data?.map((r: { merchant_name: string }) => r.merchant_name).filter(Boolean) ?? [];
-    return [...new Set(names)].sort() as string[];
+    const result = [...new Set(names)].sort() as string[];
+
+    // Amazon FR : vérification séparée (toujours en dehors de la limite)
+    let amazonQ = supabase.from('products').select('id').eq('merchant_name', 'Amazon FR').limit(1);
+    if (category && category !== 'all') amazonQ = amazonQ.contains('categories', [category]);
+    const { data: amazonData } = await amazonQ;
+    if (amazonData && amazonData.length > 0) result.push('Amazon FR');
+
+    return result;
   } catch {
     return [];
   }
