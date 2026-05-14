@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Agent, AgentStat, ActivityLog } from '@/types';
 import { format, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { PawPrint, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Shield, Mail, Clipboard, CheckCircle2, XCircle, Upload, Send } from 'lucide-react';
+import { PawPrint, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Shield, Mail, Clipboard, CheckCircle2, XCircle, Upload, Send, ChevronUp, ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -127,6 +127,9 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
   const [delegationData, setDelegationData] = useState<DelegationData | null>(null);
   const [sendToSocial, setSendToSocial] = useState(false);
   const [socialStatus, setSocialStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
+  const [marieImageUrl, setMarieImageUrl] = useState('');
+  const [marieUploading, setMarieUploading] = useState(false);
+  const marieFileRef = useRef<HTMLInputElement>(null);
   const responseRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -134,6 +137,18 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
       responseRef.current.scrollTop = responseRef.current.scrollHeight;
     }
   }, [response]);
+
+  async function handleMarieUpload(file: File) {
+    setMarieUploading(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const r = await fetch('/api/admin/upload-image', { method: 'POST', body: form });
+      const data = await r.json();
+      if (data.url) setMarieImageUrl(data.url);
+    } catch { /* ignore */ }
+    finally { setMarieUploading(false); }
+  }
 
   async function runTask(taskText: string) {
     if (!taskText.trim() || isLoading) return;
@@ -148,10 +163,12 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
     let finalResponse = '';
 
     try {
+      const body: Record<string, string> = { task: taskText };
+      if (agent.id === 'marie' && marieImageUrl) body.imageUrl = marieImageUrl;
       const res = await fetch(`/api/agents/${agent.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task: taskText }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
@@ -190,7 +207,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
         const r = await fetch('/api/admin/emma-direct', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ instructions }),
+          body: JSON.stringify({ instructions, imageUrl: marieImageUrl || undefined }),
         });
         setSocialStatus(r.ok ? 'done' : 'error');
       } catch {
@@ -312,6 +329,39 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                 <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 leading-relaxed">
                   {agentHint}
                 </p>
+              )}
+              {agent.id === 'marie' && (
+                <div className="mb-3">
+                  <div
+                    onClick={() => !marieUploading && marieFileRef.current?.click()}
+                    className={clsx(
+                      'border-2 border-dashed rounded-lg p-2.5 cursor-pointer transition-colors text-center',
+                      marieImageUrl ? 'border-purple-300' : 'border-gray-200 hover:border-purple-300'
+                    )}
+                  >
+                    {marieImageUrl ? (
+                      <div className="relative">
+                        <img src={marieImageUrl} alt="Aperçu" className="max-h-20 mx-auto rounded object-contain" />
+                        <button
+                          onClick={e => { e.stopPropagation(); setMarieImageUrl(''); }}
+                          className="absolute top-0 right-0 bg-white border border-gray-200 rounded-full w-5 h-5 flex items-center justify-center text-gray-500 hover:text-red-500 text-xs"
+                        >×</button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400 flex items-center justify-center gap-1.5">
+                        <Upload size={12} />
+                        {marieUploading ? 'Upload en cours…' : 'Ajouter une image (optionnel)'}
+                      </p>
+                    )}
+                    <input
+                      ref={marieFileRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={e => { const f = e.target.files?.[0]; if (f) handleMarieUpload(f); }}
+                    />
+                  </div>
+                </div>
               )}
               {agent.id === 'marie' && (
                 <label className="flex items-center gap-2 mb-3 cursor-pointer select-none">

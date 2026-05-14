@@ -113,7 +113,7 @@ async function saveEmma(content: string) {
   }
 }
 
-async function saveMarie(content: string) {
+async function saveMarie(content: string, overrideImageUrl?: string) {
   let normalized = content.trim();
   const firstLine = normalized.split('\n')[0].trim();
   if (/^```/.test(firstLine)) {
@@ -138,17 +138,25 @@ async function saveMarie(content: string) {
   const articleContent = normalized.replace(/^---[\s\S]*?---\n/, '').trim();
   if (!title || !slug) return null;
 
-  let imageData: { url: string; alt: string; credit: string; creditUrl: string } | null = null;
-  try {
-    imageData = await Promise.race([
-      getPhotoForCategory(category),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
-    ]);
-  } catch { /* ignore */ }
+  let storedImageUrl: string | null = overrideImageUrl ?? null;
+  let imageAlt: string | null = null;
+  let imageCredit: string | null = null;
+  let imageCreditUrl: string | null = null;
 
-  let storedImageUrl = imageData?.url ?? null;
-  if (imageData?.url) {
-    storedImageUrl = await downloadAndStorePhoto(imageData.url, `article-${Date.now()}.jpg`) ?? imageData.url;
+  if (!storedImageUrl) {
+    let imageData: { url: string; alt: string; credit: string; creditUrl: string } | null = null;
+    try {
+      imageData = await Promise.race([
+        getPhotoForCategory(category),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+      ]);
+    } catch { /* ignore */ }
+    if (imageData?.url) {
+      storedImageUrl = await downloadAndStorePhoto(imageData.url, `article-${Date.now()}.jpg`) ?? imageData.url;
+      imageAlt = imageData.alt;
+      imageCredit = imageData.credit;
+      imageCreditUrl = imageData.creditUrl;
+    }
   }
 
   const res = await dbFetch('articles', 'POST', {
@@ -156,8 +164,8 @@ async function saveMarie(content: string) {
     seo_keywords: seoKeywords, meta_description: metaDescription,
     reading_time: readingTime, status: 'published',
     published_at: new Date().toISOString(),
-    image_url: storedImageUrl, image_alt: imageData?.alt ?? null,
-    image_credit: imageData?.credit ?? null, image_credit_url: imageData?.creditUrl ?? null,
+    image_url: storedImageUrl, image_alt: imageAlt,
+    image_credit: imageCredit, image_credit_url: imageCreditUrl,
   });
   // Si conflict slug → upsert via PATCH
   if (!res.ok) {
@@ -232,15 +240,15 @@ async function saveSofia(content: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const { agentId, agentName, content, task, durationMs, tokens } = await req.json() as {
-    agentId: string; agentName: string; content: string; task: string; durationMs: number; tokens: number;
+  const { agentId, agentName, content, task, durationMs, tokens, imageUrl } = await req.json() as {
+    agentId: string; agentName: string; content: string; task: string; durationMs: number; tokens: number; imageUrl?: string;
   };
 
   const start = Date.now();
   let extraDetails: Record<string, unknown> = {};
 
   if (agentId === 'marie') {
-    const slug = await saveMarie(content);
+    const slug = await saveMarie(content, imageUrl);
     if (slug) extraDetails = { article_slug: slug };
   } else if (agentId === 'emma') {
     await saveEmma(content);

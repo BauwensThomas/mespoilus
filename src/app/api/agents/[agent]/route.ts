@@ -48,7 +48,7 @@ export async function POST(
   }
 
   // Parser le body
-  let body: { task?: string; context?: Record<string, unknown> };
+  let body: { task?: string; imageUrl?: string; context?: Record<string, unknown> };
   try {
     body = await request.json();
   } catch {
@@ -72,10 +72,11 @@ export async function POST(
   }
 
   const task = sanitizeInput(rawTask);
+  const imageUrl = typeof body.imageUrl === 'string' && body.imageUrl.startsWith('https://') ? body.imageUrl : undefined;
 
   // Stream la réponse
   try {
-    const stream = await streamAgentTask(agentId, task);
+    const stream = await streamAgentTask(agentId, task, imageUrl);
 
     return new Response(stream, {
       headers: {
