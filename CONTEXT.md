@@ -487,9 +487,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
   - `reptiles/checklist-adoption-reptile.pdf`
   - `oiseaux/alimentation-perroquet.pdf`
 ### Migrations Supabase en attente ⚠️
-- [ ] Exécuter `src/lib/supabase/migration_awin_categories.sql` (ajoute `categories TEXT[]` + GIN index sur `products`)
-- [ ] Exécuter `src/lib/supabase/migration_rls_awin_progress.sql` (active RLS sur `awin_sync_progress`)
-- Après migration : relancer tous les crons Awin pour re-sync avec le nouveau champ `categories[]`
+- ✅ `migration_awin_categories.sql` — colonne `categories TEXT[]` + GIN index sur `products` (vérifié en DB)
+- ✅ `migration_rls_awin_progress.sql` — RLS sur `awin_sync_progress` (vérifié : anon=[], service_role=données)
 
 ### Actions déjà effectuées ✅
 - Site public (blog, adoption, boutique, pages légales) : **thème clair complet** ✅
