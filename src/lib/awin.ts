@@ -141,9 +141,6 @@ async function parseCSVStreamingWithFlush(
     const price = parseFloat(priceMatch?.[1] ?? '0') || 0;
     const currencyFromField = (p['currency'] ?? p['currency_code'] ?? '').toUpperCase().trim();
     const currency = priceMatch?.[2] ?? (currencyFromField || 'EUR');
-    const availability = (p['availability'] ?? p['in_stock'] ?? p['stock_status'] ?? '').toLowerCase();
-    const OUT_OF_STOCK = new Set(['out_of_stock', 'out of stock', 'out-of-stock', 'outofstock', 'false', '0', 'no', 'unavailable', 'discontinued', 'sold out', 'sold_out', 'preorder', 'pre-order']);
-    const inStock = availability === '' ? true : !OUT_OF_STOCK.has(availability);
     const imageUrl = p['image_link'] ?? p['aw_image_url'] ?? p['merchant_image_url'] ?? '';
 
     seenIds.add(pid);
@@ -153,7 +150,7 @@ async function parseCSVStreamingWithFlush(
       id: pid, name, description: desc.slice(0, 200),
       price, currency, image_url: imageUrl,
       affiliate_url: deepLink, merchant_name: merchantName ?? '',
-      category: primary, categories: cats, in_stock: inStock,
+      category: primary, categories: cats,
       last_synced: new Date().toISOString(),
     });
 
@@ -391,8 +388,6 @@ export async function fetchAwinProducts(
         const priceMatch = priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/);
         const price = parseFloat(priceMatch?.[1] ?? '0') || 0;
         const currency = priceMatch?.[2] ?? 'EUR';
-        const availability = p['availability'] ?? p['in_stock'] ?? '';
-        const inStock = ['in_stock', 'in stock', '1', 'true'].includes(availability);
 
         if (!id || !deepLink) continue;
         if (/\bparts?\b/i.test(name) || / \/ [A-Z0-9]{5,}$/.test(name)) continue;
@@ -406,7 +401,7 @@ export async function fetchAwinProducts(
           id: pid, name, description: desc.slice(0, 200),
           price, currency, image_url: imageUrl,
           affiliate_url: deepLink, merchant_name: merchantName ?? '',
-          category, categories: [category], in_stock: inStock,
+          category, categories: [category],
           last_synced: new Date().toISOString(),
         });
       }
