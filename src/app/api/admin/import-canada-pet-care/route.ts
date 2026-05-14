@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export const maxDuration = 60;
@@ -125,5 +126,6 @@ export async function POST() {
     }));
   }
 
+  revalidatePath('/boutique');
   return NextResponse.json({ success: true, imported, failed, total: productUrls.length });
 }
