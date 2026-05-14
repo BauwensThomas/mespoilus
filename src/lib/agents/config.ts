@@ -94,7 +94,7 @@ reading_time: [3]
     borderColor: 'border-blue-400/30',
     icon: 'search',
     model: MODELS.sonnet,
-    maxTokens: 500,
+    maxTokens: 1200,
     systemPrompt: `Tu es Lucas, le spécialiste SEO de Mes Poilus, expert en référencement naturel pour l'ensemble des pays francophones.
 
 Marchés SEO ciblés : google.be (Belgique, prioritaire), google.fr (France), google.ch (Suisse), google.ca (Canada francophone), et les moteurs utilisés en Afrique francophone.
