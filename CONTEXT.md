@@ -18,7 +18,7 @@ Deux piliers :
 - 🇨🇦 **Canada francophone (Québec)** - marché en croissance
 - 🌍 **Afrique francophone** - marché émergent (Maroc, Côte d'Ivoire, Sénégal, etc.)
 
-**Animaux couverts :** chiens, chats, oiseaux, rongeurs, reptiles.
+**Animaux couverts :** chiens, chats, oiseaux, rongeurs, reptiles. Catégorie `general` pour articles transversaux.
 
 **Budget de démarrage :** 500 €
 
@@ -34,7 +34,7 @@ Chaque agent utilise l'API Anthropic (Claude) et fonctionne de façon autonome. 
 |-------|------|--------------|-----------|-----------------|
 | 👔 **Thomas** | CEO Orchestrateur | Opus 4.7 | 3000 | Stratégie globale, priorisation, coordination, rapports |
 | ✍️ **Marie** | Rédactrice de contenu | **Haiku 4.5** | **1800** | Articles de blog (550-700 mots), guides pratiques, conseils |
-| 🔍 **Lucas** | Spécialiste SEO | Sonnet 4.6 | **500** | Recherche mots-clés, optimisation on-page, stratégie francophone |
+| 🔍 **Lucas** | Spécialiste SEO | Sonnet 4.6 | **1200** | Recherche mots-clés, optimisation on-page, stratégie francophone |
 | 📱 **Emma** | Réseaux sociaux | Haiku 4.5 | 2000 | Posts Facebook + Instagram (@mespoilusofficiel), hashtags, lien article complet |
 | 💻 **Maxime** | Développeur & Maintenance | Sonnet 4.6 | 6000 | Performances, bugs, Next.js / Supabase, Core Web Vitals |
 | 💬 **Léa** | Support client | Haiku 4.5 | 3000 | Réponses emails clients, commandes, FAQ -à la demande uniquement (pas de cron) |
@@ -154,9 +154,13 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 - Photo ambiante Unsplash en hero (fallback SVG thématique)
 - Zone de saisie de tâche avec **streaming en temps réel** de la réponse Claude
 - Tâches rapides préconfigurées par agent
-- Historique des activités par agent (cliquable -Marie → article, autres → accordéon contenu)
+- **Historique des activités** : collapsible (fermé par défaut), filtre par date (`<input type="date">`), cliquable (Marie → article, autres → accordéon contenu)
 - **Stats : tâches complétées/échouées + tokens -total all-time + ce mois en ambré**
 - **Délégation automatique via Thomas** : après chaque réponse, Thomas analyse et délègue si nécessaire (voir section Délégation)
+- **Panneau Emma (post direct)** : upload photo + instructions → `POST /api/admin/emma-direct` → Emma génère + webhook Make.com (sans créer d'article blog)
+- **Panneau Sofia (newsletter manuelle)** : choix destinataire (admin test / tous abonnés) + envoi immédiat, bypass anti-doublon 5 jours
+- **Toggle Marie "Publier sur les réseaux"** : après génération article, appelle Emma via `/api/admin/emma-direct` avec slug+titre+image
+- **Upload image Marie** : zone drag-and-drop sous la textarea, stocke dans Supabase Storage `blog-images`, image utilisée dans l'article (au lieu de Pexels) + transmise à Emma si toggle réseaux ON
 - `revalidate = 30`
 ### Orchestration (`/orchestrate`)
 - Thomas reçoit un objectif libre, crée un plan JSON, délègue aux agents
@@ -271,12 +275,24 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 | Maxime | `saveTechReport` | `tech_reports` |
 | Léa | `saveSupportLog` | `support_logs` |
 **Route `POST /api/internal/save-agent-data`** :
-- Marie → strip code fence, parse frontmatter, `getPhotoForCategory` Pexels (4s timeout), upsert `articles`
+- Marie → strip code fence, parse frontmatter, **anti-doublon** (vérifie slug existant avant INSERT), si `overrideImageUrl` fourni utilise cette image (sinon `getPhotoForCategory` Pexels 4s timeout), upsert `articles`
 - Emma → extrait hashtags, cherche image article (slug dans post), fallback Pexels, INSERT `social_posts`, webhook Make.com
 - Nathalie → INSERT `security_logs`
 - Antoine → INSERT `financial_reports`
 - Sofia → parse JSON `{ subject, preview_text, content_html }`, INSERT `newsletter_campaigns` draft
 - Toujours : `logActivity` + `updateAgentStats` via `dbFetch` (fetch natif Supabase REST, AbortController 6s)
+**Route `POST /api/admin/emma-direct`** :
+- Auth session requise
+- Body : `{ instructions: string, imageUrl?: string }`
+- Appelle `executeAgentTask('emma', prompt)` (non-streaming)
+- Envoie au webhook Make.com avec `imageUrl` fourni (prioritaire sur l'image auto)
+
+**Route `POST /api/admin/upload-image`** :
+- Auth session requise
+- FormData avec `file` (image)
+- Upload dans Supabase Storage `blog-images` sous le nom `social-{timestamp}.ext`
+- Retourne `{ url: string }` (URL publique)
+
 **Route `POST /api/internal/save-social-post`** :
 - Cherche `image_url` sur l'article le plus récent avec image (Supabase)
 - **Filtre URL** : n'utilise que les URLs commençant par `NEXT_PUBLIC_SUPABASE_URL` (Supabase Storage) → rejette les CDN externes (Awin, etc.) que Instagram refuse
@@ -286,8 +302,10 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 ### Blog public (`/blog`)
 - Articles sauvegardés automatiquement dans Supabase
 - Images stockées dans Supabase Storage `blog-images`
-- Filtres par catégorie via `?category=chiens`
+- Filtres par catégorie : chiens, chats, oiseaux, rongeurs, reptiles, **general** (+ page `/blog/general` avec métadonnées SEO)
+- Catégorie `general` : articles transversaux, boutique, sujets multi-animaux
 - **Pages articles (`/blog/[slug]`) : thème clair** (`bg-gray-50`, texte `#111827`) -prose Tailwind light + `.article-content` CSS light dans `globals.css`
+- Liens articles : soulignés en ambré (`text-decoration: underline`, `text-underline-offset: 3px`) via `.article-content a` dans `globals.css`
 - Hero image + gradient overlay + crédit photographe Pexels cliquable
 - SEO complet (meta, OG, Twitter Card, Schema.org JSON-LD)
 - Sitemap dynamique, robots.txt
@@ -548,6 +566,9 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Boutique : `unoptimized` sur `<Image>` de `ProductCard` (CDN Awin non listé dans `remotePatterns`)
 - Awin sync : refactoring complet vers 7 crons par catégorie, streaming pur, `assignCategories()` multi-catégories
 - Awin Darwin CSV : fix colonnes réelles (`product_name`, `category_name`, `stock_status`, `isbn`) + bornes de mot manuelles + détection ISBN livres + no pre-delete + anti-faux-positifs (null pour produits hors-animaux) ✅
+- Awin CATEGORY_EXCLUSIONS : formes plurielles/diminutives FR/NL/DE ajoutées (chats, chatons, katten, chiens, chiots, honden…) pour rongeurs/oiseaux/reptiles — évite les faux positifs pluriels ✅
+- Awin image produit blog : URL upscalée 200×200 → 800×800 avant téléchargement (`?w=800&h=800`) ✅
+- Boutique : hint recherche "Vous ne trouvez pas…" à côté du sélecteur de tri quand aucune recherche active ✅
 - Colonne `in_stock` supprimée de `products` (table + type + sync + boutique + dashboard) — feeds Awin non fiables pour le stock ✅
 - Migration exécutée : `migration_drop_in_stock.sql` (DROP COLUMN CASCADE + nouvelle RLS `USING (true)`) ✅
 - Awin GPC_MAP livres élargi : roman, BD, manga, littérature, jeunesse, encyclopédie, biographie, poche, broché, relié ✅
@@ -566,7 +587,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Sofia mode manuel : reçoit les 3 derniers articles via `buildEnrichedPrompt` (même comportement que le cron)
 - Boutique : barre de recherche produits par nom/description (`BoutiqueSearchBar.tsx`)
 - Descriptions agents corrigées pour refléter leurs vraies tâches (Nathalie, Emma, Lucas, Marie, Léa, Maxime, Antoine, Sofia, Thomas)
-- Sofia mode manuel : génère + envoie la newsletter directement via Resend (anti-doublon 5 jours actif)
+- Sofia mode manuel : génère + envoie la newsletter directement via Resend — **bypass anti-doublon 5 jours** + choix destinataires (admin test ou tous abonnés) ✅
 - Sofia : reçoit `image_url` des articles et les inclut comme `<img>` dans le HTML de la newsletter
 - Emma enrichie : reçoit le dernier article publié automatiquement en mode manuel
 - Hints visuels ajoutés sur les pages Marie, Lucas, Léa pour guider la saisie
@@ -632,6 +653,13 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
   - Sitemap mis à jour : `/guides` (priority 0.9) + slugs individuels (priority 0.8)
   - Guides dans dropdown "Outils" header (pas dans NAV_LINKS)
 - **Scroll-to-top corrigé** : `useEffect` sur `pathname` avec garde `if (!window.location.hash)` -les ancres (#categories, #newsletter) ne sont plus écrasées ✅
+- **Emma post direct** : panneau sur page Emma (border rose) — upload image + instructions → `/api/admin/emma-direct` → Emma génère + Make webhook, sans passer par le blog ✅
+- **Marie toggle réseaux** : toggle "Publier aussi sur les réseaux (Emma)" sur page Marie → après génération, Emma crée un post avec slug+titre+image uploadée ✅
+- **Marie upload image** : zone d'upload sur page Marie → image stockée dans `blog-images` → utilisée comme image article (pas Pexels) + transmise à Emma si toggle ON ✅
+- **Historique agents collapsible** : `HistoryPanel` fermé par défaut, bouton ouvrir/fermer, filtre par date (`<input type="date">`), compteur résultats filtrés ✅
+- **Anti-doublon Marie** : `save-agent-data` vérifie le slug avant INSERT → PATCH si existant (évite doublons si exécution double) ✅
+- **Catégorie Général blog** : page `/blog/general`, filtre dans nav, métadonnées SEO — prompt Marie renforcé pour choisir `general` si article transversal/boutique/multi-animaux ✅
+- **Lucas maxTokens** : 500 → 1200 (URLs Awin trop longues pour 500 tokens) ✅
 ---
 ## Ce qui reste à faire (code)
 ### Outils publics (`/outils/`)
