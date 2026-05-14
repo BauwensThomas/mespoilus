@@ -5,6 +5,9 @@ import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 import { PARTENAIRES } from '@/lib/partenaires';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 const ANIMAL_CATEGORIES = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
 
 const GENERIC_PRODUCTS: Record<string, string[]> = {
