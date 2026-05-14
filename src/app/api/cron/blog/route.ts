@@ -149,7 +149,6 @@ export async function GET(req: Request) {
       .from('products')
       .select('name, affiliate_url, image_url')
       .eq('category', animal)
-      .eq('in_stock', true)
       .gt('price', 0)
       .limit(5);
     type ProductRow = { name: string; affiliate_url: string; image_url: string };

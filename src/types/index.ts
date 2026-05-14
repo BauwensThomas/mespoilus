@@ -157,7 +157,6 @@ export interface AwinProduct {
   merchant_name: string;
   category: 'chiens' | 'chats' | 'oiseaux' | 'rongeurs' | 'reptiles' | 'livres' | 'general';
   categories: string[];
-  in_stock: boolean;
   last_synced: string;
 }
 

@@ -28,7 +28,7 @@ async function getDashboardData() {
       supabase.from('activity_logs').select('agent_id, status, tokens_used, created_at'),
       supabase.from('security_logs').select('id', { count: 'exact' }).in('threat_level', ['high', 'critical']).gte('created_at', startOfMonth.toISOString()),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published').gte('published_at', startOfMonth.toISOString()),
-      supabase.from('products').select('id', { count: 'exact' }).eq('in_stock', true),
+      supabase.from('products').select('id', { count: 'exact' }),
       supabase.from('activity_logs')
         .select('created_at')
         .ilike('action', '[Awin sync]%')
