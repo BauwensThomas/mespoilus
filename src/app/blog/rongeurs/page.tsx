@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   twitter: { card: 'summary', title: meta.title, description: meta.description },
 };
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default function RongeursPage({ searchParams }: { searchParams: { q?: string } }) {
   return <CategoryPageContent category="rongeurs" search={searchParams.q?.trim()} />;

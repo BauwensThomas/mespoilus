@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import GuidesGrid from '@/components/guides/GuidesGrid';
 import type { PdfGuide } from '@/lib/guides';
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Guides & Checklists gratuits — Mes Poilus',

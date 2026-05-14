@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   twitter: { card: 'summary', title: meta.title, description: meta.description },
 };
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default function ChiensPage({ searchParams }: { searchParams: { q?: string } }) {
   return <CategoryPageContent category="chiens" search={searchParams.q?.trim()} />;
