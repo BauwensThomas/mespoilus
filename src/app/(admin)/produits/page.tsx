@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw } from 'lucide-react';
+import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, Pencil, Check, X } from 'lucide-react';
 import clsx from 'clsx';
 
 const ANIMAL_CATEGORIES = [
@@ -34,6 +34,9 @@ export default function ProduitsPage() {
   const [success, setSuccess] = useState('');
   const [preview, setPreview] = useState('');
   const [filterCat, setFilterCat] = useState<string>('all');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editCats, setEditCats] = useState<string[]>([]);
+  const [editSaving, setEditSaving] = useState(false);
 
   async function fetchProducts() {
     setLoading(true);
@@ -83,6 +86,25 @@ export default function ProduitsPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function startEdit(p: Product) {
+    setEditingId(p.id);
+    setEditCats(p.categories.filter(c => c !== 'livres'));
+  }
+
+  async function handleSaveEdit(id: string) {
+    setEditSaving(true);
+    try {
+      const r = await fetch('/api/admin/products', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, categories: editCats }),
+      });
+      const data = await r.json();
+      if (data.success) { setEditingId(null); fetchProducts(); }
+    } catch { /* ignore */ }
+    finally { setEditSaving(false); }
   }
 
   async function handleDelete(id: string, name: string) {
@@ -267,37 +289,74 @@ export default function ProduitsPage() {
             {products
               .filter(p => filterCat === 'all' || p.categories.includes(filterCat))
               .map(p => (
-                <div key={p.id} className="flex items-center gap-4 p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
-                  {p.image_url && (
-                    <img src={p.image_url} alt={p.name} className="w-10 h-14 object-contain flex-shrink-0 rounded" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
-                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                      {p.categories.filter(c => c !== 'livres').map(c => (
-                        <span key={c} className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium capitalize">{c}</span>
-                      ))}
-                      <span className="text-xs text-gray-400">{p.price.toFixed(2)} €</span>
+                <div key={p.id} className="rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                  <div className="flex items-center gap-4 p-3">
+                    {p.image_url && (
+                      <img src={p.image_url} alt={p.name} className="w-10 h-14 object-contain flex-shrink-0 rounded" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        {p.categories.filter(c => c !== 'livres').length === 0
+                          ? <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-medium">Aucune catégorie animale</span>
+                          : p.categories.filter(c => c !== 'livres').map(c => (
+                            <span key={c} className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium capitalize">{c}</span>
+                          ))
+                        }
+                        <span className="text-xs text-gray-400">{p.price.toFixed(2)} €</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => editingId === p.id ? setEditingId(null) : startEdit(p)}
+                        className={clsx('transition-colors', editingId === p.id ? 'text-orange-500' : 'text-gray-400 hover:text-orange-500')}
+                        title="Modifier"
+                      >
+                        <Pencil size={15} strokeWidth={1.5} />
+                      </button>
+                      <a href={p.affiliate_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-600 transition-colors" title="Voir sur Amazon">
+                        <ExternalLink size={15} strokeWidth={1.5} />
+                      </a>
+                      <button onClick={() => handleDelete(p.id, p.name)} className="text-gray-400 hover:text-red-500 transition-colors" title="Supprimer">
+                        <Trash2 size={15} strokeWidth={1.5} />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <a
-                      href={p.affiliate_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-400 hover:text-orange-600 transition-colors"
-                      title="Voir sur Amazon"
-                    >
-                      <ExternalLink size={15} strokeWidth={1.5} />
-                    </a>
-                    <button
-                      onClick={() => handleDelete(p.id, p.name)}
-                      className="text-gray-400 hover:text-red-500 transition-colors"
-                      title="Supprimer"
-                    >
-                      <Trash2 size={15} strokeWidth={1.5} />
-                    </button>
-                  </div>
+
+                  {editingId === p.id && (
+                    <div className="border-t border-gray-200 px-4 py-3 bg-gray-50 rounded-b-lg">
+                      <p className="text-xs font-medium text-gray-700 mb-2">Catégories animales :</p>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {ANIMAL_CATEGORIES.map(c => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => setEditCats(prev => prev.includes(c.id) ? prev.filter(x => x !== c.id) : [...prev, c.id])}
+                            className={clsx(
+                              'text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors',
+                              editCats.includes(c.id) ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
+                            )}
+                          >
+                            {c.label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSaveEdit(p.id)}
+                          disabled={editSaving}
+                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-500 disabled:opacity-50"
+                        >
+                          <Check size={13} strokeWidth={2} />
+                          {editSaving ? 'Sauvegarde…' : 'Enregistrer'}
+                        </button>
+                        <button onClick={() => setEditingId(null)} className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:border-gray-400">
+                          <X size={13} strokeWidth={2} />
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
           </div>
