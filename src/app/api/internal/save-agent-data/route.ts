@@ -138,6 +138,19 @@ async function saveMarie(content: string, overrideImageUrl?: string) {
   const articleContent = normalized.replace(/^---[\s\S]*?---\n/, '').trim();
   if (!title || !slug) return null;
 
+  // Anti-doublon : si un article avec ce slug ou ce titre existe déjà, on met à jour
+  const existing = await dbFetch('articles', 'GET', undefined, `slug=eq.${slug}&select=id`);
+  const existingRows = existing.data as { id: string }[] | null;
+  if (existingRows && existingRows.length > 0) {
+    await dbFetch('articles', 'PATCH', {
+      content: articleContent, excerpt, seo_keywords: seoKeywords,
+      meta_description: metaDescription, updated_at: new Date().toISOString(),
+      ...(overrideImageUrl ? { image_url: overrideImageUrl, image_alt: null, image_credit: null, image_credit_url: null } : {}),
+    }, `slug=eq.${slug}`);
+    console.log('[save-agent] Marie article mis à jour (doublon évité):', slug);
+    return slug;
+  }
+
   let storedImageUrl: string | null = overrideImageUrl ?? null;
   let imageAlt: string | null = null;
   let imageCredit: string | null = null;
