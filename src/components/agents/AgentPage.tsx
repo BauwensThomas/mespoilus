@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Agent, AgentStat, ActivityLog } from '@/types';
 import { format, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { PawPrint, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Shield, Mail, Clipboard, CheckCircle2, XCircle } from 'lucide-react';
+import { PawPrint, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Shield, Mail, Clipboard, CheckCircle2, XCircle, Upload, Send } from 'lucide-react';
 import clsx from 'clsx';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -273,6 +273,8 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
 
           {/* Panneau gauche */}
           <div className="lg:col-span-1 space-y-4">
+            {agent.id === 'emma' && <EmmaDirectPanel />}
+            {agent.id === 'sofia' && <SofiaNewsletterPanel />}
             <div className="card p-5">
               <h2 className="text-base font-semibold text-gray-900 mb-3">Nouvelle tâche</h2>
               <textarea
@@ -510,6 +512,201 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Panneau Emma : post direct réseaux sociaux ───────────────────────────────
+
+function EmmaDirectPanel() {
+  const [instructions, setInstructions] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleUpload(file: File) {
+    setUploading(true);
+    setError('');
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const r = await fetch('/api/admin/upload-image', { method: 'POST', body: form });
+      const data = await r.json();
+      if (data.url) setImageUrl(data.url);
+      else setError(data.error ?? 'Upload échoué');
+    } catch {
+      setError('Upload échoué');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleGenerate() {
+    if (!instructions.trim()) return;
+    setGenerating(true);
+    setResult('');
+    setError('');
+    try {
+      const r = await fetch('/api/admin/emma-direct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instructions, imageUrl: imageUrl || undefined }),
+      });
+      const data = await r.json();
+      if (data.success) setResult(data.content);
+      else setError(data.error ?? 'Erreur');
+    } catch {
+      setError('Erreur inconnue');
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  return (
+    <div className="card p-5 border border-pink-200">
+      <h2 className="text-sm font-semibold text-pink-600 mb-3 flex items-center gap-2">
+        <Send size={14} strokeWidth={1.5} />
+        Post direct réseaux sociaux
+      </h2>
+
+      <div
+        onClick={() => !uploading && fileRef.current?.click()}
+        className={clsx(
+          'border-2 border-dashed rounded-lg p-3 mb-3 cursor-pointer transition-colors text-center',
+          imageUrl ? 'border-pink-300' : 'border-gray-200 hover:border-pink-300'
+        )}
+      >
+        {imageUrl ? (
+          <div className="relative">
+            <img src={imageUrl} alt="Aperçu" className="max-h-28 mx-auto rounded object-contain" />
+            <button
+              onClick={e => { e.stopPropagation(); setImageUrl(''); }}
+              className="absolute top-0 right-0 bg-white border border-gray-200 rounded-full w-5 h-5 flex items-center justify-center text-gray-500 hover:text-red-500 text-xs"
+            >×</button>
+          </div>
+        ) : (
+          <p className="text-xs text-gray-400 flex items-center justify-center gap-1.5">
+            <Upload size={13} />
+            {uploading ? 'Upload en cours…' : 'Photo (optionnel)'}
+          </p>
+        )}
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f); }}
+        />
+      </div>
+
+      <textarea
+        className="input-dark resize-none h-24 mb-3 w-full text-sm"
+        placeholder="Dis à Emma quoi publier… ex: 'Fais un post sur nos nouveaux produits pour reptiles'"
+        value={instructions}
+        onChange={e => setInstructions(e.target.value)}
+      />
+
+      {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
+
+      <button
+        onClick={handleGenerate}
+        disabled={generating || !instructions.trim() || uploading}
+        className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+      >
+        {generating
+          ? <span className="flex items-center justify-center gap-2"><span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />Emma génère…</span>
+          : 'Générer & Envoyer sur les réseaux'}
+      </button>
+
+      {result && (
+        <div className="mt-3 bg-pink-50 border border-pink-200 rounded-lg p-3">
+          <p className="text-xs text-pink-600 font-semibold mb-1.5">✓ Post envoyé</p>
+          <pre className="text-xs text-gray-800 whitespace-pre-wrap leading-relaxed">{result}</pre>
+          <button
+            onClick={() => { setResult(''); setInstructions(''); setImageUrl(''); }}
+            className="text-xs text-gray-400 hover:text-gray-600 mt-2"
+          >Nouveau post</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Panneau Sofia : envoi newsletter manuel ──────────────────────────────────
+
+function SofiaNewsletterPanel() {
+  const [target, setTarget] = useState<'admin' | 'all'>('admin');
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  async function handleSend() {
+    setSending(true);
+    setResult(null);
+    try {
+      const r = await fetch('/api/admin/run-cron', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step: 'newsletter', target, bypass: 'true' }),
+      });
+      const data = await r.json();
+      setResult({
+        success: data.success,
+        message: data.success
+          ? `Newsletter envoyée à ${data.sent ?? 1} destinataire${(data.sent ?? 1) > 1 ? 's' : ''}`
+          : (data.error ?? data.reason ?? 'Erreur inconnue'),
+      });
+    } catch {
+      setResult({ success: false, message: 'Erreur de connexion' });
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="card p-5 border border-rose-200">
+      <h2 className="text-sm font-semibold text-rose-600 mb-3 flex items-center gap-2">
+        <Mail size={14} strokeWidth={1.5} />
+        Envoyer newsletter
+      </h2>
+
+      <div className="flex gap-2 mb-3">
+        {(['admin', 'all'] as const).map(t => (
+          <button
+            key={t}
+            onClick={() => setTarget(t)}
+            className={clsx(
+              'flex-1 text-xs py-2 rounded-lg border font-medium transition-colors',
+              target === t
+                ? 'bg-rose-600 text-white border-rose-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:border-rose-400'
+            )}
+          >
+            {t === 'admin' ? '🔒 Test (admin)' : '📧 Tous les abonnés'}
+          </button>
+        ))}
+      </div>
+
+      <button
+        onClick={handleSend}
+        disabled={sending}
+        className="w-full py-2 rounded-lg text-sm font-medium text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {sending
+          ? <span className="flex items-center justify-center gap-2"><span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />Génération et envoi…</span>
+          : 'Envoyer la newsletter'}
+      </button>
+
+      {result && (
+        <div className={clsx(
+          'mt-3 rounded-lg p-3 text-xs',
+          result.success ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'
+        )}>
+          {result.success ? '✓ ' : '✗ '}{result.message}
+        </div>
+      )}
     </div>
   );
 }
