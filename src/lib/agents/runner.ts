@@ -83,7 +83,8 @@ export async function executeAgentTask(
 
 export async function streamAgentTask(
   agentId: AgentId,
-  task: string
+  task: string,
+  imageUrl?: string
 ): Promise<ReadableStream<Uint8Array>> {
   const agent = getAgent(agentId);
   const startTime = Date.now();
@@ -119,7 +120,7 @@ export async function streamAgentTask(
             const r = await fetch(`${appUrl}/api/internal/save-agent-data`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET ?? '' },
-              body: JSON.stringify({ agentId, agentName: agent.name, content: fullContent, task, durationMs: duration, tokens: totalTokens }),
+              body: JSON.stringify({ agentId, agentName: agent.name, content: fullContent, task, durationMs: duration, tokens: totalTokens, imageUrl }),
             });
             if (!r.ok) {
               const text = await r.text().catch(() => '');
