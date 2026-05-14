@@ -126,7 +126,7 @@ export const AWIN_CATEGORY_SEARCH: Record<string, string[]> = {
   oiseaux:  ['bird', 'oiseau', 'perroquet', 'canari'],
   rongeurs: ['rabbit', 'hamster', 'rongeur', 'lapin', 'cobaye', 'guinea'],
   reptiles: ['reptile', 'serpent', 'lézard', 'tortue', 'turtle'],
-  livres:   ['livre', 'book', 'broché', 'relié', 'poche', 'paperback', 'hardcover', 'isbn', 'éditions', 'auteur', 'encyclopédie', 'guide pratique animal', 'manuel vétérinaire'],
+  livres:   ['livre', 'book', 'paperback', 'hardcover', 'isbn', 'encyclopédie', 'guide pratique animal', 'manuel vétérinaire'],
   general:  ['animaux de compagnie', 'animal domestique', 'pet food', 'pet supplies', 'animalerie', 'petshop', 'vétérinaire', 'aquarium', 'terrarium', 'accessoire animal'],
 };
 
