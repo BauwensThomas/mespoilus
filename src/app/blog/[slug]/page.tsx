@@ -215,7 +215,7 @@ export default async function ArticlePage({ params }: Props) {
               prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
               prose-h4:text-base prose-h4:mt-6 prose-h4:mb-2
               prose-p:leading-[1.85] prose-p:my-5
-              prose-a:text-orange-600 prose-a:no-underline hover:prose-a:underline
+              prose-a:text-orange-600 prose-a:underline prose-a:decoration-orange-400 prose-a:underline-offset-2 prose-a:font-medium hover:prose-a:text-orange-500
               prose-strong:font-semibold
               prose-ul:my-5 prose-ol:my-5
               prose-li:my-1.5 prose-li:leading-relaxed
