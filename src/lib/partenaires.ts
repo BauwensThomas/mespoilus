@@ -34,4 +34,19 @@ export const PARTENAIRES: Partenaire[] = [
     pays: ['FR'],
     categories: ['chiens'],
   },
+  {
+    id: 'canada-pet-care',
+    nom: 'CanadaPetCare',
+    description:
+      'Antiparasitaires, vermifuges et soins santé pour chiens et chats. Frontline Plus, Advantage, K9 Advantix et plus.',
+    url: 'https://www.jdoqocy.com/click-101746286-17287368',
+    emoji: '💊',
+    tag: 'Santé animale',
+    tagColor: 'bg-blue-100 text-blue-800',
+    tagBg: '#dbeafe', tagText: '#1e40af',
+    pour: 'Pour chiens & chats',
+    network: 'cj',
+    pays: ['CA', 'US'],
+    categories: ['chiens', 'chats'],
+  },
 ];
