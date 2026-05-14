@@ -33,11 +33,11 @@ export interface DBProduct {
 }
 
 const SHOPPING_PRODUCTS_QUERY = `
-  query ShoppingProducts($companyId: ID!, $advertiserIds: [ID!], $partnerStatus: PartnerStatus, $limit: Int!, $offset: Int!) {
-    shoppingProducts(
+  query Products($companyId: ID!, $advertiserIds: [ID!], $limit: Int!, $offset: Int!) {
+    products(
       companyId: $companyId
       advertiserIds: $advertiserIds
-      partnerStatus: $partnerStatus
+      partnerStatus: joined
       limit: $limit
       offset: $offset
     ) {
@@ -72,7 +72,10 @@ async function queryCJ<T>(token: string, query: string, variables: Record<string
     body: JSON.stringify({ query, variables }),
   });
 
-  if (!res.ok) throw new Error(`CJ API HTTP error: ${res.status}`);
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`CJ API HTTP error: ${res.status} — ${body.slice(0, 500)}`);
+  }
 
   const json = await res.json();
   if (json.errors?.length) throw new Error(`CJ GraphQL error: ${json.errors[0].message}`);
@@ -128,16 +131,15 @@ export async function fetchCJProductsForAdvertiser(
 
   while (offset < totalCount) {
     const data = await queryCJ<{
-      shoppingProducts: { totalCount: number; resultList: CJShoppingProduct[] };
+      products: { totalCount: number; resultList: CJShoppingProduct[] };
     }>(token, SHOPPING_PRODUCTS_QUERY, {
       companyId,
       advertiserIds: [advertiserId],
-      partnerStatus: 'JOINED',
       limit: LIMIT,
       offset,
     });
 
-    const { resultList, totalCount: count } = data.shoppingProducts;
+    const { resultList, totalCount: count } = data.products;
     totalCount = count;
 
     if (!resultList.length) break;
