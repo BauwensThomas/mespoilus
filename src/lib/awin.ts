@@ -2,11 +2,51 @@ import { gunzipSync } from 'zlib';
 import type { AwinProduct } from '@/types';
 
 const GPC_MAP: Record<string, string[]> = {
-  chiens:   ['dog supplies', 'dog food', 'dog toys', 'dog beds', 'dog treat'],
-  chats:    ['cat supplies', 'cat litter', 'cat furniture', 'cat toys', 'cat food', 'cat treat'],
-  oiseaux:  ['bird supplies', 'bird food'],
-  rongeurs: ['small animal', 'rabbit', 'hamster', 'guinea pig'],
-  reptiles: ['reptile', 'turtle', 'lizard'],
+  chiens:   [
+    'dog supplies', 'dog food', 'dog toys', 'dog beds', 'dog treat', 'dog care',
+    // français
+    'chien', 'chiens', 'canin', 'canine', 'croquette chien', 'friandise chien',
+    // néerlandais
+    'hond', 'honden', 'hondenvoer', 'hondensnack', 'hondenspeelgoed', 'hondenverzorging',
+    // allemand
+    'hund', 'hunde', 'hundefutter', 'hundesnack', 'hundespielzeug',
+  ],
+  chats:    [
+    'cat supplies', 'cat litter', 'cat furniture', 'cat toys', 'cat food', 'cat treat', 'cat care',
+    // français
+    'chat', 'chats', 'félin', 'litière', 'croquette chat', 'friandise chat',
+    // néerlandais
+    'kat', 'katten', 'kattenvoer', 'kattensnack', 'kattenbakvulling',
+    // allemand
+    'katze', 'katzen', 'katzenfutter', 'katzensnack', 'katzenstreu',
+  ],
+  oiseaux:  [
+    'bird supplies', 'bird food',
+    // français
+    'oiseau', 'oiseaux', 'perroquet', 'canari', 'nourriture oiseau',
+    // néerlandais
+    'vogel', 'vogels', 'vogelvoer',
+    // allemand
+    'vogel', 'vögel', 'vogelfutter',
+  ],
+  rongeurs: [
+    'small animal', 'rabbit supplies', 'hamster supplies', 'guinea pig supplies', 'rodent',
+    // français
+    'rongeur', 'rongeurs', 'lapin', 'hamster', 'cochon d\'inde',
+    // néerlandais
+    'knaagdier', 'konijn', 'hamster', 'cavia',
+    // allemand
+    'kleintier', 'nagetier', 'kaninchen', 'meerschweinchen',
+  ],
+  reptiles: [
+    'reptile', 'turtle', 'lizard',
+    // français
+    'reptile', 'reptiles', 'serpent', 'lézard', 'tortue',
+    // néerlandais
+    'reptiel', 'reptielen', 'schildpad',
+    // allemand
+    'reptil', 'reptilien', 'schildkröte',
+  ],
   livres:   ['books', 'book', 'livre', 'livres', 'media > book', 'books & magazine', 'literatura', 'roman', 'bd', 'bande dessinée', 'manga', 'littérature', 'comics', 'jeunesse', 'encyclopédie', 'biographie', 'poche', 'broché', 'relié'],
 };
 
