@@ -212,8 +212,9 @@ export async function getJoinedFeeds(publisherId: string, feedToken: string): Pr
   });
 
   // ─── DÉDUPLICATION PAR MARCHAND (seulement si ≥5 feeds) ─────────────────
-  // Fnac FR a 62 flux → on garde au max les feeds pertinents (livres, animaux)
-  // ou l'URL la plus longue en fallback. Marchands avec <5 feeds → tous conservés.
+  // Marchands avec beaucoup de feeds → on garde ceux dont l'URL contient des mots-clés
+  // pertinents (livre, animal…) ou l'URL la plus longue en fallback.
+  // Marchands avec <5 feeds → tous conservés.
   const RELEVANT_FEED_KEYWORDS = ['livre', 'book', 'animal', 'pet', 'chien', 'chat', 'oiseau', 'rongeur', 'reptile'];
   const feedsByMerchant = new Map<string, Record<string, string>[]>();
   for (const f of joined) {
@@ -228,7 +229,7 @@ export async function getJoinedFeeds(publisherId: string, feedToken: string): Pr
       // Peu de feeds → tous conservés (ex: Tuft & Paw USD + EUR)
       selected.push(...feeds);
     } else {
-      // Gros marchand (ex: Fnac 62 feeds) → filtrer par mots-clés dans l'URL
+      // Gros marchand → filtrer par mots-clés dans l'URL
       const relevant = feeds.filter(f =>
         RELEVANT_FEED_KEYWORDS.some(kw => (f['URL'] ?? '').toLowerCase().includes(kw))
       );
