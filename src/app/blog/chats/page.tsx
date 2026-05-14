@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   twitter: { card: 'summary', title: meta.title, description: meta.description },
 };
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default function ChatsPage({ searchParams }: { searchParams: { q?: string } }) {
   return <CategoryPageContent category="chats" search={searchParams.q?.trim()} />;
