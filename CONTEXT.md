@@ -482,6 +482,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 
 ### Actions manuelles en attente ⚠️
 - **SQL Supabase** : supprimer faux positifs Maxi Zoo dans livres → `DELETE FROM products WHERE category = 'livres' AND merchant_name LIKE '%Maxi Zoo%';`
+- **SQL Supabase** : migration colonne product_type → `migration_product_type.sql` + `UPDATE products SET product_type = 'livres' WHERE merchant_name = 'Amazon FR';`
 - **Livres Amazon** : continuer d'en ajouter via `/produits` (objectif : ~2 par catégorie animale minimum)
 - **Amazon Associates** : générer 3 ventes dans les 180 jours pour valider le compte et débloquer l'API PA
 
@@ -662,6 +663,9 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - **maxDuration = 60** : ajouté sur toutes les routes cron manquantes (7× awin-sync, blog, social) — évite timeout 10s Vercel Hobby par défaut ✅
 - **Vercel crons** : 13 crons tous actifs et reconnus par Vercel Hobby ✅
 - **Awin mots-clés livres** : `'poche'`, `'broché'`, `'relié'` retirés (causaient "lampe de poche" → livres) ✅
+- **Filtre type de produit boutique** : bouton "Type ▼" dans la rangée catégories (après Livres, séparateur) → dropdown cases à cocher multi-select (nourriture, accessoires, habitat, jouets, hygiène, santé, livres) → param `?types=a,b` → `.in('product_type', types)` ✅
+- **Colonne `product_type TEXT`** sur `products` : migration `migration_product_type.sql` à exécuter, index GIN. `assignProductType()` dans `awin.ts` détecte le type depuis GPC + titre (ISBN → livres en priorité). `'bd'` retiré (faux positifs couvertures) ✅
+- **Livres Amazon** : `product_type = 'livres'` ajouté dans POST et PATCH de `/api/admin/products` — les nouveaux livres sont automatiquement filtrables. SQL pour les existants : `UPDATE products SET product_type = 'livres' WHERE merchant_name = 'Amazon FR';` ✅
 ---
 ## Ce qui reste à faire (code)
 ### Outils publics (`/outils/`)
