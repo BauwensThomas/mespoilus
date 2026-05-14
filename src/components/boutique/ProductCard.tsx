@@ -34,11 +34,14 @@ export default function ProductCard({ product }: { product: AwinProduct }) {
       <div className="p-5 flex flex-col gap-3 flex-1">
         <p className="text-xs text-gray-500 uppercase tracking-widest font-semibold flex items-center gap-1.5">
           {(() => {
-            const suffix = product.merchant_name.match(/\b([A-Z]{2})$/)?.[1]?.toLowerCase() ?? null;
-            const countryCode = suffix ?? (product.currency === 'USD' ? 'us' : product.currency === 'CAD' ? 'ca' : product.currency === 'GBP' ? 'gb' : null);
+            const MERCHANT_COUNTRY: Record<string, string> = {
+              'tuft & paw': 'us',
+            };
+            const nameKey = product.merchant_name.toLowerCase().replace(/\s+(fr|be|de|nl|es|it|uk)$/i, '').trim();
+            const suffix = product.merchant_name.match(/\s+(FR|BE|DE|NL|ES|IT|UK)$/)?.[1]?.toLowerCase() ?? null;
+            const countryCode = MERCHANT_COUNTRY[nameKey] ?? suffix ?? (product.currency === 'USD' ? 'us' : product.currency === 'CAD' ? 'ca' : product.currency === 'GBP' ? 'gb' : null);
             if (!countryCode) return null;
-            const label = countryCode.toUpperCase();
-            return <img src={`https://flagcdn.com/16x12/${countryCode}.png`} alt={label} className="w-4 h-3" />;
+            return <img src={`https://flagcdn.com/16x12/${countryCode}.png`} alt={countryCode.toUpperCase()} className="w-4 h-3" />;
           })()}
           {product.merchant_name}
         </p>

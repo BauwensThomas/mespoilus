@@ -3,6 +3,7 @@ import { createAdminClient, createClient } from '@/lib/supabase/server';
 import type { AwinProduct } from '@/types';
 import Link from 'next/link';
 import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
+import BoutiqueSortSelect, { type SortValue } from '@/components/boutique/BoutiqueSortSelect';
 import ProductCard from '@/components/boutique/ProductCard';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, BookOpen, ChevronLeft, ChevronRight, Store } from 'lucide-react';
 
@@ -44,16 +45,20 @@ async function getProducts(
   category: string | undefined,
   search: string | undefined,
   affiliate: string | undefined,
-  page: number
+  page: number,
+  sort: SortValue
 ): Promise<{ products: AwinProduct[]; total: number }> {
   try {
     const supabase = createAdminClient();
     const offset = (page - 1) * PAGE_SIZE;
 
-    let dataQ = supabase.from('products').select('*')
-      .gt('price', 0)
-      .order('in_stock', { ascending: false })
-      .order('price', { ascending: true });
+    let dataQ = supabase.from('products').select('*').gt('price', 0);
+
+    if (sort === 'price_asc')  dataQ = dataQ.order('price', { ascending: true });
+    else if (sort === 'price_desc') dataQ = dataQ.order('price', { ascending: false });
+    else if (sort === 'name_asc')   dataQ = dataQ.order('name', { ascending: true });
+    else /* stock */ dataQ = dataQ.order('in_stock', { ascending: false }).order('price', { ascending: true });
+
     let countQ = supabase.from('products').select('*', { count: 'exact', head: true })
       .gt('price', 0);
 
@@ -92,8 +97,10 @@ function buildPageUrl(base: URLSearchParams, page: number): string {
   return `/boutique${qs ? `?${qs}` : ''}`;
 }
 
+const VALID_SORTS: SortValue[] = ['stock', 'price_asc', 'price_desc', 'name_asc'];
+
 interface Props {
-  searchParams: { category?: string; search?: string; page?: string; affiliate?: string };
+  searchParams: { category?: string; search?: string; page?: string; affiliate?: string; sort?: string };
 }
 
 export default async function BoutiquePage({ searchParams }: Props) {
@@ -101,6 +108,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
   const search    = searchParams.search?.trim();
   const affiliate = searchParams.affiliate;
   const page      = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
+  const sort      = (VALID_SORTS.includes(searchParams.sort as SortValue) ? searchParams.sort : 'stock') as SortValue;
 
   // Vérifier si admin connecté (cookies → session Supabase)
   let isAdmin = false;
@@ -112,7 +120,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
     if (isAdmin) merchants = await getMerchants(category);
   } catch { /* non-bloquant */ }
 
-  const { products, total } = await getProducts(category, search, affiliate, page);
+  const { products, total } = await getProducts(category, search, affiliate, page, sort);
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const activeCat  = CATEGORIES.find(c => c.id === (category ?? 'all')) ?? CATEGORIES[0];
   const hasSynced  = total > 0;
@@ -121,6 +129,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
   if (category)  baseParams.set('category', category);
   if (search)    baseParams.set('search', search);
   if (affiliate) baseParams.set('affiliate', affiliate);
+  if (sort && sort !== 'stock') baseParams.set('sort', sort);
 
   return (
     <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5 pb-20">
@@ -190,8 +199,11 @@ export default async function BoutiquePage({ searchParams }: Props) {
         </div>
       )}
 
-      {/* Recherche */}
-      <BoutiqueSearchBar defaultValue={search ?? ''} />
+      {/* Recherche + Tri */}
+      <div className="flex flex-wrap items-center gap-3">
+        <BoutiqueSearchBar defaultValue={search ?? ''} />
+        <BoutiqueSortSelect defaultValue={sort} />
+      </div>
 
       {/* Bannière */}
       <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">

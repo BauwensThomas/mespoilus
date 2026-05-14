@@ -139,7 +139,8 @@ async function parseCSVStreamingWithFlush(
     const priceRaw = p['price'] ?? p['search_price'] ?? '0';
     const priceMatch = priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/);
     const price = parseFloat(priceMatch?.[1] ?? '0') || 0;
-    const currency = priceMatch?.[2] ?? 'EUR';
+    const currencyFromField = (p['currency'] ?? p['currency_code'] ?? '').toUpperCase().trim();
+    const currency = priceMatch?.[2] ?? (currencyFromField || 'EUR');
     const availability = (p['availability'] ?? p['in_stock'] ?? p['stock_status'] ?? '').toLowerCase();
     const OUT_OF_STOCK = new Set(['out_of_stock', 'out of stock', 'out-of-stock', 'outofstock', 'false', '0', 'no', 'unavailable', 'discontinued', 'sold out', 'sold_out', 'preorder', 'pre-order']);
     const inStock = availability === '' ? true : !OUT_OF_STOCK.has(availability);
