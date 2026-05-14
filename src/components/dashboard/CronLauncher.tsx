@@ -414,6 +414,68 @@ function AwinPanel() {
   );
 }
 
+// ─── CJ Sync Panel ───────────────────────────────────────────────────────────
+
+function CJSyncPanel() {
+  const [status, setStatus] = useState<StepStatus>('idle');
+  const [result, setResult] = useState<string>('');
+
+  const launch = async () => {
+    if (status === 'running') return;
+    setStatus('running');
+    setResult('');
+    try {
+      const r = await fetch('/api/admin/run-cron', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step: 'cj-sync-canada-pet-care' }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
+      setResult(`${data.synced ?? 0} produits`);
+      setStatus('done');
+    } catch (err) {
+      setResult(err instanceof Error ? err.message : 'Erreur');
+      setStatus('error');
+    }
+  };
+
+  return (
+    <div className="px-4 py-3.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2.5 flex-1 min-w-0">
+          <ShoppingBag size={18} strokeWidth={1.5} className="mt-0.5 flex-shrink-0 text-blue-600" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-blue-600">Sync Boutique CJ</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {status === 'running' ? 'Synchronisation en cours…'
+                : status === 'done' ? `✓ ${result}`
+                : status === 'error' ? result
+                : 'CanadaPetCare — antiparasitaires & santé'}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={status === 'done' ? () => { setStatus('idle'); setResult(''); } : launch}
+          disabled={status === 'running'}
+          className={clsx(
+            'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1',
+            status === 'done' ? 'bg-emerald-100 text-emerald-600 cursor-pointer'
+              : status === 'error' ? 'bg-red-100 text-red-500 hover:bg-red-200 cursor-pointer'
+              : status === 'running' ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-100 text-blue-700 hover:bg-blue-200 cursor-pointer'
+          )}
+        >
+          {status === 'done' && <><CheckCircle2 size={14} strokeWidth={1.5} />Reset</>}
+          {status === 'error' && <><XCircle size={14} strokeWidth={1.5} />Retry</>}
+          {status === 'running' && <><span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />En cours</>}
+          {status === 'idle' && 'Lancer'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 export default function CronLauncher() {
@@ -516,6 +578,9 @@ export default function CronLauncher() {
 
             {/* Panel Awin avec avancement */}
             <AwinPanel />
+
+            {/* CJ sync */}
+            <CJSyncPanel />
           </div>
 
           <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 flex items-start gap-2">
