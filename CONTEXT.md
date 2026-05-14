@@ -34,7 +34,7 @@ Chaque agent utilise l'API Anthropic (Claude) et fonctionne de façon autonome. 
 |-------|------|--------------|-----------|-----------------|
 | 👔 **Thomas** | CEO Orchestrateur | Opus 4.7 | 3000 | Stratégie globale, priorisation, coordination, rapports |
 | ✍️ **Marie** | Rédactrice de contenu | **Haiku 4.5** | **1800** | Articles de blog (550-700 mots), guides pratiques, conseils |
-| 🔍 **Lucas** | Spécialiste SEO | Sonnet 4.6 | **1200** | Recherche mots-clés, optimisation on-page, stratégie francophone |
+| 🔍 **Lucas** | Spécialiste SEO | Sonnet 4.6 | **3000** | Recherche mots-clés, optimisation on-page, stratégie francophone |
 | 📱 **Emma** | Réseaux sociaux | Haiku 4.5 | 2000 | Posts Facebook + Instagram (@mespoilusofficiel), hashtags, lien article complet |
 | 💻 **Maxime** | Développeur & Maintenance | Sonnet 4.6 | 6000 | Performances, bugs, Next.js / Supabase, Core Web Vitals |
 | 💬 **Léa** | Support client | Haiku 4.5 | 3000 | Réponses emails clients, commandes, FAQ -à la demande uniquement (pas de cron) |
@@ -58,7 +58,7 @@ Chaque agent utilise l'API Anthropic (Claude) et fonctionne de façon autonome. 
 | Stockage images | Supabase Storage `blog-images` (articles) + `hero-photos` (hero & catégories) |
 | Sécurité | Middleware Edge : rate limiting, détection SQLi/XSS, blocage IP |
 | Déploiement | Vercel (crons configurés dans `vercel.json`) |
-| Affiliation | Awin (EU) + Amazon Associates FR (en cours, catégorie Livres) + CJ.com (CA/US, en attente confirmation) |
+| Affiliation | Awin (EU) + Amazon Associates FR (en cours, catégorie Livres) + CJ.com / scraping sitemap (CanadaPetCare CA/US — ~82 produits importés) |
 
 ### Variables d'environnement requises
 ANTHROPIC_API_KEY
@@ -221,6 +221,7 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 | `/api/cron/awin-sync/reptiles` | Tous les jours | 3h20 | -| `products` |
 | `/api/cron/awin-sync/livres` | Tous les jours | 3h40 | -| `products` |
 | `/api/cron/awin-sync/general` | Tous les jours | 4h00 | -| `products` |
+| `/api/cron/cj-sync/canada-pet-care` | Tous les jours | 5h00 | -| `products` (scraping sitemap canadapetcare.com, ~82 produits, USD, 🇨🇦) |
 | `/api/cron/blog` | Lun / Mer / Ven | 9h00 | Lucas + Marie | `articles` + Pexels Storage |
 | `/api/cron/social` | Lun / Mer / Ven | 9h30 | Emma | `social_posts` + webhook Facebook |
 | `/api/cron/finance` | **1er de chaque mois** | 8h00 | Antoine | `financial_reports` |
@@ -231,7 +232,7 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 - Finance → vérifie si `financial_reports.period` existe déjà pour ce mois → abandon si oui
 - Newsletter → vérifie si une campagne `sent` existe dans les 5 derniers jours → abandon si oui
 ### CronLauncher -Pipelines manuels (Dashboard)
-Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
+Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de sync boutique :
 - **Sélecteur animal** : forcer un animal spécifique (chiens, chats, oiseaux, rongeurs, reptiles) ou Auto
 - **Sélecteur type article** : Auto (rotation), Trending, Partenaire/Produit, Conseil pratique
 | Pipeline | Agents | Ce qui se passe |
@@ -241,6 +242,15 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 | 🛡️ Sécurité & Maintenance | Nathalie + Maxime | Audit sécurité + audit technique → `security_logs` + `tech_reports` |
 | 💌 Newsletter | Sofia | Newsletter avec 3 derniers articles → générée + **envoyée automatiquement via Resend** |
 **Léa** : pas de cron -répond à la demande sur sa page agent uniquement.
+- **Sync Boutique Awin** (`AwinPanel`) : 7 catégories indépendantes, progression temps réel depuis `awin_sync_progress`
+- **Sync Boutique CJ** (`CJSyncPanel`) : déclenche `/api/cron/cj-sync/canada-pet-care` (scraper sitemap) -générique, prêt pour futurs affiliés CJ
+- **Import CanadaPetCare** (`CanadaPetCareImportPanel`) : scraping one-shot `/api/admin/import-canada-pet-care` -utile pour import initial ou réimport forcé. Invalide le cache `/boutique` via `revalidatePath` après import.
+### Page admin Produits affiliés (`/produits`)
+- Renommée "Produits affiliés" (était "Livres Amazon") -sidebar icône `ShoppingBag`
+- **Onglets affiliés** en haut : `Amazon Livres` | `CanadaPetCare` (extensible via `AFFILIATE_SOURCES`)
+- **Amazon** : formulaire ajout livre (ASIN + image + prix + catégories animales), liste éditable avec catégories
+- **CanadaPetCare** : liste lecture seule (image, nom, catégories, prix USD, lien externe, supprimer)
+- API `/api/admin/products-list` : accepte `?merchant=` pour filtrer par marchand (défaut : `Amazon FR`)
 ### Images -Architecture
 | Usage | Source | Stockage |
 |-------|--------|---------|
@@ -389,7 +399,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Filtres par catégorie (chiens, chats, oiseaux, rongeurs, reptiles, **livres**), barre de recherche, disclaimer affiliation barre fixe en bas
 - **Pagination** : 48 produits/page, param `?page=N`, compte exact via requête Supabase parallèle `{ count: 'exact', head: true }`
 - **Tri client** : `BoutiqueSortSelect.tsx` (select) avec 4 options via param `?sort=` : `stock` (dispo en premier + prix asc, défaut), `price_asc`, `price_desc`, `name_asc`
-- **Filtre admin affilié** : panel amber visible uniquement si session admin connectée -liste des marchands par catégorie, param `?affiliate=Merchant+Name`
+- **Filtre admin affilié** : panel amber visible uniquement si session admin connectée -liste des marchands par catégorie, param `?affiliate=Merchant+Name`. `getMerchants()` fait 2 requêtes : existence check pour marchands connus non-Awin (`Amazon FR`, `CanadaPetCare`) + requête dynamique pour marchands Awin (limit 5000). Évite la limite de lignes Supabase qui tronquait les résultats sur "Tous".
 - `ProductCard` : image `unoptimized` (CDN Awin externe), nom, description, prix + devise, drapeau marchand, bouton "Voir" (orange). Pas de filtre ni badge stock — tous les produits sont affichés
 - **Drapeaux** via `flagcdn.com` : table override `MERCHANT_COUNTRY` pour cas connus (ex: `'tuft & paw' → 'us'`), puis suffixe marchand (`Zooplus FR` → fr), puis devise (USD→us, CAD→ca, GBP→gb). EUR sans pays connu = pas de drapeau
 - Cron sync Awin : **7 crons par catégorie** (2h-4h UTC, 20min d'écart), reset catégorie + réinsertion depuis feeds Awin
@@ -449,8 +459,9 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - `pays: string[]` (codes ISO), `network: 'awin' | 'cj'`
 - `tagColor` (classes Tailwind, pour PartenairesSection et BoutiquePartenairesRotating)
 - `tagBg` / `tagText` (valeurs CSS hex, pour BoutiquePartenairesCarousel -inline styles)
-- Partenaire actuel : **Dogfy Diet** (Awin, FR, chiens, nutrition fraîche)
-- En attente CJ.com : Canada Pet Care, EntirelyPets (CA/US) -à ajouter quand confirmés
+- Partenaires actifs : **Dogfy Diet** (Awin, FR, chiens), **Maxi Zoo** (Awin, FR+BE -picker pays popup), **Tuft & Paw** (Awin, US, chats)
+- **Maxi Zoo** : `urlsByCountry: { FR: awinmid=68698, BE: awinmid=68696 }` -clic ouvre un popup (bandeau) ou modal (section) pour choisir FR 🇫🇷 ou BE 🇧🇪
+- CanadaPetCare : produits dans boutique via scraping sitemap (pas de section partenaire dédiée)
 - Carousel actif à partir de **3 partenaires** (flèches + animation)
 #### Fix Tailwind config
 - `./src/lib/**/*.{js,ts,jsx,tsx}` ajouté au `content` de `tailwind.config.ts`

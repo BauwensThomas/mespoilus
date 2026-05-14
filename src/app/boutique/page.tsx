@@ -30,24 +30,34 @@ const CATEGORIES = [
 ];
 
 
+// Marchands hors-Awin ajoutés manuellement (1 requête existence = fiable)
+const NON_AWIN_MERCHANTS = ['Amazon FR', 'CanadaPetCare'];
+
 async function getMerchants(category?: string): Promise<string[]> {
   try {
     const supabase = createAdminClient();
+    const cat = category && category !== 'all' ? category : null;
+    const names = new Set<string>();
 
-    // Marchands Awin (hors Amazon)
-    let q = supabase.from('products').select('merchant_name').neq('merchant_name', 'Amazon FR').limit(100000);
-    if (category && category !== 'all') q = q.contains('categories', [category]);
-    const { data } = await q;
-    const names = data?.map((r: { merchant_name: string }) => r.merchant_name).filter(Boolean) ?? [];
-    const result = [...new Set(names)].sort() as string[];
+    // Marchands connus : vérification d'existence (1 row, ultra-rapide)
+    await Promise.all(NON_AWIN_MERCHANTS.map(async (merchant) => {
+      let q = supabase.from('products').select('id').eq('merchant_name', merchant).limit(1);
+      if (cat) q = q.contains('categories', [cat]);
+      const { data } = await q;
+      if (data && data.length > 0) names.add(merchant);
+    }));
 
-    // Amazon FR : vérification séparée (toujours en dehors de la limite)
-    let amazonQ = supabase.from('products').select('id').eq('merchant_name', 'Amazon FR').limit(1);
-    if (category && category !== 'all') amazonQ = amazonQ.contains('categories', [category]);
-    const { data: amazonData } = await amazonQ;
-    if (amazonData && amazonData.length > 0) result.push('Amazon FR');
+    // Marchands Awin : requête dynamique (chaque marchand a des centaines de produits,
+    // donc ils apparaissent bien dans les premières lignes)
+    let awinQ = supabase.from('products').select('merchant_name')
+      .not('merchant_name', 'is', null)
+      .not('merchant_name', 'in', `(${NON_AWIN_MERCHANTS.map(m => `"${m}"`).join(',')})`)
+      .limit(5000);
+    if (cat) awinQ = awinQ.contains('categories', [cat]);
+    const { data: awinData } = await awinQ;
+    awinData?.forEach((r: { merchant_name: string }) => { if (r.merchant_name) names.add(r.merchant_name); });
 
-    return result;
+    return [...names].sort();
   } catch {
     return [];
   }

@@ -30,7 +30,7 @@ const navItems = [
   { href: '/moderation',  label: 'Modération', icon: Shield },
   { href: '/blog',        label: 'Blog',       icon: BookOpen },
   { href: '/boutique',    label: 'Boutique',   icon: ShoppingBag },
-  { href: '/produits',    label: 'Livres Amazon', icon: BookOpen },
+  { href: '/produits',    label: 'Produits affiliés', icon: ShoppingBag },
 ];
 
 interface SidebarProps {

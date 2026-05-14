@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, Pencil, Check, X } from 'lucide-react';
+import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, Pencil, Check, X, ShoppingBag } from 'lucide-react';
 import clsx from 'clsx';
 
 const ANIMAL_CATEGORIES = [
@@ -10,6 +10,11 @@ const ANIMAL_CATEGORIES = [
   { id: 'oiseaux',  label: 'Oiseaux' },
   { id: 'rongeurs', label: 'Rongeurs' },
   { id: 'reptiles', label: 'Reptiles' },
+];
+
+const AFFILIATE_SOURCES = [
+  { id: 'amazon',        label: 'Amazon Livres',   merchant: 'Amazon FR',       icon: BookOpen,     color: 'text-orange-600' },
+  { id: 'canadapetcare', label: 'CanadaPetCare',   merchant: 'CanadaPetCare',   icon: ShoppingBag,  color: 'text-blue-600'   },
 ];
 
 interface Product {
@@ -33,22 +38,24 @@ export default function ProduitsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [preview, setPreview] = useState('');
+  const [filterAffiliate, setFilterAffiliate] = useState<string>('amazon');
   const [filterCat, setFilterCat] = useState<string>('all');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCats, setEditCats] = useState<string[]>([]);
   const [editSaving, setEditSaving] = useState(false);
 
-  async function fetchProducts() {
+  async function fetchProducts(affiliate = filterAffiliate) {
     setLoading(true);
+    const src = AFFILIATE_SOURCES.find(s => s.id === affiliate) ?? AFFILIATE_SOURCES[0];
     try {
-      const r = await fetch('/api/admin/products-list');
+      const r = await fetch(`/api/admin/products-list?merchant=${encodeURIComponent(src.merchant)}`);
       const data = await r.json();
       setProducts(data.products ?? []);
     } catch { /* ignore */ }
     finally { setLoading(false); }
   }
 
-  useEffect(() => { fetchProducts(); }, []);
+  useEffect(() => { fetchProducts(filterAffiliate); }, [filterAffiliate]);
 
   // Générer le lien affilié en temps réel depuis l'URL collée
   useEffect(() => {
@@ -126,6 +133,8 @@ export default function ProduitsPage() {
     }));
   }
 
+  const activeSrc = AFFILIATE_SOURCES.find(s => s.id === filterAffiliate) ?? AFFILIATE_SOURCES[0];
+
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
       <div className="flex items-center gap-3">
@@ -133,13 +142,35 @@ export default function ProduitsPage() {
           <BookOpen size={20} strokeWidth={1.5} className="text-orange-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Livres Amazon</h1>
-          <p className="text-sm text-gray-500">Tag affilié : <code className="bg-gray-100 px-1.5 py-0.5 rounded text-orange-600 text-xs">mespoilus-21</code></p>
+          <h1 className="text-2xl font-bold text-gray-900">Produits affiliés</h1>
+          <p className="text-sm text-gray-500">Gérer les produits de chaque partenaire affilié</p>
         </div>
       </div>
 
-      {/* Formulaire ajout */}
-      <div className="card p-6 border border-orange-200">
+      {/* Onglets affiliés */}
+      <div className="flex gap-2">
+        {AFFILIATE_SOURCES.map(src => {
+          const Icon = src.icon;
+          return (
+            <button
+              key={src.id}
+              onClick={() => { setFilterAffiliate(src.id); setFilterCat('all'); }}
+              className={clsx(
+                'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors',
+                filterAffiliate === src.id
+                  ? 'bg-orange-600 text-white border-orange-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
+              )}
+            >
+              <Icon size={15} strokeWidth={1.5} />
+              {src.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Formulaire ajout (Amazon uniquement) */}
+      {filterAffiliate === 'amazon' && <div className="card p-6 border border-orange-200">
         <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Plus size={16} strokeWidth={2} className="text-orange-600" />
           Ajouter un livre
@@ -242,15 +273,15 @@ export default function ProduitsPage() {
             }
           </button>
         </form>
-      </div>
+      </div>}
 
-      {/* Liste livres existants */}
+      {/* Liste produits */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-gray-900">
-            Livres Amazon ({products.length})
+            {activeSrc.label} ({products.length})
           </h2>
-          <button onClick={fetchProducts} className="text-gray-400 hover:text-gray-700 transition-colors">
+          <button onClick={() => fetchProducts()} className="text-gray-400 hover:text-gray-700 transition-colors">
             <RefreshCw size={16} strokeWidth={1.5} />
           </button>
         </div>
@@ -283,7 +314,7 @@ export default function ProduitsPage() {
         {loading ? (
           <p className="text-sm text-gray-500 py-4 text-center">Chargement…</p>
         ) : products.length === 0 ? (
-          <p className="text-sm text-gray-500 py-8 text-center">Aucun livre Amazon ajouté</p>
+          <p className="text-sm text-gray-500 py-8 text-center">Aucun produit {activeSrc.label}</p>
         ) : (
           <div className="space-y-3">
             {products
@@ -297,24 +328,23 @@ export default function ProduitsPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
                       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        {p.categories.filter(c => c !== 'livres').length === 0
-                          ? <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-medium">Aucune catégorie animale</span>
-                          : p.categories.filter(c => c !== 'livres').map(c => (
-                            <span key={c} className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium capitalize">{c}</span>
-                          ))
-                        }
-                        <span className="text-xs text-gray-400">{p.price.toFixed(2)} €</span>
+                        {p.categories.filter(c => c !== 'livres').map(c => (
+                          <span key={c} className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium capitalize">{c}</span>
+                        ))}
+                        <span className="text-xs text-gray-400">{p.price.toFixed(2)} {p.currency ?? '€'}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => editingId === p.id ? setEditingId(null) : startEdit(p)}
-                        className={clsx('transition-colors', editingId === p.id ? 'text-orange-500' : 'text-gray-400 hover:text-orange-500')}
-                        title="Modifier"
-                      >
-                        <Pencil size={15} strokeWidth={1.5} />
-                      </button>
-                      <a href={p.affiliate_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-600 transition-colors" title="Voir sur Amazon">
+                      {filterAffiliate === 'amazon' && (
+                        <button
+                          onClick={() => editingId === p.id ? setEditingId(null) : startEdit(p)}
+                          className={clsx('transition-colors', editingId === p.id ? 'text-orange-500' : 'text-gray-400 hover:text-orange-500')}
+                          title="Modifier"
+                        >
+                          <Pencil size={15} strokeWidth={1.5} />
+                        </button>
+                      )}
+                      <a href={p.affiliate_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-600 transition-colors" title="Voir le produit">
                         <ExternalLink size={15} strokeWidth={1.5} />
                       </a>
                       <button onClick={() => handleDelete(p.id, p.name)} className="text-gray-400 hover:text-red-500 transition-colors" title="Supprimer">
@@ -323,7 +353,7 @@ export default function ProduitsPage() {
                     </div>
                   </div>
 
-                  {editingId === p.id && (
+                  {filterAffiliate === 'amazon' && editingId === p.id && (
                     <div className="border-t border-gray-200 px-4 py-3 bg-gray-50 rounded-b-lg">
                       <p className="text-xs font-medium text-gray-700 mb-2">Catégories animales :</p>
                       <div className="flex flex-wrap gap-2 mb-3">
@@ -363,9 +393,11 @@ export default function ProduitsPage() {
         )}
       </div>
 
-      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm text-emerald-800">
-        ✓ Mention légale Amazon présente dans le footer · Tag affilié : <strong>mespoilus-21</strong>
-      </div>
+      {filterAffiliate === 'amazon' && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm text-emerald-800">
+          ✓ Mention légale Amazon présente dans le footer · Tag affilié : <strong>mespoilus-21</strong>
+        </div>
+      )}
     </div>
   );
 }

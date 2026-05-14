@@ -509,7 +509,7 @@ function CJSyncPanel() {
               {status === 'running' ? 'Synchronisation en cours…'
                 : status === 'done' ? `✓ ${result}`
                 : status === 'error' ? result
-                : 'CanadaPetCare — antiparasitaires & santé'}
+                : 'Sync produits affiliés via l\'API CJ'}
             </p>
           </div>
         </div>
