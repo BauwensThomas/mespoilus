@@ -15,7 +15,7 @@ export async function runAgent(
   task: string,
   model: string = MODELS.sonnet,
   maxTokens: number = 2048
-): Promise<{ content: string; inputTokens: number; outputTokens: number }> {
+): Promise<{ content: string; inputTokens: number; outputTokens: number; stopReason: string }> {
   const message = await anthropic.messages.create({
     model,
     max_tokens: maxTokens,
@@ -32,6 +32,7 @@ export async function runAgent(
     content,
     inputTokens: message.usage.input_tokens,
     outputTokens: message.usage.output_tokens,
+    stopReason: message.stop_reason ?? 'end_turn',
   };
 }
 

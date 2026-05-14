@@ -30,14 +30,20 @@ async function supabaseFetch(path: string, method: string, body?: unknown, param
 }
 
 async function getImageUrl(): Promise<string | null> {
-  // 1. Image de l'article le plus récent déjà stockée dans Supabase
+  // 1. Image de l'article le plus récent stockée dans Supabase Storage
   const res = await supabaseFetch('articles', 'GET', undefined,
     'status=eq.published&image_url=not.is.null&order=published_at.desc&limit=1&select=image_url,category');
   const rows = res.data as { image_url: string; category: string }[] | null;
 
-  if (rows?.[0]?.image_url) {
-    console.log('[save-post] image article récent:', rows[0].image_url.slice(0, 60));
-    return rows[0].image_url;
+  const candidateUrl = rows?.[0]?.image_url ?? null;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  // N'utiliser que les URLs Supabase Storage — les URLs CDN externes (Awin, etc.) sont rejetées par Instagram
+  if (candidateUrl && supabaseUrl && candidateUrl.startsWith(supabaseUrl)) {
+    console.log('[save-post] image article récent (Supabase):', candidateUrl.slice(0, 60));
+    return candidateUrl;
+  }
+  if (candidateUrl) {
+    console.log('[save-post] image article récent ignorée (CDN externe), fallback Pexels...');
   }
 
   // 2. Fallback via Pexels + stockage Supabase
