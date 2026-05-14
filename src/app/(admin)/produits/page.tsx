@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw } from 'lucide-react';
 import clsx from 'clsx';
-import Image from 'next/image';
 
 const ANIMAL_CATEGORIES = [
   { id: 'chiens',   label: 'Chiens' },
@@ -34,6 +33,7 @@ export default function ProduitsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [preview, setPreview] = useState('');
+  const [filterCat, setFilterCat] = useState<string>('all');
 
   async function fetchProducts() {
     setLoading(true);
@@ -233,48 +233,79 @@ export default function ProduitsPage() {
           </button>
         </div>
 
+        {/* Filtre par catégorie animale */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {[{ id: 'all', label: 'Tous' }, ...ANIMAL_CATEGORIES].map(c => {
+            const count = c.id === 'all'
+              ? products.length
+              : products.filter(p => p.categories.includes(c.id)).length;
+            return (
+              <button
+                key={c.id}
+                onClick={() => setFilterCat(c.id)}
+                className={clsx(
+                  'text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors',
+                  filterCat === c.id
+                    ? 'bg-orange-600 text-white border-orange-600'
+                    : count === 0
+                      ? 'bg-red-50 text-red-500 border-red-200 hover:border-red-400'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
+                )}
+              >
+                {c.label} <span className="opacity-70">({count})</span>
+              </button>
+            );
+          })}
+        </div>
+
         {loading ? (
           <p className="text-sm text-gray-500 py-4 text-center">Chargement…</p>
         ) : products.length === 0 ? (
           <p className="text-sm text-gray-500 py-8 text-center">Aucun livre Amazon ajouté</p>
         ) : (
           <div className="space-y-3">
-            {products.map(p => (
-              <div key={p.id} className="flex items-center gap-4 p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
-                {p.image_url && (
-                  <img src={p.image_url} alt={p.name} className="w-10 h-14 object-contain flex-shrink-0 rounded" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{p.price.toFixed(2)} € · {p.categories.join(', ')}</p>
+            {products
+              .filter(p => filterCat === 'all' || p.categories.includes(filterCat))
+              .map(p => (
+                <div key={p.id} className="flex items-center gap-4 p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                  {p.image_url && (
+                    <img src={p.image_url} alt={p.name} className="w-10 h-14 object-contain flex-shrink-0 rounded" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      {p.categories.filter(c => c !== 'livres').map(c => (
+                        <span key={c} className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium capitalize">{c}</span>
+                      ))}
+                      <span className="text-xs text-gray-400">{p.price.toFixed(2)} €</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <a
+                      href={p.affiliate_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-orange-600 transition-colors"
+                      title="Voir sur Amazon"
+                    >
+                      <ExternalLink size={15} strokeWidth={1.5} />
+                    </a>
+                    <button
+                      onClick={() => handleDelete(p.id, p.name)}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                      title="Supprimer"
+                    >
+                      <Trash2 size={15} strokeWidth={1.5} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <a
-                    href={p.affiliate_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-400 hover:text-orange-600 transition-colors"
-                    title="Voir sur Amazon"
-                  >
-                    <ExternalLink size={15} strokeWidth={1.5} />
-                  </a>
-                  <button
-                    onClick={() => handleDelete(p.id, p.name)}
-                    className="text-gray-400 hover:text-red-500 transition-colors"
-                    title="Supprimer"
-                  >
-                    <Trash2 size={15} strokeWidth={1.5} />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
-        <p className="font-semibold mb-1">Mention légale obligatoire Amazon</p>
-        <p>La phrase <em>"En tant que Partenaire Amazon, je réalise un bénéfice sur les achats remplissant les conditions requises."</em> doit apparaître sur le site. Pense à l'ajouter dans le footer.</p>
+      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm text-emerald-800">
+        ✓ Mention légale Amazon présente dans le footer · Tag affilié : <strong>mespoilus-21</strong>
       </div>
     </div>
   );
