@@ -263,11 +263,13 @@
 
 .article-content a {
   color: #d97706;
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
 }
 
 .article-content a:hover {
-  text-decoration: underline;
+  color: #b45309;
 }
 
 .article-content strong {
