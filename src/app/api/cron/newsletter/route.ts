@@ -27,19 +27,25 @@ export async function GET(req: Request) {
   const globalStart = Date.now();
   const supabase = createAdminClient();
 
-  // Éviter les doublons : vérifier si une newsletter a déjà été envoyée dans les 5 derniers jours
-  const since = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: recentSent } = await supabase
-    .from('newsletter_campaigns')
-    .select('id')
-    .eq('status', 'sent')
-    .gte('sent_at', since)
-    .limit(1)
-    .maybeSingle();
+  const urlParams = new URL(req.url).searchParams;
+  const bypass = urlParams.get('bypass') === 'true';
+  const target = urlParams.get('target') ?? 'all'; // 'admin' | 'all'
 
-  if (recentSent) {
-    console.log('[Cron Newsletter] Newsletter déjà envoyée cette semaine, abandon.');
-    return NextResponse.json({ success: false, reason: 'already_sent_this_week' });
+  // Éviter les doublons sauf si bypass=true (envoi manuel depuis la page agent)
+  if (!bypass) {
+    const since = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentSent } = await supabase
+      .from('newsletter_campaigns')
+      .select('id')
+      .eq('status', 'sent')
+      .gte('sent_at', since)
+      .limit(1)
+      .maybeSingle();
+
+    if (recentSent) {
+      console.log('[Cron Newsletter] Newsletter déjà envoyée cette semaine, abandon.');
+      return NextResponse.json({ success: false, reason: 'already_sent_this_week' });
+    }
   }
 
   // Récupérer les 3 derniers articles publiés
@@ -85,13 +91,19 @@ Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": 
 
     if (!campaign?.content_html) throw new Error('Brouillon newsletter introuvable après génération');
 
-    // ── Étape 3 : Récupérer les abonnés actifs ────────────────────────────────
-    const { data: subscribers } = await supabase
-      .from('newsletter_subscribers')
-      .select('email')
-      .eq('status', 'active');
-
-    const emails = (subscribers ?? []).map((s: { email: string }) => s.email);
+    // ── Étape 3 : Destinataires selon target ─────────────────────────────────
+    let emails: string[] = [];
+    if (target === 'admin') {
+      const adminEmail = process.env.ADMIN_EMAIL ?? 'thozma.thomas@gmail.com';
+      emails = [adminEmail];
+      console.log(`[Cron Newsletter] Envoi test → admin (${adminEmail})`);
+    } else {
+      const { data: subscribers } = await supabase
+        .from('newsletter_subscribers')
+        .select('email')
+        .eq('status', 'active');
+      emails = (subscribers ?? []).map((s: { email: string }) => s.email);
+    }
 
     if (emails.length === 0) {
       await logActivity('thomas', 'Thomas', 'Cron newsletter : aucun abonné actif', 'success', Date.now() - globalStart);

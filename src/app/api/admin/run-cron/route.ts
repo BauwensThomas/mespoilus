@@ -25,11 +25,13 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
-  const { step, animal, type, auto } = await req.json() as {
+  const { step, animal, type, auto, target, bypass } = await req.json() as {
     step: string;
     animal?: string;
     type?: string;
     auto?: string;
+    target?: string;
+    bypass?: string;
   };
 
   // ─── Lecture progression Awin (pas d'appel cron, lecture directe Supabase) ──
@@ -56,6 +58,8 @@ export async function POST(req: NextRequest) {
   if (step === 'blog' && auto === 'true') params.set('auto', 'true');
   else if (step === 'blog' && animal && VALID_ANIMALS.includes(animal)) params.set('animal', animal);
   if (step === 'blog' && type && VALID_TYPES.includes(type)) params.set('type', type);
+  if (step === 'newsletter' && bypass === 'true') params.set('bypass', 'true');
+  if (step === 'newsletter' && target) params.set('target', target);
   const queryParams = params.toString() ? `?${params.toString()}` : '';
 
   try {
