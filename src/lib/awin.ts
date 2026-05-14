@@ -7,7 +7,7 @@ const GPC_MAP: Record<string, string[]> = {
   oiseaux:  ['bird supplies', 'bird food'],
   rongeurs: ['small animal', 'rabbit', 'hamster', 'guinea pig'],
   reptiles: ['reptile', 'turtle', 'lizard'],
-  livres:   ['books', 'book', 'livre', 'livres', 'media > book', 'books & magazine', 'literatura'],
+  livres:   ['books', 'book', 'livre', 'livres', 'media > book', 'books & magazine', 'literatura', 'roman', 'bd', 'bande dessinée', 'manga', 'littérature', 'comics', 'jeunesse', 'encyclopédie', 'biographie', 'poche', 'broché', 'relié'],
 };
 
 // Mots simples : titre uniquement, bornes de mot (évite "chat en direct", "catalogue", "pochette")
@@ -141,7 +141,8 @@ async function parseCSVStreamingWithFlush(
     const price = parseFloat(priceMatch?.[1] ?? '0') || 0;
     const currency = priceMatch?.[2] ?? 'EUR';
     const availability = (p['availability'] ?? p['in_stock'] ?? p['stock_status'] ?? '').toLowerCase();
-    const inStock = ['in_stock', 'in stock', 'in-stock', 'available', '1', 'true', 'yes', 'instock'].includes(availability);
+    const OUT_OF_STOCK = new Set(['out_of_stock', 'out of stock', 'out-of-stock', 'outofstock', 'false', '0', 'no', 'unavailable', 'discontinued', 'sold out', 'sold_out', 'preorder', 'pre-order']);
+    const inStock = availability === '' ? true : !OUT_OF_STOCK.has(availability);
     const imageUrl = p['image_link'] ?? p['aw_image_url'] ?? p['merchant_image_url'] ?? '';
 
     seenIds.add(pid);

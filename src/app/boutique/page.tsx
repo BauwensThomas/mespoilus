@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import type { AwinProduct } from '@/types';
 import Link from 'next/link';
 import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
 import ProductCard from '@/components/boutique/ProductCard';
-import { PawPrint, Dog, Cat, Bird, Mouse, Zap, BookOpen } from 'lucide-react';
+import { PawPrint, Dog, Cat, Bird, Mouse, Zap, BookOpen, ChevronLeft, ChevronRight, Store } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Boutique animaux -Mes Poilus',
@@ -14,6 +14,8 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 3600;
+
+const PAGE_SIZE = 48;
 
 const CATEGORIES = [
   { id: 'all',      label: 'Tous',     icon: PawPrint },
@@ -25,35 +27,100 @@ const CATEGORIES = [
   { id: 'livres',   label: 'Livres',   icon: BookOpen },
 ];
 
-async function getProducts(category?: string, search?: string): Promise<AwinProduct[]> {
+async function getMerchants(category?: string): Promise<string[]> {
   try {
     const supabase = createAdminClient();
-    let q = supabase
-      .from('products')
-      .select('*')
-      .eq('in_stock', true)
-      .gt('price', 0)
-      .order('price', { ascending: true })
-      .limit(48);
+    let q = supabase.from('products').select('merchant_name').limit(10000);
     if (category && category !== 'all') q = q.contains('categories', [category]);
-    if (search) q = q.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
     const { data } = await q;
-    return (data as AwinProduct[]) ?? [];
+    const names = data?.map((r: { merchant_name: string }) => r.merchant_name).filter(Boolean) ?? [];
+    return [...new Set(names)].sort() as string[];
   } catch {
     return [];
   }
 }
 
+async function getProducts(
+  category: string | undefined,
+  search: string | undefined,
+  affiliate: string | undefined,
+  page: number
+): Promise<{ products: AwinProduct[]; total: number }> {
+  try {
+    const supabase = createAdminClient();
+    const offset = (page - 1) * PAGE_SIZE;
+
+    let dataQ = supabase.from('products').select('*')
+      .gt('price', 0)
+      .order('in_stock', { ascending: false })
+      .order('price', { ascending: true });
+    let countQ = supabase.from('products').select('*', { count: 'exact', head: true })
+      .gt('price', 0);
+
+    if (category && category !== 'all') {
+      dataQ  = dataQ.contains('categories', [category]);
+      countQ = countQ.contains('categories', [category]);
+    }
+    if (search) {
+      const filter = `name.ilike.%${search}%,description.ilike.%${search}%`;
+      dataQ  = dataQ.or(filter);
+      countQ = countQ.or(filter);
+    }
+    if (affiliate) {
+      dataQ  = dataQ.eq('merchant_name', affiliate);
+      countQ = countQ.eq('merchant_name', affiliate);
+    }
+
+    dataQ = dataQ.range(offset, offset + PAGE_SIZE - 1);
+
+    const [dataRes, countRes] = await Promise.all([dataQ, countQ]);
+
+    return {
+      products: (dataRes.data as AwinProduct[]) ?? [],
+      total: countRes.count ?? 0,
+    };
+  } catch {
+    return { products: [], total: 0 };
+  }
+}
+
+function buildPageUrl(base: URLSearchParams, page: number): string {
+  const p = new URLSearchParams(base);
+  if (page <= 1) p.delete('page');
+  else p.set('page', String(page));
+  const qs = p.toString();
+  return `/boutique${qs ? `?${qs}` : ''}`;
+}
+
 interface Props {
-  searchParams: { category?: string; search?: string };
+  searchParams: { category?: string; search?: string; page?: string; affiliate?: string };
 }
 
 export default async function BoutiquePage({ searchParams }: Props) {
-  const category = searchParams.category;
-  const search = searchParams.search?.trim();
-  const products = await getProducts(category, search);
-  const activeCat = CATEGORIES.find(c => c.id === (category ?? 'all')) ?? CATEGORIES[0];
-  const hasSynced = products.length > 0;
+  const category  = searchParams.category;
+  const search    = searchParams.search?.trim();
+  const affiliate = searchParams.affiliate;
+  const page      = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
+
+  // Vérifier si admin connecté (cookies → session Supabase)
+  let isAdmin = false;
+  let merchants: string[] = [];
+  try {
+    const authClient = createClient();
+    const { data: { user } } = await authClient.auth.getUser();
+    isAdmin = !!user;
+    if (isAdmin) merchants = await getMerchants(category);
+  } catch { /* non-bloquant */ }
+
+  const { products, total } = await getProducts(category, search, affiliate, page);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const activeCat  = CATEGORIES.find(c => c.id === (category ?? 'all')) ?? CATEGORIES[0];
+  const hasSynced  = total > 0;
+
+  const baseParams = new URLSearchParams();
+  if (category)  baseParams.set('category', category);
+  if (search)    baseParams.set('search', search);
+  if (affiliate) baseParams.set('affiliate', affiliate);
 
   return (
     <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5 pb-20">
@@ -68,10 +135,13 @@ export default async function BoutiquePage({ searchParams }: Props) {
         {CATEGORIES.map(cat => {
           const isActive = (cat.id === 'all' && !category) || cat.id === category;
           const IconComponent = cat.icon;
+          const href = cat.id === 'all'
+            ? (affiliate ? `/boutique?affiliate=${encodeURIComponent(affiliate)}` : '/boutique')
+            : `/boutique?category=${cat.id}${affiliate ? `&affiliate=${encodeURIComponent(affiliate)}` : ''}`;
           return (
             <Link
               key={cat.id}
-              href={cat.id === 'all' ? '/boutique' : `/boutique?category=${cat.id}`}
+              href={href}
               className={`text-sm px-3 py-1.5 rounded-lg border transition-all duration-200 flex items-center gap-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                 isActive
                   ? 'bg-orange-600 text-white border-orange-600 focus:ring-orange-300'
@@ -85,17 +155,58 @@ export default async function BoutiquePage({ searchParams }: Props) {
         })}
       </div>
 
+      {/* Filtre affiliés — admin uniquement */}
+      {isAdmin && merchants.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-2">
+          <p className="text-xs font-semibold text-amber-700 uppercase tracking-widest flex items-center gap-1.5">
+            <Store size={13} />
+            Filtre affilié (admin)
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={category ? `/boutique?category=${category}` : '/boutique'}
+              className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
+                !affiliate
+                  ? 'bg-amber-600 text-white border-amber-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-amber-500 hover:text-amber-700'
+              }`}
+            >
+              Tous les affiliés
+            </Link>
+            {merchants.map(m => (
+              <Link
+                key={m}
+                href={`/boutique?affiliate=${encodeURIComponent(m)}${category ? `&category=${category}` : ''}`}
+                className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
+                  affiliate === m
+                    ? 'bg-amber-600 text-white border-amber-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-amber-500 hover:text-amber-700'
+                }`}
+              >
+                {m}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Recherche */}
       <BoutiqueSearchBar defaultValue={search ?? ''} />
 
       {/* Bannière */}
       <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
         <div>
-          <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Catégorie</p>
-          <p className="text-white font-bold text-lg md:text-xl capitalize">{activeCat.label}</p>
+          <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">
+            {affiliate ? 'Affilié' : 'Catégorie'}
+          </p>
+          <p className="text-white font-bold text-lg md:text-xl capitalize">
+            {affiliate ?? activeCat.label}
+          </p>
         </div>
         <p className="text-white/60 text-sm">
-          {hasSynced ? `${products.length} produit${products.length !== 1 ? 's' : ''}` : 'Bientôt disponible'}
+          {hasSynced
+            ? `${total.toLocaleString('fr-FR')} produit${total !== 1 ? 's' : ''}`
+            : 'Bientôt disponible'}
           {search ? ` · "${search}"` : ''}
         </p>
       </div>
@@ -108,16 +219,96 @@ export default async function BoutiquePage({ searchParams }: Props) {
         </div>
       ) : (
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            {products.length} produit{products.length !== 1 ? 's' : ''}
-            {category && category !== 'all' ? ` · ${activeCat.label}` : ''}
-            {search ? ` · "${search}"` : ''}
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {total.toLocaleString('fr-FR')} produit{total !== 1 ? 's' : ''}
+              {affiliate ? ` · ${affiliate}` : category && category !== 'all' ? ` · ${activeCat.label}` : ''}
+              {search ? ` · "${search}"` : ''}
+            </h2>
+            {totalPages > 1 && (
+              <p className="text-sm text-gray-500">Page {page} / {totalPages}</p>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {products.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 mt-10">
+              {page > 1 ? (
+                <Link
+                  href={buildPageUrl(baseParams, page - 1)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:border-orange-500 hover:text-orange-600 transition-colors text-sm font-medium"
+                >
+                  <ChevronLeft size={16} />
+                  Précédent
+                </Link>
+              ) : (
+                <span className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-100 text-gray-300 text-sm font-medium cursor-not-allowed">
+                  <ChevronLeft size={16} />
+                  Précédent
+                </span>
+              )}
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let p: number;
+                  if (totalPages <= 5) {
+                    p = i + 1;
+                  } else if (page <= 3) {
+                    p = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    p = totalPages - 4 + i;
+                  } else {
+                    p = page - 2 + i;
+                  }
+                  return (
+                    <Link
+                      key={p}
+                      href={buildPageUrl(baseParams, p)}
+                      className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                        p === page
+                          ? 'bg-orange-600 text-white'
+                          : 'border border-gray-300 bg-white text-gray-700 hover:border-orange-500 hover:text-orange-600'
+                      }`}
+                    >
+                      {p}
+                    </Link>
+                  );
+                })}
+                {totalPages > 5 && page < totalPages - 2 && (
+                  <>
+                    <span className="px-1 text-gray-400 text-sm">…</span>
+                    <Link
+                      href={buildPageUrl(baseParams, totalPages)}
+                      className="w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:border-orange-500 hover:text-orange-600 transition-colors"
+                    >
+                      {totalPages}
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              {page < totalPages ? (
+                <Link
+                  href={buildPageUrl(baseParams, page + 1)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:border-orange-500 hover:text-orange-600 transition-colors text-sm font-medium"
+                >
+                  Suivant
+                  <ChevronRight size={16} />
+                </Link>
+              ) : (
+                <span className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-100 text-gray-300 text-sm font-medium cursor-not-allowed">
+                  Suivant
+                  <ChevronRight size={16} />
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
 

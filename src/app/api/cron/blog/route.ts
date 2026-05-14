@@ -388,15 +388,40 @@ CONSIGNES :
 
         if (!imageUrl) {
           if (imageProduit) {
-            // Image du produit Awin -on la télécharge et stocke dans Supabase Storage
+            // Image du produit Awin — télécharger dans Supabase Storage (URL CDN Awin rejetée par Instagram)
             console.log(`[Cron1] Image: produit Awin "${nomProduit}"...`);
             const stored = await Promise.race([
               downloadAndStorePhoto(imageProduit, `article-${articleSlug}.jpg`),
-              new Promise<null>(r => setTimeout(() => r(null), 5000)),
+              new Promise<null>(r => setTimeout(() => r(null), 7000)),
             ]);
-            imageUrl = stored ?? imageProduit;
-            await supabase.from('articles').update({ image_url: imageUrl }).eq('slug', articleSlug);
-            console.log('[Cron1] Image produit:', stored ? 'stockée Supabase ✅' : 'URL directe');
+            if (stored) {
+              imageUrl = stored;
+              await supabase.from('articles').update({ image_url: imageUrl }).eq('slug', articleSlug);
+              console.log('[Cron1] Image produit Awin: stockée Supabase ✅');
+            } else {
+              // Téléchargement Awin échoué → Pexels pour éviter URL CDN non accessible sur Instagram
+              console.log('[Cron1] Image produit Awin: timeout → fallback Pexels...');
+              const photo = await Promise.race([
+                getPhotoForCategory(animal, sujet),
+                new Promise<null>(r => setTimeout(() => r(null), 5000)),
+              ]);
+              if (photo) {
+                const pexelsStored = await Promise.race([
+                  downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`),
+                  new Promise<null>(r => setTimeout(() => r(null), 5000)),
+                ]);
+                imageUrl = pexelsStored ?? photo.url;
+                await supabase.from('articles').update({
+                  image_url: imageUrl,
+                  image_alt: photo.alt,
+                  image_credit: photo.credit,
+                  image_credit_url: photo.creditUrl,
+                }).eq('slug', articleSlug);
+                console.log('[Cron1] Image fallback Pexels:', pexelsStored ? 'stockée ✅' : 'URL directe');
+              } else {
+                console.log('[Cron1] Image: Pexels indisponible, article sans image');
+              }
+            }
           } else {
             console.log(`[Cron1] Image: téléchargement Pexels pour catégorie "${animal}"...`);
             const photo = await Promise.race([

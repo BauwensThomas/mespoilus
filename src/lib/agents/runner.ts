@@ -17,12 +17,17 @@ export async function executeAgentTask(
     : task;
 
   try {
-    const { content, inputTokens, outputTokens } = await runAgent(
+    const { content, inputTokens, outputTokens, stopReason } = await runAgent(
       agent.systemPrompt,
       fullTask,
       agent.model,
       agent.maxTokens ?? 3000
     );
+
+    if (stopReason === 'max_tokens') {
+      console.error(`[${agentId}] TRUNCATED — stop_reason=max_tokens (${outputTokens} tokens générés)`);
+      throw new Error(`Article tronqué : limite de tokens atteinte (${outputTokens} tokens). Augmenter maxTokens.`);
+    }
 
     const duration = Date.now() - startTime;
     const totalTokens = inputTokens + outputTokens;

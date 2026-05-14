@@ -388,10 +388,15 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - **Déduplication par marchand** : 1 seul feed par marchand (URL la plus longue = flux complet)
 - Chaque feed est un CSV (parfois `.gz`) téléchargé et décompressé (détection gzip par magic bytes `0x1F 0x8B`)
 - **Streaming pur** : `parseCSVStreamingWithFlush` -jamais plus de 100 produits en RAM, flush+upsert immédiat
-- Catégorisation : `google_product_category` en priorité via `GPC_MAP` → fallback mots-clés titre/description
+- **Colonnes Darwin (noms réels)** : `product_name` (titre), `category_name` (catégorie GPC), `stock_status` (dispo), `isbn` (livres). Fallbacks dans le code : `title ?? product_name`, `google_product_category ?? category_name ?? merchant_category`, `availability ?? in_stock ?? stock_status`
+- Catégorisation : `category_name` / `google_product_category` en priorité via `GPC_MAP` → fallback mots-clés titre
+- **Détection livres** : ISBN non vide (`p['isbn']?.trim()`) = livre garanti (fiable pour Fnac)
+- **Mots-clés : titre uniquement + bornes de mot** pour mots simples (évite "pochette"→poche, "catalogue"→chat), titre+description pour expressions multi-mots
+- **Anti-faux-positifs** : produits sans correspondance animal/livre → retournés `null` par `assignCategories()`, non importés
 - Prix extrait par regex `priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/)` (format `'199.00 USD'`)
-- Disponibilité : `in_stock | in stock | 1 | true`
+- Disponibilité : `in_stock | in stock | in-stock | available | 1 | true | yes | instock` (colonne `stock_status` prioritaire)
 - Filtres : `price > 0`, exclusion pièces détachées (`/\bparts?\b/i`, `/ [A-Z0-9]{5,}$/`)
+- **Pas de pre-delete** : suppression post-sync uniquement si `totalSynced > 0 && !lastError`, par comparaison `last_synced < syncStart` (évite DB vide si feed échoue)
 - Cache feeds 1h en mémoire (évite re-téléchargement feedList à chaque appel)
 #### Table `awin_sync_progress`
 - Tracker de progression des crons Awin (1 ligne par catégorie)
@@ -536,6 +541,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Boutique : colonne `categories TEXT[]` + GIN index + filtre `.contains()`. Catégorie "Livres" ajoutée
 - Boutique : `unoptimized` sur `<Image>` de `ProductCard` (CDN Awin non listé dans `remotePatterns`)
 - Awin sync : refactoring complet vers 7 crons par catégorie, streaming pur, `assignCategories()` multi-catégories
+- Awin Darwin CSV : fix colonnes réelles (`product_name`, `category_name`, `stock_status`, `isbn`) + bornes de mot manuelles + détection ISBN livres + no pre-delete + anti-faux-positifs (null pour produits hors-animaux) ✅
 - CronLauncher : panel Awin avec 7 catégories, étendu par défaut, progress merge sans écraser les catégories idle
 - Dashboard totaux : calculés depuis `activity_logs` (même source que mensuels) pour cohérence garantie
 - Cron social log : label corrigé (était "Emma + Sofia terminés", maintenant "Emma terminée")
