@@ -125,6 +125,8 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [delegationState, setDelegationState] = useState<'idle' | 'loading' | 'done'>('idle');
   const [delegationData, setDelegationData] = useState<DelegationData | null>(null);
+  const [sendToSocial, setSendToSocial] = useState(false);
+  const [socialStatus, setSocialStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   const responseRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -174,6 +176,26 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
     } finally {
       setIsLoading(false);
       setIsStreaming(false);
+    }
+
+    // Si Marie + toggle réseaux : appeler Emma avec le slug/titre de l'article
+    if (agent.id === 'marie' && sendToSocial && finalResponse.length > 100) {
+      setSocialStatus('sending');
+      try {
+        const slugMatch = finalResponse.match(/^slug:\s*(.+)/m);
+        const titleMatch = finalResponse.match(/^title:\s*(.+)/m);
+        const slug = slugMatch?.[1]?.trim() ?? '';
+        const title = titleMatch?.[1]?.trim() ?? task;
+        const instructions = `Crée un post Facebook et Instagram pour cet article de blog :\nTitre : ${title}\nLien : https://mespoilus.com/blog/${slug}\nDonne envie de le lire !`;
+        const r = await fetch('/api/admin/emma-direct', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ instructions }),
+        });
+        setSocialStatus(r.ok ? 'done' : 'error');
+      } catch {
+        setSocialStatus('error');
+      }
     }
 
     if (finalResponse.length >= 150) {
@@ -291,8 +313,25 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                   {agentHint}
                 </p>
               )}
+              {agent.id === 'marie' && (
+                <label className="flex items-center gap-2 mb-3 cursor-pointer select-none">
+                  <div
+                    onClick={() => setSendToSocial(v => !v)}
+                    className={clsx(
+                      'w-9 h-5 rounded-full transition-colors flex-shrink-0 relative',
+                      sendToSocial ? 'bg-pink-500' : 'bg-gray-200'
+                    )}
+                  >
+                    <span className={clsx(
+                      'absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform',
+                      sendToSocial ? 'translate-x-4' : 'translate-x-0.5'
+                    )} />
+                  </div>
+                  <span className="text-xs text-gray-600">Publier aussi sur les réseaux (Emma)</span>
+                </label>
+              )}
               <button
-                onClick={() => runTask(task)}
+                onClick={() => { setSocialStatus('idle'); runTask(task); }}
                 disabled={isLoading || !task.trim()}
                 className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -305,6 +344,13 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                   'Exécuter'
                 )}
               </button>
+              {agent.id === 'marie' && socialStatus !== 'idle' && (
+                <p className={clsx('text-xs mt-2 text-center', socialStatus === 'done' ? 'text-emerald-600' : socialStatus === 'error' ? 'text-red-500' : 'text-pink-500')}>
+                  {socialStatus === 'sending' && '📱 Emma publie sur les réseaux…'}
+                  {socialStatus === 'done' && '✓ Post publié sur les réseaux'}
+                  {socialStatus === 'error' && '✗ Erreur lors de la publication réseaux'}
+                </p>
+              )}
             </div>
 
             {quickTasks.length > 0 && (
