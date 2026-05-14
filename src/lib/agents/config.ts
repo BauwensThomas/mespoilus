@@ -74,7 +74,7 @@ Format de sortie STRICT (commence directement par ---) :
 title: [Titre accrocheur]
 slug: [slug-url-friendly]
 excerpt: [Résumé 1 phrase]
-category: [chiens|chats|oiseaux|rongeurs|reptiles|general]
+category: [chiens|chats|oiseaux|rongeurs|reptiles|general] — utilise "general" si l'article parle de plusieurs animaux, de la boutique, d'un sujet transversal ou ne cible pas un seul type d'animal
 categories: [catégories pertinentes séparées par virgule]
 seo_keywords: [mot1, mot2, mot3, mot4]
 meta_description: [155 chars max]

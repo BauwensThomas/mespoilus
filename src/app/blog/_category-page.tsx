@@ -4,7 +4,7 @@ import { Article } from '@/types';
 import Link from 'next/link';
 import AdBanner from '@/components/ui/AdBanner';
 import BlogSearchBar from '@/components/blog/BlogSearchBar';
-import { Dog, Cat, Bird, Mouse, Zap, PawPrint } from 'lucide-react';
+import { Dog, Cat, Bird, Mouse, Zap, PawPrint, Globe } from 'lucide-react';
 
 export const CATEGORY_META: Record<string, {
   label: string;
@@ -40,6 +40,12 @@ export const CATEGORY_META: Record<string, {
     description: 'Guides pratiques pour tortues, lézards, serpents et autres reptiles.',
     intro: 'Conseils sur l\'habitat, l\'alimentation et les soins pour vos reptiles.',
   },
+  general: {
+    label: 'Général',
+    title: 'Conseils généraux animaux de compagnie -Mes Poilus',
+    description: 'Actualités, conseils et guides généraux pour tous les propriétaires d\'animaux de compagnie.',
+    intro: 'Actualités, bons plans et conseils pour tous les propriétaires d\'animaux.',
+  },
 };
 
 const CATEGORIES = [
@@ -49,6 +55,7 @@ const CATEGORIES = [
   { id: 'oiseaux',  label: 'Oiseaux',  icon: Bird,     href: '/blog/oiseaux' },
   { id: 'rongeurs', label: 'Rongeurs', icon: Mouse,    href: '/blog/rongeurs' },
   { id: 'reptiles', label: 'Reptiles', icon: Zap,      href: '/blog/reptiles' },
+  { id: 'general',  label: 'Général',  icon: Globe,    href: '/blog/general' },
 ];
 
 async function getArticles(category: string, search?: string): Promise<Article[]> {
