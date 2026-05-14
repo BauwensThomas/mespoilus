@@ -74,6 +74,33 @@ function keywordsMatchProduct(p: Record<string, string>, keywords: string[]): bo
   });
 }
 
+// Si ces mots apparaissent dans le titre OU la description, le produit n'appartient pas à cette catégorie
+// (ingrédient ≠ espèce cible : friandise au lapin pour chien ≠ produit pour rongeur)
+const CATEGORY_EXCLUSIONS: Record<string, string[]> = {
+  rongeurs: ['chien', 'dog', 'hond', 'pour chien', 'pour votre chien', 'for dog', 'your dog', 'votre chien', 'chat', 'cat', 'kat', 'pour chat', 'for cat', 'chiot', 'puppy'],
+  oiseaux:  ['chien', 'dog', 'hond', 'pour chien', 'pour votre chien', 'chat', 'cat', 'kat', 'pour chat'],
+  reptiles: ['chien', 'dog', 'hond', 'pour chien', 'chat', 'cat', 'kat', 'pour chat'],
+};
+
+function excludedByKeywords(p: Record<string, string>, exclusions: string[]): boolean {
+  const title = (p['title'] ?? p['product_name'] ?? '').toLowerCase();
+  const desc  = (p['description'] ?? p['product_short_description'] ?? '').toLowerCase();
+  return exclusions.some(kw => {
+    const k = kw.toLowerCase();
+    if (k.includes(' ')) return title.includes(k) || desc.includes(k);
+    for (const text of [title, desc]) {
+      let i = text.indexOf(k);
+      while (i !== -1) {
+        const before = i > 0 ? text.charCodeAt(i - 1) : 0;
+        const after  = i + k.length < text.length ? text.charCodeAt(i + k.length) : 0;
+        if (!isAlphaChar(before) && !isAlphaChar(after)) return true;
+        i = text.indexOf(k, i + 1);
+      }
+    }
+    return false;
+  });
+}
+
 function matchesCategory(p: Record<string, string>, category: string): boolean {
   // Un produit avec un ISBN est forcément un livre
   if (category === 'livres' && p['isbn']?.trim()) return true;
@@ -85,6 +112,10 @@ function matchesCategory(p: Record<string, string>, category: string): boolean {
   for (const [cat, keys] of Object.entries(GPC_MAP)) {
     if (cat !== category && keys.some(k => gpc.includes(k))) return false;
   }
+
+  // Si le titre/description mentionne explicitement une autre espèce → pas cette catégorie
+  const exclusions = CATEGORY_EXCLUSIONS[category];
+  if (exclusions && excludedByKeywords(p, exclusions)) return false;
 
   return keywordsMatchProduct(p, AWIN_CATEGORY_SEARCH[category] ?? []);
 }
