@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import PublicHeader from './PublicHeader';
@@ -13,6 +12,19 @@ const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/moderation'];
 function PartenairesBandeau() {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
+  const [showPicker, setShowPicker] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showPicker) return;
+    const handler = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showPicker]);
 
   useEffect(() => {
     if (PARTENAIRES.length <= 1) return;
@@ -21,6 +33,7 @@ function PartenairesBandeau() {
       setTimeout(() => {
         setIndex(i => (i + 1) % PARTENAIRES.length);
         setVisible(true);
+        setShowPicker(false);
       }, 400);
     }, 15000);
     return () => clearInterval(interval);
@@ -29,31 +42,64 @@ function PartenairesBandeau() {
   const partenaire = PARTENAIRES[index];
   if (!partenaire) return null;
 
+  const hasCountryPicker = !!partenaire.urlsByCountry;
+
+  const innerContent = (
+    <>
+      <span className="text-gray-400 text-[10px] uppercase tracking-wider font-semibold shrink-0">Partenaire</span>
+      <span className="w-px h-3 bg-gray-200 shrink-0" />
+      <span className="font-bold text-gray-900 shrink-0">{partenaire.nom}</span>
+      {(partenaire.pays ?? []).map(code => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={code} src={getFlagUrl(code)} alt={code} style={{ width: '18px', height: '13px', objectFit: 'cover' }} className="rounded-[2px] border border-gray-200 shrink-0" />
+      ))}
+      {partenaire.tag && (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0" style={{ backgroundColor: partenaire.tagBg ?? '#f3f4f6', color: partenaire.tagText ?? '#374151' }}>
+          {partenaire.tag}
+        </span>
+      )}
+      <span className="w-px h-3 bg-gray-200 shrink-0" />
+      {partenaire.description && (
+        <span className="text-gray-500 truncate flex-1 min-w-0">{partenaire.description}</span>
+      )}
+    </>
+  );
+
+  const innerClass = "max-w-7xl w-full mx-auto px-6 h-9 flex items-center gap-2.5 text-xs text-gray-600 hover:text-orange-600 transition-colors";
+
   return (
-    <div className="sticky top-20 z-30 h-9 bg-white/95 backdrop-blur border-b border-gray-100 hidden md:flex items-center w-full">
-      <a
-        href={partenaire.url}
-        target="_blank"
-        rel="noopener noreferrer sponsored"
-        style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.4s ease' }}
-        className="max-w-7xl w-full mx-auto px-6 flex items-center justify-center gap-2.5 text-xs text-gray-600 hover:text-orange-600 transition-colors"
-      >
-        <span className="text-gray-400 text-[10px] uppercase tracking-wider font-semibold shrink-0">Partenaire</span>
-        <span className="w-px h-3 bg-gray-200 shrink-0" />
-        <span className="font-bold text-gray-900 shrink-0">{partenaire.nom}</span>
-        {(partenaire.pays ?? []).map(code => (
-          <Image key={code} src={getFlagUrl(code)} alt={code} width={18} height={13} className="rounded-[2px] border border-gray-200 shrink-0" />
-        ))}
-        {partenaire.tag && (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0" style={{ backgroundColor: partenaire.tagBg ?? '#f3f4f6', color: partenaire.tagText ?? '#374151' }}>
-            {partenaire.tag}
-          </span>
+    <div className="sticky top-20 z-30 bg-white/95 backdrop-blur border-b border-gray-100 hidden md:block w-full">
+      <div className="flex items-center w-full relative" ref={pickerRef}>
+        <a
+          href={hasCountryPicker ? '#' : partenaire.url}
+          target={hasCountryPicker ? undefined : '_blank'}
+          rel={hasCountryPicker ? undefined : 'noopener noreferrer sponsored'}
+          onClick={hasCountryPicker ? (e) => { e.preventDefault(); setShowPicker(v => !v); } : undefined}
+          style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.4s ease' }}
+          className={innerClass + (hasCountryPicker ? ' cursor-pointer' : '')}
+        >
+          {innerContent}
+        </a>
+
+        {showPicker && (
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 flex z-50">
+            {Object.entries(partenaire.urlsByCountry!).map(([code, url]) => (
+              <a
+                key={code}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                onClick={() => setShowPicker(false)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-orange-600 transition-colors"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={getFlagUrl(code)} alt={code} style={{ width: '20px', height: '15px', objectFit: 'cover' }} className="rounded-[2px] border border-gray-200 shrink-0" />
+                {code === 'FR' ? 'France' : code === 'BE' ? 'Belgique' : code}
+              </a>
+            ))}
+          </div>
         )}
-        <span className="w-px h-3 bg-gray-200 shrink-0" />
-        {partenaire.description && (
-          <span className="text-gray-500 truncate max-w-xs lg:max-w-md">{partenaire.description}</span>
-        )}
-      </a>
+      </div>
     </div>
   );
 }

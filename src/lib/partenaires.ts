@@ -1,16 +1,17 @@
 export interface Partenaire {
   id: string;
   nom: string;
-  url: string;
+  url?: string;
+  urlsByCountry?: Record<string, string>;
   emoji: string;
   description?: string;
   tag?: string;
   tagColor?: string;
-  tagBg?: string;   // CSS color pour inline style (carousel)
-  tagText?: string; // CSS color pour inline style (carousel)
+  tagBg?: string;
+  tagText?: string;
   pour?: string;
   network?: 'awin' | 'cj';
-  pays?: string[];     // codes ISO: ['FR', 'BE', 'CA', 'US'…]
+  pays?: string[];
   categories?: string[];
 }
 
@@ -33,6 +34,22 @@ export const PARTENAIRES: Partenaire[] = [
     network: 'awin',
     pays: ['FR'],
     categories: ['chiens'],
+  },
+  {
+    id: 'maxi-zoo',
+    nom: 'Maxi Zoo',
+    description: 'Alimentation, accessoires et soins pour tous vos animaux. Magasins en France et en Belgique.',
+    urlsByCountry: {
+      FR: 'https://www.awin1.com/cread.php?awinmid=68698&awinaffid=2885973&ued=https%3A%2F%2Fwww.maxizoo.fr',
+      BE: 'https://www.awin1.com/cread.php?awinmid=68696&awinaffid=2885973&ued=https%3A%2F%2Fwww.maxizoo.be',
+    },
+    emoji: '🐾',
+    tag: 'Animalerie',
+    tagBg: '#dcfce7', tagText: '#166534',
+    pour: 'Pour tous les animaux',
+    network: 'awin',
+    pays: ['FR', 'BE'],
+    categories: ['chiens', 'chats'],
   },
   {
     id: 'canada-pet-care',
