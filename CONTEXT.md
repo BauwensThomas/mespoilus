@@ -33,7 +33,7 @@ Chaque agent utilise l'API Anthropic (Claude) et fonctionne de façon autonome. 
 | Agent | Rôle | Modèle Claude | maxTokens | Responsabilités |
 |-------|------|--------------|-----------|-----------------|
 | 👔 **Thomas** | CEO Orchestrateur | Opus 4.7 | 3000 | Stratégie globale, priorisation, coordination, rapports |
-| ✍️ **Marie** | Rédactrice de contenu | **Haiku 4.5** | **1400** | Articles de blog (550-700 mots), guides pratiques, conseils |
+| ✍️ **Marie** | Rédactrice de contenu | **Haiku 4.5** | **1800** | Articles de blog (550-700 mots), guides pratiques, conseils |
 | 🔍 **Lucas** | Spécialiste SEO | Sonnet 4.6 | **500** | Recherche mots-clés, optimisation on-page, stratégie francophone |
 | 📱 **Emma** | Réseaux sociaux | Haiku 4.5 | 2000 | Posts Facebook + Instagram (@mespoilusofficiel), hashtags, lien article complet |
 | 💻 **Maxime** | Développeur & Maintenance | Sonnet 4.6 | 6000 | Performances, bugs, Next.js / Supabase, Core Web Vitals |
@@ -279,6 +279,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Toujours : `logActivity` + `updateAgentStats` via `dbFetch` (fetch natif Supabase REST, AbortController 6s)
 **Route `POST /api/internal/save-social-post`** :
 - Cherche `image_url` sur l'article le plus récent avec image (Supabase)
+- **Filtre URL** : n'utilise que les URLs commençant par `NEXT_PUBLIC_SUPABASE_URL` (Supabase Storage) → rejette les CDN externes (Awin, etc.) que Instagram refuse
 - Fallback : `getPhotoForCategory` Pexels → stockage dans Supabase Storage
 - INSERT `social_posts` (facebook + instagram)
 - Webhook Make.com avec `image_url` uniquement si non null
@@ -367,9 +368,11 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 ### Boutique (`/boutique`) -Architecture Awin
 - **Thème clair** (`bg-gray-50`, cards `bg-white`)
 - Filtres par catégorie (chiens, chats, oiseaux, rongeurs, reptiles, **livres**), barre de recherche, disclaimer affiliation barre fixe en bas
-- `ProductCard` server component simplifié : image `unoptimized` (CDN Awin externe), nom, description, prix + devise, drapeau marchand, bouton "Voir sur le site" affilié `rel="sponsored"`
-- Liens 404 laissés tels quels (1 produit sur 30 acceptable -risque de tout supprimer par erreur > risque d'un 404 isolé)
-- Drapeaux via `flagcdn.com` : USD→🇺🇸, CAD→🇨🇦, GBP→🇬🇧, EUR→🇪🇺
+- **Pagination** : 48 produits/page, param `?page=N`, compte exact via requête Supabase parallèle `{ count: 'exact', head: true }`
+- **Tri client** : `BoutiqueSortSelect.tsx` (select) avec 4 options via param `?sort=` : `stock` (dispo en premier + prix asc, défaut), `price_asc`, `price_desc`, `name_asc`
+- **Filtre admin affilié** : panel amber visible uniquement si session admin connectée -liste des marchands par catégorie, param `?affiliate=Merchant+Name`
+- `ProductCard` : image `unoptimized` (CDN Awin externe), nom, description, prix + devise, drapeau marchand, badge "Indisponible", bouton "Vérifier" (gris) ou "Voir" (orange) selon `in_stock`
+- **Drapeaux** via `flagcdn.com` : table override `MERCHANT_COUNTRY` pour cas connus (ex: `'tuft & paw' → 'us'`), puis suffixe marchand (`Zooplus FR` → fr), puis devise (USD→us, CAD→ca, GBP→gb). EUR sans pays connu = pas de drapeau
 - Cron sync Awin : **7 crons par catégorie** (2h-4h UTC, 20min d'écart), reset catégorie + réinsertion depuis feeds Awin
 - Disclaimer affiliation barre fixe en bas (bg-white/95)
 - Filtre boutique : `.contains('categories', [category])` (array containment) -un livre sur chien apparaît dans "Tous", "Chiens" ET "Livres"
@@ -393,8 +396,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - **Détection livres** : ISBN non vide (`p['isbn']?.trim()`) = livre garanti (fiable pour Fnac)
 - **Mots-clés : titre uniquement + bornes de mot** pour mots simples (évite "pochette"→poche, "catalogue"→chat), titre+description pour expressions multi-mots
 - **Anti-faux-positifs** : produits sans correspondance animal/livre → retournés `null` par `assignCategories()`, non importés
-- Prix extrait par regex `priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/)` (format `'199.00 USD'`)
-- Disponibilité : `in_stock | in stock | in-stock | available | 1 | true | yes | instock` (colonne `stock_status` prioritaire)
+- Prix extrait par regex `priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/)` (format `'199.00 USD'`). Fallback devise : colonne `currency` ou `currency_code` du CSV, puis EUR
+- **Disponibilité** : approche **blacklist** — valeurs inconnues/vides → `in_stock=true` par défaut. Valeurs `out_of_stock | out of stock | out-of-stock | false | 0 | no | unavailable | discontinued | sold out | preorder` → false. (colonne `stock_status` prioritaire via fallback `availability ?? in_stock ?? stock_status`)
 - Filtres : `price > 0`, exclusion pièces détachées (`/\bparts?\b/i`, `/ [A-Z0-9]{5,}$/`)
 - **Pas de pre-delete** : suppression post-sync uniquement si `totalSynced > 0 && !lastError`, par comparaison `last_synced < syncStart` (évite DB vide si feed échoue)
 - Cache feeds 1h en mémoire (évite re-téléchargement feedList à chaque appel)
@@ -519,7 +522,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Anti-répétition partenaires : colonne `featured_partner` sur `articles`, bloque réutilisation pendant 30 articles
 - Lucas enrichi : output cron inclut INTENTION, RAISON, NOM_PRODUIT, LIEN_AFFILIE, IMAGE_PRODUIT, META_DESC
 - Marie enrichie : reçoit contexte Lucas complet + 3 articles récents même catégorie pour liens internes + meta cible
-- Marie tokens 1200 → 1400, consigne 550-700 mots (était 400-600), structure 3-4 H2 (était 2 H2)
+- Marie tokens 1200 → 1400 → 1800, consigne 550-700 mots (était 400-600), structure 3-4 H2 (était 2 H2)
+- Détection troncature Marie : `stop_reason === 'max_tokens'` → erreur explicite dans runner.ts (article rejeté, pas publié tronqué)
 - Lucas tokens 400 → 500
 - Temps de lecture calculé dynamiquement après génération (wordCount÷250) et mis à jour en DB
 - Pages articles blog `/blog/[slug]` : thème clair (bg-gray-50, texte #111827), `.article-content` CSS light
@@ -542,6 +546,16 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Boutique : `unoptimized` sur `<Image>` de `ProductCard` (CDN Awin non listé dans `remotePatterns`)
 - Awin sync : refactoring complet vers 7 crons par catégorie, streaming pur, `assignCategories()` multi-catégories
 - Awin Darwin CSV : fix colonnes réelles (`product_name`, `category_name`, `stock_status`, `isbn`) + bornes de mot manuelles + détection ISBN livres + no pre-delete + anti-faux-positifs (null pour produits hors-animaux) ✅
+- Awin inStock : approche **blacklist** (valeur inconnue/vide = dispo) → corrige Tuft & Paw tous marqués "indisponible" ✅
+- Awin GPC_MAP livres élargi : roman, BD, manga, littérature, jeunesse, encyclopédie, biographie, poche, broché, relié ✅
+- Awin devise : fallback sur colonnes `currency`/`currency_code` du CSV si absente du champ `price` ✅
+- Boutique pagination : 48/page, `?page=N`, requête count parallèle ✅
+- Boutique tri : `BoutiqueSortSelect` (disponibles en premier / prix ↑ / prix ↓ / nom A–Z) via `?sort=` ✅
+- Boutique filtre admin affilié : panel amber, visible si session admin, `?affiliate=` ✅
+- ProductCard drapeaux : table override `MERCHANT_COUNTRY` (Tuft & Paw → US), suffixe marchand (FR/BE/…), devise, jamais EUR par défaut ✅
+- Blog cron image : fallback Pexels si téléchargement image Awin échoue, jamais URL CDN Awin stockée ✅
+- save-social-post : filtre URL Supabase Storage uniquement → Instagram accepte les images ✅
+- Marie maxTokens 1800 + détection troncature `stop_reason=max_tokens` dans runner.ts ✅
 - CronLauncher : panel Awin avec 7 catégories, étendu par défaut, progress merge sans écraser les catégories idle
 - Dashboard totaux : calculés depuis `activity_logs` (même source que mensuels) pour cohérence garantie
 - Cron social log : label corrigé (était "Emma + Sofia terminés", maintenant "Emma terminée")
