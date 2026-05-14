@@ -475,13 +475,66 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
         )}
 
         {/* Historique */}
-        <div className="card p-5">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Historique d'activité</h2>
-          {recentLogs.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4 text-center">Aucune activité enregistrée</p>
+        <HistoryPanel recentLogs={recentLogs} expandedLog={expandedLog} setExpandedLog={setExpandedLog} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Historique avec collapse + filtre date ──────────────────────────────────
+
+function HistoryPanel({
+  recentLogs,
+  expandedLog,
+  setExpandedLog,
+}: {
+  recentLogs: ActivityLog[];
+  expandedLog: string | null;
+  setExpandedLog: (id: string | null) => void;
+}) {
+  const [open, setOpen] = useState(true);
+  const [dateFilter, setDateFilter] = useState('');
+
+  const filtered = dateFilter
+    ? recentLogs.filter(log => log.created_at.slice(0, 10) === dateFilter)
+    : recentLogs;
+
+  return (
+    <div className="card p-5">
+      <div className="flex items-center justify-between mb-1">
+        <button
+          onClick={() => setOpen(v => !v)}
+          className="flex items-center gap-2 text-base font-semibold text-gray-900 hover:text-gray-700"
+        >
+          <span>{open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</span>
+          Historique d'activité
+          <span className="text-xs font-normal text-gray-400 ml-1">({recentLogs.length})</span>
+        </button>
+        {open && (
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={e => setDateFilter(e.target.value)}
+            className="text-xs border border-gray-200 rounded-lg px-2 py-1 text-gray-700 focus:outline-none focus:border-orange-400"
+          />
+        )}
+      </div>
+
+      {open && (
+        <>
+          {dateFilter && (
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs text-gray-500">{filtered.length} résultat{filtered.length !== 1 ? 's' : ''} pour le {new Date(dateFilter + 'T00:00:00').toLocaleDateString('fr-FR')}</span>
+              <button onClick={() => setDateFilter('')} className="text-xs text-orange-500 hover:underline">Effacer</button>
+            </div>
+          )}
+          {filtered.length === 0 ? (
+            <p className="text-sm text-gray-500 py-4 text-center">
+              {dateFilter ? 'Aucune activité ce jour' : 'Aucune activité enregistrée'}
+            </p>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {recentLogs.map((log) => {
+            <div className="divide-y divide-gray-100 mt-3">
+              {filtered.map((log) => {
                 const link = getLogLink(log);
                 const isExpanded = expandedLog === log.id;
                 const hasDetails = log.details && Object.keys(log.details).length > 0;
@@ -495,16 +548,10 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                         <p className="text-xs text-gray-500 mt-0.5">{log.duration_ms}ms</p>
                       )}
                     </div>
-                    <span className="text-xs text-gray-500 flex-shrink-0">
-                      {formatDate(log.created_at)}
-                    </span>
+                    <span className="text-xs text-gray-500 flex-shrink-0">{formatDate(log.created_at)}</span>
                     {link
                       ? <span className="text-xs text-blue-500 flex-shrink-0">→</span>
-                      : hasDetails && (
-                          <span className="text-xs text-gray-400 flex-shrink-0">
-                            {isExpanded ? '▲' : '▼'}
-                          </span>
-                        )
+                      : hasDetails && <span className="text-xs text-gray-400 flex-shrink-0">{isExpanded ? '▲' : '▼'}</span>
                     }
                   </div>
                 );
@@ -512,42 +559,30 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                 return (
                   <div key={log.id} className="py-2">
                     {link ? (
-                      <Link
-                        href={link}
-                        className="flex items-start gap-3 hover:bg-gray-50 rounded-lg px-2 -mx-2 py-1.5 transition-colors duration-150"
-                      >
+                      <Link href={link} className="flex items-start gap-3 hover:bg-gray-50 rounded-lg px-2 -mx-2 py-1.5 transition-colors">
                         <StatusDot status={log.status} />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-gray-900 truncate">{log.action}</p>
-                          {log.duration_ms && (
-                            <p className="text-xs text-gray-500 mt-0.5">{log.duration_ms}ms</p>
-                          )}
+                          {log.duration_ms && <p className="text-xs text-gray-500 mt-0.5">{log.duration_ms}ms</p>}
                         </div>
-                        <span className="text-xs text-gray-500 flex-shrink-0">
-                          {formatDate(log.created_at)}
-                        </span>
+                        <span className="text-xs text-gray-500 flex-shrink-0">{formatDate(log.created_at)}</span>
                         <span className="text-xs text-blue-500 flex-shrink-0">→</span>
                       </Link>
                     ) : (
                       <button
                         onClick={() => setExpandedLog(isExpanded ? null : log.id)}
                         disabled={!hasDetails}
-                        className="w-full text-left hover:bg-gray-50 rounded-lg px-2 -mx-2 py-1.5 transition-colors duration-150 disabled:cursor-default"
+                        className="w-full text-left hover:bg-gray-50 rounded-lg px-2 -mx-2 py-1.5 transition-colors disabled:cursor-default"
                       >
                         {RowContent}
                       </button>
                     )}
-
                     {isExpanded && hasDetails && (
                       <div className="mt-2 mb-1 mx-2 bg-gray-50 border border-gray-200 rounded-lg p-4 overflow-y-auto max-h-[500px]">
                         {typeof log.details.content === 'string' ? (
-                          <pre className="text-sm text-gray-900 leading-relaxed whitespace-pre-wrap font-mono">
-                            {log.details.content}
-                          </pre>
+                          <pre className="text-sm text-gray-900 leading-relaxed whitespace-pre-wrap font-mono">{log.details.content}</pre>
                         ) : (
-                          <pre className="text-xs text-emerald-700 leading-relaxed whitespace-pre-wrap">
-                            {JSON.stringify(log.details, null, 2)}
-                          </pre>
+                          <pre className="text-xs text-emerald-700 leading-relaxed whitespace-pre-wrap">{JSON.stringify(log.details, null, 2)}</pre>
                         )}
                       </div>
                     )}
@@ -556,8 +591,8 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
               })}
             </div>
           )}
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
