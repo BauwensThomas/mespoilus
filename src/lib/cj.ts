@@ -14,11 +14,8 @@ export interface CJShoppingProduct {
   imageLink?: string;
   link?: string;
   brand?: string;
-  inStock?: boolean;
   advertiserId: string;
   advertiserName: string;
-  category?: string;
-  keywords?: string;
 }
 
 export interface DBProduct {
@@ -61,11 +58,8 @@ const SHOPPING_PRODUCTS_QUERY = `
         imageLink
         link
         brand
-        inStock
         advertiserId
         advertiserName
-        category
-        keywords
       }
     }
   }
