@@ -258,7 +258,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Payload webhook : `{ content (sans hashtags), hashtags (string), image_url (URL Supabase Storage) }`
 - `image_url` omis du payload si null → évite les erreurs Make.com `Missing required parameter`
 ### Post-processing streaming (`src/lib/agents/runner.ts`)
-**Architecture :** Vercel Hobby = timeout 10s. Solution : appel à `/api/internal/save-agent-data` (route interne, timeout propre).
+**Architecture :** Vercel Hobby = timeout 60s (`maxDuration = 60` configuré sur toutes les routes cron). Solution streaming : appel à `/api/internal/save-agent-data` (route interne, timeout propre).
 - `streamAgentTask` collecte le contenu complet au fil des chunks
 - Au `done`, appelle `POST /api/internal/save-agent-data`
 - Tokens réels capturés via callback `onComplete` → `stream.finalMessage()`
@@ -480,6 +480,11 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - ✅ `migration_awin_categories.sql` — colonne `categories TEXT[]` + GIN index sur `products` (vérifié en DB)
 - ✅ `migration_rls_awin_progress.sql` — RLS sur `awin_sync_progress` (vérifié : anon=[], service_role=données)
 
+### Actions manuelles en attente ⚠️
+- **SQL Supabase** : supprimer faux positifs Maxi Zoo dans livres → `DELETE FROM products WHERE category = 'livres' AND merchant_name LIKE '%Maxi Zoo%';`
+- **Livres Amazon** : continuer d'en ajouter via `/produits` (objectif : ~2 par catégorie animale minimum)
+- **Amazon Associates** : générer 3 ventes dans les 180 jours pour valider le compte et débloquer l'API PA
+
 ### Actions déjà effectuées ✅
 - Site public (blog, adoption, boutique, pages légales) : **thème clair complet** ✅
 - Landing page catégories : **icônes en bas des images** ✅
@@ -649,6 +654,14 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - **Anti-doublon Marie** : `save-agent-data` vérifie le slug avant INSERT → PATCH si existant (évite doublons si exécution double) ✅
 - **Catégorie Général blog** : page `/blog/general`, filtre dans nav, métadonnées SEO — prompt Marie renforcé pour choisir `general` si article transversal/boutique/multi-animaux ✅
 - **Lucas maxTokens** : 500 → 1200 (URLs Awin trop longues pour 500 tokens) ✅
+- **Amazon Associates FR** : compte approuvé (ID `mespoilus-21`), mention légale ajoutée au footer homepage ("En tant que Partenaire Amazon…") ✅
+- **Page admin `/produits`** (`src/app/(admin)/produits/page.tsx`) : ajout manuel livres Amazon avec extraction ASIN automatique, preview lien affilié, upload image, catégories animales, liste avec filtre par catégorie + badge "Aucune catégorie animale", bouton modifier inline ✅
+- **API admin livres** : `POST/PATCH/DELETE /api/admin/products` (extraction ASIN, URL affiliée `https://www.amazon.fr/dp/[ASIN]?tag=mespoilus-21`, id `amazon_[ASIN]`, `merchant_name: 'Amazon FR'`) + `GET /api/admin/products-list` ✅
+- **Boutique catégorie Livres** : réactivée dans CATEGORIES avec icône `BookOpen` ✅
+- **getMerchants fix** : requête Amazon FR séparée (limit 1) + marchands Awin (limit 100000) — évite le plafond 10 000 lignes qui cachait Amazon FR dans les filtres admin ✅
+- **maxDuration = 60** : ajouté sur toutes les routes cron manquantes (7× awin-sync, blog, social) — évite timeout 10s Vercel Hobby par défaut ✅
+- **Vercel crons** : 13 crons tous actifs et reconnus par Vercel Hobby ✅
+- **Awin mots-clés livres** : `'poche'`, `'broché'`, `'relié'` retirés (causaient "lampe de poche" → livres) ✅
 ---
 ## Ce qui reste à faire (code)
 ### Outils publics (`/outils/`)
@@ -656,7 +669,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - **Comparateur croquettes** : comparer 2-3 marques sur critères (protéines, prix/kg, note)
 - **Suivi vaccination** : calendrier des vaccins par animal + rappels
 ### Boutique / Monétisation
-- **Amazon Associates FR** : intégration livres animaux à faire une fois le compte approuvé (API Product Advertising ou liens manuels — pas de feed CSV Awin)
+- **Amazon Associates FR** : compte approuvé (ID `mespoilus-21`). Page admin `/produits` opérationnelle pour ajout manuel de livres. Après 3 ventes dans 180 jours → intégration API Product Advertising pour sync automatique
 - Barre de recherche produits ajoutée (`?search=mot`) -filtre par nom et description via `ilike`
 ### Marketing
 - Stratégie backlinks francophones
