@@ -7,9 +7,9 @@ import Link from 'next/link';
 import AdBanner from '@/components/ui/AdBanner';
 import { permanentRedirect } from 'next/navigation';
 import BlogSearchBar from '@/components/blog/BlogSearchBar';
-import { PawPrint, Dog, Cat, Bird, Mouse, Zap } from 'lucide-react';
+import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Globe } from 'lucide-react';
 
-const CATEGORY_SLUGS = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
+const CATEGORY_SLUGS = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles', 'general'];
 
 const BLOG_URL = '/blog';
 
@@ -61,6 +61,7 @@ const CATEGORIES = [
   { id: 'oiseaux',  label: 'Oiseaux',  icon: Bird,     href: '/blog/oiseaux' },
   { id: 'rongeurs', label: 'Rongeurs', icon: Mouse,    href: '/blog/rongeurs' },
   { id: 'reptiles', label: 'Reptiles', icon: Zap,      href: '/blog/reptiles' },
+  { id: 'general',  label: 'Général',  icon: Globe,    href: '/blog/general' },
 ];
 
 interface Props {
