@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
     merchant_name: 'Amazon FR',
     category: 'livres',
     categories,
+    product_type: 'livres',
     last_synced: new Date().toISOString(),
   });
 
@@ -70,7 +71,7 @@ export async function PATCH(req: NextRequest) {
   if (!cats.includes('livres')) cats.unshift('livres');
 
   const admin = createAdminClient();
-  const update: Record<string, unknown> = { categories: cats, last_synced: new Date().toISOString() };
+  const update: Record<string, unknown> = { categories: cats, product_type: 'livres', last_synced: new Date().toISOString() };
   if (name?.trim()) update.name = name.trim();
   if (price !== undefined) update.price = price;
   if (description !== undefined) update.description = description.trim();
