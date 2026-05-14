@@ -56,6 +56,30 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ success: true, asin, affiliate_url: affiliateUrl });
 }
 
+export async function PATCH(req: NextRequest) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+
+  const { id, categories, name, price, description } = await req.json() as {
+    id: string; categories: string[]; name?: string; price?: number; description?: string;
+  };
+  if (!id?.startsWith('amazon_')) return NextResponse.json({ error: 'ID invalide' }, { status: 400 });
+
+  const cats = categories.length > 0 ? categories : ['livres'];
+  if (!cats.includes('livres')) cats.unshift('livres');
+
+  const admin = createAdminClient();
+  const update: Record<string, unknown> = { categories: cats, last_synced: new Date().toISOString() };
+  if (name?.trim()) update.name = name.trim();
+  if (price !== undefined) update.price = price;
+  if (description !== undefined) update.description = description.trim();
+
+  const { error } = await admin.from('products').update(update).eq('id', id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
+}
+
 export async function DELETE(req: NextRequest) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
