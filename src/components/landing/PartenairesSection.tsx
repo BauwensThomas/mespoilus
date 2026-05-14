@@ -131,7 +131,7 @@ export default function PartenairesSection() {
         </div>
 
         <p className="text-xs text-gray-500 text-center mt-10">
-          Liens affiliés — Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
+          Liens affiliés. Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
         </p>
       </div>
 
