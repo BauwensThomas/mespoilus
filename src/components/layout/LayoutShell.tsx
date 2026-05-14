@@ -11,7 +11,22 @@ import clsx from 'clsx';
 const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/moderation'];
 
 function PartenairesBandeau() {
-  const [partenaire] = useState(() => PARTENAIRES[Math.floor(Math.random() * PARTENAIRES.length)]);
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (PARTENAIRES.length <= 1) return;
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIndex(i => (i + 1) % PARTENAIRES.length);
+        setVisible(true);
+      }, 400);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const partenaire = PARTENAIRES[index];
   if (!partenaire) return null;
 
   return (
@@ -20,6 +35,7 @@ function PartenairesBandeau() {
         href={partenaire.url}
         target="_blank"
         rel="noopener noreferrer sponsored"
+        style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.4s ease' }}
         className="flex items-center gap-2.5 text-xs text-gray-600 hover:text-orange-600 transition-colors"
       >
         <span className="text-gray-400 text-[10px] uppercase tracking-wider font-semibold">Partenaire</span>
