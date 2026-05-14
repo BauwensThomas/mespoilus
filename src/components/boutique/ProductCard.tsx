@@ -27,6 +27,7 @@ export default function ProductCard({ product }: { product: AwinProduct }) {
           {(() => {
             const MERCHANT_COUNTRY: Record<string, string> = {
               'tuft & paw': 'us',
+              'canadapetcare': 'ca',
             };
             const nameKey = product.merchant_name.toLowerCase().replace(/\s+(fr|be|de|nl|es|it|uk)$/i, '').trim();
             const suffix = product.merchant_name.match(/\s+(FR|BE|DE|NL|ES|IT|UK)$/)?.[1]?.toLowerCase() ?? null;
