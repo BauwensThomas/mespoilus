@@ -46,21 +46,24 @@ async function getProducts(
   search: string | undefined,
   affiliate: string | undefined,
   page: number,
-  sort: SortValue
+  sort: SortValue,
+  stockFilter: 'in_stock' | 'out_of_stock' | 'all'
 ): Promise<{ products: AwinProduct[]; total: number }> {
   try {
     const supabase = createAdminClient();
     const offset = (page - 1) * PAGE_SIZE;
 
     let dataQ = supabase.from('products').select('*').gt('price', 0);
+    if (stockFilter === 'in_stock')    dataQ = dataQ.eq('in_stock', true);
+    else if (stockFilter === 'out_of_stock') dataQ = dataQ.eq('in_stock', false);
 
-    if (sort === 'price_asc')  dataQ = dataQ.order('price', { ascending: true });
-    else if (sort === 'price_desc') dataQ = dataQ.order('price', { ascending: false });
-    else if (sort === 'name_asc')   dataQ = dataQ.order('name', { ascending: true });
-    else /* stock */ dataQ = dataQ.order('in_stock', { ascending: false }).order('price', { ascending: true });
+    if (sort === 'price_desc') dataQ = dataQ.order('price', { ascending: false });
+    else if (sort === 'name_asc') dataQ = dataQ.order('name', { ascending: true });
+    else /* stock — prix croissant par défaut */ dataQ = dataQ.order('price', { ascending: true });
 
-    let countQ = supabase.from('products').select('*', { count: 'exact', head: true })
-      .gt('price', 0);
+    let countQ = supabase.from('products').select('*', { count: 'exact', head: true }).gt('price', 0);
+    if (stockFilter === 'in_stock')         countQ = countQ.eq('in_stock', true);
+    else if (stockFilter === 'out_of_stock') countQ = countQ.eq('in_stock', false);
 
     if (category && category !== 'all') {
       dataQ  = dataQ.contains('categories', [category]);
@@ -97,10 +100,12 @@ function buildPageUrl(base: URLSearchParams, page: number): string {
   return `/boutique${qs ? `?${qs}` : ''}`;
 }
 
-const VALID_SORTS: SortValue[] = ['stock', 'price_asc', 'price_desc', 'name_asc'];
+const VALID_SORTS: SortValue[] = ['stock', 'price_desc', 'name_asc'];
+
+type StockFilter = 'in_stock' | 'out_of_stock' | 'all';
 
 interface Props {
-  searchParams: { category?: string; search?: string; page?: string; affiliate?: string; sort?: string };
+  searchParams: { category?: string; search?: string; page?: string; affiliate?: string; sort?: string; stock?: string };
 }
 
 export default async function BoutiquePage({ searchParams }: Props) {
@@ -120,7 +125,12 @@ export default async function BoutiquePage({ searchParams }: Props) {
     if (isAdmin) merchants = await getMerchants(category);
   } catch { /* non-bloquant */ }
 
-  const { products, total } = await getProducts(category, search, affiliate, page, sort);
+  const VALID_STOCK: StockFilter[] = ['in_stock', 'out_of_stock', 'all'];
+  const stockFilter: StockFilter = isAdmin && VALID_STOCK.includes(searchParams.stock as StockFilter)
+    ? (searchParams.stock as StockFilter)
+    : 'in_stock';
+
+  const { products, total } = await getProducts(category, search, affiliate, page, sort, stockFilter);
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const activeCat  = CATEGORIES.find(c => c.id === (category ?? 'all')) ?? CATEGORIES[0];
   const hasSynced  = total > 0;
@@ -130,6 +140,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
   if (search)    baseParams.set('search', search);
   if (affiliate) baseParams.set('affiliate', affiliate);
   if (sort && sort !== 'stock') baseParams.set('sort', sort);
+  if (isAdmin && stockFilter !== 'in_stock') baseParams.set('stock', stockFilter);
 
   return (
     <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5 pb-20">
@@ -164,38 +175,72 @@ export default async function BoutiquePage({ searchParams }: Props) {
         })}
       </div>
 
-      {/* Filtre affiliés — admin uniquement */}
-      {isAdmin && merchants.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-2">
+      {/* Filtres admin */}
+      {isAdmin && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-3">
           <p className="text-xs font-semibold text-amber-700 uppercase tracking-widest flex items-center gap-1.5">
             <Store size={13} />
-            Filtre affilié (admin)
+            Filtres admin
           </p>
+
+          {/* Filtre stock */}
           <div className="flex flex-wrap gap-2">
-            <Link
-              href={category ? `/boutique?category=${category}` : '/boutique'}
-              className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
-                !affiliate
-                  ? 'bg-amber-600 text-white border-amber-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:border-amber-500 hover:text-amber-700'
-              }`}
-            >
-              Tous les affiliés
-            </Link>
-            {merchants.map(m => (
+            {([['in_stock', 'En stock'], ['all', 'Tous'], ['out_of_stock', 'Indisponibles']] as [StockFilter, string][]).map(([val, label]) => {
+              const params = new URLSearchParams();
+              if (category)  params.set('category', category);
+              if (search)    params.set('search', search);
+              if (affiliate) params.set('affiliate', affiliate);
+              if (val !== 'in_stock') params.set('stock', val);
+              return (
+                <Link
+                  key={val}
+                  href={`/boutique${params.toString() ? `?${params.toString()}` : ''}`}
+                  className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
+                    stockFilter === val
+                      ? 'bg-amber-600 text-white border-amber-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-amber-500 hover:text-amber-700'
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Filtre affilié */}
+          {merchants.length > 0 && (
+            <div className="flex flex-wrap gap-2">
               <Link
-                key={m}
-                href={`/boutique?affiliate=${encodeURIComponent(m)}${category ? `&category=${category}` : ''}`}
+                href={`/boutique${category ? `?category=${category}` : ''}${stockFilter !== 'in_stock' ? `${category ? '&' : '?'}stock=${stockFilter}` : ''}`}
                 className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
-                  affiliate === m
+                  !affiliate
                     ? 'bg-amber-600 text-white border-amber-600'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-amber-500 hover:text-amber-700'
                 }`}
               >
-                {m}
+                Tous les affiliés
               </Link>
-            ))}
-          </div>
+              {merchants.map(m => {
+                const params = new URLSearchParams();
+                params.set('affiliate', m);
+                if (category) params.set('category', category);
+                if (stockFilter !== 'in_stock') params.set('stock', stockFilter);
+                return (
+                  <Link
+                    key={m}
+                    href={`/boutique?${params.toString()}`}
+                    className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
+                      affiliate === m
+                        ? 'bg-amber-600 text-white border-amber-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-amber-500 hover:text-amber-700'
+                    }`}
+                  >
+                    {m}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

@@ -5,8 +5,7 @@ import { useTransition } from 'react';
 import { ArrowUpDown } from 'lucide-react';
 
 export const SORT_OPTIONS = [
-  { value: 'stock',      label: 'Disponibles en premier' },
-  { value: 'price_asc',  label: 'Prix croissant' },
+  { value: 'stock',      label: 'Prix croissant' },
   { value: 'price_desc', label: 'Prix décroissant' },
   { value: 'name_asc',   label: 'Nom A–Z' },
 ] as const;
