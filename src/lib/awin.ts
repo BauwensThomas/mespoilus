@@ -211,22 +211,32 @@ export async function getJoinedFeeds(publisherId: string, feedToken: string): Pr
     return true;
   });
 
-  // ─── DÉDUPLICATION PAR MARCHAND ───────────────────────────────────────────
-  // Fnac FR a 62 flux → on garde 1 seul par marchand (l'URL la plus longue
-  // correspond généralement au flux complet plutôt qu'un flux partiel)
-  const byMerchant = new Map<string, Record<string, string>>();
+  // ─── DÉDUPLICATION PAR MARCHAND (seulement si ≥5 feeds) ─────────────────
+  // Fnac FR a 62 flux → cap à 1 (URL la plus longue = flux le plus complet)
+  // Marchands avec peu de feeds (ex: Tuft & Paw avec feed USD + feed EUR) → tous conservés
+  const feedCountByMerchant = new Map<string, number>();
   for (const f of joined) {
     const name = (f['Advertiser Name'] ?? '').trim().toLowerCase();
-    if (!byMerchant.has(name)) {
-      byMerchant.set(name, f);
+    feedCountByMerchant.set(name, (feedCountByMerchant.get(name) ?? 0) + 1);
+  }
+  const byMerchant = new Map<string, Record<string, string>>();
+  const multiFeeds: Record<string, string>[] = [];
+  for (const f of joined) {
+    const name = (f['Advertiser Name'] ?? '').trim().toLowerCase();
+    if ((feedCountByMerchant.get(name) ?? 1) < 5) {
+      multiFeeds.push(f);
     } else {
-      const existing = byMerchant.get(name)!;
-      if ((f['URL']?.length ?? 0) > (existing['URL']?.length ?? 0)) {
+      if (!byMerchant.has(name)) {
         byMerchant.set(name, f);
+      } else {
+        const existing = byMerchant.get(name)!;
+        if ((f['URL']?.length ?? 0) > (existing['URL']?.length ?? 0)) {
+          byMerchant.set(name, f);
+        }
       }
     }
   }
-  joined = Array.from(byMerchant.values());
+  joined = [...multiFeeds, ...Array.from(byMerchant.values())];
   // ──────────────────────────────────────────────────────────────────────────
 
   console.log(`[awin] marchands actifs: ${joined.map(f => f['Advertiser Name']).join(', ') || 'aucun'} | flux uniques: ${joined.length}`);
