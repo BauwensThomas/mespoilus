@@ -4,6 +4,7 @@ import type { AwinProduct } from '@/types';
 import Link from 'next/link';
 import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
 import BoutiqueSortSelect, { type SortValue } from '@/components/boutique/BoutiqueSortSelect';
+import BoutiqueTypeFilter from '@/components/boutique/BoutiqueTypeFilter';
 import ProductCard from '@/components/boutique/ProductCard';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronLeft, ChevronRight, Store, BookOpen } from 'lucide-react';
 
@@ -27,6 +28,7 @@ const CATEGORIES = [
   { id: 'reptiles', label: 'Reptiles', icon: Zap },
   { id: 'livres',   label: 'Livres',   icon: BookOpen },
 ];
+
 
 async function getMerchants(category?: string): Promise<string[]> {
   try {
@@ -56,7 +58,8 @@ async function getProducts(
   search: string | undefined,
   affiliate: string | undefined,
   page: number,
-  sort: SortValue
+  sort: SortValue,
+  productTypes: string[]
 ): Promise<{ products: AwinProduct[]; total: number }> {
   try {
     const supabase = createAdminClient();
@@ -83,6 +86,10 @@ async function getProducts(
       dataQ  = dataQ.eq('merchant_name', affiliate);
       countQ = countQ.eq('merchant_name', affiliate);
     }
+    if (productTypes.length > 0) {
+      dataQ  = dataQ.in('product_type', productTypes);
+      countQ = countQ.in('product_type', productTypes);
+    }
 
     dataQ = dataQ.range(offset, offset + PAGE_SIZE - 1);
 
@@ -107,16 +114,19 @@ function buildPageUrl(base: URLSearchParams, page: number): string {
 
 const VALID_SORTS: SortValue[] = ['stock', 'price_desc', 'name_asc'];
 
+const VALID_TYPES = ['nourriture', 'accessoires', 'habitat', 'jouets', 'hygiene', 'sante', 'livres'];
+
 interface Props {
-  searchParams: { category?: string; search?: string; page?: string; affiliate?: string; sort?: string };
+  searchParams: { category?: string; search?: string; page?: string; affiliate?: string; sort?: string; types?: string };
 }
 
 export default async function BoutiquePage({ searchParams }: Props) {
-  const category  = searchParams.category;
-  const search    = searchParams.search?.trim();
-  const affiliate = searchParams.affiliate;
-  const page      = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
-  const sort      = (VALID_SORTS.includes(searchParams.sort as SortValue) ? searchParams.sort : 'stock') as SortValue;
+  const category     = searchParams.category;
+  const search       = searchParams.search?.trim();
+  const affiliate    = searchParams.affiliate;
+  const page         = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
+  const sort         = (VALID_SORTS.includes(searchParams.sort as SortValue) ? searchParams.sort : 'stock') as SortValue;
+  const productTypes = (searchParams.types ?? '').split(',').filter(t => VALID_TYPES.includes(t));
 
   // Vérifier si admin connecté (cookies → session Supabase)
   let isAdmin = false;
@@ -128,16 +138,17 @@ export default async function BoutiquePage({ searchParams }: Props) {
     if (isAdmin) merchants = await getMerchants(category);
   } catch { /* non-bloquant */ }
 
-  const { products, total } = await getProducts(category, search, affiliate, page, sort);
+  const { products, total } = await getProducts(category, search, affiliate, page, sort, productTypes);
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const activeCat  = CATEGORIES.find(c => c.id === (category ?? 'all')) ?? CATEGORIES[0];
   const hasSynced  = total > 0;
 
   const baseParams = new URLSearchParams();
-  if (category)  baseParams.set('category', category);
-  if (search)    baseParams.set('search', search);
-  if (affiliate) baseParams.set('affiliate', affiliate);
+  if (category)              baseParams.set('category', category);
+  if (search)                baseParams.set('search', search);
+  if (affiliate)             baseParams.set('affiliate', affiliate);
   if (sort && sort !== 'stock') baseParams.set('sort', sort);
+  if (productTypes.length > 0) baseParams.set('types', productTypes.join(','));
 
   return (
     <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5 pb-20">
@@ -170,6 +181,8 @@ export default async function BoutiquePage({ searchParams }: Props) {
             </Link>
           );
         })}
+        <div className="w-px bg-gray-200 self-stretch mx-1" />
+        <BoutiqueTypeFilter currentTypes={productTypes} />
       </div>
 
       {/* Filtre affilié — admin uniquement */}
