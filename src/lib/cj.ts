@@ -1,12 +1,16 @@
 const CJ_GRAPHQL_URL = 'https://ads.api.cj.com/query';
 
+interface AmountWithCurrency {
+  amount: string;
+  currency: string;
+}
+
 export interface CJShoppingProduct {
   id: string;
   title: string;
   description?: string;
-  price?: string;
-  salePrice?: string;
-  currency?: string;
+  price?: AmountWithCurrency;
+  salePrice?: AmountWithCurrency;
   imageLink?: string;
   link?: string;
   brand?: string;
@@ -33,11 +37,11 @@ export interface DBProduct {
 }
 
 const SHOPPING_PRODUCTS_QUERY = `
-  query Products($companyId: ID!, $advertiserIds: [ID!], $limit: Int!, $offset: Int!) {
+  query Products($companyId: ID!, $partnerIds: [ID!], $limit: Int!, $offset: Int!) {
     products(
       companyId: $companyId
-      advertiserIds: $advertiserIds
-      partnerStatus: joined
+      partnerIds: $partnerIds
+      partnerStatus: JOINED
       limit: $limit
       offset: $offset
     ) {
@@ -46,9 +50,14 @@ const SHOPPING_PRODUCTS_QUERY = `
         id
         title
         description
-        price
-        salePrice
-        currency
+        price {
+          amount
+          currency
+        }
+        salePrice {
+          amount
+          currency
+        }
         imageLink
         link
         brand
@@ -91,23 +100,20 @@ function detectCategories(title: string, desc: string): string[] {
   return cats.length > 0 ? cats : ['chiens', 'chats'];
 }
 
-function parsePrice(raw?: string): number {
-  if (!raw) return 0;
-  const n = parseFloat(raw.replace(/[^0-9.]/g, ''));
-  return isNaN(n) ? 0 : n;
-}
-
 function mapToDB(p: CJShoppingProduct): DBProduct | null {
   if (!p.imageLink || !p.link) return null;
 
+  const priceObj = p.salePrice ?? p.price;
+  const price = priceObj ? parseFloat(priceObj.amount) : 0;
+  const currency = priceObj?.currency ?? 'USD';
   const categories = detectCategories(p.title, p.description ?? '');
 
   return {
     id: `cj_${p.advertiserId}_${p.id}`,
     name: p.title,
     description: p.description ?? '',
-    price: parsePrice(p.salePrice ?? p.price),
-    currency: p.currency ?? 'USD',
+    price: isNaN(price) ? 0 : price,
+    currency,
     image_url: p.imageLink,
     affiliate_url: p.link,
     merchant_name: p.advertiserName,
@@ -134,7 +140,7 @@ export async function fetchCJProductsForAdvertiser(
       products: { totalCount: number; resultList: CJShoppingProduct[] };
     }>(token, SHOPPING_PRODUCTS_QUERY, {
       companyId,
-      advertiserIds: [advertiserId],
+      partnerIds: [advertiserId],
       limit: LIMIT,
       offset,
     });
