@@ -361,7 +361,7 @@ function assignProductType(p: Record<string, string>): string | null {
   if (/\b(health|sant[eé]|medicine|m[eé]dicament|antiparasit|vermifuge|supplement|vitamin|pharma|probiotique)\b/.test(text))           return 'sante';
   if (/\b(bed|panier|couchage|coussin|niche|cage|aquarium|terrarium|vivarium|furniture|griffoir|perchoir|vol[iì]ere|kennel|crate|maison)\b/.test(text)) return 'habitat';
   if (/\b(collar|leash|harness|collier|laisse|harnais|clothing|apparel|bowl|gamelle|carrier|transport|sac de transport)\b/.test(text)) return 'accessoires';
-  if (/\b(book|livre|roman|encyclop[eé]die|guide|manuel|bd|manga|litt[eé]rature)\b/.test(text))                                       return 'livres';
+  if (/\b(book|livre|roman|encyclop[eé]die|manuel vétérinaire|manga|litt[eé]rature|bande dessin[eé]e)\b/.test(text))                   return 'livres';
 
   return null;
 }
