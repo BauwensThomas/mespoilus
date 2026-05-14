@@ -298,7 +298,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Headers de sécurité sur toutes les routes
 - **RLS activé sur les 15 tables** ✅
   - `articles` → policy SELECT `status = 'published'` (lecture publique)
-  - `products` → policy SELECT `in_stock = true` (lecture publique)
+  - `products` → policy SELECT `true` (lecture publique totale — colonne `in_stock` supprimée)
   - Toutes les autres tables → RLS activé sans policy (accès anon bloqué, service role bypass)
 - Les rapports Nathalie/Maxime sont informatifs uniquement -pas de corrections automatiques
 - Workflow mensuel : lire les rapports du 1er du mois → appliquer les corrections manuellement
@@ -339,6 +339,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 | `src/lib/supabase/migration_agent_reports.sql` | Tables `seo_reports`, `tech_reports`, `support_logs` ✅ |
 | `src/lib/supabase/migration_featured_partner.sql` | Colonne `featured_partner TEXT` sur `articles` -anti-répétition partenaires 30 articles ✅ |
 | `src/lib/supabase/migration_awin_categories.sql` | Colonne `categories TEXT[]` sur `products` + GIN index (⚠️ à exécuter) |
+| `src/lib/supabase/migration_drop_in_stock.sql` | Supprime colonne `in_stock` de `products` + RLS `USING (true)` ✅ |
 | `src/lib/supabase/migration_rls_awin_progress.sql` | RLS sur `awin_sync_progress` (⚠️ à exécuter) |
 ### Newsletter (Sofia)
 - `src/lib/resend.ts` -client Resend via fetch natif
@@ -371,7 +372,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - **Pagination** : 48 produits/page, param `?page=N`, compte exact via requête Supabase parallèle `{ count: 'exact', head: true }`
 - **Tri client** : `BoutiqueSortSelect.tsx` (select) avec 4 options via param `?sort=` : `stock` (dispo en premier + prix asc, défaut), `price_asc`, `price_desc`, `name_asc`
 - **Filtre admin affilié** : panel amber visible uniquement si session admin connectée -liste des marchands par catégorie, param `?affiliate=Merchant+Name`
-- `ProductCard` : image `unoptimized` (CDN Awin externe), nom, description, prix + devise, drapeau marchand, badge "Indisponible", bouton "Vérifier" (gris) ou "Voir" (orange) selon `in_stock`
+- `ProductCard` : image `unoptimized` (CDN Awin externe), nom, description, prix + devise, drapeau marchand, bouton "Voir" (orange). Pas de filtre ni badge stock — tous les produits sont affichés
 - **Drapeaux** via `flagcdn.com` : table override `MERCHANT_COUNTRY` pour cas connus (ex: `'tuft & paw' → 'us'`), puis suffixe marchand (`Zooplus FR` → fr), puis devise (USD→us, CAD→ca, GBP→gb). EUR sans pays connu = pas de drapeau
 - Cron sync Awin : **7 crons par catégorie** (2h-4h UTC, 20min d'écart), reset catégorie + réinsertion depuis feeds Awin
 - Disclaimer affiliation barre fixe en bas (bg-white/95)
@@ -391,13 +392,13 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - **Déduplication par marchand** : 1 seul feed par marchand (URL la plus longue = flux complet)
 - Chaque feed est un CSV (parfois `.gz`) téléchargé et décompressé (détection gzip par magic bytes `0x1F 0x8B`)
 - **Streaming pur** : `parseCSVStreamingWithFlush` -jamais plus de 100 produits en RAM, flush+upsert immédiat
-- **Colonnes Darwin (noms réels)** : `product_name` (titre), `category_name` (catégorie GPC), `stock_status` (dispo), `isbn` (livres). Fallbacks dans le code : `title ?? product_name`, `google_product_category ?? category_name ?? merchant_category`, `availability ?? in_stock ?? stock_status`
+- **Colonnes Darwin (noms réels)** : `product_name` (titre), `category_name` (catégorie GPC), `isbn` (livres). Fallbacks : `title ?? product_name`, `google_product_category ?? category_name ?? merchant_category`. Colonne `stock_status` ignorée (supprimée du modèle)
 - Catégorisation : `category_name` / `google_product_category` en priorité via `GPC_MAP` → fallback mots-clés titre
 - **Détection livres** : ISBN non vide (`p['isbn']?.trim()`) = livre garanti
 - **Mots-clés : titre uniquement + bornes de mot** pour mots simples (évite "pochette"→poche, "catalogue"→chat), titre+description pour expressions multi-mots
 - **Anti-faux-positifs** : produits sans correspondance animal/livre → retournés `null` par `assignCategories()`, non importés
 - Prix extrait par regex `priceRaw.match(/^([\d.]+)\s*([A-Z]{3})?/)` (format `'199.00 USD'`). Fallback devise : colonne `currency` ou `currency_code` du CSV, puis EUR
-- **Disponibilité** : approche **blacklist** — valeurs inconnues/vides → `in_stock=true` par défaut. Valeurs `out_of_stock | out of stock | out-of-stock | false | 0 | no | unavailable | discontinued | sold out | preorder` → false. (colonne `stock_status` prioritaire via fallback `availability ?? in_stock ?? stock_status`)
+- **Disponibilité** : colonne `in_stock` supprimée de la table `products` et du type `AwinProduct`. Les feeds Awin ne sont pas fiables pour le stock — tous les produits sont affichés, l'utilisateur vérifie sur le site marchand
 - Filtres : `price > 0`, exclusion pièces détachées (`/\bparts?\b/i`, `/ [A-Z0-9]{5,}$/`)
 - **Pas de pre-delete** : suppression post-sync uniquement si `totalSynced > 0 && !lastError`, par comparaison `last_synced < syncStart` (évite DB vide si feed échoue)
 - Cache feeds 1h en mémoire (évite re-téléchargement feedList à chaque appel)
@@ -547,7 +548,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 - Boutique : `unoptimized` sur `<Image>` de `ProductCard` (CDN Awin non listé dans `remotePatterns`)
 - Awin sync : refactoring complet vers 7 crons par catégorie, streaming pur, `assignCategories()` multi-catégories
 - Awin Darwin CSV : fix colonnes réelles (`product_name`, `category_name`, `stock_status`, `isbn`) + bornes de mot manuelles + détection ISBN livres + no pre-delete + anti-faux-positifs (null pour produits hors-animaux) ✅
-- Awin inStock : approche **blacklist** (valeur inconnue/vide = dispo) → corrige Tuft & Paw tous marqués "indisponible" ✅
+- Colonne `in_stock` supprimée de `products` (table + type + sync + boutique + dashboard) — feeds Awin non fiables pour le stock ✅
+- Migration exécutée : `migration_drop_in_stock.sql` (DROP COLUMN CASCADE + nouvelle RLS `USING (true)`) ✅
 - Awin GPC_MAP livres élargi : roman, BD, manga, littérature, jeunesse, encyclopédie, biographie, poche, broché, relié ✅
 - Awin devise : fallback sur colonnes `currency`/`currency_code` du CSV si absente du champ `price` ✅
 - Boutique pagination : 48/page, `?page=N`, requête count parallèle ✅
