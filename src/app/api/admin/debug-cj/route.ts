@@ -8,15 +8,12 @@ const FEEDS_QUERY = `
     productFeeds(
       companyId: $companyId
       partnerIds: $partnerIds
-      partnerStatus: JOINED
     ) {
       totalCount
       resultList {
         advertiserName
         advertiserId
-        numberOfProducts
         lastUpdated
-        catalogName
       }
     }
   }
