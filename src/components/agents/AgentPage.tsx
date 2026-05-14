@@ -542,7 +542,7 @@ function HistoryPanel({
   expandedLog: string | null;
   setExpandedLog: (id: string | null) => void;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState('');
 
   const filtered = dateFilter
