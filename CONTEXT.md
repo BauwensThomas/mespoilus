@@ -472,20 +472,10 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 4 pipelines :
 ---
 ## Actions manuelles restantes
 
-### Guides PDF — actions Supabase requises
-- [ ] Exécuter `src/lib/supabase/migration_pdf_guides.sql` dans Supabase SQL Editor
-- [ ] Créer le bucket `pdf-guides` dans Supabase Storage (**privé**, pas public)
-- [ ] Uploader les 10 PDFs avec les chemins exacts :
-  - `chiens/preparer-arrivee-chiot.pdf`
-  - `chiens/guide-nutrition-chien.pdf`
-  - `chiens/premiers-soins-chien.pdf`
-  - `chats/checklist-adoption-chaton.pdf`
-  - `chats/securiser-maison-chat.pdf`
-  - `chats/preparer-arrivee-chat-adulte.pdf`
-  - `rongeurs/materiel-essentiel-hamster.pdf`
-  - `rongeurs/premiers-achats-lapin.pdf`
-  - `reptiles/checklist-adoption-reptile.pdf`
-  - `oiseaux/alimentation-perroquet.pdf`
+### Guides PDF ✅
+- ✅ Migration `pdf_guides` exécutée (table + données seedées)
+- ✅ Bucket `pdf-guides` créé (privé, application/pdf uniquement)
+- ✅ 10/10 PDFs uploadés dans Supabase Storage
 ### Migrations Supabase en attente ⚠️
 - ✅ `migration_awin_categories.sql` — colonne `categories TEXT[]` + GIN index sur `products` (vérifié en DB)
 - ✅ `migration_rls_awin_progress.sql` — RLS sur `awin_sync_progress` (vérifié : anon=[], service_role=données)
