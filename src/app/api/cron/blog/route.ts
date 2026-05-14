@@ -389,8 +389,9 @@ CONSIGNES :
           if (imageProduit) {
             // Image du produit Awin — télécharger dans Supabase Storage (URL CDN Awin rejetée par Instagram)
             console.log(`[Cron1] Image: produit Awin "${nomProduit}"...`);
+            const hdImageUrl = imageProduit.replace(/([?&])(w|h)=\d+/g, '$1$2=800');
             const stored = await Promise.race([
-              downloadAndStorePhoto(imageProduit, `article-${articleSlug}.jpg`),
+              downloadAndStorePhoto(hdImageUrl, `article-${articleSlug}.jpg`),
               new Promise<null>(r => setTimeout(() => r(null), 7000)),
             ]);
             if (stored) {
