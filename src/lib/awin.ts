@@ -77,9 +77,32 @@ function keywordsMatchProduct(p: Record<string, string>, keywords: string[]): bo
 // Si ces mots apparaissent dans le titre OU la description, le produit n'appartient pas à cette catégorie
 // (ingrédient ≠ espèce cible : friandise au lapin pour chien ≠ produit pour rongeur)
 const CATEGORY_EXCLUSIONS: Record<string, string[]> = {
-  rongeurs: ['chien', 'dog', 'hond', 'pour chien', 'pour votre chien', 'for dog', 'your dog', 'votre chien', 'chat', 'cat', 'kat', 'pour chat', 'for cat', 'chiot', 'puppy'],
-  oiseaux:  ['chien', 'dog', 'hond', 'pour chien', 'pour votre chien', 'chat', 'cat', 'kat', 'pour chat'],
-  reptiles: ['chien', 'dog', 'hond', 'pour chien', 'chat', 'cat', 'kat', 'pour chat'],
+  rongeurs: [
+    // chiens/dogs — singulier + pluriel + diminutif
+    'chien', 'chiens', 'chiot', 'chiots', 'dog', 'dogs', 'puppy', 'puppies',
+    'hond', 'honden', 'hund', 'hunde',
+    'pour chien', 'pour votre chien', 'for dog', 'your dog', 'votre chien', 'pour les chiens',
+    // chats/cats
+    'chat', 'chats', 'chaton', 'chatons', 'cat', 'cats', 'kitten', 'kittens',
+    'kat', 'katten', 'katze', 'katzen',
+    'pour chat', 'for cat', 'pour les chats', 'pour votre chat',
+  ],
+  oiseaux: [
+    'chien', 'chiens', 'chiot', 'chiots', 'dog', 'dogs',
+    'hond', 'honden',
+    'pour chien', 'pour votre chien', 'pour les chiens',
+    'chat', 'chats', 'chaton', 'chatons', 'cat', 'cats', 'kitten', 'kittens',
+    'kat', 'katten',
+    'pour chat', 'pour les chats',
+  ],
+  reptiles: [
+    'chien', 'chiens', 'chiot', 'chiots', 'dog', 'dogs',
+    'hond', 'honden',
+    'pour chien', 'pour les chiens',
+    'chat', 'chats', 'chaton', 'chatons', 'cat', 'cats', 'kitten', 'kittens',
+    'kat', 'katten',
+    'pour chat', 'pour les chats',
+  ],
 };
 
 function excludedByKeywords(p: Record<string, string>, exclusions: string[]): boolean {
