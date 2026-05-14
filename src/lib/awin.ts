@@ -245,6 +245,7 @@ async function parseCSVStreamingWithFlush(
       price, currency, image_url: imageUrl,
       affiliate_url: deepLink, merchant_name: merchantName ?? '',
       category: primary, categories: cats,
+      product_type: assignProductType(p),
       last_synced: new Date().toISOString(),
     });
 
@@ -346,6 +347,24 @@ export async function getJoinedFeeds(publisherId: string, feedToken: string): Pr
 }
 
 const ANIMAL_CATEGORIES = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'] as const;
+
+function assignProductType(p: Record<string, string>): string | null {
+  if (p['isbn']?.trim()) return 'livres';
+
+  const gpc   = (p['google_product_category'] ?? p['category_name'] ?? p['merchant_category'] ?? '').toLowerCase();
+  const title = (p['title'] ?? p['product_name'] ?? '').toLowerCase();
+  const text  = `${gpc} ${title}`;
+
+  if (/\b(food|treat|snack|nourriture|croquette|friandise|alimentation|p[aâ]t[eé]e|voer|futter|kibble|nutrition|feeding)\b/.test(text)) return 'nourriture';
+  if (/\b(toy|jouet|jeu|balle|peluche|speelgoed|spielzeug|play|interactive|interactif|tunnel|roue)\b/.test(text))                      return 'jouets';
+  if (/\b(grooming|shampoo|shampooing|toilettage|litter|liti[eè]re|dental|brosse|peigne|coupe.ongles|d[eé]sodorisant)\b/.test(text))   return 'hygiene';
+  if (/\b(health|sant[eé]|medicine|m[eé]dicament|antiparasit|vermifuge|supplement|vitamin|pharma|probiotique)\b/.test(text))           return 'sante';
+  if (/\b(bed|panier|couchage|coussin|niche|cage|aquarium|terrarium|vivarium|furniture|griffoir|perchoir|vol[iì]ere|kennel|crate|maison)\b/.test(text)) return 'habitat';
+  if (/\b(collar|leash|harness|collier|laisse|harnais|clothing|apparel|bowl|gamelle|carrier|transport|sac de transport)\b/.test(text)) return 'accessoires';
+  if (/\b(book|livre|roman|encyclop[eé]die|guide|manuel|bd|manga|litt[eé]rature)\b/.test(text))                                       return 'livres';
+
+  return null;
+}
 
 function assignCategories(p: Record<string, string>): { primary: AwinProduct['category']; all: string[] } | null {
   const all: string[] = [];
