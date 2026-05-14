@@ -33,7 +33,7 @@ async function getMerchants(category?: string): Promise<string[]> {
     const supabase = createAdminClient();
 
     // Marchands Awin (hors Amazon)
-    let q = supabase.from('products').select('merchant_name').neq('merchant_name', 'Amazon FR');
+    let q = supabase.from('products').select('merchant_name').neq('merchant_name', 'Amazon FR').limit(100000);
     if (category && category !== 'all') q = q.contains('categories', [category]);
     const { data } = await q;
     const names = data?.map((r: { merchant_name: string }) => r.merchant_name).filter(Boolean) ?? [];
