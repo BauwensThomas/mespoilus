@@ -467,8 +467,17 @@ export default function AdoptionPostForm() {
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-800 mb-1.5 font-medium">Race / Espèce</label>
-          <input type="text" value={form.breed} onChange={e => set('breed', e.target.value)} placeholder="ex : Labrador, Siamois…" className={inputCls} />
+          {form.animal_type === 'autre' ? (
+            <>
+              <label className="block text-xs text-gray-800 mb-1.5 font-medium">Quel animal ? *</label>
+              <input required type="text" value={form.breed} onChange={e => set('breed', e.target.value)} placeholder="ex : Cheval, Cochon, Araignée…" className={inputCls} />
+            </>
+          ) : (
+            <>
+              <label className="block text-xs text-gray-800 mb-1.5 font-medium">Race / Espèce</label>
+              <input type="text" value={form.breed} onChange={e => set('breed', e.target.value)} placeholder="ex : Labrador, Siamois…" className={inputCls} />
+            </>
+          )}
         </div>
         <div>
           <label className="block text-xs text-gray-800 mb-1.5 font-medium">Âge *</label>

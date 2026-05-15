@@ -7,6 +7,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import AdBanner from '@/components/ui/AdBanner';
 import AdoptionSearchBar from '@/components/adoption/AdoptionSearchBar';
+import AdoptionFilters from '@/components/adoption/AdoptionFilters';
+import { Suspense } from 'react';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart, MapPin } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -46,7 +48,7 @@ const TYPE_COLOR: Record<string, { border: string; badge: string; bg: string }> 
   autre:   { border: 'border-gray-300',     badge: 'text-gray-700',     bg: 'bg-gray-100'     },
 };
 
-async function getPosts(animal?: string, search?: string): Promise<AdoptionPost[]> {
+async function getPosts(animal?: string, search?: string, pays?: string, gender?: string, race?: string, ageUnit?: string): Promise<AdoptionPost[]> {
   try {
     const supabase = createAdminClient();
     let q = supabase
@@ -56,7 +58,11 @@ async function getPosts(animal?: string, search?: string): Promise<AdoptionPost[
       .order('created_at', { ascending: false })
       .limit(50);
     if (animal && animal !== 'all') q = q.eq('animal_type', animal);
-    if (search) q = q.or(`breed.ilike.%${search}%,description.ilike.%${search}%,region.ilike.%${search}%`);
+    if (search)   q = q.or(`breed.ilike.%${search}%,description.ilike.%${search}%,region.ilike.%${search}%`);
+    if (pays)     q = q.ilike('region', `%${pays}`);
+    if (gender)   q = q.eq('gender', gender);
+    if (race)     q = q.ilike('breed', `%${race}%`);
+    if (ageUnit)  q = q.ilike('age', `%${ageUnit}`);
     const { data } = await q;
     return (data as AdoptionPost[]) ?? [];
   } catch {
@@ -64,14 +70,58 @@ async function getPosts(animal?: string, search?: string): Promise<AdoptionPost[
   }
 }
 
+async function getAvailableFilters(animal?: string, pays?: string, gender?: string, race?: string, ageUnit?: string) {
+  try {
+    const supabase = createAdminClient();
+    let q = supabase
+      .from('adoption_posts')
+      .select('gender,breed,age,region')
+      .eq('status', 'approved');
+    if (animal && animal !== 'all') q = q.eq('animal_type', animal);
+    if (pays)    q = q.ilike('region', `%${pays}`);
+    if (gender)  q = q.eq('gender', gender);
+    if (race)    q = q.ilike('breed', `%${race}%`);
+    if (ageUnit) q = q.ilike('age', `%${ageUnit}`);
+    const { data } = await q;
+    if (!data) return { countries: [], breeds: [], ageUnits: [], genders: [] };
+
+    const countries = [...new Set(data.map(p => {
+      if (!p.region) return null;
+      const parts = p.region.split(', ');
+      return parts.length > 1 ? parts[parts.length - 1] : null;
+    }).filter(Boolean))].sort() as string[];
+
+    const breeds = [...new Set(data.map(p => p.breed).filter(Boolean))].sort() as string[];
+
+    const ageUnits = [...new Set(data.map(p => {
+      if (!p.age) return null;
+      return p.age.includes('mois') ? 'mois' : 'ans';
+    }).filter(Boolean))] as string[];
+
+    const genders = [...new Set(data.map(p => p.gender).filter(g => g && g !== 'inconnu'))] as string[];
+
+    return { countries, breeds, ageUnits, genders };
+  } catch {
+    return { countries: [], breeds: [], ageUnits: [], genders: [] };
+  }
+}
+
 interface Props {
-  searchParams: { animal?: string; q?: string };
+  searchParams: { animal?: string; q?: string; pays?: string; gender?: string; race?: string; age_unit?: string };
 }
 
 export default async function AdoptionPage({ searchParams }: Props) {
-  const animal = searchParams.animal;
-  const search = searchParams.q?.trim();
-  const posts = await getPosts(animal, search);
+  const animal  = searchParams.animal;
+  const search  = searchParams.q?.trim();
+  const pays    = searchParams.pays?.trim();
+  const gender  = searchParams.gender?.trim();
+  const race    = searchParams.race?.trim();
+  const ageUnit = searchParams.age_unit?.trim();
+
+  const [posts, availableFilters] = await Promise.all([
+    getPosts(animal, search, pays, gender, race, ageUnit),
+    getAvailableFilters(animal, pays, gender, race, ageUnit),
+  ]);
   const activeType = ANIMAL_TYPES.find(t => t.id === (animal ?? 'all')) ?? ANIMAL_TYPES[0];
 
   return (
@@ -84,7 +134,7 @@ export default async function AdoptionPage({ searchParams }: Props) {
       </div>
 
       {/* Filtres + bouton */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {ANIMAL_TYPES.map(t => {
           const isActive = (t.id === 'all' && !animal) || t.id === animal;
           const IconComponent = t.icon;
@@ -103,6 +153,15 @@ export default async function AdoptionPage({ searchParams }: Props) {
             </Link>
           );
         })}
+
+        {/* Séparateur visuel */}
+        <span className="w-px h-6 bg-gray-200 mx-1" />
+
+        {/* Filtres dynamiques */}
+        <Suspense fallback={null}>
+          <AdoptionFilters available={availableFilters} />
+        </Suspense>
+
         <Link
           href="/adoption/deposer"
           className="ml-auto text-sm px-3 py-1.5 rounded-lg border transition-all duration-200 flex items-center gap-2 font-medium bg-rose-500 hover:bg-rose-600 text-white border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:ring-offset-2"
