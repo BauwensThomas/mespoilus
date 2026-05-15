@@ -8,6 +8,7 @@ import type { Article } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import PartenairesSection from '@/components/landing/PartenairesSection';
+import AdoptionPreviewSection from '@/components/landing/AdoptionPreviewSection';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronRight, CheckCircle, Calculator, HelpCircle, Sparkles, BookOpen } from 'lucide-react';
 
 export const revalidate = 3600;
@@ -383,6 +384,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ── ADOPTION ──────────────────────────────────────────────────────── */}
+      <AdoptionPreviewSection />
       {/* ── PARTENAIRES ───────────────────────────────────────────────────── */}
       <PartenairesSection />
       {/* ── NEWSLETTER ────────────────────────────────────────────────────── */}
