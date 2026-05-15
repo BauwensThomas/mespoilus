@@ -139,6 +139,7 @@ export interface AdoptionPost {
   gender: string;
   region: string;
   description: string;
+  reason: string | null;
   contact_info: string;
   photo_urls: string[];
   status: 'pending' | 'approved' | 'rejected';

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { poster_name, email, animal_type, breed, age, gender, region, description, contact_email, contact_phone, photo_urls } =
+    const { poster_name, email, animal_type, breed, age, gender, region, description, reason, contact_phone, photo_urls } =
       await req.json();
 
     if (!poster_name?.trim())
@@ -23,18 +23,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Type d'animal requis" }, { status: 400 });
     if (!region?.trim())
       return NextResponse.json({ error: 'Région requise' }, { status: 400 });
+    if (!age || !/^\d{1,2} (mois|ans)$/.test(age.trim()) || parseInt(age) < 1 || parseInt(age) > 99)
+      return NextResponse.json({ error: 'Âge invalide (1–99 mois ou ans)' }, { status: 400 });
     if (!description?.trim() || description.trim().length < 20)
       return NextResponse.json({ error: 'Description trop courte (min. 20 caractères)' }, { status: 400 });
-    if (!contact_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact_email))
-      return NextResponse.json({ error: 'Email public invalide' }, { status: 400 });
+    if (!reason?.trim() || reason.trim().length < 10)
+      return NextResponse.json({ error: 'Raison du don requise (min. 10 caractères)' }, { status: 400 });
+    if (!contact_phone?.trim())
+      return NextResponse.json({ error: 'Numéro de téléphone requis' }, { status: 400 });
     if (!Array.isArray(photo_urls) || photo_urls.length < 2)
       return NextResponse.json({ error: 'Minimum 2 photos requises' }, { status: 400 });
     if (photo_urls.length > 5)
       return NextResponse.json({ error: '5 photos maximum' }, { status: 400 });
-
-    const contact_info = contact_phone?.trim()
-      ? `${contact_email.trim()} · ${contact_phone.trim()}`
-      : contact_email.trim();
 
     const supabase = createAdminClient();
     const { error } = await supabase.from('adoption_posts').insert({
@@ -46,7 +46,8 @@ export async function POST(req: NextRequest) {
       gender: gender || 'inconnu',
       region: region.trim(),
       description: description.trim(),
-      contact_info,
+      reason: reason.trim(),
+      contact_info: contact_phone?.trim() || null,
       photo_urls,
     });
 
@@ -68,8 +69,8 @@ export async function POST(req: NextRequest) {
             <h2 style="color:#f59e0b">Annonce bien reçue !</h2>
             <p>Bonjour <strong>${cleanName}</strong>,</p>
             <p>Votre annonce d'adoption pour votre <strong>${animal_type}</strong> (${region.trim()}) a bien été soumise.</p>
-            <p>Elle sera vérifiée par notre équipe et publiée sous <strong>24h</strong> si elle respecte nos conditions.</p>
-            <p style="color:#6b7280;font-size:13px">Si vous avez des questions, répondez simplement à cet email.</p>
+            <p>Elle sera vérifiée par notre équipe et publiée dès validation si elle respecte nos conditions.</p>
+            <p style="color:#6b7280;font-size:13px">Si vous avez des questions, contactez-nous à <a href="mailto:contact@mespoilus.com" style="color:#f59e0b">contact@mespoilus.com</a>.</p>
             <p>-L'équipe Mes Poilus 🐾</p>
           </div>
         `,
@@ -90,7 +91,6 @@ export async function POST(req: NextRequest) {
             <p><strong>Animal :</strong> ${animal_type}${breed ? ` · ${breed}` : ''}${age ? ` · ${age}` : ''}</p>
             <p><strong>Région :</strong> ${region.trim()}</p>
             <p><strong>Description :</strong> ${description.trim()}</p>
-            <p><strong>Contact public :</strong> ${contact_info}</p>
             <p><a href="https://mespoilus.com/moderation" style="color:#f59e0b">→ Accéder à la modération</a></p>
           </div>
         `,

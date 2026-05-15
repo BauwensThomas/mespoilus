@@ -4,6 +4,18 @@ import LayoutShell from '@/components/layout/LayoutShell';
 import CookieBanner from '@/components/ui/CookieBanner';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import AdSense from '@/components/analytics/AdSense';
+import { createAdminClient } from '@/lib/supabase/server';
+
+async function getPendingCount(): Promise<number> {
+  try {
+    const supabase = createAdminClient();
+    const { count } = await supabase
+      .from('adoption_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending');
+    return count ?? 0;
+  } catch { return 0; }
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://mespoilus.com'),
@@ -21,7 +33,9 @@ export const metadata: Metadata = {
 };
 
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const pendingCount = await getPendingCount();
+
   return (
     <html lang="fr">
       <head>
@@ -47,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* end Pinterest Tag */}
       </head>
       <body className="min-h-screen">
-        <LayoutShell>{children}</LayoutShell>
+        <LayoutShell pendingCount={pendingCount}>{children}</LayoutShell>
         <CookieBanner />
         <GoogleAnalytics />
         <AdSense />

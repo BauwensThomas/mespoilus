@@ -5,10 +5,12 @@ export async function sendEmail({
   to,
   subject,
   html,
+  replyTo,
 }: {
   to: string;
   subject: string;
   html: string;
+  replyTo?: string;
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error('RESEND_API_KEY manquant');
@@ -24,7 +26,7 @@ export async function sendEmail({
       to: [to],
       subject,
       html,
-      reply_to: REPLY_TO,
+      reply_to: replyTo ?? REPLY_TO,
     }),
   });
 

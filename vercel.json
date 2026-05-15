@@ -13,6 +13,8 @@
     { "path": "/api/cron/security",           "schedule": "0 8 1 * *" },
     { "path": "/api/cron/newsletter",         "schedule": "0 10 * * 5" },
     { "path": "/api/cron/prenoms",            "schedule": "0 7 1 * *" },
-    { "path": "/api/cron/cj-sync/canada-pet-care", "schedule": "0 5 * * *" }
+    { "path": "/api/cron/cj-sync/canada-pet-care", "schedule": "0 5 * * *" },
+    { "path": "/api/cron/adoption-followup",  "schedule": "0 19 * * 6" },
+    { "path": "/api/cron/adoption-cleanup",   "schedule": "0 3 * * *"  }
   ]
 }

@@ -36,25 +36,21 @@ const navItems = [
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  initialPendingCount?: number;
 }
 
-export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: SidebarProps) {
   const pathname = usePathname();
-  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(initialPendingCount);
 
   useEffect(() => {
-    fetch('/api/admin/pending-count')
-      .then(r => r.json())
-      .then(d => setPendingCount(d.count ?? 0))
-      .catch(() => {});
-
-    const interval = setInterval(() => {
+    const refresh = () =>
       fetch('/api/admin/pending-count')
         .then(r => r.json())
         .then(d => setPendingCount(d.count ?? 0))
         .catch(() => {});
-    }, 60000);
 
+    const interval = setInterval(refresh, 60_000);
     return () => clearInterval(interval);
   }, []);
 

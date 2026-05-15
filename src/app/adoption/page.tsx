@@ -51,7 +51,7 @@ async function getPosts(animal?: string, search?: string): Promise<AdoptionPost[
     const supabase = createAdminClient();
     let q = supabase
       .from('adoption_posts')
-      .select('id,poster_name,animal_type,breed,age,gender,region,description,contact_info,photo_urls,created_at')
+      .select('id,poster_name,animal_type,breed,age,gender,region,description,photo_urls,created_at')
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .limit(50);
@@ -154,7 +154,7 @@ function AdoptionCard({ post }: { post: AdoptionPost }) {
   const date = formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: fr });
 
   return (
-    <div className={`bg-white rounded-2xl border ${colors.border} shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group focus-within:ring-2 focus-within:ring-orange-300`}>
+    <Link href={`/adoption/${post.id}`} className={`bg-white rounded-2xl border ${colors.border} shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group focus-within:ring-2 focus-within:ring-orange-300`}>
       {post.photo_urls?.length > 0 ? (
         <div className="relative h-48 overflow-hidden bg-gradient-to-br from-orange-100 to-blue-100">
           <Image
@@ -198,11 +198,9 @@ function AdoptionCard({ post }: { post: AdoptionPost }) {
 
         <div className="pt-4 border-t border-gray-200 flex items-center justify-between gap-2">
           <span className="text-xs text-gray-500">Par <span className="font-medium text-gray-700">{post.poster_name}</span></span>
-          <span className={`text-xs font-semibold ${colors.badge} truncate max-w-[180px]`}>
-            {post.contact_info}
-          </span>
+          <span className="text-xs font-medium text-orange-600 hover:underline">Voir l'annonce →</span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

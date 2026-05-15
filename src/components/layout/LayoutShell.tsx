@@ -104,7 +104,7 @@ function PartenairesBandeau() {
   );
 }
 
-export default function LayoutShell({ children }: { children: React.ReactNode }) {
+export default function LayoutShell({ children, pendingCount = 0 }: { children: React.ReactNode; pendingCount?: number }) {
   const pathname = usePathname();
   const isAdmin = ADMIN_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -118,7 +118,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   if (isAdmin) {
     return (
       <div className="min-h-screen flex bg-white text-gray-900">
-        <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(v => !v)} />
+        <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(v => !v)} initialPendingCount={pendingCount} />
         <main className={clsx('flex-1 min-h-screen overflow-auto bg-gray-50 transition-all duration-300', sidebarOpen ? 'ml-64' : 'ml-0')}>
           {children}
         </main>
