@@ -54,6 +54,10 @@ export default function PolitiqueConfidentialitePage() {
                 <h3 className="font-medium text-gray-700 mb-2">2.7 Commentaires d'articles</h3>
                 <p>Lorsque vous laissez un commentaire sur un article, nous collectons votre <strong>prénom</strong> (ou pseudo) et le <strong>texte de votre commentaire</strong>. Aucune adresse email n'est collectée. Les commentaires sont soumis à modération avant publication et peuvent être supprimés à tout moment sur simple demande à <a href="mailto:contact@mespoilus.com" className="text-orange-600 underline">contact@mespoilus.com</a>.</p>
               </div>
+              <div>
+                <h3 className="font-medium text-gray-700 mb-2">2.8 Demandes de contact par email</h3>
+                <p>Lorsque vous nous contactez par email (presse, partenariats, questions générales), votre <strong>adresse email</strong> et le contenu de votre message sont utilisés uniquement pour répondre à votre demande. Ces échanges ne sont pas stockés dans une base de données et ne sont pas utilisés à des fins commerciales.</p>
+              </div>
             </div>
           </section>
 
