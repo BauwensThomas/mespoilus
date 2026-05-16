@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import PartenairesSection from '@/components/landing/PartenairesSection';
 import AdoptionPreviewSection from '@/components/landing/AdoptionPreviewSection';
-import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronRight, Calculator, HelpCircle, Sparkles, BookOpen, ClipboardList } from 'lucide-react';
+import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronRight, UtensilsCrossed, Calculator, HelpCircle, Sparkles, BookOpen, ClipboardList } from 'lucide-react';
 
 export const revalidate = 3600;
 
@@ -44,15 +44,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 type HeroPhoto = { url: string; alt: string };
 
-
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
 
 // Ordre fixe des 4 cases du hero
 const HERO_SLOTS = ['chiens', 'chats', 'oiseaux', 'rongeurs'];
@@ -321,72 +312,29 @@ export default async function LandingPage() {
       {/* ── OUTILS ────────────────────────────────────────────────────────── */}
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <span className="text-orange-600 text-sm font-semibold uppercase tracking-widest">Gratuit</span>
-            <h2 className="text-4xl font-bold text-gray-900 mt-2">Nos outils pour vous aider</h2>
-            <p className="text-gray-600 mt-3 text-lg">Calculez, testez et trouvez en quelques secondes</p>
+            <h2 className="text-4xl font-bold text-gray-900 mt-2">Outils pratiques</h2>
+            <p className="text-gray-500 mt-3 text-base">Calculez, testez et trouvez en quelques secondes</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              {
-                href: '/outils/age',
-                icon: Calculator,
-                color: 'bg-orange-50',
-                iconColor: 'text-orange-600',
-                border: 'border-orange-100',
-                title: 'Calculateur d\'âge',
-                desc: 'Convertissez l\'âge de votre animal en années humaines. Chien, chat, oiseau, rongeur, reptile.',
-              },
-              {
-                href: '/outils/quiz',
-                icon: HelpCircle,
-                color: 'bg-blue-50',
-                iconColor: 'text-blue-600',
-                border: 'border-blue-100',
-                title: 'Quel animal pour moi ?',
-                desc: '6 questions pour découvrir l\'animal de compagnie idéal selon votre mode de vie.',
-              },
-              {
-                href: '/outils/prenom',
-                icon: Sparkles,
-                color: 'bg-purple-50',
-                iconColor: 'text-purple-600',
-                border: 'border-purple-100',
-                title: 'Générateur de prénom',
-                desc: 'Trouvez le prénom parfait pour votre nouvel animal parmi des centaines de suggestions.',
-              },
-              {
-                href: '/guides',
-                icon: BookOpen,
-                color: 'bg-green-50',
-                iconColor: 'text-green-600',
-                border: 'border-green-100',
-                title: 'Guides PDF gratuits',
-                desc: 'Téléchargez nos checklists et guides pratiques : adoption, alimentation, soins, sécurité.',
-              },
-              {
-                href: '/races',
-                icon: ClipboardList,
-                color: 'bg-amber-50',
-                iconColor: 'text-amber-600',
-                border: 'border-amber-100',
-                title: 'Fiches races',
-                desc: 'Toutes les caractéristiques de chaque race : caractère, santé, entretien, niveau d\'activité.',
-              },
-            ].map(({ href, icon: Icon, color, iconColor, border, title, desc }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`${color} border ${border} rounded-2xl p-6 hover:shadow-md transition-all group flex flex-col`}
-              >
-                <div className={`w-12 h-12 rounded-xl bg-white border ${border} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                  <Icon size={24} strokeWidth={1.5} className={iconColor} />
+              { href: '/outils/nutrition', icon: UtensilsCrossed, iconBg: 'bg-teal-100',   iconColor: 'text-teal-600',   label: 'Ration journalière',    desc: "Croquettes ou pâtée selon le poids et l'activité." },
+              { href: '/outils/age',       icon: Calculator,      iconBg: 'bg-orange-100', iconColor: 'text-orange-600', label: "Calculateur d'âge",      desc: "Âge animal en équivalent humain. Chien, chat, oiseau, rongeur, reptile." },
+              { href: '/outils/quiz',      icon: HelpCircle,      iconBg: 'bg-blue-100',   iconColor: 'text-blue-600',   label: 'Quel animal pour moi ?', desc: "6 questions pour trouver l'animal idéal selon votre mode de vie." },
+              { href: '/outils/prenom',    icon: Sparkles,        iconBg: 'bg-purple-100', iconColor: 'text-purple-600', label: 'Générateur de prénom',   desc: 'Des centaines de suggestions pour votre nouvel animal.' },
+              { href: '/guides',           icon: BookOpen,        iconBg: 'bg-green-100',  iconColor: 'text-green-600',  label: 'Guides PDF gratuits',    desc: 'Checklists adoption, alimentation, soins et sécurité.' },
+              { href: '/races',            icon: ClipboardList,   iconBg: 'bg-amber-100',  iconColor: 'text-amber-600',  label: 'Fiches races',           desc: "Caractère, santé et entretien de chaque race." },
+            ].map(({ href, icon: Icon, iconBg, iconColor, label, desc }) => (
+              <Link key={href} href={href} className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex items-center gap-4 hover:shadow-sm hover:border-gray-200 transition-all group">
+                <div className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}>
+                  <Icon size={20} strokeWidth={1.5} className={iconColor} />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed flex-1">{desc}</p>
-                <span className={`inline-flex items-center gap-1 mt-auto pt-4 text-sm font-semibold ${iconColor}`}>
-                  Essayer <ChevronRight size={14} />
-                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-gray-900 leading-snug">{label}</p>
+                  <p className="text-xs text-gray-500 leading-relaxed mt-0.5 line-clamp-1">{desc}</p>
+                </div>
+                <ChevronRight size={14} className={`${iconColor} flex-shrink-0 ml-auto opacity-60 group-hover:opacity-100 transition-opacity`} />
               </Link>
             ))}
           </div>
