@@ -2,15 +2,14 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRef, useTransition } from 'react';
-import { Search, X, LayoutGrid, List } from 'lucide-react';
+import { Search, X } from 'lucide-react';
+import ViewToggle from '@/components/ui/ViewToggle';
 
 export default function AdoptionSearchBar({ defaultValue = '' }: { defaultValue?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const view = searchParams.get('view') === 'list' ? 'list' : 'grid';
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -28,15 +27,8 @@ export default function AdoptionSearchBar({ defaultValue = '' }: { defaultValue?
     startTransition(() => router.push(`/adoption?${params.toString()}`));
   }
 
-  function handleView(v: 'grid' | 'list') {
-    const params = new URLSearchParams(searchParams.toString());
-    if (v === 'grid') params.delete('view');
-    else params.set('view', v);
-    startTransition(() => router.push(`/adoption?${params.toString()}`));
-  }
-
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between gap-3">
       <form onSubmit={handleSearch} className="flex gap-3 w-full max-w-md">
         <div className="relative flex-1">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -74,22 +66,7 @@ export default function AdoptionSearchBar({ defaultValue = '' }: { defaultValue?
         </button>
       </form>
 
-      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 shrink-0">
-        <button
-          onClick={() => handleView('grid')}
-          className={`p-1.5 rounded-md transition-colors ${view === 'grid' ? 'bg-white shadow text-orange-600' : 'text-gray-400 hover:text-gray-700'}`}
-          aria-label="Vue grille"
-        >
-          <LayoutGrid size={18} strokeWidth={1.5} />
-        </button>
-        <button
-          onClick={() => handleView('list')}
-          className={`p-1.5 rounded-md transition-colors ${view === 'list' ? 'bg-white shadow text-orange-600' : 'text-gray-400 hover:text-gray-700'}`}
-          aria-label="Vue liste"
-        >
-          <List size={18} strokeWidth={1.5} />
-        </button>
-      </div>
+      <ViewToggle />
     </div>
   );
 }

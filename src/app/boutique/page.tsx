@@ -7,6 +7,8 @@ import BoutiqueSortSelect, { type SortValue } from '@/components/boutique/Boutiq
 import BoutiqueTypeFilter from '@/components/boutique/BoutiqueTypeFilter';
 import BoutiqueProductsGrid from '@/components/boutique/BoutiqueProductsGrid';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronLeft, ChevronRight, Store, BookOpen } from 'lucide-react';
+import { Suspense } from 'react';
+import ViewToggle from '@/components/ui/ViewToggle';
 
 
 export const metadata: Metadata = {
@@ -231,6 +233,11 @@ export default async function BoutiquePage({ searchParams }: Props) {
       <div className="flex flex-wrap items-center gap-3">
         <BoutiqueSearchBar defaultValue={search ?? ''} />
         <BoutiqueSortSelect defaultValue={sort} />
+        <div className="ml-auto">
+          <Suspense>
+            <ViewToggle />
+          </Suspense>
+        </div>
         {!search && (
           <p className="text-xs text-gray-700">
             Vous ne trouvez pas ce que vous cherchez ?{' '}
