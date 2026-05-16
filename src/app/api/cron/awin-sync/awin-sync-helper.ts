@@ -73,11 +73,13 @@ export async function runAwinSyncForCategory(
   }
 
   if (totalSynced > 0 && !lastError) {
-    // Supprimer les produits de cette catégorie qui n'ont PAS été mis à jour lors de ce sync
+    // Supprimer les produits Awin de cette catégorie qui n'ont PAS été mis à jour lors de ce sync
+    // Exclure les produits ajoutés manuellement (Amazon FR, CanadaPetCare) pour ne pas les écraser
     await supabase.from('products')
       .delete()
       .eq('category', category)
-      .lt('last_synced', syncStart);
+      .lt('last_synced', syncStart)
+      .not('merchant_name', 'in', '("Amazon FR","CanadaPetCare")');
   }
 
   const finalError = feedErrors.length > 0 ? feedErrors.join(' | ') : null;
