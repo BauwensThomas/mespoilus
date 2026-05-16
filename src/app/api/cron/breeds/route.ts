@@ -74,7 +74,7 @@ export async function GET(req: Request) {
     try {
       const response = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2000,
+        max_tokens: 3000,
         messages: [{
           role: 'user',
           content: `Tu es un expert en bien-être animal. Génère une fiche race complète et précise pour : ${breed.name} (${ANIMAL_LABEL_FR[breed.animal]}).
@@ -82,7 +82,7 @@ export async function GET(req: Request) {
 Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans commentaires) :
 {
   "excerpt": "Une phrase accrocheuse de 80-120 caractères décrivant la race",
-  "description": "<p>Paragraphe 1 sur l'histoire et l'origine.</p><p>Paragraphe 2 sur le caractère et le comportement.</p><p>Paragraphe 3 sur la vie au quotidien avec cette race.</p>",
+  "description": "<p>Paragraphe court sur l'histoire et l'origine.</p><p>Paragraphe court sur le caractère et la vie avec cette race.</p>",
   "origine": "Pays ou région d'origine",
   "taille": "petit ou moyen ou grand ou très grand",
   "poids": "X-Y kg",
@@ -104,6 +104,10 @@ Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans commentaires) :
       });
 
       totalTokens += response.usage.input_tokens + response.usage.output_tokens;
+
+      if (response.stop_reason === 'max_tokens') {
+        throw new Error('Réponse tronquée (max_tokens atteint)');
+      }
 
       const raw = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
