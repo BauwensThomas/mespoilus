@@ -88,7 +88,7 @@ async function getAvailableFilters(animal?: string, pays?: string, gender?: stri
 }
 
 interface Props {
-  searchParams: { animal?: string; q?: string; pays?: string; gender?: string; race?: string; age_unit?: string };
+  searchParams: { animal?: string; q?: string; pays?: string; gender?: string; race?: string; age_unit?: string; view?: string };
 }
 
 export default async function AdoptionPage({ searchParams }: Props) {
@@ -171,7 +171,7 @@ export default async function AdoptionPage({ searchParams }: Props) {
           <p className="text-gray-600 text-base mt-2">Soyez le premier à déposer une annonce !</p>
         </div>
       ) : (
-        <AdoptionPostsGrid posts={posts} />
+        <AdoptionPostsGrid posts={posts} view={searchParams.view === 'list' ? 'list' : 'grid'} />
       )}
 
       <AdBanner slot="1148710530" className="mt-12" />
