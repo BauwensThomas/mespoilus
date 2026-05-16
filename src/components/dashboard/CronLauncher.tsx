@@ -115,6 +115,15 @@ const CRONS: CronConfig[] = [
     borderColor: 'border-rose-400/30',
     steps: [{ key: 'adoption-social', label: 'Post adoption (Emma → Facebook + Instagram)' }],
   },
+  {
+    id: 'breeds',
+    label: 'Fiches races',
+    description: 'Génère les 10 prochaines fiches races (Haiku) — à relancer jusqu\'à 120 fiches',
+    icon: Sparkles,
+    color: 'text-teal-600',
+    borderColor: 'border-teal-400/30',
+    steps: [{ key: 'breeds', label: 'Génération fiches races (Haiku × 10)' }],
+  },
 ];
 
 // ─── Hook crons génériques ────────────────────────────────────────────────────
