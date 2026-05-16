@@ -184,7 +184,7 @@ export default async function PressePage() {
             {/* Note */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
               <p className="text-xs text-blue-700 leading-relaxed">
-                Nous répondons à toutes les demandes sous <strong>48h ouvrées</strong>. Pour les partenariats commerciaux, merci de préciser votre site et vos objectifs.
+                Pour les partenariats commerciaux, merci de préciser votre site et vos objectifs dans votre message.
               </p>
             </div>
 
