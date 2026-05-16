@@ -475,6 +475,7 @@ export default async function LandingPage() {
                   { href: '/politique-confidentialite', label: 'Politique de confidentialité' },
                   { href: '/cgu',                       label: "Conditions d'utilisation"     },
                   { href: '/cookies',                   label: 'Cookies'                      },
+                  { href: '/presse',                    label: 'Presse & partenaires'         },
                 ].map(({ href, label }) => (
                   <li key={href}><Link href={href} className="text-sm hover:text-orange-400 transition-colors focus-ring">{label}</Link></li>
                 ))}

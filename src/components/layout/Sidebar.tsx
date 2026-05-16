@@ -24,15 +24,15 @@ function getAgentIcon(iconId: string) {
 }
 
 const navItems = [
-  { href: '/',            label: 'Accueil',    icon: Home },
-  { href: '/dashboard',   label: 'Dashboard',  icon: Zap },
-  { href: '/orchestrate', label: 'Orchestrer', icon: Target },
-  { href: '/moderation',  label: 'Adoption',   icon: Shield },
-  { href: '/gestion-blog', label: 'Blog',       icon: BookOpen },
-  { href: '/boutique',    label: 'Boutique',   icon: ShoppingBag },
-  { href: '/produits',    label: 'Produits affiliés', icon: ShoppingBag },
-  { href: '/gestion-races', label: 'Fiches races', icon: ClipboardList },
-  { href: '/guides-admin', label: 'Guides PDF',       icon: FileText },
+  { href: '/',             label: 'Accueil',          icon: Home,          isPublic: true  },
+  { href: '/dashboard',    label: 'Dashboard',        icon: Zap,           isPublic: false },
+  { href: '/orchestrate',  label: 'Orchestrer',       icon: Target,        isPublic: false },
+  { href: '/moderation',   label: 'Adoption',         icon: Shield,        isPublic: false },
+  { href: '/gestion-blog', label: 'Blog',             icon: BookOpen,      isPublic: false },
+  { href: '/boutique',     label: 'Boutique',         icon: ShoppingBag,   isPublic: true  },
+  { href: '/produits',     label: 'Produits affiliés',icon: ShoppingBag,   isPublic: false },
+  { href: '/gestion-races',label: 'Fiches races',     icon: ClipboardList, isPublic: false },
+  { href: '/guides-admin', label: 'Guides PDF',       icon: FileText,      isPublic: false },
 ];
 
 interface SidebarProps {
@@ -117,7 +117,7 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
 
         {/* Nav principal */}
         <nav className="px-3 pt-3 pb-1">
-          {navItems.map(({ href, label, icon: Icon }) => {
+          {navItems.map(({ href, label, icon: Icon, isPublic }) => {
             const isActive = href === '/' ? pathname === '/' : pathname === href;
             const isMod = href === '/moderation';
             return (
@@ -126,9 +126,12 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
                 href={href}
                 className={clsx(
                   'flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-0.5 transition-all duration-150',
+                  isPublic && 'border border-blue-200 bg-blue-50/60',
                   isActive
-                    ? 'bg-orange-100 text-orange-700 font-medium'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'bg-orange-100 text-orange-700 font-medium border-orange-200'
+                    : isPublic
+                      ? 'text-blue-700 hover:bg-blue-100 hover:border-blue-300'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 )}
               >
                 <Icon size={17} strokeWidth={1.5} />
