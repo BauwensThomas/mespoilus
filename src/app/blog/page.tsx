@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import Head from 'next/head';
-import BlogCard from '@/components/blog/BlogCard';
+import BlogPostsGrid from '@/components/blog/BlogPostsGrid';
 import { Article } from '@/types';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -79,7 +79,6 @@ export default async function BlogPage({ searchParams }: Props) {
   const search = searchParams.q?.trim();
   const activeCat = CATEGORIES.find((c) => c.id === (activeCategory ?? 'all'));
   const articles = await getArticles(activeCategory, search);
-  const [featured, ...rest] = articles;
 
   return (
     <>
@@ -134,30 +133,12 @@ export default async function BlogPage({ searchParams }: Props) {
           <p className="text-gray-600 font-medium text-lg">Les premiers articles arrivent bientôt !</p>
         </div>
       ) : (
-        <>
-          {featured && !activeCategory && !search && (
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-xs text-orange-600 font-semibold uppercase tracking-widest">À la une</span>
-              </div>
-              <BlogCard article={featured} featured />
-            </div>
-          )}
-          <div>
-            {(activeCategory || search ? articles : rest).length > 0 && (
-              <>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  {activeCategory ? `Articles · ${activeCat?.label}` : 'Derniers articles'}
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {(activeCategory || search ? articles : rest).map((article) => (
-                    <BlogCard key={article.id} article={article} />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </>
+        <BlogPostsGrid
+          articles={articles}
+          activeCategory={activeCategory}
+          search={search}
+          label={activeCategory ? `Articles · ${activeCat?.label}` : 'Derniers articles'}
+        />
       )}
 
       <AdBanner slot="1266534148" variant="in-article" className="mt-6" />
