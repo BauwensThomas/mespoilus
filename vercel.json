@@ -16,6 +16,7 @@
     { "path": "/api/cron/cj-sync/canada-pet-care", "schedule": "0 5 * * *" },
     { "path": "/api/cron/adoption-followup",  "schedule": "0 19 * * 6" },
     { "path": "/api/cron/adoption-cleanup",   "schedule": "0 3 * * *"  },
-    { "path": "/api/cron/adoption-social",    "schedule": "0 19 * * 2" }
+    { "path": "/api/cron/adoption-social",    "schedule": "0 19 * * 2" },
+    { "path": "/api/cron/breeds",             "schedule": "0 6 * * *" }
   ]
 }
