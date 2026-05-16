@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { ClipboardList, RefreshCw, Check, X, ImageOff, Upload, Link, Trash2 } from 'lucide-react';
+import { RefreshCw, Check, X, ImageOff, Upload, Link, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 
 const ANIMAL_TABS = [
@@ -146,18 +146,14 @@ export default function AdminRacesPage() {
   const withoutPhoto = displayed.length - withPhoto;
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+    <div className="px-8 py-8 space-y-6 animate-fade-in">
 
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-          <ClipboardList size={20} strokeWidth={1.5} className="text-amber-600" />
-        </div>
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Fiches races</h1>
-          <p className="text-sm text-gray-500">Photos stockées dans Supabase Storage</p>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Fiches races</h1>
+          <p className="text-gray-500 text-base mt-1">Photos stockées dans Supabase Storage</p>
         </div>
-        <button onClick={fetchBreeds} className="ml-auto text-gray-400 hover:text-gray-700 transition-colors">
+        <button onClick={fetchBreeds} className="text-gray-400 hover:text-gray-700 transition-colors p-2 rounded-lg hover:bg-gray-100">
           <RefreshCw size={16} strokeWidth={1.5} />
         </button>
       </div>
@@ -179,8 +175,7 @@ export default function AdminRacesPage() {
                   : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
               )}
             >
-              <span>{tab.emoji}</span>
-              {tab.label}
+                {tab.label}
               {noPhoto > 0 && (
                 <span className={clsx(
                   'text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center',

@@ -8,7 +8,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import AdBanner from '@/components/ui/AdBanner';
-import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool } from 'lucide-react';
+import CommentForm from '@/components/blog/CommentForm';
+import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle } from 'lucide-react';
 
 interface Props {
   params: { slug: string };
@@ -160,7 +161,7 @@ export default async function ArticlePage({ params }: Props) {
 
       {/* Contenu */}
       <div className="px-6 py-10">
-        <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm p-8" style={{ color: '#111827' }}>
+        <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-sm p-8" style={{ color: '#111827' }}>
 
           <Link
             href="/blog"
@@ -238,7 +239,49 @@ export default async function ArticlePage({ params }: Props) {
             </Link>
           </footer>
 
+          {/* Commentaires */}
+          <section className="mt-10 space-y-6">
+            <CommentsSection slug={params.slug} />
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+              <CommentForm slug={params.slug} />
+            </div>
+          </section>
+
         </div>
+      </div>
+    </div>
+  );
+}
+
+async function CommentsSection({ slug }: { slug: string }) {
+  const supabase = createAdminClient();
+  const { data: comments } = await supabase
+    .from('article_comments')
+    .select('id, author_name, content, created_at')
+    .eq('article_slug', slug)
+    .eq('status', 'approved')
+    .order('created_at', { ascending: true });
+
+  if (!comments || comments.length === 0) return null;
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-4">
+        <MessageCircle size={17} strokeWidth={1.5} className="text-orange-600" />
+        <h2 className="font-bold text-gray-900">{comments.length} commentaire{comments.length > 1 ? 's' : ''}</h2>
+      </div>
+      <div className="space-y-3">
+        {comments.map((c) => (
+          <div key={c.id} className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-semibold text-sm text-gray-900">{c.author_name}</span>
+              <span className="text-xs text-gray-400">
+                {format(new Date(c.created_at), 'd MMM yyyy', { locale: fr })}
+              </span>
+            </div>
+            <p className="text-sm text-gray-700 leading-relaxed">{c.content}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

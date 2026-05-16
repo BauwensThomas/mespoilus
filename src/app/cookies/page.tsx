@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function CookiesPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="max-w-6xl mx-auto px-6 py-12">
 
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Politique de cookies</h1>
         <p className="text-gray-500 text-sm mb-12">Conforme au RGPD et à la recommandation de l'APD belge - Dernière mise à jour : mai 2026</p>

@@ -105,8 +105,7 @@ export default async function BreedPage({ params }: Props) {
         &larr; {ANIMAL_LABEL[animalType]}
       </Link>
 
-      {/* Contenu centré — largeur carte */}
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div className="max-w-6xl mx-auto space-y-4">
 
         {/* Photo centrée */}
         <div className="max-w-xs mx-auto relative aspect-[3/4] rounded-2xl overflow-hidden">

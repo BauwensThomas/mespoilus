@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function PolitiqueConfidentialitePage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="max-w-6xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Politique de confidentialité</h1>
         <p className="text-gray-500 text-sm mb-12">Conforme au RGPD (Règlement UE 2016/679) - Dernière mise à jour : mai 2026</p>
 
@@ -50,6 +50,10 @@ export default function PolitiqueConfidentialitePage() {
                 <h3 className="font-medium text-gray-700 mb-2">2.6 Alertes adoption</h3>
                 <p>Si vous vous inscrivez aux alertes adoption, nous collectons votre <strong>adresse email</strong>, le <strong>type d'animal</strong> et le <strong>pays</strong> souhaités. Un email de confirmation (double opt-in) est envoyé avant toute activation. Vous pouvez vous désinscrire à tout moment via le lien présent dans chaque email d'alerte.</p>
               </div>
+              <div>
+                <h3 className="font-medium text-gray-700 mb-2">2.7 Commentaires d'articles</h3>
+                <p>Lorsque vous laissez un commentaire sur un article, nous collectons votre <strong>prénom</strong> (ou pseudo) et le <strong>texte de votre commentaire</strong>. Aucune adresse email n'est collectée. Les commentaires sont soumis à modération avant publication et peuvent être supprimés à tout moment sur simple demande à <a href="mailto:contact@mespoilus.com" className="text-orange-600 underline">contact@mespoilus.com</a>.</p>
+              </div>
             </div>
           </section>
 
@@ -61,6 +65,7 @@ export default function PolitiqueConfidentialitePage() {
                   { traitement: 'Newsletter', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Annonces d\'adoption', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Alertes adoption', base: 'Consentement (Art. 6.1.a RGPD)' },
+                  { traitement: 'Commentaires articles', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Cookies analytiques', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Téléchargement guide PDF', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Cookies essentiels', base: 'Intérêt légitime (Art. 6.1.f RGPD)' },
@@ -85,6 +90,7 @@ export default function PolitiqueConfidentialitePage() {
                 { type: 'Annonces d\'adoption', duree: "60 jours après approbation, ou suppression à votre demande" },
                 { type: 'Photos d\'adoption', duree: "Supprimées avec l'annonce" },
                 { type: 'Email téléchargement guide', duree: "Jusqu'à désinscription ou suppression à votre demande" },
+                { type: 'Commentaires articles', duree: "Jusqu'à suppression par l'administrateur ou sur demande" },
                 { type: 'Logs techniques', duree: '12 mois' },
                 { type: 'Cookies analytiques', duree: '13 mois maximum' },
               ].map(({ type, duree }) => (

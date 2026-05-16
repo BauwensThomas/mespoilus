@@ -8,12 +8,21 @@ export async function GET() {
 
   try {
     const supabase = createAdminClient();
-    const { count } = await supabase
-      .from('adoption_posts')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending');
-    return NextResponse.json({ count: count ?? 0 });
+    const [adoptionRes, commentsRes] = await Promise.all([
+      supabase
+        .from('adoption_posts')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending'),
+      supabase
+        .from('article_comments')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending'),
+    ]);
+    return NextResponse.json({
+      count: adoptionRes.count ?? 0,
+      commentCount: commentsRes.count ?? 0,
+    });
   } catch {
-    return NextResponse.json({ count: 0 });
+    return NextResponse.json({ count: 0, commentCount: 0 });
   }
 }

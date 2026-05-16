@@ -27,8 +27,8 @@ const navItems = [
   { href: '/',            label: 'Accueil',    icon: Home },
   { href: '/dashboard',   label: 'Dashboard',  icon: Zap },
   { href: '/orchestrate', label: 'Orchestrer', icon: Target },
-  { href: '/moderation',  label: 'Modération', icon: Shield },
-  { href: '/blog',        label: 'Blog',       icon: BookOpen },
+  { href: '/moderation',  label: 'Adoption',   icon: Shield },
+  { href: '/gestion-blog', label: 'Blog',       icon: BookOpen },
   { href: '/boutique',    label: 'Boutique',   icon: ShoppingBag },
   { href: '/produits',    label: 'Produits affiliés', icon: ShoppingBag },
   { href: '/gestion-races', label: 'Fiches races', icon: ClipboardList },
@@ -44,15 +44,20 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: SidebarProps) {
   const pathname = usePathname();
   const [pendingCount, setPendingCount] = useState(initialPendingCount);
+  const [commentCount, setCommentCount] = useState(0);
   const [noPhotoCount, setNoPhotoCount] = useState(0);
 
   useEffect(() => {
     const refresh = () =>
       fetch('/api/admin/pending-count')
         .then(r => r.json())
-        .then(d => setPendingCount(d.count ?? 0))
+        .then(d => {
+          setPendingCount(d.count ?? 0);
+          setCommentCount(d.commentCount ?? 0);
+        })
         .catch(() => {});
 
+    refresh();
     const interval = setInterval(refresh, 60_000);
     return () => clearInterval(interval);
   }, []);
@@ -136,6 +141,11 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
                 {href === '/gestion-races' && noPhotoCount > 0 && (
                   <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white min-w-[18px] text-center">
                     {noPhotoCount > 99 ? '99+' : noPhotoCount}
+                  </span>
+                )}
+                {href === '/gestion-blog' && commentCount > 0 && (
+                  <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white min-w-[18px] text-center">
+                    {commentCount > 99 ? '99+' : commentCount}
                   </span>
                 )}
               </Link>
