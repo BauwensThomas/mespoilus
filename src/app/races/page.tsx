@@ -65,7 +65,7 @@ export default async function RacesPage() {
 
       <div>
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Fiches races</h1>
-        <p className="text-gray-500 text-sm">Caractère, santé, entretien — tout ce qu&apos;il faut savoir sur chaque race</p>
+        <p className="text-gray-500 text-sm">Caractère, santé, entretien : tout ce qu&apos;il faut savoir sur chaque race</p>
       </div>
 
       <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
@@ -114,7 +114,7 @@ export default async function RacesPage() {
       </div>
 
       <p className="text-xs text-gray-400 text-center">
-        Nouvelles fiches ajoutées régulièrement. Les informations sont des moyennes — chaque animal est unique.
+        Nouvelles fiches ajoutées régulièrement. Les informations sont des moyennes indicatives.
       </p>
     </div>
   );

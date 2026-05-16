@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import PartenairesSection from '@/components/landing/PartenairesSection';
 import AdoptionPreviewSection from '@/components/landing/AdoptionPreviewSection';
-import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronRight, CheckCircle, Calculator, HelpCircle, Sparkles, BookOpen } from 'lucide-react';
+import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronRight, Calculator, HelpCircle, Sparkles, BookOpen, ClipboardList } from 'lucide-react';
 
 export const revalidate = 3600;
 
@@ -326,7 +326,7 @@ export default async function LandingPage() {
             <h2 className="text-4xl font-bold text-gray-900 mt-2">Nos outils pour vous aider</h2>
             <p className="text-gray-600 mt-3 text-lg">Calculez, testez et trouvez en quelques secondes</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {[
               {
                 href: '/outils/age',
@@ -363,6 +363,15 @@ export default async function LandingPage() {
                 border: 'border-green-100',
                 title: 'Guides PDF gratuits',
                 desc: 'Téléchargez nos checklists et guides pratiques : adoption, alimentation, soins, sécurité.',
+              },
+              {
+                href: '/races',
+                icon: ClipboardList,
+                color: 'bg-amber-50',
+                iconColor: 'text-amber-600',
+                border: 'border-amber-100',
+                title: 'Fiches races',
+                desc: 'Toutes les caractéristiques de chaque race : caractère, santé, entretien, niveau d\'activité.',
               },
             ].map(({ href, icon: Icon, color, iconColor, border, title, desc }) => (
               <Link
