@@ -549,7 +549,8 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 - ✅ **SQL Supabase** : faux positifs Maxi Zoo supprimés + colonne `product_type` migrée + Amazon FR tagué `livres`
 - ✅ **Livres Amazon** : ~2 par catégorie animale minimum atteint
 - **Amazon Associates** : générer 3 ventes dans les 180 jours pour valider le compte et débloquer l'API PA
-- **Migration breeds** : exécuter `migration_breeds.sql` dans Supabase Dashboard → puis lancer "Fiches races" depuis CronLauncher (répéter ~12× pour les 120 fiches)
+- **Migration breeds** : exécuter `migration_breeds.sql` dans Supabase Dashboard → puis lancer "Fiches races" depuis CronLauncher (répéter ~12× pour les 120 fiches, max_tokens=2000 depuis correction troncature)
+- **Migration breeds photo_url** : exécuter `migration_breeds_photo.sql` dans Supabase Dashboard (`ALTER TABLE breeds ADD COLUMN IF NOT EXISTS photo_url TEXT;`)
 
 ### Features à implémenter (backlog)
 - **Alertes adoption par email** : abonnement "chien, Belgique" → email auto quand annonce approuvée correspondante
@@ -635,6 +636,21 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 - Boutique : hint recherche "Vous ne trouvez pas…" à côté du sélecteur de tri quand aucune recherche active ✅
 - Colonne `in_stock` supprimée de `products` (table + type + sync + boutique + dashboard) — feeds Awin non fiables pour le stock ✅
 - Migration exécutée : `migration_drop_in_stock.sql` (DROP COLUMN CASCADE + nouvelle RLS `USING (true)`) ✅
+- **Feature "Fiches races"** : pages `/races`, `/races/[animal]`, `/races/[animal]/[slug]`, cron Haiku génération 120 races, table `breeds` Supabase ✅
+  - `/races` : 5 catégories en cartes portrait avec photos `hero_photos` + fallback gradient
+  - `/races/[animal]` : grille 5 colonnes, barre de recherche (`?q=`), bannière orange standard, toggle liste/grille, **photos individuelles par race** depuis `breeds.photo_url` (affiche "NO IMAGE" si absent)
+  - `/races/[animal]/[slug]` : photo depuis `breed.photo_url` (plus de `hero_photos`), bannière orange standard, container `max-w-4xl`, stats + caractère + convient_pour + description + soins
+  - Cron `/api/cron/breeds` : Haiku 4.5, max_tokens=2000 (fix troncature JSON), batch 10, upsert `animal,slug`, nettoyage JSON robuste
+  - `BREEDS_SEED` : 50 chiens, 30 chats, 15 oiseaux, 15 rongeurs, 10 reptiles
+  - Toggle grille/liste via `?view=list` URL param (composant `ViewToggle.tsx` partagé)
+  - **Colonne `photo_url TEXT`** sur `breeds` : migration `migration_breeds_photo.sql` à exécuter
+  - **Page admin `/gestion-races`** : liste toutes les races publiées (tous animaux), filtre par onglet, carte rouge si pas de photo, bouton "Ajouter photo" (rouge) ou "Modifier" (orange), champ URL + preview, sauvegarde via `PATCH /api/admin/breeds`
+  - **Badge rouge sidebar** : nombre de races sans photo, fetchée depuis `/api/admin/breeds-no-photo-count`
+  - `/gestion-races` protégé : ajouté dans `ADMIN_PAGE_PREFIXES` (middleware) et `ADMIN_PREFIXES` (LayoutShell)
+- **Toggle grille/liste unifié** (`ViewToggle.tsx`) : composant client partagé, même couleur orange-600 sur adoption/boutique/races, placé à droite de la barre de recherche via `justify-between` ✅
+- **Boutique** : texte "Vous ne trouvez pas..." déplacé à côté du tri, `ViewToggle` en `ml-auto` tout à droite ✅
+- **Homepage outils** : 5ème carte "Fiches races" ajoutée, grille `lg:grid-cols-5` (5 cartes sur même ligne) ✅
+- Tirets longs (—) retirés des textes visibles sur toutes les pages publiques ✅
 - Awin GPC_MAP livres élargi : roman, BD, manga, littérature, jeunesse, encyclopédie, biographie, poche, broché, relié ✅
 - Awin devise : fallback sur colonnes `currency`/`currency_code` du CSV si absente du champ `price` ✅
 - Boutique pagination : 48/page, `?page=N`, requête count parallèle ✅
