@@ -46,6 +46,10 @@ export default function PolitiqueConfidentialitePage() {
                 <h3 className="font-medium text-gray-700 mb-2">2.5 Téléchargement de guides PDF</h3>
                 <p>Lorsque vous téléchargez un guide gratuit, nous collectons votre <strong>adresse email</strong> afin de vous envoyer le lien de téléchargement. Vous pouvez également consentir, séparément, à recevoir notre newsletter. Ces deux consentements sont indépendants.</p>
               </div>
+              <div>
+                <h3 className="font-medium text-gray-700 mb-2">2.6 Alertes adoption</h3>
+                <p>Si vous vous inscrivez aux alertes adoption, nous collectons votre <strong>adresse email</strong>, le <strong>type d'animal</strong> et le <strong>pays</strong> souhaités. Un email de confirmation (double opt-in) est envoyé avant toute activation. Vous pouvez vous désinscrire à tout moment via le lien présent dans chaque email d'alerte.</p>
+              </div>
             </div>
           </section>
 
@@ -56,6 +60,7 @@ export default function PolitiqueConfidentialitePage() {
                 {[
                   { traitement: 'Newsletter', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Annonces d\'adoption', base: 'Consentement (Art. 6.1.a RGPD)' },
+                  { traitement: 'Alertes adoption', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Cookies analytiques', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Téléchargement guide PDF', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Cookies essentiels', base: 'Intérêt légitime (Art. 6.1.f RGPD)' },
@@ -76,6 +81,7 @@ export default function PolitiqueConfidentialitePage() {
             <div className="text-sm space-y-2">
               {[
                 { type: 'Adresse email newsletter', duree: "Jusqu'à désinscription" },
+                { type: 'Alertes adoption', duree: "Jusqu'à désinscription (lien dans chaque email)" },
                 { type: 'Annonces d\'adoption', duree: "60 jours après approbation, ou suppression à votre demande" },
                 { type: 'Photos d\'adoption', duree: "Supprimées avec l'annonce" },
                 { type: 'Email téléchargement guide', duree: "Jusqu'à désinscription ou suppression à votre demande" },
