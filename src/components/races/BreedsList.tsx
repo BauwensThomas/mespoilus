@@ -25,7 +25,7 @@ function GridCard({ breed, animalUrl }: { breed: BreedItem; animalUrl: string })
       href={`/races/${animalUrl}/${breed.slug}`}
       className="group bg-white border border-gray-200 hover:border-orange-300 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-md"
     >
-      <div className="relative h-28 bg-gray-50 overflow-hidden flex items-center justify-center">
+      <div className="relative h-80 bg-gray-50 overflow-hidden flex items-center justify-center">
         {breed.photo_url ? (
           <Image
             src={breed.photo_url}
@@ -111,7 +111,7 @@ export default function BreedsList({ breeds, animalUrl, search, view = 'grid' }:
           <p className="text-gray-600 font-medium">Aucune race trouvée{search ? ` pour "${search}"` : ''}</p>
         </div>
       ) : view === 'grid' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {breeds.map((b) => (
             <GridCard key={b.slug} breed={b} animalUrl={animalUrl} />
           ))}

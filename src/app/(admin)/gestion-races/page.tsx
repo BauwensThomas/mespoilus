@@ -37,6 +37,7 @@ export default function AdminRacesPage() {
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+  const [hasFile, setHasFile] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -55,14 +56,18 @@ export default function AdminRacesPage() {
   function startEdit(b: Breed) {
     setEditingId(b.id);
     setEditUrl(b.photo_url ?? '');
-    setPreviewSrc(b.photo_url ?? null);
+    setPreviewSrc(null);
+    setHasFile(false);
     setUploadMode('file');
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setPreviewSrc(URL.createObjectURL(file));
+    setHasFile(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => setPreviewSrc(ev.target?.result as string);
+    reader.readAsDataURL(file);
   }
 
   async function saveByUpload(id: string) {
@@ -86,17 +91,23 @@ export default function AdminRacesPage() {
   }
 
   async function saveByUrl(id: string) {
+    if (!editUrl.trim()) return;
     setSaving(true);
     try {
-      await fetch('/api/admin/breeds', {
-        method: 'PATCH',
+      const r = await fetch('/api/admin/breed-photo-upload', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, photo_url: editUrl.trim() || null }),
+        body: JSON.stringify({ breedId: id, url: editUrl.trim() }),
       });
-      setSavedId(id);
-      setTimeout(() => setSavedId(null), 2000);
-      setBreeds(prev => prev.map(b => b.id === id ? { ...b, photo_url: editUrl.trim() || null } : b));
-      cancelEdit();
+      const data = await r.json();
+      if (data.success) {
+        setSavedId(id);
+        setTimeout(() => setSavedId(null), 2000);
+        setBreeds(prev => prev.map(b => b.id === id ? { ...b, photo_url: data.url } : b));
+        cancelEdit();
+      } else {
+        alert(data.error ?? 'Erreur lors du téléchargement');
+      }
     } catch { /* ignore */ }
     finally { setSaving(false); }
   }
@@ -123,6 +134,7 @@ export default function AdminRacesPage() {
     setEditingId(null);
     setPreviewSrc(null);
     setEditUrl('');
+    setHasFile(false);
     if (fileRef.current) fileRef.current.value = '';
   }
 
@@ -307,8 +319,9 @@ export default function AdminRacesPage() {
                         className="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-orange-400 transition-colors"
                         onClick={() => fileRef.current?.click()}
                       >
-                        {previewSrc && fileRef.current?.files?.[0] ? (
-                          <Image src={previewSrc} alt="preview" width={80} height={60} className="mx-auto rounded object-cover" unoptimized />
+                        {previewSrc ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={previewSrc} alt="preview" className="mx-auto rounded object-cover h-20 w-auto" />
                         ) : (
                           <>
                             <Upload size={20} strokeWidth={1.5} className="text-gray-400 mx-auto mb-1" />
@@ -321,7 +334,7 @@ export default function AdminRacesPage() {
                       <div className="flex flex-col gap-2">
                         <button
                           onClick={() => handleSave(b.id)}
-                          disabled={saving || !fileRef.current?.files?.[0]}
+                          disabled={saving || !hasFile}
                           className="flex items-center gap-1.5 text-xs px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 disabled:opacity-40 font-medium whitespace-nowrap"
                         >
                           <Check size={13} strokeWidth={2} />
