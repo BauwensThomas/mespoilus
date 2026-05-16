@@ -12,7 +12,6 @@ interface BreedItem {
 interface Props {
   breeds: BreedItem[];
   animalUrl: string;
-  total: number;
   search?: string;
   view?: 'grid' | 'list';
 }
@@ -64,13 +63,12 @@ function ListRow({ breed, animalUrl }: { breed: BreedItem; animalUrl: string }) 
   );
 }
 
-export default function BreedsList({ breeds, animalUrl, total, search, view = 'grid' }: Props) {
+export default function BreedsList({ breeds, animalUrl, search, view = 'grid' }: Props) {
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-500">
-        {breeds.length} race{breeds.length !== 1 ? 's' : ''}
-        {search ? ` pour "${search}"` : ` sur ${total}`}
-      </p>
+      {search && (
+        <p className="text-sm text-gray-500">{breeds.length} race{breeds.length !== 1 ? 's' : ''} pour &quot;{search}&quot;</p>
+      )}
 
       {breeds.length === 0 ? (
         <div className="bg-gray-50 border border-gray-200 rounded-2xl p-10 text-center">

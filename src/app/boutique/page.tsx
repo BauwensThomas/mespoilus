@@ -233,11 +233,6 @@ export default async function BoutiquePage({ searchParams }: Props) {
       <div className="flex flex-wrap items-center gap-3">
         <BoutiqueSearchBar defaultValue={search ?? ''} />
         <BoutiqueSortSelect defaultValue={sort} />
-        <div className="ml-auto">
-          <Suspense>
-            <ViewToggle />
-          </Suspense>
-        </div>
         {!search && (
           <p className="text-xs text-gray-700">
             Vous ne trouvez pas ce que vous cherchez ?{' '}
@@ -245,6 +240,11 @@ export default async function BoutiquePage({ searchParams }: Props) {
             {' '}et recherchez par mot-clé (ex&nbsp;: aquarium, nourriture, laisse…)
           </p>
         )}
+        <div className="ml-auto">
+          <Suspense>
+            <ViewToggle />
+          </Suspense>
+        </div>
       </div>
 
       {/* Bannière */}

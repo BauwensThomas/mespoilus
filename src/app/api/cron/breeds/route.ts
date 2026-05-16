@@ -74,7 +74,7 @@ export async function GET(req: Request) {
     try {
       const response = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1200,
+        max_tokens: 2000,
         messages: [{
           role: 'user',
           content: `Tu es un expert en bien-être animal. Génère une fiche race complète et précise pour : ${breed.name} (${ANIMAL_LABEL_FR[breed.animal]}).
