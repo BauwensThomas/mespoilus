@@ -6,7 +6,7 @@ import { CheckCircle2, XCircle, Activity, MapPin, Scale, Heart } from 'lucide-re
 import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_EMOJI, ANIMAL_GRADIENT, ANIMAL_URL, type Breed } from '@/lib/breeds-list';
 
-export const revalidate = 3600;
+export const revalidate = 0;
 
 interface Props { params: { animal: string; slug: string } }
 
