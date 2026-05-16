@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const ADMIN_PAGE_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/guides-admin'];
-const ADMIN_API_PREFIXES = ['/api/agents', '/api/orchestrate', '/api/stats', '/api/security'];
+const ADMIN_API_PREFIXES = ['/api/agents', '/api/orchestrate', '/api/stats', '/api/security', '/api/admin'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -64,5 +64,6 @@ export const config = {
     '/api/orchestrate/:path*',
     '/api/stats/:path*',
     '/api/security/:path*',
+    '/api/admin/:path*',
   ],
 };
