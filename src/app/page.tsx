@@ -436,7 +436,7 @@ export default async function LandingPage() {
               © 2026 Mes Poilus. Tous droits réservés.
             </p>
             <p className="text-xs text-gray-600 mt-1">
-              En tant que Partenaire Amazon, je réalise un bénéfice sur les achats remplissant les conditions requises.
+              En tant que Partenaire Amazon, nous réalisons un bénéfice sur les achats remplissant les conditions requises.
             </p>
           </div>
         </div>
