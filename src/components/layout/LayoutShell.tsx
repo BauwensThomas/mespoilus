@@ -7,7 +7,7 @@ import PublicHeader from './PublicHeader';
 import { PARTENAIRES, getFlagUrl } from '@/lib/partenaires';
 import clsx from 'clsx';
 
-const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/moderation'];
+const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/moderation', '/produits', '/guides-admin'];
 
 function PartenairesBandeau() {
   const [index, setIndex] = useState(0);
