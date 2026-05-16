@@ -70,7 +70,7 @@ export default function GuideDownloadModal({ guide, onClose }: GuideDownloadModa
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Email envoyé !</h2>
             <p className="text-gray-600 text-sm leading-relaxed">
-              Vérifiez votre boîte mail — le lien de téléchargement est valable{' '}
+              Vérifiez votre boîte mail - le lien de téléchargement est valable{' '}
               <span className="font-semibold text-gray-800">24h</span>.
             </p>
             <button

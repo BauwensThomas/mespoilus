@@ -27,10 +27,10 @@ const QUESTIONS: Question[] = [
     id: 2,
     question: 'Comment décririez-vous votre niveau d\'activité physique ?',
     options: [
-      { label: 'Très peu -je suis plutôt casanier·e', scores: { chat: 4, oiseau: 3, rongeur: 4 } },
-      { label: 'Modéré -quelques sorties par semaine',  scores: { chat: 3, lapin: 3, chien: 2, oiseau: 2 } },
-      { label: 'Actif·ve -sport régulier',              scores: { chien: 5, lapin: 2 } },
-      { label: 'Très actif·ve -sport quasi quotidien',  scores: { chien: 7 } },
+      { label: 'Très peu - Je suis plutôt casanier·e',  scores: { chat: 4, oiseau: 3, rongeur: 4 } },
+      { label: 'Modéré - Quelques sorties par semaine', scores: { chat: 3, lapin: 3, chien: 2, oiseau: 2 } },
+      { label: 'Actif·ve - Sport régulier',             scores: { chien: 5, lapin: 2 } },
+      { label: 'Très actif·ve - Sport quasi quotidien', scores: { chien: 7 } },
     ],
   },
   {
@@ -67,8 +67,8 @@ const QUESTIONS: Question[] = [
     id: 6,
     question: 'Quelle relation souhaitez-vous avec votre animal ?',
     options: [
-      { label: 'Très câlin -toujours collé à moi',   scores: { chien: 6, chat: 3 } },
-      { label: 'Indépendant -me laisse vivre',        scores: { chat: 6, lapin: 2 } },
+      { label: 'Très câlin - Toujours collé à moi',   scores: { chien: 6, chat: 3 } },
+      { label: 'Indépendant - Me laisse vivre',       scores: { chat: 6, lapin: 2 } },
       { label: 'Joueur et interactif',                 scores: { chien: 4, chat: 3, oiseau: 4, lapin: 3 } },
       { label: 'Fascinant à observer',                 scores: { oiseau: 6, rongeur: 5 } },
     ],
@@ -126,7 +126,7 @@ const RESULTS: Record<AnimalKey, {
     icon: Rat,
     color: 'text-green-700',
     bg: 'bg-green-50',
-    description: 'Un petit rongeur serait parfait pour vous ! Hamster, cochon d\'Inde ou gerbille -ces adorables petites boules de poils sont faciles à entretenir, peu coûteux et attachants à leur manière.',
+    description: 'Un petit rongeur serait parfait pour vous ! Hamster, cochon d\'Inde ou gerbille - Ces adorables petites boules de poils sont faciles à entretenir, peu coûteux et attachants à leur manière.',
     tips: ['Idéal pour les petits espaces', 'Budget moyen : 15–40 €/mois', 'Durée de vie : 2–8 ans (selon espèce)'],
   },
 };
@@ -178,7 +178,7 @@ export default function QuizPage() {
       <div className="min-h-screen bg-white px-6 md:px-8 py-10">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Quiz -Résultat</h1>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Quiz - Résultat</h1>
           </div>
 
           <div className={`${r.bg} border border-gray-200 rounded-2xl p-8 text-center shadow-sm mb-6`}>

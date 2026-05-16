@@ -14,7 +14,7 @@ export default function CookiesPage() {
       <div className="max-w-3xl mx-auto px-6 py-12">
 
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Politique de cookies</h1>
-        <p className="text-gray-500 text-sm mb-12">Conforme au RGPD et à la recommandation de l'APD belge - dernière mise à jour : mai 2026</p>
+        <p className="text-gray-500 text-sm mb-12">Conforme au RGPD et à la recommandation de l'APD belge - Dernière mise à jour : mai 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 
@@ -53,8 +53,8 @@ export default function CookiesPage() {
                 <table className="w-full text-xs">
                   <thead><tr className="text-gray-500"><th className="text-left py-1">Cookie</th><th className="text-left py-1">Durée</th><th className="text-left py-1">Rôle</th></tr></thead>
                   <tbody className="text-gray-600">
-                    <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">_ga</td><td className="py-1.5 pr-4">13 mois</td><td className="py-1.5">Google Analytics -identifiant utilisateur</td></tr>
-                    <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">_ga_*</td><td className="py-1.5 pr-4">13 mois</td><td className="py-1.5">Google Analytics -session</td></tr>
+                    <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">_ga</td><td className="py-1.5 pr-4">13 mois</td><td className="py-1.5">Google Analytics - Identifiant utilisateur</td></tr>
+                    <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">_ga_*</td><td className="py-1.5 pr-4">13 mois</td><td className="py-1.5">Google Analytics - Session</td></tr>
                   </tbody>
                 </table>
               </div>

@@ -13,7 +13,7 @@ export default function MentionsLegalesPage() {
       <div className="max-w-3xl mx-auto px-6 py-12">
 
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Mentions légales</h1>
-        <p className="text-gray-500 text-sm mb-12">Conformes au droit belge - dernière mise à jour : mai 2026</p>
+        <p className="text-gray-500 text-sm mb-12">Conformes au droit belge - Dernière mise à jour : mai 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 
@@ -58,7 +58,7 @@ export default function MentionsLegalesPage() {
               L'ensemble des contenus présents sur ce site (textes, images, graphismes, logo, icônes) sont protégés par le droit d'auteur belge et le droit européen. Toute reproduction, représentation, modification ou exploitation, totale ou partielle, est strictement interdite sans autorisation écrite préalable de l'éditeur.
             </p>
             <p className="text-sm mt-3">
-              Les photographies provenant d'Unsplash sont utilisées conformément à la licence Unsplash. Les crédits photographes sont mentionnés sur chaque image concernée.
+                Les photographies illustrant les articles de blog proviennent de <strong>Pexels</strong> et sont utilisées conformément à la licence Pexels (usage commercial autorisé). Les crédits photographes sont mentionnés sur chaque image concernée. Certaines photos décoratives des pages agents proviennent d'<strong>Unsplash</strong>, affichées directement sans stockage, conformément à leur licence.
             </p>
           </section>
 

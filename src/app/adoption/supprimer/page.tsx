@@ -94,7 +94,7 @@ function SupprimerContent() {
         </button>
 
         <Link href="/adoption" className="block text-sm text-gray-400 hover:text-gray-600 transition-colors">
-          Annuler — garder mon annonce en ligne
+          Annuler - Garder mon annonce en ligne
         </Link>
       </div>
     </div>

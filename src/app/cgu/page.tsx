@@ -11,7 +11,7 @@ export default function CGUPage() {
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <div className="max-w-3xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Conditions Générales d'Utilisation</h1>
-        <p className="text-gray-500 text-sm mb-12">Applicables au site Mes Poilus -dernière mise à jour : mai 2026</p>
+        <p className="text-gray-500 text-sm mb-12">Applicables au site Mes Poilus - Dernière mise à jour : mai 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 
@@ -30,6 +30,7 @@ export default function CGUPage() {
               </p>
             </div>
             <div className="text-sm space-y-3">
+              <p>En tant que Partenaire Amazon, Mes Poilus réalise un bénéfice sur les achats remplissant les conditions requises.</p>
               <p>Les recommandations de produits publiées sur Mes Poilus sont rédigées de façon indépendante. La présence d'un lien affilié n'influence pas notre jugement éditorial.</p>
               <p>Les achats effectués via ces liens sont régis exclusivement par les conditions générales de vente du site partenaire concerné (Amazon, Zooplus, etc.). Mes Poilus n'est pas partie à ces transactions et ne peut être tenu responsable en cas de litige avec un partenaire.</p>
             </div>
@@ -44,7 +45,7 @@ export default function CGUPage() {
                 <li>Les photos soumises doivent représenter l'animal réel décrit dans l'annonce.</li>
                 <li>Tout contenu illicite, trompeur, offensant ou contraire aux lois sur la protection animale est strictement interdit.</li>
                 <li>Chaque annonce est soumise à <strong>modération</strong> avant publication. Mes Poilus se réserve le droit de refuser ou supprimer toute annonce sans justification.</li>
-                <li>Les coordonnées publiques (email, téléphone) renseignées seront visibles de tous les visiteurs du site.</li>
+                <li>L'email et le numéro de téléphone renseignés sont conservés de façon privée et ne sont pas affichés publiquement.</li>
               </ul>
               <p>Mes Poilus agit uniquement en tant qu'intermédiaire technique. Mes Poilus n'est pas partie aux transactions ou arrangements conclus entre les utilisateurs et ne peut être tenu responsable des litiges, dommages ou problèmes résultant d'une adoption conclue via le site.</p>
             </div>
