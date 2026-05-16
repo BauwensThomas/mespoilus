@@ -77,28 +77,23 @@ export async function GET(req: Request) {
         max_tokens: 3000,
         messages: [{
           role: 'user',
-          content: `Tu es un expert en bien-être animal. Génère une fiche race complète et précise pour : ${breed.name} (${ANIMAL_LABEL_FR[breed.animal]}).
+          content: `Expert animaux. Fiche race JSON pour : ${breed.name} (${ANIMAL_LABEL_FR[breed.animal]}).
 
-Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans commentaires) :
+IMPORTANT: Retourne UNIQUEMENT le JSON ci-dessous, sans markdown. Sois CONCIS pour ne pas dépasser la limite.
+
 {
-  "excerpt": "Une phrase accrocheuse de 80-120 caractères décrivant la race",
-  "description": "<p>Paragraphe court sur l'histoire et l'origine.</p><p>Paragraphe court sur le caractère et la vie avec cette race.</p>",
-  "origine": "Pays ou région d'origine",
-  "taille": "petit ou moyen ou grand ou très grand",
+  "excerpt": "1 phrase max 100 caractères",
+  "description": "2-3 phrases courtes sur l'origine et le caractère. Pas de HTML.",
+  "origine": "pays",
+  "taille": "petit|moyen|grand|très grand",
   "poids": "X-Y kg",
   "esperance_vie": "X-Y ans",
-  "caractere": ["trait1", "trait2", "trait3", "trait4", "trait5"],
-  "entretien": "2 phrases sur le toilettage et les soins.",
-  "alimentation": "2 phrases sur les besoins alimentaires spécifiques.",
-  "sante": "2 phrases sur les maladies fréquentes et la robustesse.",
-  "convient_pour": {
-    "appartement": true,
-    "jardin": false,
-    "enfants": true,
-    "debutants": false,
-    "seniors": true
-  },
-  "niveau_activite": "faible ou modéré ou élevé ou très élevé"
+  "caractere": ["trait1","trait2","trait3","trait4"],
+  "entretien": "1 phrase.",
+  "alimentation": "1 phrase.",
+  "sante": "1 phrase.",
+  "convient_pour": {"appartement":true,"jardin":false,"enfants":true,"debutants":false,"seniors":true},
+  "niveau_activite": "faible|modéré|élevé|très élevé"
 }`,
         }],
       });
@@ -124,8 +119,21 @@ Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans commentaires) :
       try {
         content = JSON.parse(jsonStr);
       } catch {
-        // Dernier recours : extraction champ par champ des valeurs critiques
-        throw new Error(`JSON invalide: ${jsonStr.slice(0, 200)}`);
+        // Tentative de réparation : fermer les chaînes et objets ouverts
+        let fixed = jsonStr.trimEnd();
+        if (!fixed.endsWith('}')) {
+          // Couper à la dernière virgule ou propriété complète
+          const lastComplete = fixed.lastIndexOf(',"niveau_activite"');
+          if (lastComplete > 0) fixed = fixed.slice(0, lastComplete);
+          // Fermer les structures ouvertes
+          const opens = (fixed.match(/\{/g) ?? []).length - (fixed.match(/\}/g) ?? []).length;
+          fixed += '}'.repeat(Math.max(0, opens));
+        }
+        try {
+          content = JSON.parse(fixed);
+        } catch {
+          throw new Error(`JSON invalide: ${jsonStr.slice(0, 200)}`);
+        }
       }
 
       const { error } = await supabase.from('breeds').upsert({
