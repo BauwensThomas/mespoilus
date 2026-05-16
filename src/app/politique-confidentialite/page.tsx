@@ -11,7 +11,7 @@ export default function PolitiqueConfidentialitePage() {
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <div className="max-w-3xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Politique de confidentialité</h1>
-        <p className="text-gray-500 text-sm mb-12">Conforme au RGPD (Règlement UE 2016/679) - dernière mise à jour : mai 2026</p>
+        <p className="text-gray-500 text-sm mb-12">Conforme au RGPD (Règlement UE 2016/679) - Dernière mise à jour : mai 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 
@@ -32,7 +32,7 @@ export default function PolitiqueConfidentialitePage() {
               </div>
               <div>
                 <h3 className="font-medium text-gray-700 mb-2">2.2 Annonces d'adoption</h3>
-                <p>Lorsque vous déposez une annonce d'adoption, nous collectons : votre <strong>prénom</strong>, votre <strong>adresse email privée</strong> (non affichée publiquement), votre <strong>région ou ville</strong>, une <strong>adresse email publique</strong> et optionnellement un <strong>numéro de téléphone</strong> (affichés sur l'annonce publiée), ainsi que les <strong>photos</strong> de l'animal. Ces données sont nécessaires à la publication et à la modération de l'annonce.</p>
+                <p>Lorsque vous déposez une annonce d'adoption, nous collectons : votre <strong>prénom</strong>, votre <strong>adresse email</strong> (non affichée publiquement), votre <strong>numéro de téléphone</strong> (non affiché publiquement), votre <strong>pays et région/ville</strong>, ainsi que les <strong>informations sur l'animal</strong> (type, race, âge, sexe, description, raison du don) et les <strong>photos</strong>. Ces données sont nécessaires à la publication et à la modération de l'annonce.</p>
               </div>
               <div>
                 <h3 className="font-medium text-gray-700 mb-2">2.3 Cookies et données de navigation</h3>
@@ -41,6 +41,10 @@ export default function PolitiqueConfidentialitePage() {
               <div>
                 <h3 className="font-medium text-gray-700 mb-2">2.4 Données techniques</h3>
                 <p>Lors de toute connexion, notre serveur enregistre automatiquement : adresse IP, type de navigateur, pages visitées, date et heure. Ces données sont conservées à des fins de sécurité et de débogage.</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-700 mb-2">2.5 Téléchargement de guides PDF</h3>
+                <p>Lorsque vous téléchargez un guide gratuit, nous collectons votre <strong>adresse email</strong> afin de vous envoyer le lien de téléchargement. Vous pouvez également consentir, séparément, à recevoir notre newsletter. Ces deux consentements sont indépendants.</p>
               </div>
             </div>
           </section>
@@ -53,6 +57,7 @@ export default function PolitiqueConfidentialitePage() {
                   { traitement: 'Newsletter', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Annonces d\'adoption', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Cookies analytiques', base: 'Consentement (Art. 6.1.a RGPD)' },
+                  { traitement: 'Téléchargement guide PDF', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Cookies essentiels', base: 'Intérêt légitime (Art. 6.1.f RGPD)' },
                   { traitement: 'Logs de sécurité', base: 'Intérêt légitime (Art. 6.1.f RGPD)' },
                   { traitement: 'Facturation', base: 'Obligation légale (Art. 6.1.c RGPD)' },
@@ -71,8 +76,9 @@ export default function PolitiqueConfidentialitePage() {
             <div className="text-sm space-y-2">
               {[
                 { type: 'Adresse email newsletter', duree: "Jusqu'à désinscription" },
-                { type: 'Annonces d\'adoption', duree: "Jusqu'à suppression à votre demande ou après 12 mois sans activité" },
+                { type: 'Annonces d\'adoption', duree: "60 jours après approbation, ou suppression à votre demande" },
                 { type: 'Photos d\'adoption', duree: "Supprimées avec l'annonce" },
+                { type: 'Email téléchargement guide', duree: "Jusqu'à désinscription ou suppression à votre demande" },
                 { type: 'Logs techniques', duree: '12 mois' },
                 { type: 'Cookies analytiques', duree: '13 mois maximum' },
               ].map(({ type, duree }) => (
@@ -90,11 +96,19 @@ export default function PolitiqueConfidentialitePage() {
               <p>Nous ne vendons jamais vos données personnelles à des tiers.</p>
               <p>Vos données peuvent être partagées avec :</p>
               <ul className="list-disc list-inside space-y-1 text-gray-600 ml-2">
-                <li>Nos partenaires affiliés (Amazon, Zooplus, etc.) -aucune donnée personnelle transmise, simple redirection</li>
-                <li>Google Analytics -données de navigation anonymisées (si consentement accordé)</li>
-                <li>Resend -service d'envoi d'emails transactionnels (confirmation d'annonce, notifications)</li>
-                <li>Vercel -hébergeur du site (infrastructure technique)</li>
-                <li>Supabase -base de données et stockage des photos (hébergement EU disponible)</li>
+                <li className="!list-none -ml-2">
+                  <span className="text-gray-700">Nos partenaires affiliés</span>
+                  <span className="text-gray-700 text-xs ml-1">(aucune donnée personnelle transmise, simple redirection)</span>
+                  <ul className="mt-1.5 space-y-1 ml-6">
+                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />Amazon FR Associates</li>
+                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />Awin (Dogfy Diet, Maxi Zoo, Tuft &amp; Paw)</li>
+                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />CJ.com (CanadaPetCare)</li>
+                  </ul>
+                </li>
+                <li>Google Analytics - Données de navigation anonymisées (si consentement accordé)</li>
+                <li>Resend - Service d'envoi d'emails transactionnels (confirmation d'annonce, notifications)</li>
+                <li>Vercel - Hébergeur du site (infrastructure technique)</li>
+                <li>Supabase - Base de données et stockage des photos (hébergement EU disponible)</li>
               </ul>
               <p>Tout transfert hors UE est encadré par les clauses contractuelles types de la Commission européenne.</p>
             </div>

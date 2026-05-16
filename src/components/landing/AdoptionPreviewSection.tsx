@@ -49,7 +49,7 @@ export default async function AdoptionPreviewSection() {
           <p className="text-gray-500 mt-3 max-w-xl mx-auto">Chaque semaine, des animaux attendent une nouvelle famille. Peut-être le vôtre ?</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="flex flex-wrap justify-center gap-4">
           {posts.map(post => {
             const colors = TYPE_COLOR[post.animal_type] ?? TYPE_COLOR.chien;
             const photo = post.photo_urls?.[0];
@@ -57,7 +57,7 @@ export default async function AdoptionPreviewSection() {
               <Link
                 key={post.id}
                 href={`/adoption/${post.id}`}
-                className={`bg-white rounded-2xl border ${colors.border} overflow-hidden hover:shadow-lg transition-all duration-300 group flex flex-col`}
+                className={`bg-white rounded-2xl border ${colors.border} overflow-hidden hover:shadow-lg transition-all duration-300 group flex flex-col w-full sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] xl:w-52`}
               >
                 <div className="relative h-40 overflow-hidden bg-gray-100">
                   {photo ? (

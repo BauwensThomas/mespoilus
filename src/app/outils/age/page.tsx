@@ -51,7 +51,7 @@ function getComment(humanAge: number): string {
   if (humanAge < 45)  return 'Un adulte épanoui et expérimenté.';
   if (humanAge < 60)  return 'Un senior en pleine forme !';
   if (humanAge < 75)  return 'Un sage doyen qui mérite tout votre amour.';
-  return 'Un vénérable ancien -chouchoutez-le !';
+  return 'Un vénérable ancien - Chouchoutez-le !';
 }
 
 export default function AgePage() {
