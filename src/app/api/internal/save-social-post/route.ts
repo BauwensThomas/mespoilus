@@ -60,6 +60,11 @@ async function getImageUrl(): Promise<string | null> {
 }
 
 export async function POST(req: NextRequest) {
+  const secret = req.headers.get('x-internal-secret');
+  if (!secret || secret !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { content, hashtags } = await req.json() as { content: string; hashtags: string[] };
 
   const imageUrl = await getImageUrl();
