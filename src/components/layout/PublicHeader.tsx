@@ -7,6 +7,7 @@ import { PawPrint, ChevronDown, Calculator, HelpCircle, Sparkles, BookOpen, Menu
 
 const NAV_LINKS = [
   { href: '/blog',        label: 'Blog'       },
+  { href: '/#categories', label: 'Animaux'    },
   { href: '/races',       label: 'Races'      },
   { href: '/adoption',    label: 'Adoption'   },
   { href: '/#newsletter', label: 'Newsletter' },
