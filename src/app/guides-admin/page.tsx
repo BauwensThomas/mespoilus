@@ -38,6 +38,7 @@ const EMPTY_FORM = {
 
 export default function GuidesAdminPage() {
   const [guides, setGuides] = useState<Guide[]>([]);
+  const [filterCat, setFilterCat] = useState('all');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -163,22 +164,38 @@ export default function GuidesAdminPage() {
   const catInfo = (id: string) => CATEGORIES.find(c => c.id === id) ?? CATEGORIES[5];
 
   return (
-    <div className="px-8 py-8 space-y-6 max-w-6xl mx-auto">
-      {/* Header */}
+    <div className="px-8 py-8 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-100 border border-orange-200 flex items-center justify-center">
-            <FileText size={20} strokeWidth={1.5} className="text-orange-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Guides & Checklists</h1>
-            <p className="text-gray-500 text-xs">{guides.length} guide{guides.length !== 1 ? 's' : ''} — bucket Supabase <code className="bg-gray-100 px-1 rounded">pdf-guides</code></p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Guides & Checklists</h1>
+          <p className="text-gray-500 text-base mt-1">{guides.length} guide{guides.length !== 1 ? 's' : ''}</p>
         </div>
         <button onClick={openAdd} className="btn-primary flex items-center gap-2">
           <Plus size={16} strokeWidth={1.5} />
           Ajouter un guide
         </button>
+      </div>
+
+      {/* Onglets catégorie */}
+      <div className="flex flex-wrap gap-2">
+        {[{ id: 'all', label: 'Tous' }, ...CATEGORIES].map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => setFilterCat(cat.id)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+              filterCat === cat.id
+                ? 'bg-orange-600 text-white border-orange-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
+            }`}
+          >
+            {cat.label}
+            {cat.id !== 'all' && (
+              <span className="ml-1.5 text-[10px] opacity-70">
+                {guides.filter(g => g.category === cat.id).length}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
       {/* Formulaire add/edit */}
@@ -346,7 +363,7 @@ export default function GuidesAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {guides.map((g, i) => {
+              {guides.filter(g => filterCat === 'all' || g.category === filterCat).map((g, i) => {
                 const cat = catInfo(g.category);
                 return (
                   <tr key={g.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${i === guides.length - 1 ? 'border-b-0' : ''}`}>

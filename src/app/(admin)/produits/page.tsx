@@ -136,15 +136,10 @@ export default function ProduitsPage() {
   const activeSrc = AFFILIATE_SOURCES.find(s => s.id === filterAffiliate) ?? AFFILIATE_SOURCES[0];
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-          <BookOpen size={20} strokeWidth={1.5} className="text-orange-600" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Produits affiliés</h1>
-          <p className="text-sm text-gray-500">Gérer les produits de chaque partenaire affilié</p>
-        </div>
+    <div className="px-8 py-8 space-y-6 animate-fade-in">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Produits affiliés</h1>
+        <p className="text-gray-500 text-base mt-1">Gérer les produits de chaque partenaire affilié</p>
       </div>
 
       {/* Onglets affiliés */}

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function CGUPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="max-w-6xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Conditions Générales d'Utilisation</h1>
         <p className="text-gray-500 text-sm mb-12">Applicables au site Mes Poilus - Dernière mise à jour : mai 2026</p>
 
