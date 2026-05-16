@@ -37,7 +37,7 @@ Chaque agent utilise l'API Anthropic (Claude) et fonctionne de façon autonome. 
 | 🔍 **Lucas** | Spécialiste SEO | Sonnet 4.6 | **3000** | Recherche mots-clés, optimisation on-page, stratégie francophone |
 | 📱 **Emma** | Réseaux sociaux | Haiku 4.5 | 2000 | Posts Facebook + Instagram (@mespoilusofficiel), hashtags, lien article complet |
 | 💻 **Maxime** | Développeur & Maintenance | Sonnet 4.6 | 6000 | Performances, bugs, Next.js / Supabase, Core Web Vitals |
-| 💬 **Léa** | Support client | Haiku 4.5 | 3000 | Réponses emails clients, commandes, FAQ -à la demande uniquement (pas de cron) |
+| 💬 **Léa** | Support client | Haiku 4.5 | 3000 | Réponses emails clients, commandes, FAQ - À la demande uniquement (pas de cron) |
 | 📊 **Antoine** | Finance | Sonnet 4.6 | 4000 | Revenus €, marges, rapports financiers, projections |
 | 🛡️ **Nathalie** | Sécurité | Sonnet 4.6 | 4000 | Détection intrusions, blocage IPs, audits, alertes |
 | 💌 **Sofia** | Newsletter | Sonnet 4.6 | 4000 | Newsletter hebdomadaire, sélection articles, envoi Resend |
@@ -49,16 +49,16 @@ Chaque agent utilise l'API Anthropic (Claude) et fonctionne de façon autonome. 
 | Couche | Technologie |
 |--------|------------|
 | Framework | Next.js 14 (App Router, TypeScript) |
-| Style | Tailwind CSS -thème clair public `bg-gray-50`, admin clair `bg-white/bg-gray-50` |
+| Style | Tailwind CSS - Thème clair public `bg-gray-50`, admin clair `bg-white/bg-gray-50` |
 | Base de données | Supabase (PostgreSQL) |
-| IA | API Anthropic -Claude Opus 4.7 / Sonnet 4.6 / Haiku 4.5 |
+| IA | API Anthropic - Claude Opus 4.7 / Sonnet 4.6 / Haiku 4.5 |
 | Images blog/social | **Pexels API** (téléchargement + stockage autorisés, 200 req/h gratuit) |
-| Images hero & catégories | **Supabase table `hero_photos`** -rotation round-robin via `last_used_at`, `revalidate = 3600` |
-| Images agents (pages `/agents/[agent]`) | Unsplash API -affichage uniquement, non stockées |
+| Images hero & catégories | **Supabase table `hero_photos`** - Rotation round-robin via `last_used_at`, `revalidate = 3600` |
+| Images agents (pages `/agents/[agent]`) | Unsplash API - Affichage uniquement, non stockées |
 | Stockage images | Supabase Storage `blog-images` (articles) + `hero-photos` (hero & catégories) |
 | Sécurité | Middleware Edge : rate limiting, détection SQLi/XSS, blocage IP |
 | Déploiement | Vercel (crons configurés dans `vercel.json`) |
-| Affiliation | Awin (EU) + Amazon Associates FR (en cours, catégorie Livres) + CJ.com / scraping sitemap (CanadaPetCare CA/US — ~82 produits importés) |
+| Affiliation | Awin (EU) + Amazon Associates FR (en cours, catégorie Livres) + CJ.com / scraping sitemap (CanadaPetCare CA/US - ~82 produits importés) |
 
 ### Variables d'environnement requises
 ANTHROPIC_API_KEY
@@ -73,7 +73,7 @@ AWIN_PUBLISHER_ID
 AWIN_API_TOKEN
 AWIN_FEED_TOKEN # Token Darwin CSV feeds Awin (même valeur que AWIN_API_TOKEN possible)
 CRON_SECRET
-MAKE_WEBHOOK_URL # Webhook Make.com -Facebook + Instagram (@mespoilusofficiel)
+MAKE_WEBHOOK_URL # Webhook Make.com - Facebook + Instagram (@mespoilusofficiel)
 NEXT_PUBLIC_APP_URL # Ex: https://www.mespoilus.com (OBLIGATOIRE pour fetches internes Vercel)
 NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'false')
 
@@ -81,42 +81,44 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 ## Ce qui est fait
 ### Landing page publique (`/`)
 - **Design clair et chaleureux** (bg-gray-50, blanc, beige, tons ambrés)
-- Hero split : texte à gauche (52%), **4 photos depuis Supabase `hero_photos`** à droite en grille décalée (chien, chat, oiseau, rongeur) -rotation round-robin via `last_used_at`, `revalidate = 3600`, fallback dégradé coloré si pas de photo
+- Hero split : texte à gauche (52%), **4 photos depuis Supabase `hero_photos`** à droite en grille décalée (chien, chat, oiseau, rongeur) - Rotation round-robin via `last_used_at`, `revalidate = 3600`, fallback dégradé coloré si pas de photo
 - Nav : logo à gauche (PawPrint Lucide blanc sur fond orange), liens Blog / Adoption / Newsletter au centre, bouton Boutique (orange) à droite
 - Section "Derniers articles" : 3 derniers articles de Marie avec cards
-- **Section catégories "Par type d'animal"** : 5 catégories avec photos depuis **même table `hero_photos`** (1 photo aléatoire par `animal_type`), fallback dégradé coloré -lien vers `/blog/{catégorie}`
+- **Section catégories "Par type d'animal"** : 5 catégories avec photos depuis **même table `hero_photos`** (1 photo aléatoire par `animal_type`), fallback dégradé coloré - Lien vers `/blog/{catégorie}`
 - Section newsletter `py-10` (réduit depuis py-20) avec formulaire email (client component `NewsletterForm.tsx`)
-- Footer compact : `pt-8 pb-5`, grille 4 cols, liens `space-y-0.5`, titres `mb-1` -navigation, mentions légales, Instagram + Facebook, **pas de lien Admin ni TikTok**
+- Footer compact : `pt-8 pb-5`, grille 4 cols, liens `space-y-0.5`, titres `mb-1` - Navigation, mentions légales, Instagram + Facebook, **pas de lien Admin ni TikTok**
 - Bloc AdSense entre newsletter et footer : sans padding vertical (vide jusqu'à approbation AdSense)
 - `revalidate = 3600`
 ### Authentification admin (Supabase Auth)
-- **Middleware** `src/middleware.ts` -protège `/dashboard`, `/agents/*`, `/orchestrate`, `/moderation` etc.
+- **Middleware** `src/middleware.ts` - Protège `/dashboard`, `/agents/*`, `/orchestrate`, `/moderation` etc.
 - Routes admin sans session → redirect `/login?redirect=...`
 - API routes sans session → `401 Unauthorized`
-- **Page login** `src/app/login/page.tsx` -fond blanc clair, formulaire clair
-- `src/app/login/actions.ts` -server action `signIn` via `supabase.auth.signInWithPassword`
-- `src/app/actions/auth.ts` -server action `logout`
+- **Page login** `src/app/login/page.tsx` - Fond blanc clair, formulaire clair
+- `src/app/login/actions.ts` - Server action `signIn` via `supabase.auth.signInWithPassword`
+- `src/app/actions/auth.ts` - Server action `logout`
 ### Routes et layout
-- `src/app/layout.tsx` -minimal, utilise `LayoutShell` + `CookieBanner` + `GoogleAnalytics`
-- `src/components/layout/LayoutShell.tsx` -Client Component :
+- `src/app/layout.tsx` - Minimal, utilise `LayoutShell` + `CookieBanner` + `GoogleAnalytics`
+- `src/components/layout/LayoutShell.tsx` - Client Component :
   - **Admin** → Sidebar (`isOpen`/`onToggle` props) + main (`ml-64` ou `ml-0` avec transition 300ms selon état sidebar)
   - **Public** → PublicHeader (`h-20`, visible partout) + `PartenairesBandeau` (sticky `top-20 z-30 h-9`) + main
 - **`PartenairesBandeau`** (dans `LayoutShell.tsx`) : bande partenaire sticky sous le header public
-  - Affiche 1 partenaire aléatoire au chargement : label "Partenaire", nom, drapeaux pays, tag coloré, description tronquée, flèche `→`
-  - `bg-white/95 backdrop-blur border-b border-gray-100`, centré, `z-30`
+  - Affiche 1 partenaire aléatoire au chargement : label "Partenaire", nom, drapeaux pays, tag coloré, description tronquée (pas de flèche)
+  - Pour Maxi Zoo (`urlsByCountry`) : clic ouvre un picker pays inline (dropdown) avec 🇫🇷/🇧🇪 → redirige vers le bon lien Awin
+  - Drapeaux : `<img style={{ width:'18px', height:'13px', objectFit:'cover' }}>` (plain img, pas next/image) pour uniformiser BE/FR
+  - `bg-white/95 backdrop-blur border-b border-gray-100`, centré `max-w-7xl mx-auto`, `z-30`
 - Dashboard admin : `src/app/(admin)/dashboard/page.tsx`
-### Thème visuel -Conversion au THÈME CLAIR complet ✅
+### Thème visuel - Conversion au THÈME CLAIR complet ✅
 - **Site public** : `bg-gray-50`, cards `bg-white`, texte `text-gray-900`, borders `border-gray-200/300`
 - **Admin** : fond `bg-white`, main area `bg-gray-50`, sidebar `bg-white` avec borders `border-gray-200`, accents orange
-- **Composants admin convertis au clair** : `globals.css` (`.card`, `.card-hover`), `AgentCard.tsx`, `GlobalStats.tsx`, `ActivityFeed.tsx`, `CronLauncher.tsx`, `dashboard/page.tsx`, `moderation/page.tsx`, `AgentPage.tsx` -tous les `bg-[#1e2a3a]`, `bg-[#111827]`, `border-[#2a3a4a]` éliminés
+- **Composants admin convertis au clair** : `globals.css` (`.card`, `.card-hover`), `AgentCard.tsx`, `GlobalStats.tsx`, `ActivityFeed.tsx`, `CronLauncher.tsx`, `dashboard/page.tsx`, `moderation/page.tsx`, `AgentPage.tsx` - Tous les `bg-[#1e2a3a]`, `bg-[#111827]`, `border-[#2a3a4a]` éliminés
 - **Blog articles** : `bg-gray-50`, texte `text-gray-900`, `.article-content` CSS clair pour prose
 - **Header** : `bg-white/95 backdrop-blur`, hauteur **fixe `h-20`** (80px) sur toutes les pages pour cohérence
 - **Admin sidebar** : `bg-white`, nav items clairs, active items `bg-orange-100 text-orange-700`
 ### Header fixe - Hauteur cohérente ✅
 - PublicHeader : `h-20` fixe + `flex items-center h-full` pour centrage vertical
 - Hauteur identique sur toutes les pages (landing, blog, boutique, adoption, pages admin)
-- PublicHeader visible sur TOUTES les pages (y compris la homepage -`if pathname === '/'` supprimé)
-### Bannières catégories -Illustrations SVG animales ✅
+- PublicHeader visible sur TOUTES les pages (y compris la homepage - `if pathname === '/'` supprimé)
+### Bannières catégories - Illustrations SVG animales ✅
 - **Remplacement images** : remplacées par des illustrations SVG custom
 - **Chiens** : famille de chiens simple
 - **Chats** : chat assis
@@ -125,15 +127,15 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 - **Reptiles** : serpent ondulant
 - Opacité 20% pour effet discret
 - Fond dégradé orange cohérent
-### Images articles blog -Featured images améliorées ✅
+### Images articles blog - Featured images améliorées ✅
 - Hauteur **`h-56`** pour articles "à la une" (au lieu de h-48)
 - Ajout `object-center` pour centrage optimal
 - Meilleure visibilité des animaux dans les images
-### Boutique -Carousel partenaires repositionné ✅
+### Boutique - Carousel partenaires repositionné ✅
 - **Position fixe en haut à droite** (`fixed top-24 right-6 z-30`)
 - Header remain cohérent avec autres pages
 - Carousel flotte sans affecter le layout
-### Filtres blog -OR sur category ET categories[]
+### Filtres blog - OR sur category ET categories[]
 - Articles publiés peuvent avoir : `category` (string), `categories[]` (array), ou les deux
 - Filtre PostgREST : `.or(\`category.eq.${category},categories.cs.{${category}}\`)` dans `blog/page.tsx` ET `_category-page.tsx`
 - Évite les articles invisibles sur les pages catégories si `categories[]` est incomplet
@@ -148,14 +150,14 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 - **Chaque card agent affiche : tâches total + ce mois, tokens total + ce mois**
 - **Auto-refresh toutes les 30 secondes** via `AutoRefresh.tsx` (client component, `router.refresh()`)
 - **CronLauncher** : menu déroulant `w-96` avec 5 pipelines manuels, textes `text-sm`/`text-xs` lisibles
-- **Typographie admin agrandie** : titres sections `text-base`, valeurs stats `text-2xl`, descriptions `text-sm`, labels `text-sm` -plus aucun `text-[9px]`/`text-[10px]` dans les composants dashboard
+- **Typographie admin agrandie** : titres sections `text-base`, valeurs stats `text-2xl`, descriptions `text-sm`, labels `text-sm` - Plus aucun `text-[9px]`/`text-[10px]` dans les composants dashboard
 - `revalidate = 30`
 ### Pages agents (`/agents/[agent]`)
 - Photo ambiante Unsplash en hero (fallback SVG thématique)
 - Zone de saisie de tâche avec **streaming en temps réel** de la réponse Claude
 - Tâches rapides préconfigurées par agent
 - **Historique des activités** : collapsible (fermé par défaut), filtre par date (`<input type="date">`), cliquable (Marie → article, autres → accordéon contenu)
-- **Stats : tâches complétées/échouées + tokens -total all-time + ce mois en ambré**
+- **Stats : tâches complétées/échouées + tokens - Total all-time + ce mois en ambré**
 - **Délégation automatique via Thomas** : après chaque réponse, Thomas analyse et délègue si nécessaire (voir section Délégation)
 - **Panneau Emma (post direct)** : upload photo + instructions → `POST /api/admin/emma-direct` → Emma génère + webhook Make.com (sans créer d'article blog)
 - **Panneau Sofia (newsletter manuelle)** : choix destinataire (admin test / tous abonnés) + envoi immédiat, bypass anti-doublon 5 jours
@@ -176,17 +178,17 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 - Résultats affichés en cartes dépliables sous la réponse principale
 - Tout est sauvegardé en base (les save functions s'exécutent normalement)
 ### Contexte Supabase réel (`src/lib/agents/context.ts`)
-- `buildEnrichedPrompt(agentId, baseTask, supabase)` -injecte les vraies données avant d'appeler l'agent
+- `buildEnrichedPrompt(agentId, baseTask, supabase)` - Injecte les vraies données avant d'appeler l'agent
 - **Antoine** : articles publiés, posts sociaux, tokens consommés, coût API estimé (mois courant vs mois précédent)
 - **Nathalie** : incidents de sécurité, IPs bloquées, 5 derniers incidents
 - **Lucas** : titres des 15 derniers articles (évite les doublons)
 - **Maxime** : erreurs dans les logs, 5 dernières erreurs avec détail
 - **Sofia** : 3 derniers articles publiés (titre, lien, résumé) + année en cours → génère newsletter sans saisie manuelle
 - Utilisé dans orchestration, délégation, et crons finance/security
-### Blog automatique -Pipeline complet
+### Blog automatique - Pipeline complet
 #### Cron 1 : `/api/cron/blog` (Lun/Mer/Ven 9h UTC)
 1. **Thomas** prépare le contexte (animal par rotation, saison, mois, produits Supabase, 3 articles récents même catégorie)
-   - **Rotation animaux** : `ANIMAL_CATEGORIES[(semaine_ISO * 3 + jourIndex) % 5]` -3 animaux différents par semaine. Lundi=0, Mercredi=1, Vendredi=2.
+   - **Rotation animaux** : `ANIMAL_CATEGORIES[(semaine_ISO * 3 + jourIndex) % 5]` - 3 animaux différents par semaine. Lundi=0, Mercredi=1, Vendredi=2.
    - **Override manuel** : `?animal=chiens` via le sélecteur CronLauncher
 2. **Lucas** choisit le sujet selon le **type d'article** (rotation forcée ou override manuel) :
    - **Rotation type** : `(semaine*3+jourIndex) % 3` → trending → affiliation → pratique → ...
@@ -207,7 +209,7 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 3. `save-social-post` récupère l'`image_url` de l'article (déjà stockée dans Supabase Storage)
 4. Webhook Make.com → **Facebook + Instagram @mespoilusofficiel** ✅ (testé et confirmé fonctionnel)
 5. `cron_state` marqué `done`
-6. **Sofia supprimée de ce cron** -elle a son propre cron dédié
+6. **Sofia supprimée de ce cron** - Elle a son propre cron dédié
 #### URL interne (critique)
 - `saveSocialPost` dans `runner.ts` utilise `NEXT_PUBLIC_APP_URL` EN PREMIER (domaine custom, sans protection Vercel)
 - Ne jamais utiliser `VERCEL_URL` seul pour les fetches internes → retourne 401 (URL hashée protégée)
@@ -228,10 +230,14 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 | `/api/cron/security` | **1er de chaque mois** | 8h00 | Nathalie + Maxime | `security_logs` + `tech_reports` |
 | `/api/cron/newsletter` | **Chaque vendredi** | 10h00 | Sofia | `newsletter_campaigns` + envoi Resend |
 | `/api/cron/prenoms` | **1er de chaque mois** | 7h00 | Thomas (Haiku) | `prenoms` (DELETE + INSERT, 5 animaux × 4 styles × 50 noms) |
+| `/api/cron/adoption-followup` | **Chaque samedi** | 19h00 | - | Email suivi déposant (animal adopté ?) |
+| `/api/cron/adoption-cleanup` | Tous les jours | 3h00 | - | Hard delete annonces ≥60j |
+| `/api/cron/adoption-social` | **Chaque mardi** | 19h00 | Emma | `social_posts` + webhook Make.com - Photo réelle annonce - Abandon si 0 annonces |
+**⚠️ Fiabilité crons Vercel Hobby :** les crons sont tous reconnus (17 au total) mais Vercel Hobby n'a pas de retry. Un cron manqué est silencieux. Pour les crons critiques (blog, social), vérifier régulièrement Vercel Dashboard → Settings → Crons → Last execution.
 **Protection anti-doublons :**
 - Finance → vérifie si `financial_reports.period` existe déjà pour ce mois → abandon si oui
 - Newsletter → vérifie si une campagne `sent` existe dans les 5 derniers jours → abandon si oui
-### CronLauncher -Pipelines manuels (Dashboard)
+### CronLauncher - Pipelines manuels (Dashboard)
 Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de sync boutique :
 - **Sélecteur animal** : forcer un animal spécifique (chiens, chats, oiseaux, rongeurs, reptiles) ou Auto
 - **Sélecteur type article** : Auto (rotation), Trending, Partenaire/Produit, Conseil pratique
@@ -241,12 +247,13 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 | 📊 Finance | Antoine | Rapport financier mensuel → `financial_reports` |
 | 🛡️ Sécurité & Maintenance | Nathalie + Maxime | Audit sécurité + audit technique → `security_logs` + `tech_reports` |
 | 💌 Newsletter | Sofia | Newsletter avec 3 derniers articles → générée + **envoyée automatiquement via Resend** |
-**Léa** : pas de cron -répond à la demande sur sa page agent uniquement.
-- **Sync Boutique Awin** (`AwinPanel`) : 7 catégories indépendantes, progression temps réel depuis `awin_sync_progress`
-- **Sync Boutique CJ** (`CJSyncPanel`) : déclenche `/api/cron/cj-sync/canada-pet-care` (scraper sitemap) -générique, prêt pour futurs affiliés CJ
-- **Import CanadaPetCare** (`CanadaPetCareImportPanel`) : scraping one-shot `/api/admin/import-canada-pet-care` -utile pour import initial ou réimport forcé. Invalide le cache `/boutique` via `revalidatePath` après import.
+**Léa** : pas de cron - Répond à la demande sur sa page agent uniquement.
+- **Sync Boutique Awin** (`AwinPanel`) : 7 catégories indépendantes, progression temps réel depuis `awin_sync_progress` — **fermé par défaut** (toggle ChevronDown)
+- **Sync Boutique CJ** (`CJSyncPanel`) : déclenche `/api/cron/cj-sync/canada-pet-care` (scraper sitemap) - Générique, prêt pour futurs affiliés CJ
+- **Import CanadaPetCare** (`CanadaPetCareImportPanel`) : scraping one-shot `/api/admin/import-canada-pet-care` - Utile pour import initial ou réimport forcé. Invalide le cache `/boutique` via `revalidatePath` après import.
+- **Pipeline "Adoption — Réseaux"** : déclenche `/api/cron/adoption-social` — icône Heart rose, 1 étape (Emma → Facebook + Instagram)
 ### Page admin Produits affiliés (`/produits`)
-- Renommée "Produits affiliés" (était "Livres Amazon") -sidebar icône `ShoppingBag`
+- Renommée "Produits affiliés" (était "Livres Amazon") - Sidebar icône `ShoppingBag`
 - **Onglets affiliés** en haut : `Amazon Livres` | `CanadaPetCare` (extensible via `AFFILIATE_SOURCES`)
 - **Amazon** : formulaire ajout livre (ASIN + image + prix + catégories animales), liste éditable avec catégories
 - **CanadaPetCare** : liste lecture seule (image, nom, catégories, prix USD, lien externe, supprimer)
@@ -256,8 +263,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 |-------|--------|---------|
 | Images articles blog | **Pexels API** (`pexels.ts`) | Supabase Storage `blog-images` |
 | Images posts sociaux | Même image que l'article (lecture Supabase) | Supabase Storage `blog-images` |
-| Hero page accueil (4 cases) | **Supabase `hero_photos`** -round-robin `last_used_at` | Supabase Storage `hero-photos` |
-| Catégories "Par type d'animal" | **Supabase `hero_photos`** -1 photo aléatoire par `animal_type` | Supabase Storage `hero-photos` |
+| Hero page accueil (4 cases) | **Supabase `hero_photos`** - Round-robin `last_used_at` | Supabase Storage `hero-photos` |
+| Catégories "Par type d'animal" | **Supabase `hero_photos`** - 1 photo aléatoire par `animal_type` | Supabase Storage `hero-photos` |
 | Photos agents (pages `/agents/[agent]`) | Unsplash `getPhotoForAgent()` | Affiché direct (non stocké) |
 **Pourquoi Pexels pour blog/social :** Unsplash interdit le téléchargement et le stockage serveur (ToS) → 403 Forbidden. Pexels l'autorise explicitement.
 **Pourquoi Supabase pour hero/catégories :** contrôle total, rotation automatique, pas de dépendance externe, API transformation Supabase NON disponible sur plan gratuit → utiliser URLs directes `/object/public/`.
@@ -314,11 +321,12 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 - Images stockées dans Supabase Storage `blog-images`
 - Filtres par catégorie : chiens, chats, oiseaux, rongeurs, reptiles, **general** (+ page `/blog/general` avec métadonnées SEO)
 - Catégorie `general` : articles transversaux, boutique, sujets multi-animaux
-- **Pages articles (`/blog/[slug]`) : thème clair** (`bg-gray-50`, texte `#111827`) -prose Tailwind light + `.article-content` CSS light dans `globals.css`
+- **Pages articles (`/blog/[slug]`) : thème clair** (`bg-gray-50`, texte `#111827`) - Prose Tailwind light + `.article-content` CSS light dans `globals.css`
 - Liens articles : soulignés en ambré (`text-decoration: underline`, `text-underline-offset: 3px`) via `.article-content a` dans `globals.css`
 - Hero image + gradient overlay + crédit photographe Pexels cliquable
 - SEO complet (meta, OG, Twitter Card, Schema.org JSON-LD)
 - Sitemap dynamique, robots.txt
+- **Toggle grille/liste** (`BlogPostsGrid.tsx`) : bouton LayoutGrid/List en haut de la section articles, préférence `localStorage('blog-view')`. Prop `showFeatured` : `true` sur pages catégories sans recherche, `false` si recherche active. ListRow : thumbnail 64×64, badge catégorie coloré, titre tronqué, extrait, date + temps de lecture. Fonctionne sur `/blog` ET `/blog/chiens`, `/blog/chats`, etc. via `_category-page.tsx`
 ### Sécurité
 - Rate limiting : 60 req/min global, 10 req/min par agent
 - Détection : SQL injection, XSS, path traversal, LFI
@@ -328,20 +336,20 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
   - `articles` → policy SELECT `status = 'published'` (lecture publique)
   - `products` → policy SELECT `true` (lecture publique totale — colonne `in_stock` supprimée)
   - Toutes les autres tables → RLS activé sans policy (accès anon bloqué, service role bypass)
-- Les rapports Nathalie/Maxime sont informatifs uniquement -pas de corrections automatiques
+- Les rapports Nathalie/Maxime sont informatifs uniquement - Pas de corrections automatiques
 - Workflow mensuel : lire les rapports du 1er du mois → appliquer les corrections manuellement
-- **Protection temps réel** : c'est le middleware qui bloque les IPs, détecte SQLi/XSS, rate limiting -pas Nathalie
+- **Protection temps réel** : c'est le middleware qui bloque les IPs, détecte SQLi/XSS, rate limiting - Pas Nathalie
 - **Nathalie = auditrice mensuelle** : lit les logs enregistrés par le middleware et formule des recommandations
 - **Sécurité compte admin** : mot de passe fort (20+ chars) ✅. MFA nécessiterait du code supplémentaire dans l'app.
 ### Base de données Supabase (16 tables)
 `articles` · `activity_logs` · `security_logs` · `social_posts` · `financial_reports` · `agent_stats` · `blocked_ips` · `newsletter_subscribers` · `newsletter_campaigns` · `adoption_posts` · `products` · `cron_state` · `seo_reports` · `tech_reports` · `support_logs` · `hero_photos` · `prenoms` · `pdf_guides` · `pdf_downloads` · `pdf_consents`
-**Colonne ajoutée :** `activity_logs.tokens_used INTEGER DEFAULT 0` -migration : `src/lib/supabase/migration_tokens.sql` ✅
+**Colonne ajoutée :** `activity_logs.tokens_used INTEGER DEFAULT 0` - Migration : `src/lib/supabase/migration_tokens.sql` ✅
 #### Colonnes clés `articles`
-- `image_url` -URL publique Supabase Storage (ex: `https://xxx.supabase.co/storage/v1/object/public/blog-images/article-slug.jpg`)
-- `image_alt`, `image_credit`, `image_credit_url` -attribution photographe Pexels
-- `categories TEXT[]` -multi-catégories (array containment Supabase `@>`)
+- `image_url` - URL publique Supabase Storage (ex: `https://xxx.supabase.co/storage/v1/object/public/blog-images/article-slug.jpg`)
+- `image_alt`, `image_credit`, `image_credit_url` - Attribution photographe Pexels
+- `categories TEXT[]` - Multi-catégories (array containment Supabase `@>`)
 #### Table `hero_photos`
-- `id`, `url` (URL publique Supabase Storage), `alt`, `animal_type` (singulier ou pluriel -normalisé via `ANIMAL_TYPE_MAP`), `active`, `last_used_at`, `created_at`
+- `id`, `url` (URL publique Supabase Storage), `alt`, `animal_type` (singulier ou pluriel - Normalisé via `ANIMAL_TYPE_MAP`), `active`, `last_used_at`, `created_at`
 - RLS : SELECT public sur `active = true` uniquement
 - Photos organisées en sous-dossiers dans le bucket `hero-photos` (ex: `chiens/photo1.jpg`)
 - Rotation round-robin : photo la moins récemment utilisée choisie par `last_used_at ASC NULLS FIRST`
@@ -365,12 +373,12 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 | `src/lib/supabase/migration_cron_state.sql` | Table `cron_state` |
 | `src/lib/supabase/migration_blog_images.sql` | Policies bucket `blog-images` |
 | `src/lib/supabase/migration_agent_reports.sql` | Tables `seo_reports`, `tech_reports`, `support_logs` ✅ |
-| `src/lib/supabase/migration_featured_partner.sql` | Colonne `featured_partner TEXT` sur `articles` -anti-répétition partenaires 30 articles ✅ |
+| `src/lib/supabase/migration_featured_partner.sql` | Colonne `featured_partner TEXT` sur `articles` - Anti-répétition partenaires 30 articles ✅ |
 | `src/lib/supabase/migration_awin_categories.sql` | Colonne `categories TEXT[]` sur `products` + GIN index (⚠️ à exécuter) |
 | `src/lib/supabase/migration_drop_in_stock.sql` | Supprime colonne `in_stock` de `products` + RLS `USING (true)` ✅ |
 | `src/lib/supabase/migration_rls_awin_progress.sql` | RLS sur `awin_sync_progress` (⚠️ à exécuter) |
 ### Newsletter (Sofia)
-- `src/lib/resend.ts` -client Resend via fetch natif
+- `src/lib/resend.ts` - Client Resend via fetch natif
 - Sofia génère HTML en JSON `{ subject, preview_text, content_html }`, sauvegardé en `draft`
 - Cron automatique : **chaque vendredi à 10h UTC** via `/api/cron/newsletter`
   1. Sofia génère le contenu → sauvegardé en `newsletter_campaigns` (draft)
@@ -380,31 +388,77 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 - Lien désabonnement : `/api/newsletter/unsubscribe?t=<base64url(email)>` → page `/newsletter/unsubscribe`
 - Année copyright injectée dynamiquement dans le prompt Sofia
 - Protection anti-doublons : skip si campagne envoyée dans les 5 derniers jours
-### Adoption animaux (`/adoption`)
-- **Thème clair** (`bg-gray-50`, formulaire `bg-white`)
-- Filtres par type d'animal, bannière Unsplash dynamique
-- **Barre de recherche** (`AdoptionSearchBar.tsx`) : recherche par race, description, région (`?q=mot`)
-- `getPosts` accepte `search` → filtre `breed.ilike + description.ilike + region.ilike`
-- Formulaire de dépôt avec upload photos (2-5 photos, Supabase Storage)
-- Page `/adoption/deposer` : thème clair (inputs `bg-white`, labels `text-gray-800`)
-- Page modération admin avec approve/reject + emails automatiques Resend
-- Emails : soumission (client + admin), approbation (client), refus (client)
-### Blog (`/blog`) et Boutique (`/boutique`) -Harmonisation bannières ✅
+### Adoption animaux (`/adoption`) — Feature complète ✅
+#### Pages publiques
+- **Listing** `/adoption` : filtres par type + filtres dynamiques sur la même ligne, barre de recherche (race/description/région), **toggle grille/liste** (`AdoptionPostsGrid.tsx`, `localStorage('adoption-view')`), bouton "Déposer"
+  - Filtres dynamiques (`AdoptionFilters.tsx`) : pays, sexe, race, âge — affichés dans le même flex que les boutons de type animal, séparés par un trait vertical, options cascadantes (filtre par les params actifs → options disponibles = subset du résultat filtré)
+  - `getAvailableFilters(animal, pays, gender, race, ageUnit)` : applique les mêmes filtres que `getPosts()` avant d'extraire les valeurs distinctes — les dropdowns ne montrent que les options encore valides
+- **Détail** `/adoption/[id]` : galerie photos (slider + miniatures), fiche lisible (Race/Âge/Sexe/Ville/Description/Raison du don), contact privé via formulaire (reply-to visiteur), suppression par code (discrète, alignée à droite), `max-w-6xl`
+- **Dépôt** `/adoption/deposer` : bloc info (données privées, suppression auto 60j, code de suppression), formulaire 3 colonnes `max-w-4xl`
+- **Suppression** `/adoption/supprimer?id=X&token=Y` : page de confirmation avec Suspense boundary (Next.js 14)
+#### Formulaire de dépôt (`AdoptionPostForm.tsx`)
+- Photos : 2 min, 5 max, preview avec suppression individuelle
+- Téléphone : dropdown custom (bouton flag image `flagcdn.com` + code, recherche par nom de pays, séparateur visuel) — zero initial retiré en temps réel (`replace(/^0+/, '')`)
+- Âge : **obligatoire**, nombre 1–99 + select mois/ans → stocké `"3 mois"` ou `"2 ans"`
+- **Type "Autre"** : quand sélectionné, le champ "Race/Espèce" devient "Quel animal ? *" (obligatoire) — placeholder "ex : Cheval, Cochon, Araignée…" (animaux hors des 5 catégories). Valeur stockée dans `breed`.
+- Indicatif dérivé de l'emoji via `flagToISO()` (Unicode Regional Indicator → ISO 2 lettres → `flagcdn.com/20x15/{iso}.png`)
+- Pays : liste 35 pays francophones
+- Submit : `contact_phone: \`${indicatif} ${num.replace(/^0+/, '')}\`` combiné avant envoi
+#### API routes adoption
+| Route | Méthode | Description |
+|-------|---------|-------------|
+| `/api/adoption/submit` | POST | Validation complète (âge, téléphone, photos ≥2, reason ≥10 chars), insert DB, emails déposant + admin |
+| `/api/adoption/upload` | POST | Upload photo Supabase Storage `adoption-photos` (5 Mo max) |
+| `/api/adoption/post` | GET | Fetch annonce approuvée par id (champs publics + reason) |
+| `/api/adoption/contact` | POST | Message visiteur → déposant via email (`replyTo: from_email`) — email déposant jamais exposé |
+| `/api/adoption/delete` | POST | Vérification token, suppression hard |
+| `/api/adoption/forgot-token` | POST | Renvoie code + lien direct `/adoption/supprimer?id=X&token=Y` par email (anti-énumération) |
+#### Emails (tous via Resend, aucun "répondez à cet email")
+- Soumission → déposant : confirmation + `contact@mespoilus.com` pour questions
+- Soumission → admin : notification avec lien `/moderation`
+- Approbation → déposant : annonce en ligne + code de suppression (monospace 26px)
+- Refus → déposant : raison incluse, contact `contact@mespoilus.com`
+- Contact visiteur → déposant : message + `replyTo: from_email` (répondre va au visiteur)
+- Forgot-token → déposant : code + bouton "Supprimer mon annonce" (lien direct)
+- Follow-up → déposant : email chaque samedi si annonce ≥7j, bouton supprimer si adopté
+- Expiry → déposant : email avant suppression auto à 60j
+#### Modération admin (`/moderation`)
+- Tabs : En attente / Approuvées / Rejetées (badge count sur "En attente")
+- Cards : 5 photos en grille, fiche (animal, race, âge, ville, par/email/tél), description, raison (amber), boutons
+- Actions pending : Approuver (génère delete_token 8 chars hex) / Rejeter (raison obligatoire → email)
+- Actions toutes cartes : **Modifier** (→ `/moderation/[id]/edit`) / **Supprimer** (confirm() côté client via `DeletePostButton.tsx`)
+- Page edit `/moderation/[id]/edit` : formulaire pré-rempli tous champs + statut, server action redirect
+- Badge sidebar : count `pending` fetchée server-side dans `RootLayout`, passé via props à Sidebar, refresh 60s
+#### Crons adoption (`vercel.json`)
+| Route | Schedule | Description |
+|-------|----------|-------------|
+| `/api/cron/adoption-followup` | `0 19 * * 6` (samedi 19h) | Annonces approuvées ≥7j → email "animal adopté ?" avec bouton supprimer. Récurrent chaque samedi (`followup_sent_at IS NULL OR <= 6 days ago`) |
+| `/api/cron/adoption-cleanup` | `0 3 * * *` (quotidien 3h) | Annonces approuvées ≥60j → email expiry → hard delete → log `activity_logs` |
+| `/api/cron/adoption-social` | `0 19 * * 2` (mardi 19h) | Emma publie un post Facebook/Instagram sur les 3 dernières annonces approuvées. **Abandon automatique si aucune annonce.** Bypass `executeAgentTask` → `runAgent` direct pour contrôler l'image (photo réelle de l'annonce, Supabase Storage). Prompt Emma avec type, race, âge, sexe, ville, description, lien annonce individuel + lien global. Un seul webhook Make.com. |
+#### Colonnes Supabase `adoption_posts` ajoutées
+```sql
+ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS delete_token TEXT;
+ALTER TABLE adoption_posts ALTER COLUMN contact_info DROP NOT NULL;
+ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS followup_sent_at TIMESTAMPTZ;
+ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
+```
+### Blog (`/blog`) et Boutique (`/boutique`) - Harmonisation bannières ✅
 - Header `text-3xl`, layout `py-6 space-y-5`, filtres pills `px-3 py-1.5`
 - Bannière catégorie : `h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900` (même style que les pages catégories)
 - **Suppression Unsplash** des deux pages (plus aucune dépendance Unsplash sur `/blog` et `/boutique`)
-- **Boutique** : `BoutiquePartenairesCarousel` supprimé -partenaires gérés uniquement via `PartenairesBandeau` dans LayoutShell
+- **Boutique** : `BoutiquePartenairesCarousel` supprimé - Partenaires gérés uniquement via `PartenairesBandeau` dans LayoutShell
 ### Boutique (`/boutique`) -Architecture Awin
 - **Thème clair** (`bg-gray-50`, cards `bg-white`)
 - Filtres par catégorie (chiens, chats, oiseaux, rongeurs, reptiles, **livres**), barre de recherche, disclaimer affiliation barre fixe en bas
 - **Pagination** : 48 produits/page, param `?page=N`, compte exact via requête Supabase parallèle `{ count: 'exact', head: true }`
 - **Tri client** : `BoutiqueSortSelect.tsx` (select) avec 4 options via param `?sort=` : `stock` (dispo en premier + prix asc, défaut), `price_asc`, `price_desc`, `name_asc`
 - **Filtre admin affilié** : panel amber visible uniquement si session admin connectée -liste des marchands par catégorie, param `?affiliate=Merchant+Name`. `getMerchants()` fait 2 requêtes : existence check pour marchands connus non-Awin (`Amazon FR`, `CanadaPetCare`) + requête dynamique pour marchands Awin (limit 5000). Évite la limite de lignes Supabase qui tronquait les résultats sur "Tous".
+- **Toggle grille/liste** (`BoutiqueProductsGrid.tsx`) : bouton LayoutGrid/List en haut de la grille produits, préférence `localStorage('boutique-view')`. ListRow : thumbnail 64×64, drapeau + marchand, nom tronqué, description, prix, bouton "Voir"
 - `ProductCard` : image `unoptimized` (CDN Awin externe), nom, description, prix + devise, drapeau marchand, bouton "Voir" (orange). Pas de filtre ni badge stock — tous les produits sont affichés
-- **Drapeaux** via `flagcdn.com` : table override `MERCHANT_COUNTRY` pour cas connus (ex: `'tuft & paw' → 'us'`), puis suffixe marchand (`Zooplus FR` → fr), puis devise (USD→us, CAD→ca, GBP→gb). EUR sans pays connu = pas de drapeau
+- **Drapeaux** via `flagcdn.com` : table override `MERCHANT_COUNTRY` pour cas connus (ex: `'tuft & paw' → 'us'`, `'canadapetcare' → 'ca'`), puis suffixe marchand (`Zooplus FR` → fr), puis devise (USD→us, CAD→ca, GBP→gb). EUR sans pays connu = pas de drapeau
 - Cron sync Awin : **7 crons par catégorie** (2h-4h UTC, 20min d'écart), reset catégorie + réinsertion depuis feeds Awin
 - Disclaimer affiliation barre fixe en bas (bg-white/95)
-- Filtre boutique : `.contains('categories', [category])` (array containment) -un livre sur chien apparaît dans "Tous", "Chiens" ET "Livres"
+- Filtre boutique : `.contains('categories', [category])` (array containment) - Un livre sur chien apparaît dans "Tous", "Chiens" ET "Livres"
 #### Système multi-catégories produits
 - Colonne `categories TEXT[]` sur la table `products` (GIN index) en plus de `category TEXT` (primaire)
 - `assignCategories(p)` dans `src/lib/awin.ts` : attribue une catégorie primaire + tableau `categories[]`
@@ -451,7 +505,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 - Drapeaux : `flagcdn.com` 16×12px objectFit cover pour uniformiser BE/FR
 - Layout boutique : flex (colonne gauche titre/search/filtres, colonne droite carousel) -`space-y-4`
 ### Sidebar admin -Fonctionnalités ✅
-- **Lien Accueil** : premier item nav (icône `Home`, href `/`) -accès direct au site public
+- **Lien Accueil** : premier item nav (icône `Home`, href `/`) - Accès direct au site public
 - **Fermable** : bouton `ChevronLeft` dans le header sidebar pour fermer, bouton `Menu` flottant `fixed left-3 top-4` pour rouvrir. Transition `translate-x-0` / `-translate-x-full` (300ms). `ml-64`/`ml-0` sur le `<main>` synchronisé via `sidebarOpen` dans `LayoutShell`.
 - **Badge modération** : pastille orange sur l'item "Modération" affichant le nombre d'annonces adoption `pending`. Route `/api/admin/pending-count` (GET → `{ count: number }`). Consultée au chargement + toutes les 60s (setInterval).
 - **Typographie agents agrandie** : nom `text-sm`, rôle `text-xs`, icône `size=17`
@@ -460,15 +514,15 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 - `tagColor` (classes Tailwind, pour PartenairesSection et BoutiquePartenairesRotating)
 - `tagBg` / `tagText` (valeurs CSS hex, pour BoutiquePartenairesCarousel -inline styles)
 - Partenaires actifs : **Dogfy Diet** (Awin, FR, chiens), **Maxi Zoo** (Awin, FR+BE -picker pays popup), **Tuft & Paw** (Awin, US, chats)
-- **Maxi Zoo** : `urlsByCountry: { FR: awinmid=68698, BE: awinmid=68696 }` -clic ouvre un popup (bandeau) ou modal (section) pour choisir FR 🇫🇷 ou BE 🇧🇪
+- **Maxi Zoo** : `urlsByCountry: { FR: awinmid=68698, BE: awinmid=68696 }` - Clic ouvre un popup (bandeau) ou modal (section) pour choisir FR 🇫🇷 ou BE 🇧🇪
 - CanadaPetCare : produits dans boutique via scraping sitemap (pas de section partenaire dédiée)
 - Carousel actif à partir de **3 partenaires** (flèches + animation)
 #### Fix Tailwind config
 - `./src/lib/**/*.{js,ts,jsx,tsx}` ajouté au `content` de `tailwind.config.ts`
 - Nécessaire pour que les classes définies dans `partenaires.ts` soient compilées (tagColor pour PartenairesSection)
 ### Google Analytics & AdSense
-- GA `G-QE9XSS18YQ` -chargement conditionnel RGPD
-- AdSense `ca-pub-3549294158319032` -en attente approbation
+- GA `G-QE9XSS18YQ` - Chargement conditionnel RGPD
+- AdSense `ca-pub-3549294158319032` - En attente approbation
 - Emplacements : blog liste, blog article, adoption, accueil
 ### SEO & Indexation
 - Sitemap dynamique, robots.txt, Schema.org JSON-LD
@@ -492,10 +546,14 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 - ✅ `migration_rls_awin_progress.sql` — RLS sur `awin_sync_progress` (vérifié : anon=[], service_role=données)
 
 ### Actions manuelles en attente ⚠️
-- **SQL Supabase** : supprimer faux positifs Maxi Zoo dans livres → `DELETE FROM products WHERE category = 'livres' AND merchant_name LIKE '%Maxi Zoo%';`
-- **SQL Supabase** : migration colonne product_type → `migration_product_type.sql` + `UPDATE products SET product_type = 'livres' WHERE merchant_name = 'Amazon FR';`
-- **Livres Amazon** : continuer d'en ajouter via `/produits` (objectif : ~2 par catégorie animale minimum)
+- ✅ **SQL Supabase** : faux positifs Maxi Zoo supprimés + colonne `product_type` migrée + Amazon FR tagué `livres`
+- ✅ **Livres Amazon** : ~2 par catégorie animale minimum atteint
 - **Amazon Associates** : générer 3 ventes dans les 180 jours pour valider le compte et débloquer l'API PA
+- **Migration breeds** : exécuter `migration_breeds.sql` dans Supabase Dashboard → puis lancer "Fiches races" depuis CronLauncher (répéter ~12× pour les 120 fiches)
+
+### Features à implémenter (backlog)
+- **Alertes adoption par email** : abonnement "chien, Belgique" → email auto quand annonce approuvée correspondante
+- **Commentaires articles** : commentaires simples (prénom + texte, modération admin) via Supabase
 
 ### Actions déjà effectuées ✅
 - Site public (blog, adoption, boutique, pages légales) : **thème clair complet** ✅
@@ -602,7 +660,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 - CronLauncher : dropdown pour forcer un animal spécifique (override de la rotation automatique)
 - Instagram `@mespoilusofficiel` connecté Make.com, posts Facebook+Instagram confirmés fonctionnels
 - Mode jour/nuit/auto (next-themes) : toggle dans header public + admin sidebar, CSS variables, `ThemeToggle.tsx`
-- Filtres catégories blog : OR sur `category` ET `categories[]` -articles visibles sur toutes les pages catégories
+- Filtres catégories blog : OR sur `category` ET `categories[]` - Articles visibles sur toutes les pages catégories
 - Barres de recherche blog + boutique : fond `bg-gray-700` (gris visible) au lieu de noir/navy
 - Espacement pages publiques : `space-y-4` sur boutique, blog, adoption (uniformisé)
 - Boutique : carousel coverflow partenaires (RAF, auto-rotate, flèches ≥3, inline styles tags)
@@ -633,11 +691,11 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 - **Sidebar "Accueil"** : lien Home ajouté en premier dans la nav admin ✅
 - **Typographie admin agrandie** : text-[9px]/text-[10px]/text-[11px] éliminés, textes lisibles text-sm/text-base partout (dashboard, agents, modération, sidebar) ✅
 - **Outils publics** : 4 outils accessibles via dropdown "Outils" dans le header public ✅
-  - Calculateur d'âge (`/outils/age`) : **5 catégories site** (chien, chat, oiseau, rongeur, reptile) -formules spécifiques par animal, slider, résultat gradient orange, `max-w-6xl`
+  - Calculateur d'âge (`/outils/age`) : **5 catégories site** (chien, chat, oiseau, rongeur, reptile) - Formules spécifiques par animal, slider, résultat gradient orange, `max-w-6xl`
   - Quiz "Quel animal pour moi ?" (`/outils/quiz`) : 6 questions, 5 animaux scorés, progression automatique 300ms, résultat avec conseils, `max-w-6xl`
-  - Générateur de prénom (`/outils/prenom`) : 5 animaux × 4 styles -tirage aléatoire de 6, grille 3 cols, **connecté à la table Supabase `prenoms`** (fallback statique si vide), badge "Mis à jour ce mois-ci" si données DB actives
+  - Générateur de prénom (`/outils/prenom`) : 5 animaux × 4 styles - Tirage aléatoire de 6, grille 3 cols, **connecté à la table Supabase `prenoms`** (fallback statique si vide), badge "Mis à jour ce mois-ci" si données DB actives
   - Guides PDF gratuits (`/guides`) : page liste avec modal email + download sécurisé, `max-w-6xl`
-- **Cron mensuel prénoms** : `/api/cron/prenoms` (1er du mois, 7h UTC) -Thomas génère 50 prénoms par animal (5 animaux × 4 styles) via Claude Haiku, DELETE+INSERT full refresh, logActivity ✅
+- **Cron mensuel prénoms** : `/api/cron/prenoms` (1er du mois, 7h UTC) - Thomas génère 50 prénoms par animal (5 animaux × 4 styles) via Claude Haiku, DELETE+INSERT full refresh, logActivity ✅
   - Table `prenoms` : `(animal TEXT, style TEXT, names TEXT[], generated_at TIMESTAMP, PRIMARY KEY(animal, style))`, RLS public SELECT
   - CronLauncher : pipeline "Prénoms animaux" (pipeline #5) avec icône Sparkles
 - **Header public avec menu hamburger** ✅
@@ -646,6 +704,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
   - `PartenairesBandeau` : `hidden md:flex` (masqué sur mobile)
   - Boutique : `whitespace-nowrap` (toujours visible)
 - **Homepage "Nos outils pour vous aider"** : section avec 4 cards (Calculateur d'âge, Quiz, Générateur prénom, Guides PDF), `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` ✅
+- **Homepage "Des animaux cherchent un foyer"** (`AdoptionPreviewSection.tsx`) : section entre Outils et Partenaires, `max-w-6xl` (même largeur que "Par type d'animal"), 5 cards 1 par catégorie (chien/chat/oiseau/rongeur/reptile), 1 aléatoire parmi 10 derniers, `unstable_noStore()` pour variété à chaque chargement, âge et ville en `text-gray-900`. **Centrage automatique** : `flex flex-wrap justify-center gap-4` + largeur fixe `w-full sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] xl:w-52` → cards centrées si moins de 5 catégories disponibles ✅
 - **Homepage headers centrés** : "Nos derniers conseils", "Nos recommandations", "PartenairesSection" tous centrés (`text-center mb-12`) ✅
 - **Hero/footer** : reptiles ajoutés dans le texte hero et navigation footer ✅
 - **Système guides PDF RGPD** ✅
@@ -670,11 +729,18 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 - **Page admin `/produits`** (`src/app/(admin)/produits/page.tsx`) : ajout manuel livres Amazon avec extraction ASIN automatique, preview lien affilié, upload image, catégories animales, liste avec filtre par catégorie + badge "Aucune catégorie animale", bouton modifier inline ✅
 - **API admin livres** : `POST/PATCH/DELETE /api/admin/products` (extraction ASIN, URL affiliée `https://www.amazon.fr/dp/[ASIN]?tag=mespoilus-21`, id `amazon_[ASIN]`, `merchant_name: 'Amazon FR'`) + `GET /api/admin/products-list` ✅
 - **Boutique catégorie Livres** : réactivée dans CATEGORIES avec icône `BookOpen` ✅
+- **Fiches races** (`/races`) : 120 races seed (50 chiens, 30 chats, 15 oiseaux, 15 rongeurs, 10 reptiles) - Cron quotidien 6h UTC - Génération Haiku 10/run - Pages `/races`, `/races/[animal]`, `/races/[animal]/[slug]` - JSON-LD breed - Sitemap - "Races" dans nav header ✅
+- **Pages légales auditées et corrigées (mai 2026)** : données annonces adoption mises à jour (email + téléphone privés, non publics), durée conservation adoption 60 jours, section 2.5 guides PDF ajoutée dans politique-confidentialite, affiliés listés précisément (Amazon FR Associates, Awin, CJ.com/CanadaPetCare), mention Amazon Associates ajoutée dans CGU ✅
 - **getMerchants fix** : requête Amazon FR séparée (limit 1) + marchands Awin (limit 100000) — évite le plafond 10 000 lignes qui cachait Amazon FR dans les filtres admin ✅
 - **maxDuration = 60** : ajouté sur toutes les routes cron manquantes (7× awin-sync, blog, social) — évite timeout 10s Vercel Hobby par défaut ✅
 - **Vercel crons** : 13 crons tous actifs et reconnus par Vercel Hobby ✅
 - **Awin mots-clés livres** : `'poche'`, `'broché'`, `'relié'` retirés (causaient "lampe de poche" → livres) ✅
 - **Filtre type de produit boutique** : bouton "Type ▼" dans la rangée catégories (après Livres, séparateur) → dropdown cases à cocher multi-select (nourriture, accessoires, habitat, jouets, hygiène, santé, livres) → param `?types=a,b` → `.in('product_type', types)` ✅
+- **Toggle grille/liste boutique** (`BoutiqueProductsGrid.tsx`) : bouton LayoutGrid/List, préférence `localStorage('boutique-view')` ✅
+- **Toggle grille/liste adoption** (`AdoptionPostsGrid.tsx`) : idem boutique, `localStorage('adoption-view')` ✅
+- **Toggle grille/liste blog** (`BlogPostsGrid.tsx`) : fonctionne sur `/blog` et toutes les pages catégories (`_category-page.tsx`), prop `showFeatured`, `localStorage('blog-view')` ✅
+- **AdoptionPreviewSection centrage** : cards centrées quand < 5 catégories via `flex flex-wrap justify-center` + largeur fixe `xl:w-52` ✅
+- **CJ sync activity log** : log `activity_logs` ajouté à la fin du cron CanadaPetCare ✅
 - **Colonne `product_type TEXT`** sur `products` : migration `migration_product_type.sql` à exécuter, index GIN. `assignProductType()` dans `awin.ts` détecte le type depuis GPC + titre (ISBN → livres en priorité). `'bd'` retiré (faux positifs couvertures) ✅
 - **Livres Amazon** : `product_type = 'livres'` ajouté dans POST et PATCH de `/api/admin/products` — les nouveaux livres sont automatiquement filtrables. SQL pour les existants : `UPDATE products SET product_type = 'livres' WHERE merchant_name = 'Amazon FR';` ✅
 ---
