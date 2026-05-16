@@ -109,7 +109,20 @@ Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans commentaires) :
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('JSON introuvable dans la réponse');
 
-      const content = JSON.parse(jsonMatch[0]);
+      let jsonStr = jsonMatch[0];
+      // Nettoie les problèmes courants de Haiku
+      jsonStr = jsonStr
+        .replace(/,\s*([}\]])/g, '$1')   // virgules trailing
+        .replace(/(['"])?([a-zA-Z_éèêàâùûîï]+)(['"])?\s*:/g, '"$2":') // clés sans guillemets
+        .replace(/:\s*'([^']*)'/g, ': "$1"'); // valeurs avec guillemets simples
+
+      let content: Record<string, unknown>;
+      try {
+        content = JSON.parse(jsonStr);
+      } catch {
+        // Dernier recours : extraction champ par champ des valeurs critiques
+        throw new Error(`JSON invalide: ${jsonStr.slice(0, 200)}`);
+      }
 
       const { error } = await supabase.from('breeds').upsert({
         animal: breed.animal,
