@@ -85,6 +85,7 @@ export default function AdminRacesPage() {
         setTimeout(() => setSavedId(null), 2000);
         setBreeds(prev => prev.map(b => b.id === id ? { ...b, photo_url: data.url } : b));
         cancelEdit();
+        window.dispatchEvent(new Event('breed-photo-updated'));
       }
     } catch { /* ignore */ }
     finally { setSaving(false); }
@@ -105,6 +106,7 @@ export default function AdminRacesPage() {
         setTimeout(() => setSavedId(null), 2000);
         setBreeds(prev => prev.map(b => b.id === id ? { ...b, photo_url: data.url } : b));
         cancelEdit();
+        window.dispatchEvent(new Event('breed-photo-updated'));
       } else {
         alert(data.error ?? 'Erreur lors du téléchargement');
       }
@@ -121,6 +123,7 @@ export default function AdminRacesPage() {
         body: JSON.stringify({ id, photo_url: null }),
       });
       setBreeds(prev => prev.map(b => b.id === id ? { ...b, photo_url: null } : b));
+      window.dispatchEvent(new Event('breed-photo-updated'));
     } catch { /* ignore */ }
     finally { setDeletingId(null); }
   }

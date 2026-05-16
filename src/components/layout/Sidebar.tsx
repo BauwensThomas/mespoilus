@@ -58,10 +58,19 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
   }, []);
 
   useEffect(() => {
-    fetch('/api/admin/breeds-no-photo-count')
-      .then(r => r.json())
-      .then(d => setNoPhotoCount(d.count ?? 0))
-      .catch(() => {});
+    const refresh = () =>
+      fetch('/api/admin/breeds-no-photo-count')
+        .then(r => r.json())
+        .then(d => setNoPhotoCount(d.count ?? 0))
+        .catch(() => {});
+
+    refresh();
+    const interval = setInterval(refresh, 60_000);
+    window.addEventListener('breed-photo-updated', refresh);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('breed-photo-updated', refresh);
+    };
   }, []);
 
   return (
