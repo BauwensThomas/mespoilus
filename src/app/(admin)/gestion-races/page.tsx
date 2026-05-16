@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { ClipboardList, RefreshCw, Check, X, ImageOff } from 'lucide-react';
+import { ClipboardList, RefreshCw, Check, X, ImageOff, Upload, Link, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 
 const ANIMAL_TABS = [
@@ -33,8 +33,12 @@ export default function AdminRacesPage() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editUrl, setEditUrl] = useState('');
+  const [uploadMode, setUploadMode] = useState<'url' | 'file'>('file');
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const fetchBreeds = useCallback(async () => {
     setLoading(true);
@@ -51,9 +55,37 @@ export default function AdminRacesPage() {
   function startEdit(b: Breed) {
     setEditingId(b.id);
     setEditUrl(b.photo_url ?? '');
+    setPreviewSrc(b.photo_url ?? null);
+    setUploadMode('file');
   }
 
-  async function savePhoto(id: string) {
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPreviewSrc(URL.createObjectURL(file));
+  }
+
+  async function saveByUpload(id: string) {
+    const file = fileRef.current?.files?.[0];
+    if (!file) return;
+    setSaving(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      form.append('breedId', id);
+      const r = await fetch('/api/admin/breed-photo-upload', { method: 'POST', body: form });
+      const data = await r.json();
+      if (data.success) {
+        setSavedId(id);
+        setTimeout(() => setSavedId(null), 2000);
+        setBreeds(prev => prev.map(b => b.id === id ? { ...b, photo_url: data.url } : b));
+        cancelEdit();
+      }
+    } catch { /* ignore */ }
+    finally { setSaving(false); }
+  }
+
+  async function saveByUrl(id: string) {
     setSaving(true);
     try {
       await fetch('/api/admin/breeds', {
@@ -64,9 +96,34 @@ export default function AdminRacesPage() {
       setSavedId(id);
       setTimeout(() => setSavedId(null), 2000);
       setBreeds(prev => prev.map(b => b.id === id ? { ...b, photo_url: editUrl.trim() || null } : b));
-      setEditingId(null);
+      cancelEdit();
     } catch { /* ignore */ }
     finally { setSaving(false); }
+  }
+
+  async function deletePhoto(id: string) {
+    setDeletingId(id);
+    try {
+      await fetch('/api/admin/breeds', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, photo_url: null }),
+      });
+      setBreeds(prev => prev.map(b => b.id === id ? { ...b, photo_url: null } : b));
+    } catch { /* ignore */ }
+    finally { setDeletingId(null); }
+  }
+
+  function handleSave(id: string) {
+    if (uploadMode === 'file') saveByUpload(id);
+    else saveByUrl(id);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setPreviewSrc(null);
+    setEditUrl('');
+    if (fileRef.current) fileRef.current.value = '';
   }
 
   const displayed = filter === 'all' ? breeds : breeds.filter(b => b.animal === filter);
@@ -83,7 +140,7 @@ export default function AdminRacesPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Fiches races</h1>
-          <p className="text-sm text-gray-500">Gérer les photos de chaque race</p>
+          <p className="text-sm text-gray-500">Photos stockées dans Supabase Storage</p>
         </div>
         <button onClick={fetchBreeds} className="ml-auto text-gray-400 hover:text-gray-700 transition-colors">
           <RefreshCw size={16} strokeWidth={1.5} />
@@ -127,9 +184,7 @@ export default function AdminRacesPage() {
         <div className="flex items-center gap-4 text-sm text-gray-500">
           <span>{displayed.length} races</span>
           <span className="text-emerald-600 font-medium">{withPhoto} avec photo</span>
-          {withoutPhoto > 0 && (
-            <span className="text-red-500 font-medium">{withoutPhoto} sans photo</span>
-          )}
+          {withoutPhoto > 0 && <span className="text-red-500 font-medium">{withoutPhoto} sans photo</span>}
         </div>
       )}
 
@@ -162,7 +217,7 @@ export default function AdminRacesPage() {
                   )}
                 </div>
 
-                {/* Nom + animal + statut photo */}
+                {/* Nom + animal */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold text-gray-900 truncate">{b.name}</p>
@@ -171,65 +226,143 @@ export default function AdminRacesPage() {
                     </span>
                   </div>
                   {b.photo_url ? (
-                    <p className="text-xs text-emerald-600 mt-0.5 truncate max-w-xs">{b.photo_url}</p>
+                    <p className="text-xs text-emerald-600 mt-0.5">Supabase Storage ✓</p>
                   ) : (
                     <p className="text-xs text-red-400 mt-0.5 font-medium">Pas de photo</p>
                   )}
                 </div>
 
-                {/* Bouton */}
-                {savedId === b.id ? (
-                  <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1 flex-shrink-0">
-                    <Check size={13} strokeWidth={2} /> Sauvegardé
-                  </span>
-                ) : (
-                  <button
-                    onClick={() => editingId === b.id ? setEditingId(null) : startEdit(b)}
-                    className={clsx(
-                      'text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors flex-shrink-0',
-                      editingId === b.id
-                        ? 'bg-gray-100 text-gray-600 border-gray-300'
-                        : b.photo_url
-                          ? 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100'
-                          : 'bg-red-600 text-white border-red-600 hover:bg-red-500'
-                    )}
-                  >
-                    {editingId === b.id ? 'Annuler' : b.photo_url ? 'Modifier' : 'Ajouter photo'}
-                  </button>
-                )}
+                {/* Actions */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {savedId === b.id && (
+                    <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                      <Check size={13} strokeWidth={2} /> Sauvegardé
+                    </span>
+                  )}
+
+                  {/* Supprimer photo */}
+                  {b.photo_url && editingId !== b.id && savedId !== b.id && (
+                    <button
+                      onClick={() => deletePhoto(b.id)}
+                      disabled={deletingId === b.id}
+                      className="p-1.5 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40"
+                      title="Supprimer la photo"
+                    >
+                      {deletingId === b.id
+                        ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin inline-block" />
+                        : <Trash2 size={14} strokeWidth={1.5} />
+                      }
+                    </button>
+                  )}
+
+                  {/* Ajouter / Modifier */}
+                  {savedId !== b.id && (
+                    <button
+                      onClick={() => editingId === b.id ? cancelEdit() : startEdit(b)}
+                      className={clsx(
+                        'text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors',
+                        editingId === b.id
+                          ? 'bg-gray-100 text-gray-600 border-gray-300'
+                          : b.photo_url
+                            ? 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100'
+                            : 'bg-red-600 text-white border-red-600 hover:bg-red-500'
+                      )}
+                    >
+                      {editingId === b.id ? 'Annuler' : b.photo_url ? 'Modifier' : 'Ajouter photo'}
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Formulaire inline */}
               {editingId === b.id && (
-                <div className="border-t border-gray-100 px-4 py-3 bg-gray-50">
-                  <label className="text-xs font-medium text-gray-700 mb-1.5 block">URL de la photo</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      value={editUrl}
-                      onChange={e => setEditUrl(e.target.value)}
-                      placeholder="https://…"
-                      className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-orange-400"
-                      autoFocus
-                    />
+                <div className="border-t border-gray-100 px-4 py-4 bg-gray-50 space-y-3">
+
+                  {/* Toggle upload / URL */}
+                  <div className="flex gap-1 bg-gray-200 rounded-lg p-1 w-fit">
                     <button
-                      onClick={() => savePhoto(b.id)}
-                      disabled={saving}
-                      className="flex items-center gap-1.5 text-xs px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 disabled:opacity-50 font-medium"
+                      onClick={() => setUploadMode('file')}
+                      className={clsx(
+                        'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md font-medium transition-colors',
+                        uploadMode === 'file' ? 'bg-white text-gray-900 shadow' : 'text-gray-500 hover:text-gray-700'
+                      )}
                     >
-                      <Check size={13} strokeWidth={2} />
-                      {saving ? 'Sauvegarde…' : 'Enregistrer'}
+                      <Upload size={12} strokeWidth={2} /> Uploader un fichier
                     </button>
                     <button
-                      onClick={() => setEditingId(null)}
-                      className="p-2 text-gray-400 hover:text-gray-700 border border-gray-300 rounded-lg transition-colors"
+                      onClick={() => setUploadMode('url')}
+                      className={clsx(
+                        'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md font-medium transition-colors',
+                        uploadMode === 'url' ? 'bg-white text-gray-900 shadow' : 'text-gray-500 hover:text-gray-700'
+                      )}
                     >
-                      <X size={14} strokeWidth={1.5} />
+                      <Link size={12} strokeWidth={2} /> Coller une URL
                     </button>
                   </div>
-                  {editUrl && (
-                    <div className="mt-2">
-                      <Image src={editUrl} alt="preview" width={80} height={60} className="rounded object-cover border border-gray-200" unoptimized />
+
+                  {/* Upload fichier */}
+                  {uploadMode === 'file' && (
+                    <div className="flex gap-3 items-start">
+                      <div
+                        className="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-orange-400 transition-colors"
+                        onClick={() => fileRef.current?.click()}
+                      >
+                        {previewSrc && fileRef.current?.files?.[0] ? (
+                          <Image src={previewSrc} alt="preview" width={80} height={60} className="mx-auto rounded object-cover" unoptimized />
+                        ) : (
+                          <>
+                            <Upload size={20} strokeWidth={1.5} className="text-gray-400 mx-auto mb-1" />
+                            <p className="text-xs text-gray-500">Cliquez pour choisir une image</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5">JPG, PNG, WEBP — stocké dans Supabase</p>
+                          </>
+                        )}
+                        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <button
+                          onClick={() => handleSave(b.id)}
+                          disabled={saving || !fileRef.current?.files?.[0]}
+                          className="flex items-center gap-1.5 text-xs px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 disabled:opacity-40 font-medium whitespace-nowrap"
+                        >
+                          <Check size={13} strokeWidth={2} />
+                          {saving ? 'Upload…' : 'Enregistrer'}
+                        </button>
+                        <button onClick={cancelEdit} className="p-2 text-gray-400 hover:text-gray-700 border border-gray-300 rounded-lg transition-colors">
+                          <X size={14} strokeWidth={1.5} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* URL externe */}
+                  {uploadMode === 'url' && (
+                    <div>
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          value={editUrl}
+                          onChange={e => { setEditUrl(e.target.value); setPreviewSrc(e.target.value || null); }}
+                          placeholder="https://…"
+                          className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-orange-400"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleSave(b.id)}
+                          disabled={saving}
+                          className="flex items-center gap-1.5 text-xs px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 disabled:opacity-50 font-medium"
+                        >
+                          <Check size={13} strokeWidth={2} />
+                          {saving ? 'Sauvegarde…' : 'Enregistrer'}
+                        </button>
+                        <button onClick={cancelEdit} className="p-2 text-gray-400 hover:text-gray-700 border border-gray-300 rounded-lg transition-colors">
+                          <X size={14} strokeWidth={1.5} />
+                        </button>
+                      </div>
+                      {previewSrc && (
+                        <div className="mt-2">
+                          <Image src={previewSrc} alt="preview" width={80} height={60} className="rounded object-cover border border-gray-200" unoptimized />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
