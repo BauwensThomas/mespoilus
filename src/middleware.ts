@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const ADMIN_PAGE_PREFIXES = ['/dashboard', '/agents', '/orchestrate'];
+const ADMIN_PAGE_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/guides-admin'];
 const ADMIN_API_PREFIXES = ['/api/agents', '/api/orchestrate', '/api/stats', '/api/security'];
 
 export async function middleware(request: NextRequest) {
@@ -59,6 +59,7 @@ export const config = {
     '/dashboard/:path*',
     '/agents/:path*',
     '/orchestrate/:path*',
+    '/guides-admin/:path*',
     '/api/agents/:path*',
     '/api/orchestrate/:path*',
     '/api/stats/:path*',
