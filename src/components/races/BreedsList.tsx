@@ -33,7 +33,6 @@ function GridCard({ breed, animalUrl }: { breed: BreedItem; animalUrl: string })
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-            unoptimized
           />
         ) : (
           <div className="flex flex-col items-center justify-center gap-1 w-full h-full">
@@ -74,7 +73,6 @@ function ListRow({ breed, animalUrl }: { breed: BreedItem; animalUrl: string }) 
             fill
             className="object-cover"
             sizes="56px"
-            unoptimized
           />
         ) : (
           <ImageOff size={16} strokeWidth={1.5} className="text-gray-300" />
