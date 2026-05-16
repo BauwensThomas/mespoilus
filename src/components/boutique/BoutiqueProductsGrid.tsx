@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { LayoutGrid, List, ExternalLink, Package } from 'lucide-react';
+import { ExternalLink, Package } from 'lucide-react';
 import Image from 'next/image';
 import type { AwinProduct } from '@/types';
 
@@ -107,45 +106,18 @@ interface Props {
   affiliate?: string;
   category?: string;
   search?: string;
+  view?: 'grid' | 'list';
 }
 
-export default function BoutiqueProductsGrid({ products, total, affiliate, category, search }: Props) {
-  const [view, setView] = useState<'grid' | 'list'>('grid');
-
-  useEffect(() => {
-    const saved = localStorage.getItem('boutique-view');
-    if (saved === 'list' || saved === 'grid') setView(saved);
-  }, []);
-
-  function toggle(v: 'grid' | 'list') {
-    setView(v);
-    localStorage.setItem('boutique-view', v);
-  }
-
+export default function BoutiqueProductsGrid({ products, total, affiliate, category, search, view = 'grid' }: Props) {
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900">
           {total.toLocaleString('fr-FR')} produit{total !== 1 ? 's' : ''}
           {affiliate ? ` · ${affiliate}` : category && category !== 'all' ? ` · ${category}` : ''}
           {search ? ` · "${search}"` : ''}
         </h2>
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => toggle('grid')}
-            className={`p-1.5 rounded-md transition-colors ${view === 'grid' ? 'bg-white shadow text-orange-600' : 'text-gray-400 hover:text-gray-700'}`}
-            aria-label="Vue grille"
-          >
-            <LayoutGrid size={18} strokeWidth={1.5} />
-          </button>
-          <button
-            onClick={() => toggle('list')}
-            className={`p-1.5 rounded-md transition-colors ${view === 'list' ? 'bg-white shadow text-orange-600' : 'text-gray-400 hover:text-gray-700'}`}
-            aria-label="Vue liste"
-          >
-            <List size={18} strokeWidth={1.5} />
-          </button>
-        </div>
       </div>
 
       {view === 'grid' ? (

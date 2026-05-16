@@ -128,7 +128,7 @@ const VALID_SORTS: SortValue[] = ['stock', 'price_desc', 'name_asc'];
 const VALID_TYPES = ['nourriture', 'accessoires', 'habitat', 'jouets', 'hygiene', 'sante', 'livres'];
 
 interface Props {
-  searchParams: { category?: string; search?: string; page?: string; affiliate?: string; sort?: string; types?: string };
+  searchParams: { category?: string; search?: string; page?: string; affiliate?: string; sort?: string; types?: string; view?: string };
 }
 
 export default async function BoutiquePage({ searchParams }: Props) {
@@ -276,6 +276,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
             affiliate={affiliate}
             category={category}
             search={search}
+            view={searchParams.view === 'list' ? 'list' : 'grid'}
           />
 
           {/* Pagination */}

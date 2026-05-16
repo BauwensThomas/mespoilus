@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { LayoutGrid, List, PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart, MapPin } from 'lucide-react';
+import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -113,37 +112,13 @@ function ListRow({ post }: { post: AdoptionPost }) {
   );
 }
 
-export default function AdoptionPostsGrid({ posts }: { posts: AdoptionPost[] }) {
-  const [view, setView] = useState<'grid' | 'list'>('grid');
-
-  useEffect(() => {
-    const saved = localStorage.getItem('adoption-view');
-    if (saved === 'list' || saved === 'grid') setView(saved);
-  }, []);
-
-  function toggle(v: 'grid' | 'list') {
-    setView(v);
-    localStorage.setItem('adoption-view', v);
-  }
-
+export default function AdoptionPostsGrid({ posts, view = 'grid' }: { posts: AdoptionPost[]; view?: 'grid' | 'list' }) {
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900">
           {posts.length} annonce{posts.length !== 1 ? 's' : ''}
         </h2>
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-          <button onClick={() => toggle('grid')}
-            className={`p-1.5 rounded-md transition-colors ${view === 'grid' ? 'bg-white shadow text-orange-600' : 'text-gray-400 hover:text-gray-700'}`}
-            aria-label="Vue grille">
-            <LayoutGrid size={18} strokeWidth={1.5} />
-          </button>
-          <button onClick={() => toggle('list')}
-            className={`p-1.5 rounded-md transition-colors ${view === 'list' ? 'bg-white shadow text-orange-600' : 'text-gray-400 hover:text-gray-700'}`}
-            aria-label="Vue liste">
-            <List size={18} strokeWidth={1.5} />
-          </button>
-        </div>
       </div>
 
       {view === 'grid' ? (
