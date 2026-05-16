@@ -59,7 +59,7 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
 
   useEffect(() => {
     const refresh = () =>
-      fetch('/api/admin/breeds-no-photo-count')
+      fetch('/api/admin/breeds-no-photo-count', { cache: 'no-store' })
         .then(r => r.json())
         .then(d => setNoPhotoCount(d.count ?? 0))
         .catch(() => {});
