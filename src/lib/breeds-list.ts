@@ -33,6 +33,7 @@ export interface Breed {
   name: string;
   slug: string;
   content: BreedContent | null;
+  photo_url: string | null;
   status: 'draft' | 'published';
   generated_at: string | null;
   created_at: string;
