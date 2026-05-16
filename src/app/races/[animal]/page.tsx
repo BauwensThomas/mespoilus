@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
@@ -24,17 +23,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-async function getAnimalPhoto(animalType: string): Promise<string | null> {
+async function getAnimalPhotos(animalType: string): Promise<string[]> {
   try {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from('hero_photos')
       .select('url')
       .eq('active', true)
-      .in('animal_type', [animalType, `${animalType}s`]);
-    if (!data || data.length === 0) return null;
-    return data[Math.floor(Math.random() * data.length)].url;
-  } catch { return null; }
+      .in('animal_type', [animalType, `${animalType}s`])
+      .limit(12);
+    return data?.map(r => r.url) ?? [];
+  } catch { return []; }
 }
 
 export default async function AnimalRacesPage({ params, searchParams }: Props) {
@@ -54,7 +53,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
 
   if (q) query = query.ilike('name', `%${q}%`);
 
-  const [{ data: breeds }, { count: total }, photo] = await Promise.all([
+  const [{ data: breeds }, { count: total }, photos] = await Promise.all([
     query,
     supabase
       .from('breeds')
@@ -62,7 +61,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
       .eq('animal', animalType)
       .eq('status', 'published')
       .not('content', 'is', null),
-    getAnimalPhoto(animalType),
+    getAnimalPhotos(animalType),
   ]);
 
   const totalCount = total ?? 0;
@@ -76,25 +75,6 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
         </h1>
         <p className="text-gray-500 text-sm">Fiches races : caractère, santé, entretien</p>
       </div>
-
-      {/* Photo de l'animal */}
-      {photo ? (
-        <div className="relative h-48 md:h-64 rounded-2xl overflow-hidden">
-          <Image
-            src={photo}
-            alt={ANIMAL_LABEL[animalType]}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 900px"
-            unoptimized
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-        </div>
-      ) : (
-        <div className="h-32 rounded-2xl bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
-          <span className="text-6xl">{ANIMAL_EMOJI[animalType]}</span>
-        </div>
-      )}
 
       <Suspense>
         <BreedsSearchBar defaultValue={q} />
@@ -124,6 +104,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
         <BreedsList
           breeds={breeds ?? []}
           animalUrl={ANIMAL_URL[animalType]}
+          photos={photos}
           search={q || undefined}
           view={searchParams.view === 'list' ? 'list' : 'grid'}
         />
