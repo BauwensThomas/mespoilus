@@ -5,8 +5,9 @@ import Link from 'next/link';
 import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
 import BoutiqueSortSelect, { type SortValue } from '@/components/boutique/BoutiqueSortSelect';
 import BoutiqueTypeFilter from '@/components/boutique/BoutiqueTypeFilter';
-import ProductCard from '@/components/boutique/ProductCard';
+import BoutiqueProductsGrid from '@/components/boutique/BoutiqueProductsGrid';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronLeft, ChevronRight, Store, BookOpen } from 'lucide-react';
+
 
 export const metadata: Metadata = {
   title: 'Boutique animaux -Mes Poilus',
@@ -265,22 +266,17 @@ export default async function BoutiquePage({ searchParams }: Props) {
         </div>
       ) : (
         <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {total.toLocaleString('fr-FR')} produit{total !== 1 ? 's' : ''}
-              {affiliate ? ` · ${affiliate}` : category && category !== 'all' ? ` · ${activeCat.label}` : ''}
-              {search ? ` · "${search}"` : ''}
-            </h2>
-            {totalPages > 1 && (
-              <p className="text-sm text-gray-500">Page {page} / {totalPages}</p>
-            )}
-          </div>
+          {totalPages > 1 && (
+            <p className="text-sm text-gray-500 text-right mb-2">Page {page} / {totalPages}</p>
+          )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {products.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <BoutiqueProductsGrid
+            products={products}
+            total={total}
+            affiliate={affiliate}
+            category={category}
+            search={search}
+          />
 
           {/* Pagination */}
           {totalPages > 1 && (

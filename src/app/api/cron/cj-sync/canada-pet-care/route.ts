@@ -124,6 +124,13 @@ export async function GET(req: Request) {
     }));
   }
 
+  await admin.from('activity_logs').insert({
+    agent_id: 'thomas', agent_name: 'Thomas',
+    action: `[CJ sync:CanadaPetCare] ${synced} produits synchronisés`,
+    details: failed > 0 ? { failed } : {},
+    status: 'success',
+  });
+
   revalidatePath('/boutique');
   return NextResponse.json({ success: true, synced, failed, total: productUrls.length });
 }

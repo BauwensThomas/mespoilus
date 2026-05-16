@@ -1,15 +1,13 @@
 import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
 import type { AdoptionPost } from '@/types';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import Image from 'next/image';
 import Link from 'next/link';
 import AdBanner from '@/components/ui/AdBanner';
 import AdoptionSearchBar from '@/components/adoption/AdoptionSearchBar';
 import AdoptionFilters from '@/components/adoption/AdoptionFilters';
+import AdoptionPostsGrid from '@/components/adoption/AdoptionPostsGrid';
 import { Suspense } from 'react';
-import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart, MapPin } from 'lucide-react';
+import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Adoption animaux',
@@ -30,23 +28,6 @@ const ANIMAL_TYPES = [
   { id: 'autre',   label: 'Autre',    icon: Heart },
 ];
 
-const ADOPTION_BANNER_QUERIES: Record<string, string> = {
-  chien:   'cute dog puppy',
-  chat:    'cute cat kitten',
-  oiseau:  'pet bird parrot',
-  rongeur: 'rabbit hamster guinea pig',
-  reptile: 'lizard reptile gecko',
-  autre:   'pet animal cute',
-};
-
-const TYPE_COLOR: Record<string, { border: string; badge: string; bg: string }> = {
-  chien:   { border: 'border-orange-300',   badge: 'text-orange-700',   bg: 'bg-orange-100'   },
-  chat:    { border: 'border-pink-300',     badge: 'text-pink-700',     bg: 'bg-pink-100'     },
-  oiseau:  { border: 'border-blue-300',     badge: 'text-blue-700',     bg: 'bg-blue-100'     },
-  rongeur: { border: 'border-teal-300',     badge: 'text-teal-700',     bg: 'bg-teal-100'     },
-  reptile: { border: 'border-green-300',    badge: 'text-green-700',    bg: 'bg-green-100'    },
-  autre:   { border: 'border-gray-300',     badge: 'text-gray-700',     bg: 'bg-gray-100'     },
-};
 
 async function getPosts(animal?: string, search?: string, pays?: string, gender?: string, race?: string, ageUnit?: string): Promise<AdoptionPost[]> {
   try {
@@ -190,14 +171,7 @@ export default async function AdoptionPage({ searchParams }: Props) {
           <p className="text-gray-600 text-base mt-2">Soyez le premier à déposer une annonce !</p>
         </div>
       ) : (
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            {posts.length} annonce{posts.length !== 1 ? 's' : ''}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {posts.map(post => <AdoptionCard key={post.id} post={post} />)}
-          </div>
-        </div>
+        <AdoptionPostsGrid posts={posts} />
       )}
 
       <AdBanner slot="1148710530" className="mt-12" />
@@ -206,60 +180,3 @@ export default async function AdoptionPage({ searchParams }: Props) {
   );
 }
 
-function AdoptionCard({ post }: { post: AdoptionPost }) {
-  const colors = TYPE_COLOR[post.animal_type] ?? TYPE_COLOR.autre;
-  const typeInfo = ANIMAL_TYPES.find(t => t.id === post.animal_type);
-  const IconComponent = typeInfo?.icon ?? PawPrint;
-  const date = formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: fr });
-
-  return (
-    <Link href={`/adoption/${post.id}`} className={`bg-white rounded-2xl border ${colors.border} shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group focus-within:ring-2 focus-within:ring-orange-300`}>
-      {post.photo_urls?.length > 0 ? (
-        <div className="relative h-48 overflow-hidden bg-gradient-to-br from-orange-100 to-blue-100">
-          <Image
-            src={post.photo_urls[0]}
-            alt={`${typeInfo?.label ?? post.animal_type} à adopter`}
-            fill
-            className="object-cover group-hover:scale-105 transition-smooth"
-            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-          />
-          {post.photo_urls.length > 1 && (
-            <span className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full">
-              +{post.photo_urls.length - 1} photo{post.photo_urls.length > 2 ? 's' : ''}
-            </span>
-          )}
-        </div>
-      ) : null}
-
-      <div className={`${colors.bg} px-4 py-4 flex items-center justify-between border-b ${colors.border}`}>
-        <span className={`text-xs font-semibold uppercase tracking-wider flex items-center gap-2 ${colors.badge}`}>
-          <IconComponent size={16} strokeWidth={1.5} />
-          {typeInfo?.label ?? post.animal_type}
-        </span>
-        <span className="text-xs text-gray-500 font-medium">{date}</span>
-      </div>
-
-      <div className="p-5 flex flex-col gap-4 flex-1">
-        <div className="flex flex-wrap gap-2">
-          {post.breed  && <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full font-medium">{post.breed}</span>}
-          {post.age    && <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full font-medium">{post.age}</span>}
-          {post.gender !== 'inconnu' && <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full font-medium capitalize">{post.gender}</span>}
-        </div>
-
-        <p className="text-sm text-gray-600 flex items-center gap-2 font-medium">
-          <MapPin size={16} strokeWidth={1.5} />
-          <span>{post.region}</span>
-        </p>
-
-        <p className="text-sm text-gray-700 leading-relaxed line-clamp-3 flex-1">
-          {post.description}
-        </p>
-
-        <div className="pt-4 border-t border-gray-200 flex items-center justify-between gap-2">
-          <span className="text-xs text-gray-500">Par <span className="font-medium text-gray-700">{post.poster_name}</span></span>
-          <span className="text-xs font-medium text-orange-600 hover:underline">Voir l'annonce →</span>
-        </div>
-      </div>
-    </Link>
-  );
-}
