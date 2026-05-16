@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
-import BlogCard from '@/components/blog/BlogCard';
+import BlogPostsGrid from '@/components/blog/BlogPostsGrid';
 import { Article } from '@/types';
 import Link from 'next/link';
 import AdBanner from '@/components/ui/AdBanner';
@@ -79,7 +79,6 @@ async function getArticles(category: string, search?: string): Promise<Article[]
 export async function CategoryPageContent({ category, search }: { category: string; search?: string }) {
   const meta = CATEGORY_META[category];
   const articles = await getArticles(category, search);
-  const [featured, ...rest] = articles;
 
   return (
     <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5">
@@ -127,30 +126,13 @@ export async function CategoryPageContent({ category, search }: { category: stri
           <p className="text-gray-600 font-medium text-lg">Les premiers articles arrivent bientôt !</p>
         </div>
       ) : (
-        <>
-          {featured && !search && (
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-xs text-orange-600 font-semibold uppercase tracking-widest">À la une</span>
-              </div>
-              <BlogCard article={featured} featured />
-            </div>
-          )}
-          <div>
-            {(search ? articles : rest).length > 0 && (
-              <>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Articles · {meta.label}
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {(search ? articles : rest).map((article) => (
-                    <BlogCard key={article.id} article={article} />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </>
+        <BlogPostsGrid
+          articles={articles}
+          activeCategory={category}
+          search={search}
+          label={`Articles · ${meta.label}`}
+          showFeatured={!search}
+        />
       )}
 
       <AdBanner slot="1266534148" variant="in-article" className="mt-6" />
