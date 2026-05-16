@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import PublicHeader from './PublicHeader';
+import VetFinderPanel from '@/components/vet/VetFinderPanel';
 import { PARTENAIRES, getFlagUrl } from '@/lib/partenaires';
 import clsx from 'clsx';
 
@@ -131,6 +132,7 @@ export default function LayoutShell({ children, pendingCount = 0 }: { children: 
       <PublicHeader />
       <PartenairesBandeau />
       <main>{children}</main>
+      <VetFinderPanel />
     </>
   );
 }
