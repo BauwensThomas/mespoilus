@@ -17,6 +17,7 @@ const CRON_PATHS: Record<string, string> = {
   'awin-sync-livres':   '/api/cron/awin-sync/livres',
   'awin-sync-general':  '/api/cron/awin-sync/general',
   'cj-sync-canada-pet-care': '/api/cron/cj-sync/canada-pet-care',
+  'adoption-social':         '/api/cron/adoption-social',
 };
 
 export const maxDuration = 120;
