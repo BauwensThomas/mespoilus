@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
-import { Mail, Download, ExternalLink, PawPrint } from 'lucide-react';
+import { Mail, ExternalLink, PawPrint } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Espace presse & partenaires — Mes Poilus',
+  title: 'Espace presse & partenaires | Mes Poilus',
   description: 'Kit presse, description du site et contact pour les journalistes, blogueurs et partenaires souhaitant parler de Mes Poilus.',
   robots: { index: true, follow: true },
 };
@@ -101,7 +101,7 @@ export default async function PressePage() {
                     <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-2 flex-shrink-0" />
                     <div>
                       <span className="font-semibold text-gray-900 text-sm">{title}</span>
-                      <span className="text-gray-500 text-sm"> — {desc}</span>
+                      <span className="text-gray-500 text-sm"> : {desc}</span>
                     </div>
                   </li>
                 ))}
@@ -129,7 +129,7 @@ export default async function PressePage() {
               <h2 className="text-lg font-bold text-gray-900 mb-1">Contact presse</h2>
               <p className="text-gray-500 text-sm mb-4">Pour toute demande de partenariat, article, interview ou collaboration.</p>
               <a
-                href="mailto:contact@mespoilus.com?subject=Demande partenariat / presse — Mes Poilus"
+                href="mailto:contact@mespoilus.com?subject=Demande partenariat / presse Mes Poilus"
                 className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-semibold text-sm transition-colors"
               >
                 <Mail size={16} strokeWidth={1.5} />
