@@ -78,5 +78,17 @@ export async function GET(req: Request) {
     });
   }
 
-  return NextResponse.json({ success: true, deleted, failed, total: posts?.length ?? 0, expiry_days: EXPIRY_DAYS });
+  // Supprimer les alertes adoption non confirmées depuis plus de 7 jours
+  const alertExpiry = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { count: alertsDeleted } = await supabase
+    .from('adoption_alerts')
+    .delete({ count: 'exact' })
+    .eq('confirmed', false)
+    .lte('created_at', alertExpiry);
+
+  if (alertsDeleted && alertsDeleted > 0) {
+    console.log(`[adoption-cleanup] ${alertsDeleted} alerte(s) non confirmée(s) supprimée(s)`);
+  }
+
+  return NextResponse.json({ success: true, deleted, failed, total: posts?.length ?? 0, expiry_days: EXPIRY_DAYS, alerts_cleaned: alertsDeleted ?? 0 });
 }

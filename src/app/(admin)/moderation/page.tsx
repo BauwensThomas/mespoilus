@@ -29,6 +29,47 @@ async function approvePost(id: string) {
     .eq('id', id);
 
   if (post) {
+    // Envoyer les alertes aux abonnés correspondants
+    try {
+      const { data: alerts } = await supabase
+        .from('adoption_alerts')
+        .select('email, confirm_token, animal, country')
+        .eq('confirmed', true);
+
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mespoilus.com';
+      const animalLabels: Record<string, string> = { chien: 'chien', chat: 'chat', oiseau: 'oiseau', rongeur: 'rongeur', reptile: 'reptile' };
+      const animalLabel = animalLabels[post.animal_type as string] ?? (post.animal_type as string);
+
+      for (const alert of (alerts ?? []) as { email: string; confirm_token: string; animal: string; country: string }[]) {
+        const matchAnimal  = alert.animal === 'tous' || alert.animal === (post.animal_type as string);
+        const matchCountry = alert.country === 'tous' || (post.region as string ?? '').includes(alert.country);
+        if (!matchAnimal || !matchCountry) continue;
+
+        const unsubUrl = `${appUrl}/api/adoption/alerts/unsubscribe?token=${alert.confirm_token}`;
+        await sendEmail({
+          to: alert.email,
+          subject: `Nouvelle annonce d'adoption : un ${animalLabel} cherche un foyer`,
+          html: `
+            <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111827">
+              <h2 style="color:#f97316;margin-bottom:8px">Nouvelle annonce d'adoption</h2>
+              <p>Un <strong>${animalLabel}</strong> cherche un foyer${post.region ? ` en <strong>${post.region}</strong>` : ''} !</p>
+              <p style="text-align:center;margin:24px 0">
+                <a href="${appUrl}/adoption" style="background:#f97316;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block">
+                  Voir les annonces
+                </a>
+              </p>
+              <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0">
+              <p style="font-size:11px;color:#9ca3af;text-align:center">
+                <a href="${unsubUrl}" style="color:#9ca3af">Se désinscrire de ces alertes</a>
+              </p>
+            </div>
+          `,
+        }).catch(() => {});
+      }
+    } catch (alertErr) {
+      console.error('[moderation] alerts send error:', alertErr);
+    }
+
     try {
       await sendEmail({
         to: post.email,

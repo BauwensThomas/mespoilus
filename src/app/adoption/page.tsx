@@ -6,6 +6,7 @@ import AdBanner from '@/components/ui/AdBanner';
 import AdoptionSearchBar from '@/components/adoption/AdoptionSearchBar';
 import AdoptionFilters from '@/components/adoption/AdoptionFilters';
 import AdoptionPostsGrid from '@/components/adoption/AdoptionPostsGrid';
+import AdoptionAlertForm from '@/components/adoption/AdoptionAlertForm';
 import { Suspense } from 'react';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart } from 'lucide-react';
 
@@ -88,7 +89,7 @@ async function getAvailableFilters(animal?: string, pays?: string, gender?: stri
 }
 
 interface Props {
-  searchParams: { animal?: string; q?: string; pays?: string; gender?: string; race?: string; age_unit?: string; view?: string };
+  searchParams: { animal?: string; q?: string; pays?: string; gender?: string; race?: string; age_unit?: string; view?: string; alert_ok?: string; alert_off?: string; alert_error?: string };
 }
 
 export default async function AdoptionPage({ searchParams }: Props) {
@@ -172,6 +173,28 @@ export default async function AdoptionPage({ searchParams }: Props) {
         </div>
       ) : (
         <AdoptionPostsGrid posts={posts} view={searchParams.view === 'list' ? 'list' : 'grid'} />
+      )}
+
+      {/* Bouton flottant alertes + modal (fixed, toujours visible) */}
+      <AdoptionAlertForm />
+
+      {/* Banners confirmation / désinscription */}
+      {searchParams.alert_ok && (
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
+          <p className="font-semibold text-green-800">Alerte activée !</p>
+          <p className="text-green-700 text-sm mt-1">Vous recevrez un email à chaque nouvelle annonce correspondant à vos critères.</p>
+        </div>
+      )}
+      {searchParams.alert_off && (
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-center">
+          <p className="font-semibold text-gray-700">Alerte désactivée.</p>
+          <p className="text-gray-500 text-sm mt-1">Vous ne recevrez plus de notifications pour cette alerte.</p>
+        </div>
+      )}
+      {searchParams.alert_error && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
+          <p className="font-semibold text-red-700">Lien invalide ou expiré.</p>
+        </div>
       )}
 
       <AdBanner slot="1148710530" className="mt-12" />
