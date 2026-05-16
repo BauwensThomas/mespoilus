@@ -6,7 +6,7 @@ import { CheckCircle2, XCircle, Activity, MapPin, Scale, Heart } from 'lucide-re
 import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_EMOJI, ANIMAL_GRADIENT, ANIMAL_URL, type Breed } from '@/lib/breeds-list';
 
-export const revalidate = 0;
+export const revalidate = 3600;
 
 interface Props { params: { animal: string; slug: string } }
 
@@ -117,7 +117,6 @@ export default async function BreedPage({ params }: Props) {
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 672px"
-              unoptimized
             />
           ) : (
             <div className={`absolute inset-0 bg-gradient-to-br ${gradient} flex items-center justify-center`}>

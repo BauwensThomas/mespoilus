@@ -7,7 +7,7 @@ import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_EMOJI, ANIMAL_URL } from '@/lib/br
 import BreedsList from '@/components/races/BreedsList';
 import BreedsSearchBar from '@/components/races/BreedsSearchBar';
 
-export const revalidate = 0;
+export const revalidate = 3600;
 
 interface Props {
   params: { animal: string };
