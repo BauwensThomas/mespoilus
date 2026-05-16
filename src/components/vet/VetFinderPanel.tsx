@@ -4,6 +4,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Script from 'next/script';
 import { Stethoscope, X, MapPin, Search, ChevronRight, Star, AlertCircle } from 'lucide-react';
 
+declare global {
+  interface Window { google?: typeof google; }
+}
+
 const RADIUS_OPTIONS = [5, 10, 20, 50] as const;
 
 const ANIMALS = [
@@ -34,7 +38,6 @@ export default function VetFinderPanel() {
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState<string | null>(null);
   const [hasLocation, setHasLocation] = useState(false);
-  const [mapsReady, setMapsReady]     = useState(false);
 
   const mapRef         = useRef<HTMLDivElement>(null);
   const inputRef       = useRef<HTMLInputElement>(null);
@@ -46,40 +49,47 @@ export default function VetFinderPanel() {
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-  // Initialiser carte + autocomplete après ouverture du panel (attend que le SDK soit prêt)
-  const initMap = useCallback(() => {
-    if (!open || !mapsReady || mapInitialized.current) return;
-    if (!mapRef.current || !inputRef.current) return;
+  // Polling : attend que google soit dispo puis initialise carte + autocomplete
+  useEffect(() => {
+    if (!open || mapInitialized.current) return;
 
-    mapInitialized.current = true;
+    const tryInit = () => {
+      if (!window.google?.maps?.places || !mapRef.current || !inputRef.current) return false;
 
-    mapInstance.current = new google.maps.Map(mapRef.current, {
-      center: { lat: 46.8, lng: 2.3 },
-      zoom: 5,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-    });
+      mapInitialized.current = true;
 
-    const ac = new google.maps.places.Autocomplete(inputRef.current, {
-      types: ['address'],
-      fields: ['geometry', 'formatted_address'],
-      componentRestrictions: { country: ['fr', 'be', 'ch', 'lu'] },
-    });
+      mapInstance.current = new google.maps.Map(mapRef.current, {
+        center: { lat: 46.8, lng: 2.3 },
+        zoom: 5,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+      });
 
-    ac.addListener('place_changed', () => {
-      const place = ac.getPlace();
-      if (place.geometry?.location) {
-        locationRef.current = {
-          lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng(),
-        };
-        setHasLocation(true);
-      }
-    });
-  }, [open, mapsReady]);
+      const ac = new google.maps.places.Autocomplete(inputRef.current, {
+        types: ['address'],
+        fields: ['geometry', 'formatted_address'],
+        componentRestrictions: { country: ['fr', 'be', 'ch', 'lu'] },
+      });
 
-  useEffect(() => { initMap(); }, [initMap]);
+      ac.addListener('place_changed', () => {
+        const place = ac.getPlace();
+        if (place.geometry?.location) {
+          locationRef.current = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+          };
+          setHasLocation(true);
+        }
+      });
+
+      return true;
+    };
+
+    if (tryInit()) return;
+    const interval = setInterval(() => { if (tryInit()) clearInterval(interval); }, 300);
+    return () => clearInterval(interval);
+  }, [open]);
 
   const clearOverlays = useCallback(() => {
     markersRef.current.forEach(m => m.setMap(null));
@@ -172,7 +182,7 @@ export default function VetFinderPanel() {
       {apiKey && (
         <Script
           src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly`}
-          onLoad={() => setMapsReady(true)}
+          strategy="afterInteractive"
         />
       )}
 
