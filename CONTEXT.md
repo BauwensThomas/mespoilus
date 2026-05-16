@@ -233,7 +233,8 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 | `/api/cron/adoption-followup` | **Chaque samedi** | 19h00 | - | Email suivi déposant (animal adopté ?) |
 | `/api/cron/adoption-cleanup` | Tous les jours | 3h00 | - | Hard delete annonces ≥60j |
 | `/api/cron/adoption-social` | **Chaque mardi** | 19h00 | Emma | `social_posts` + webhook Make.com - Photo réelle annonce - Abandon si 0 annonces |
-**⚠️ Fiabilité crons Vercel Hobby :** les crons sont tous reconnus (17 au total) mais Vercel Hobby n'a pas de retry. Un cron manqué est silencieux. Pour les crons critiques (blog, social), vérifier régulièrement Vercel Dashboard → Settings → Crons → Last execution.
+| `/api/cron/breeds?batch=10` | **Chaque dimanche** | 7h00 | Haiku | `breeds` (10 races/run, 2 par catégorie interleaved) |
+**⚠️ Fiabilité crons Vercel Hobby :** les crons sont tous reconnus (18 au total) mais Vercel Hobby n'a pas de retry. Un cron manqué est silencieux. Pour les crons critiques (blog, social), vérifier régulièrement Vercel Dashboard → Settings → Crons → Last execution.
 **Protection anti-doublons :**
 - Finance → vérifie si `financial_reports.period` existe déjà pour ce mois → abandon si oui
 - Newsletter → vérifie si une campagne `sent` existe dans les 5 derniers jours → abandon si oui
@@ -429,11 +430,22 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 - Actions toutes cartes : **Modifier** (→ `/moderation/[id]/edit`) / **Supprimer** (confirm() côté client via `DeletePostButton.tsx`)
 - Page edit `/moderation/[id]/edit` : formulaire pré-rempli tous champs + statut, server action redirect
 - Badge sidebar : count `pending` fetchée server-side dans `RootLayout`, passé via props à Sidebar, refresh 60s
+#### Alertes adoption par email ✅
+- Table `adoption_alerts` : `email`, `animal` ('tous'/'chien'/…), `country` ('tous'/'Belgique'/…), `confirmed`, `confirm_token` (UUID, sert aussi de token désinscription)
+- **Double opt-in RGPD** : email confirmation envoyé à l'inscription, alerte active seulement après clic
+- **Bouton flottant** `fixed bottom-6 right-6` sur `/adoption` → modal avec sélecteurs animal + pays
+- Si déjà confirmé pour mêmes critères → message "déjà inscrit" sans écraser
+- **Envoi automatique** à chaque approbation en modération : filtre `animal IN (post.animal_type, 'tous')` + `country === 'tous' OR post.region.includes(alert.country)`, email avec lien désinscription
+- **Désinscription** : lien dans chaque email d'alerte + dans l'email de confirmation → `GET /api/adoption/alerts/unsubscribe?token=xxx` → suppression immédiate
+- **Nettoyage** : inscriptions `confirmed=false` de plus de 7 jours supprimées par le cron `adoption-cleanup` quotidien
+- Section 2.6 ajoutée dans politique de confidentialité
+- Migration : `migration_adoption_alerts.sql`
+
 #### Crons adoption (`vercel.json`)
 | Route | Schedule | Description |
 |-------|----------|-------------|
 | `/api/cron/adoption-followup` | `0 19 * * 6` (samedi 19h) | Annonces approuvées ≥7j → email "animal adopté ?" avec bouton supprimer. Récurrent chaque samedi (`followup_sent_at IS NULL OR <= 6 days ago`) |
-| `/api/cron/adoption-cleanup` | `0 3 * * *` (quotidien 3h) | Annonces approuvées ≥60j → email expiry → hard delete → log `activity_logs` |
+| `/api/cron/adoption-cleanup` | `0 3 * * *` (quotidien 3h) | Annonces approuvées ≥60j → email expiry → hard delete → log `activity_logs`. **+** suppression alertes `confirmed=false` de plus de 7j |
 | `/api/cron/adoption-social` | `0 19 * * 2` (mardi 19h) | Emma publie un post Facebook/Instagram sur les 3 dernières annonces approuvées. **Abandon automatique si aucune annonce.** Bypass `executeAgentTask` → `runAgent` direct pour contrôler l'image (photo réelle de l'annonce, Supabase Storage). Prompt Emma avec type, race, âge, sexe, ville, description, lien annonce individuel + lien global. Un seul webhook Make.com. |
 #### Colonnes Supabase `adoption_posts` ajoutées
 ```sql
@@ -549,12 +561,8 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 - ✅ **SQL Supabase** : faux positifs Maxi Zoo supprimés + colonne `product_type` migrée + Amazon FR tagué `livres`
 - ✅ **Livres Amazon** : ~2 par catégorie animale minimum atteint
 - **Amazon Associates** : générer 3 ventes dans les 180 jours pour valider le compte et débloquer l'API PA
-- **Migration breeds** : exécuter `migration_breeds.sql` dans Supabase Dashboard → puis lancer "Fiches races" depuis CronLauncher (répéter ~12× pour les 120 fiches, max_tokens=2000 depuis correction troncature)
-- **Migration breeds photo_url** : exécuter `migration_breeds_photo.sql` dans Supabase Dashboard (`ALTER TABLE breeds ADD COLUMN IF NOT EXISTS photo_url TEXT;`)
-
-### Features à implémenter (backlog)
-- **Alertes adoption par email** : abonnement "chien, Belgique" → email auto quand annonce approuvée correspondante
-- **Commentaires articles** : commentaires simples (prénom + texte, modération admin) via Supabase
+- **120 races générées + photos ajoutées** ✅ — 70 nouvelles races en DB à partir du 25 mai 2026 (cron breeds bloqué avant cette date)
+- ✅ **Migration article_comments** : exécutée dans Supabase Dashboard
 
 ### Actions déjà effectuées ✅
 - Site public (blog, adoption, boutique, pages légales) : **thème clair complet** ✅
@@ -636,17 +644,19 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 - Boutique : hint recherche "Vous ne trouvez pas…" à côté du sélecteur de tri quand aucune recherche active ✅
 - Colonne `in_stock` supprimée de `products` (table + type + sync + boutique + dashboard) — feeds Awin non fiables pour le stock ✅
 - Migration exécutée : `migration_drop_in_stock.sql` (DROP COLUMN CASCADE + nouvelle RLS `USING (true)`) ✅
-- **Feature "Fiches races"** : pages `/races`, `/races/[animal]`, `/races/[animal]/[slug]`, cron Haiku génération 120 races, table `breeds` Supabase ✅
+- **Commentaires articles blog** ✅ : formulaire (prénom + texte, max 1000 chars) sur `/blog/[slug]`, table `article_comments` (status: pending/approved/rejected), API `POST /api/comments/submit` (rate-limit 5/h), section commentaires approuvés affichée au-dessus du formulaire, modération via **`/gestion-blog`** (approuver/rejeter), migration `migration_article_comments.sql` ✅ exécutée
+- **Feature "Fiches races"** : pages `/races`, `/races/[animal]`, `/races/[animal]/[slug]`, cron Haiku génération breeds, table `breeds` Supabase ✅
   - `/races` : 5 catégories en cartes portrait avec photos `hero_photos` + fallback gradient
-  - `/races/[animal]` : grille 5 colonnes, barre de recherche (`?q=`), bannière orange standard, toggle liste/grille, **photos individuelles par race** depuis `breeds.photo_url` (affiche "NO IMAGE" si absent)
-  - `/races/[animal]/[slug]` : photo depuis `breed.photo_url` (plus de `hero_photos`), bannière orange standard, container `max-w-4xl`, stats + caractère + convient_pour + description + soins
-  - Cron `/api/cron/breeds` : Haiku 4.5, max_tokens=2000 (fix troncature JSON), batch 10, upsert `animal,slug`, nettoyage JSON robuste
-  - `BREEDS_SEED` : 50 chiens, 30 chats, 15 oiseaux, 15 rongeurs, 10 reptiles
+  - `/races/[animal]` : grille **6 colonnes** (`lg:grid-cols-6`), barre de recherche (`?q=`), bannière orange standard, toggle liste/grille, **photos individuelles par race** depuis `breeds.photo_url` (affiche "NO IMAGE" si absent), **`revalidate = 3600`**, images **sans `unoptimized`** (WebP + cache CDN Vercel)
+  - `/races/[animal]/[slug]` : photo depuis `breed.photo_url` (plus de `hero_photos`), photo `aspect-[3/4] max-w-xs` centrée, bannière orange, container `max-w-4xl`, stats + caractère + convient_pour + description (3 paragraphes) + soins, **`revalidate = 3600`**
+  - Cron `/api/cron/breeds` : Haiku 4.5, max_tokens=4096, **1×/semaine dimanche 7h UTC**, batch 10, upsert `animal,slug`, nettoyage JSON robuste + repair, logs JSON complets sur erreur parse
+  - **`BREEDS_SEED` : 190 races** (80 chiens, 45 chats, 25 oiseaux, 23 rongeurs, 17 reptiles) — nouvelles races ordonnées **2 par catégorie par semaine** (interleaved)
   - Toggle grille/liste via `?view=list` URL param (composant `ViewToggle.tsx` partagé)
-  - **Colonne `photo_url TEXT`** sur `breeds` : migration `migration_breeds_photo.sql` à exécuter
-  - **Page admin `/gestion-races`** : liste toutes les races publiées (tous animaux), filtre par onglet, carte rouge si pas de photo, bouton "Ajouter photo" (rouge) ou "Modifier" (orange), champ URL + preview, sauvegarde via `PATCH /api/admin/breeds`
-  - **Badge rouge sidebar** : nombre de races sans photo, fetchée depuis `/api/admin/breeds-no-photo-count`
+  - **Colonne `photo_url TEXT`** sur `breeds` : migration `migration_breeds_photo.sql` ✅ exécutée
+  - **Page admin `/gestion-races`** : liste toutes les races publiées (tous animaux), filtre par onglet, carte rouge si pas de photo, upload fichier (FileReader base64 preview) ou URL (téléchargée vers Supabase Storage), delete photo, sauvegarde via `PATCH /api/admin/breeds`, dispatch `breed-photo-updated`
+  - **Badge rouge sidebar** : nombre de races sans photo, `breeds-no-photo-count` API (`force-dynamic`), refresh au mount + 60s + event `breed-photo-updated`
   - `/gestion-races` protégé : ajouté dans `ADMIN_PAGE_PREFIXES` (middleware) et `ADMIN_PREFIXES` (LayoutShell)
+  - **"Bulldog Français" → "Bouledogue Français"** (breeds-list.ts + DB)
 - **Toggle grille/liste unifié** (`ViewToggle.tsx`) : composant client partagé, même couleur orange-600 sur adoption/boutique/races, placé à droite de la barre de recherche via `justify-between` ✅
 - **Boutique** : texte "Vous ne trouvez pas..." déplacé à côté du tri, `ViewToggle` en `ml-auto` tout à droite ✅
 - **Homepage outils** : 5ème carte "Fiches races" ajoutée, grille `lg:grid-cols-5` (5 cartes sur même ligne) ✅
@@ -748,6 +758,17 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 - **Fiches races** (`/races`) : 120 races seed (50 chiens, 30 chats, 15 oiseaux, 15 rongeurs, 10 reptiles) - Cron quotidien 6h UTC - Génération Haiku 10/run - Pages `/races`, `/races/[animal]`, `/races/[animal]/[slug]` - JSON-LD breed - Sitemap - "Races" dans nav header ✅
 - **Pages légales auditées et corrigées (mai 2026)** : données annonces adoption mises à jour (email + téléphone privés, non publics), durée conservation adoption 60 jours, section 2.5 guides PDF ajoutée dans politique-confidentialite, affiliés listés précisément (Amazon FR Associates, Awin, CJ.com/CanadaPetCare), mention Amazon Associates ajoutée dans CGU ✅
 - **getMerchants fix** : requête Amazon FR séparée (limit 1) + marchands Awin (limit 100000) — évite le plafond 10 000 lignes qui cachait Amazon FR dans les filtres admin ✅
+- **Sidebar admin renommée** : "Modération" → "Adoption", "Blog" → `/gestion-blog` (page réelle de modération commentaires) ✅
+- **Page admin `/gestion-blog`** : 3 sections (en attente / approuvés / rejetés), badge rouge dans sidebar (via `/api/admin/pending-count` enrichi avec `commentCount`), lien cliquable vers l'article, approve/reject server actions ✅
+- **Middleware** : `/moderation`, `/produits`, `/gestion-blog` ajoutés aux routes protégées ✅
+- **Design admin unifié** : toutes les pages admin (guides, fiches races, produits affiliés, blog, adoption) utilisent `px-8 py-8 space-y-6 animate-fade-in` + header `text-3xl font-bold tracking-tight` sans icône ✅
+- **Onglets catégorie guides admin** : filtre Tous/Chiens/Chats/Oiseaux/Rongeurs/Reptiles avec compteur par catégorie ✅
+- **Fiches races** : emojis retirés des onglets de filtre ✅
+- **Largeur `max-w-6xl` harmonisée** sur : articles blog (`/blog/[slug]`), fiches races (`/races/[animal]/[slug]`), pages légales (mentions légales, politique de confidentialité, CGU, cookies) — même largeur que les outils ✅
+- **RGPD commentaires** : section 2.7 ajoutée dans politique de confidentialité (prénom + texte, pas d'email, modération, suppression sur demande) + base légale + conservation ✅
+- **Page `/presse`** : kit presse complet (description longue + courte à copier-coller, stats dynamiques Supabase, thématiques, logo/couleurs, contact mailto, liens réseaux) — lien dans footer section Légal ✅
+- **Sidebar admin** : Accueil et Boutique encadrés en bleu clair (`border-blue-200 bg-blue-50`) pour indiquer qu'ils renvoient vers le site public ✅
+- **RGPD contact email** : section 2.8 ajoutée dans politique de confidentialité (presse, partenariats, questions — email utilisé uniquement pour répondre, non stocké en DB) ✅
 - **maxDuration = 60** : ajouté sur toutes les routes cron manquantes (7× awin-sync, blog, social) — évite timeout 10s Vercel Hobby par défaut ✅
 - **Vercel crons** : 13 crons tous actifs et reconnus par Vercel Hobby ✅
 - **Awin mots-clés livres** : `'poche'`, `'broché'`, `'relié'` retirés (causaient "lampe de poche" → livres) ✅
