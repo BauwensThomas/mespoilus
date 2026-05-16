@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AGENTS } from '@/lib/agents/config';
 import { logout } from '@/app/actions/auth';
-import { Zap, Target, Shield, BookOpen, ShoppingBag, PawPrint, LogOut, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Mail, Home, ChevronLeft, Menu, FileText } from 'lucide-react';
+import { Zap, Target, Shield, BookOpen, ShoppingBag, PawPrint, LogOut, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Mail, Home, ChevronLeft, Menu, FileText, ClipboardList } from 'lucide-react';
 import clsx from 'clsx';
 
 function getAgentIcon(iconId: string) {
@@ -30,8 +30,9 @@ const navItems = [
   { href: '/moderation',  label: 'Modération', icon: Shield },
   { href: '/blog',        label: 'Blog',       icon: BookOpen },
   { href: '/boutique',    label: 'Boutique',   icon: ShoppingBag },
-  { href: '/produits',      label: 'Produits affiliés', icon: ShoppingBag },
-  { href: '/guides-admin', label: 'Guides PDF',        icon: FileText },
+  { href: '/produits',    label: 'Produits affiliés', icon: ShoppingBag },
+  { href: '/gestion-races', label: 'Fiches races', icon: ClipboardList },
+  { href: '/guides-admin', label: 'Guides PDF',       icon: FileText },
 ];
 
 interface SidebarProps {
@@ -43,6 +44,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: SidebarProps) {
   const pathname = usePathname();
   const [pendingCount, setPendingCount] = useState(initialPendingCount);
+  const [noPhotoCount, setNoPhotoCount] = useState(0);
 
   useEffect(() => {
     const refresh = () =>
@@ -53,6 +55,13 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
 
     const interval = setInterval(refresh, 60_000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/admin/breeds-no-photo-count')
+      .then(r => r.json())
+      .then(d => setNoPhotoCount(d.count ?? 0))
+      .catch(() => {});
   }, []);
 
   return (
@@ -113,6 +122,11 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
                 {isMod && pendingCount > 0 && (
                   <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-600 text-white min-w-[18px] text-center">
                     {pendingCount > 99 ? '99+' : pendingCount}
+                  </span>
+                )}
+                {href === '/gestion-races' && noPhotoCount > 0 && (
+                  <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white min-w-[18px] text-center">
+                    {noPhotoCount > 99 ? '99+' : noPhotoCount}
                   </span>
                 )}
               </Link>

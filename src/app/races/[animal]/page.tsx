@@ -23,19 +23,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-async function getAnimalPhotos(animalType: string): Promise<string[]> {
-  try {
-    const supabase = createAdminClient();
-    const { data } = await supabase
-      .from('hero_photos')
-      .select('url')
-      .eq('active', true)
-      .in('animal_type', [animalType, `${animalType}s`])
-      .limit(12);
-    return data?.map(r => r.url) ?? [];
-  } catch { return []; }
-}
-
 export default async function AnimalRacesPage({ params, searchParams }: Props) {
   const animalType = ANIMAL_URL_MAP[params.animal];
   if (!animalType) notFound();
@@ -45,7 +32,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
 
   let query = supabase
     .from('breeds')
-    .select('name, slug, content')
+    .select('name, slug, content, photo_url')
     .eq('animal', animalType)
     .eq('status', 'published')
     .not('content', 'is', null)
@@ -53,7 +40,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
 
   if (q) query = query.ilike('name', `%${q}%`);
 
-  const [{ data: breeds }, { count: total }, photos] = await Promise.all([
+  const [{ data: breeds }, { count: total }] = await Promise.all([
     query,
     supabase
       .from('breeds')
@@ -61,7 +48,6 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
       .eq('animal', animalType)
       .eq('status', 'published')
       .not('content', 'is', null),
-    getAnimalPhotos(animalType),
   ]);
 
   const totalCount = total ?? 0;
@@ -104,7 +90,6 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
         <BreedsList
           breeds={breeds ?? []}
           animalUrl={ANIMAL_URL[animalType]}
-          photos={photos}
           search={q || undefined}
           view={searchParams.view === 'list' ? 'list' : 'grid'}
         />
