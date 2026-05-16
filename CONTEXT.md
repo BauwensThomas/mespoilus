@@ -659,7 +659,7 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
   - **"Bulldog Français" → "Bouledogue Français"** (breeds-list.ts + DB)
 - **Toggle grille/liste unifié** (`ViewToggle.tsx`) : composant client partagé, même couleur orange-600 sur adoption/boutique/races, placé à droite de la barre de recherche via `justify-between` ✅
 - **Boutique** : texte "Vous ne trouvez pas..." déplacé à côté du tri, `ViewToggle` en `ml-auto` tout à droite ✅
-- **Homepage outils** : 5ème carte "Fiches races" ajoutée, grille `lg:grid-cols-5` (5 cartes sur même ligne) ✅
+- **Homepage outils** : 6 outils en grille 2 colonnes `grid-cols-1 sm:grid-cols-2`, 3 lignes, cartes horizontales fines (`p-4 flex items-center gap-4`), meme largeur que les autres sections (`px-6 / max-w-6xl mx-auto`) ✅
 - Tirets longs (—) retirés des textes visibles sur toutes les pages publiques ✅
 - Awin GPC_MAP livres élargi : roman, BD, manga, littérature, jeunesse, encyclopédie, biographie, poche, broché, relié ✅
 - Awin devise : fallback sur colonnes `currency`/`currency_code` du CSV si absente du champ `price` ✅
@@ -716,8 +716,9 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 - **Badge modération** : pastille orange sur "Modération" avec compteur annonces pending (API `/api/admin/pending-count`, refresh 60s) ✅
 - **Sidebar "Accueil"** : lien Home ajouté en premier dans la nav admin ✅
 - **Typographie admin agrandie** : text-[9px]/text-[10px]/text-[11px] éliminés, textes lisibles text-sm/text-base partout (dashboard, agents, modération, sidebar) ✅
-- **Outils publics** : 4 outils accessibles via dropdown "Outils" dans le header public ✅
+- **Outils publics** : 5 outils + guides accessibles via dropdown "Outils" dans le header public ✅
   - Calculateur d'âge (`/outils/age`) : **5 catégories site** (chien, chat, oiseau, rongeur, reptile) - Formules spécifiques par animal, slider, résultat gradient orange, `max-w-6xl`
+  - Ration journalière (`/outils/nutrition`) : calculateur RER/MER vétérinaire — chien/chat, poids, stade (chiot/adulte/senior), stérilisation, activité (sédentaire/normal/actif), type alimentation (croquettes/pâtée/mixte 50-50), kcal/100g éditables, `max-w-6xl` ✅
   - Quiz "Quel animal pour moi ?" (`/outils/quiz`) : 6 questions, 5 animaux scorés, progression automatique 300ms, résultat avec conseils, `max-w-6xl`
   - Générateur de prénom (`/outils/prenom`) : 5 animaux × 4 styles - Tirage aléatoire de 6, grille 3 cols, **connecté à la table Supabase `prenoms`** (fallback statique si vide), badge "Mis à jour ce mois-ci" si données DB actives
   - Guides PDF gratuits (`/guides`) : page liste avec modal email + download sécurisé, `max-w-6xl`
@@ -729,7 +730,7 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
   - Mobile menu : dropdown absolu avec tous les NAV_LINKS + section Outils repliable (useState `toolsOpen`)
   - `PartenairesBandeau` : `hidden md:flex` (masqué sur mobile)
   - Boutique : `whitespace-nowrap` (toujours visible)
-- **Homepage "Nos outils pour vous aider"** : section avec 4 cards (Calculateur d'âge, Quiz, Générateur prénom, Guides PDF), `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` ✅
+- **Homepage "Outils pratiques"** : 6 cartes (Ration journalière, Calculateur d'âge, Quiz, Générateur prénom, Guides PDF, Fiches races), grille `grid-cols-1 sm:grid-cols-2` (3 lignes × 2 colonnes), cartes horizontales `p-4 flex items-center gap-4`, ChevronRight avec opacité hover ✅
 - **Homepage "Des animaux cherchent un foyer"** (`AdoptionPreviewSection.tsx`) : section entre Outils et Partenaires, `max-w-6xl` (même largeur que "Par type d'animal"), 5 cards 1 par catégorie (chien/chat/oiseau/rongeur/reptile), 1 aléatoire parmi 10 derniers, `unstable_noStore()` pour variété à chaque chargement, âge et ville en `text-gray-900`. **Centrage automatique** : `flex flex-wrap justify-center gap-4` + largeur fixe `w-full sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] xl:w-52` → cards centrées si moins de 5 catégories disponibles ✅
 - **Homepage headers centrés** : "Nos derniers conseils", "Nos recommandations", "PartenairesSection" tous centrés (`text-center mb-12`) ✅
 - **Hero/footer** : reptiles ajoutés dans le texte hero et navigation footer ✅
@@ -783,7 +784,6 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 ---
 ## Ce qui reste à faire (code)
 ### Outils publics (`/outils/`)
-- **Outil nutrition** chien/chat : calculateur de ration quotidienne selon poids/âge/activité
 - **Comparateur croquettes** : comparer 2-3 marques sur critères (protéines, prix/kg, note)
 - **Suivi vaccination** : calendrier des vaccins par animal + rappels
 ### Boutique / Monétisation
