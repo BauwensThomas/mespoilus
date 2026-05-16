@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { PawPrint, ChevronDown, Calculator, HelpCircle, Sparkles, BookOpen, Menu, X } from 'lucide-react';
+import { PawPrint, ChevronDown, Calculator, HelpCircle, Sparkles, BookOpen, Menu, X, UtensilsCrossed } from 'lucide-react';
 
 const NAV_LINKS = [
   { href: '/blog',        label: 'Blog'       },
@@ -14,10 +14,11 @@ const NAV_LINKS = [
 ];
 
 const TOOLS = [
-  { href: '/outils/age',    label: 'Calculateur d\'âge',      desc: 'Animal ↔ humain',          icon: Calculator },
-  { href: '/outils/quiz',   label: 'Quel animal pour moi ?',  desc: 'Quiz en 6 questions',       icon: HelpCircle },
-  { href: '/outils/prenom', label: 'Générateur de prénom',    desc: 'Trouvez le prénom parfait', icon: Sparkles   },
-  { href: '/guides',        label: 'Guides PDF gratuits',     desc: 'Checklists & guides pratiques', icon: BookOpen },
+  { href: '/outils/age',       label: 'Calculateur d\'âge',      desc: 'Animal ↔ humain',             icon: Calculator       },
+  { href: '/outils/nutrition', label: 'Ration journalière',       desc: 'Croquettes & pâtée',          icon: UtensilsCrossed  },
+  { href: '/outils/quiz',      label: 'Quel animal pour moi ?',   desc: 'Quiz en 6 questions',         icon: HelpCircle       },
+  { href: '/outils/prenom',    label: 'Générateur de prénom',     desc: 'Trouvez le prénom parfait',   icon: Sparkles         },
+  { href: '/guides',           label: 'Guides PDF gratuits',      desc: 'Checklists & guides pratiques', icon: BookOpen       },
 ];
 
 export default function PublicHeader() {
