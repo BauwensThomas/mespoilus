@@ -109,7 +109,7 @@ export default async function BreedPage({ params }: Props) {
       <div className="max-w-4xl mx-auto space-y-4">
 
         {/* Photo centrée */}
-        <div className="max-w-xs mx-auto relative aspect-[4/3] rounded-2xl overflow-hidden">
+        <div className="max-w-xs mx-auto relative aspect-[3/4] rounded-2xl overflow-hidden">
           {photo ? (
             <Image
               src={photo}
