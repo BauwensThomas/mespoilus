@@ -377,14 +377,14 @@ export default async function LandingPage() {
               <Link
                 key={href}
                 href={href}
-                className={`${color} border ${border} rounded-2xl p-6 hover:shadow-md transition-all group`}
+                className={`${color} border ${border} rounded-2xl p-6 hover:shadow-md transition-all group flex flex-col`}
               >
                 <div className={`w-12 h-12 rounded-xl bg-white border ${border} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                   <Icon size={24} strokeWidth={1.5} className={iconColor} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{desc}</p>
-                <span className={`inline-flex items-center gap-1 mt-4 text-sm font-semibold ${iconColor}`}>
+                <p className="text-sm text-gray-600 leading-relaxed flex-1">{desc}</p>
+                <span className={`inline-flex items-center gap-1 mt-auto pt-4 text-sm font-semibold ${iconColor}`}>
                   Essayer <ChevronRight size={14} />
                 </span>
               </Link>
