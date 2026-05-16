@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard, Rocket, CheckCircle2, XCircle, Clock, BookOpen, Mail, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard, Rocket, CheckCircle2, XCircle, Clock, BookOpen, Mail, Sparkles, Heart, ChevronDown, ChevronUp } from 'lucide-react';
 import clsx from 'clsx';
 
 const ANIMALS = [
@@ -105,6 +105,15 @@ const CRONS: CronConfig[] = [
     color: 'text-orange-500',
     borderColor: 'border-orange-400/30',
     steps: [{ key: 'prenoms', label: 'Génération prénoms (Thomas × 5 animaux)' }],
+  },
+  {
+    id: 'adoption-social',
+    label: 'Adoption — Réseaux',
+    description: 'Emma publie un post sur les dernières annonces d\'adoption',
+    icon: Heart,
+    color: 'text-rose-500',
+    borderColor: 'border-rose-400/30',
+    steps: [{ key: 'adoption-social', label: 'Post adoption (Emma → Facebook + Instagram)' }],
   },
 ];
 
@@ -271,7 +280,7 @@ function useAwinSync() {
 
 function AwinPanel() {
   const { progress, launchCategory, launchAll, resetCategory, totalSynced, anyRunning, allDone } = useAwinSync();
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const doneCount = AWIN_CATEGORIES.filter(c => progress[c.key].status === 'done').length;
   const errorCount = AWIN_CATEGORIES.filter(c => progress[c.key].status === 'error').length;
