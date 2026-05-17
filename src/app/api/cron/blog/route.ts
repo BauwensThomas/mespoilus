@@ -387,7 +387,7 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       chien: 'chiens', chat: 'chats', oiseau: 'oiseaux', rongeur: 'rongeurs', reptile: 'reptiles',
     };
     const breedPageSection = selectedBreed
-      ? `LIEN OBLIGATOIRE : tu dois inclure ce lien vers la fiche race EXACTEMENT tel quel dans l'article :\n[Découvrez notre fiche complète sur le ${selectedBreed.name}](https://mespoilus.com/races/${animalPlural[selectedBreed.animal] ?? selectedBreed.animal + 's'}/${selectedBreed.slug})\n`
+      ? `LIEN OBLIGATOIRE : tu dois inclure ce lien vers la fiche race EXACTEMENT tel quel dans l'article :\n[Découvrez notre fiche complète sur le ${selectedBreed.name}](https://www.mespoilus.com/races/${animalPlural[selectedBreed.animal] ?? selectedBreed.animal + 's'}/${selectedBreed.slug})\n`
       : '';
 
     const mariePrompt = `Écris un article de blog sur : ${sujet}
