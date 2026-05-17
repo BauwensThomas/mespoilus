@@ -11,6 +11,8 @@ import AdBanner from '@/components/ui/AdBanner';
 import CommentForm from '@/components/blog/CommentForm';
 import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 interface Props {
   params: { slug: string };
 }

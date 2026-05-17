@@ -44,7 +44,7 @@ export async function GET(req: Request) {
       p.gender && p.gender !== 'inconnu' ? `   Sexe : ${p.gender}` : null,
       p.region ? `   Ville : ${p.region}` : null,
       p.description ? `   Description : ${p.description.slice(0, 150)}` : null,
-      `   Lien : https://mespoilus.com/adoption/${p.id}`,
+      `   Lien : https://www.mespoilus.com/adoption/${p.id}`,
     ].filter(Boolean);
     return lines.join('\n');
   }).join('\n\n');
@@ -62,7 +62,7 @@ ${fiches}
 Consignes :
 - Mentionne chaque animal avec ses vraies informations (type, race, ville)
 - Donne envie d'adopter ou de partager l'annonce
-- Inclure le lien vers chaque annonce ET ce lien global à la fin : https://mespoilus.com/adoption
+- Inclure le lien vers chaque annonce ET ce lien global à la fin : https://www.mespoilus.com/adoption
 - Ajoute des hashtags pertinents`;
 
   let emmaContent = '';

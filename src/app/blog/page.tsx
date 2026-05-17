@@ -83,7 +83,7 @@ export default async function BlogPage({ searchParams }: Props) {
   return (
     <>
       <Head>
-        <link rel="canonical" href="https://mespoilus.com/blog" />
+        <link rel="canonical" href="https://www.mespoilus.com/blog" />
       </Head>
       <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5">
       {/* Header */}
