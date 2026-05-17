@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     : process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
 
   const VALID_ANIMALS = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
-  const VALID_TYPES = ['trending', 'affiliation', 'pratique', 'race'];
+  const VALID_TYPES = ['trending', 'affiliation', 'pratique', 'race', 'best_of'];
   const params = new URLSearchParams();
   if (step === 'blog' && auto === 'true') params.set('auto', 'true');
   else if (step === 'blog' && animal && VALID_ANIMALS.includes(animal)) params.set('animal', animal);
