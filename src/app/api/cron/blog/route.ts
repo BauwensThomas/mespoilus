@@ -218,6 +218,7 @@ export async function GET(req: Request) {
           .from('breeds')
           .select('name, slug, animal, photo_url')
           .not('photo_url', 'is', null)
+          .not('content', 'is', null)
           .eq('status', 'published')
           .eq('animal', breedAnimal)
           .limit(200);
@@ -376,7 +377,7 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       .join('\n');
     const produitSection = nomProduit && lienAffilie
       ? `\nPRODUIT / PARTENAIRE PRINCIPAL À METTRE EN AVANT :\n- Nom : ${nomProduit}\n- Lien affilié (utilise ce lien EXACT dans le texte, ne l'invente pas) : ${lienAffilie}\n  Ex. dans le texte : [${nomProduit}](${lienAffilie})\n`
-      : `\nIntègre naturellement 1-2 recommandations de produits dans le texte avec leurs liens :\n${productsStr}\nSi aucun lien n'est disponible, renvoie vers mespoilus.com/boutique\n`;
+      : `\nIntègre naturellement 1-2 recommandations de produits dans le texte avec leurs liens :\n${productsStr}\nSi aucun lien n'est disponible, renvoie vers www.mespoilus.com/boutique\n`;
     const contextLines = [
       forcedType !== 'affiliation' ? `Saison : ${season}` : '',
       intention ? `Ce que cherche le lecteur : ${intention}` : '',
@@ -387,7 +388,7 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       chien: 'chiens', chat: 'chats', oiseau: 'oiseaux', rongeur: 'rongeurs', reptile: 'reptiles',
     };
     const breedPageSection = selectedBreed
-      ? `LIEN OBLIGATOIRE : tu dois inclure ce lien vers la fiche race EXACTEMENT tel quel dans l'article :\n[Découvrez notre fiche complète sur le ${selectedBreed.name}](https://mespoilus.com/races/${animalPlural[selectedBreed.animal] ?? selectedBreed.animal + 's'}/${selectedBreed.slug})\n`
+      ? `LIEN OBLIGATOIRE : tu dois inclure ce lien vers la fiche race EXACTEMENT tel quel dans l'article :\n[Découvrez notre fiche complète sur le ${selectedBreed.name}](https://www.mespoilus.com/races/${animalPlural[selectedBreed.animal] ?? selectedBreed.animal + 's'}/${selectedBreed.slug})\n`
       : '';
 
     const mariePrompt = `Écris un article de blog sur : ${sujet}
@@ -395,17 +396,17 @@ Animal concerné : ${animal}${selectedBreed ? `\nRace concernée : ${selectedBre
 Mots-clés SEO à intégrer naturellement : ${motsCles.join(', ')}
 ${contextLines ? `\nContexte :\n${contextLines}\n` : ''}${metaDesc ? `Meta description cible (155 chars max) : ${metaDesc}\n` : ''}
 ${produitSection}
-${breedPageSection}${relatedArticles.length ? `Articles récents ${animal} -intègre 1-2 liens internes si pertinent :\n${relatedArticles.map(a => `- [${a.title}](https://mespoilus.com/blog/${a.slug})`).join('\n')}\n` : ''}
+${breedPageSection}${relatedArticles.length ? `Articles récents ${animal} -intègre 1-2 liens internes si pertinent :\n${relatedArticles.map(a => `- [${a.title}](https://www.mespoilus.com/blog/${a.slug})`).join('\n')}\n` : ''}
 STRUCTURE OBLIGATOIRE :
 1. Introduction accrocheuse (2-3 phrases qui parlent directement au propriétaire)
 2. 3 à 4 sections avec titres H2 clairs et informatifs
-3. Conclusion avec un appel à l'action vers mespoilus.com/boutique ou mespoilus.com/adoption selon le sujet
+3. Conclusion avec un appel à l'action vers www.mespoilus.com/boutique ou www.mespoilus.com/adoption selon le sujet
 
 CONSIGNES :
 - Entre 550 et 700 mots au total
 - Ton chaleureux, bienveillant, comme un ami expert
 - Public : propriétaires francophones (Belgique, France, Suisse, Canada)
-- Intègre au moins un lien interne : [notre boutique](https://mespoilus.com/boutique) ou [nos annonces d'adoption](https://mespoilus.com/adoption)
+- Intègre au moins un lien interne : [notre boutique](https://www.www.mespoilus.com/boutique) ou [nos annonces d'adoption](https://www.www.mespoilus.com/adoption)
 - Ne jamais inventer de faits médicaux ou vétérinaires sans nuance`;
 
     const marieResult = await executeAgentTask('marie', mariePrompt);

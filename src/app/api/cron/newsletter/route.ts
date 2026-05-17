@@ -62,7 +62,7 @@ export async function GET(req: Request) {
 
   const articlesStr = articles
     .map((a: { title: string; slug: string; excerpt: string | null }) =>
-      `- ${a.title}\n  Lien : https://mespoilus.com/blog/${a.slug}\n  Résumé : ${a.excerpt ?? ''}`
+      `- ${a.title}\n  Lien : https://www.mespoilus.com/blog/${a.slug}\n  Résumé : ${a.excerpt ?? ''}`
     )
     .join('\n\n');
 

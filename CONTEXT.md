@@ -186,23 +186,26 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 - **Sofia** : 3 derniers articles publiés (titre, lien, résumé) + année en cours → génère newsletter sans saisie manuelle
 - Utilisé dans orchestration, délégation, et crons finance/security
 ### Blog automatique - Pipeline complet
-#### Cron 1 : `/api/cron/blog` (Lun/Mer/Ven 9h UTC)
-1. **Thomas** prépare le contexte (animal par rotation, saison, mois, produits Supabase, 3 articles récents même catégorie)
-   - **Rotation animaux** : `ANIMAL_CATEGORIES[(semaine_ISO * 3 + jourIndex) % 5]` - 3 animaux différents par semaine. Lundi=0, Mercredi=1, Vendredi=2.
-   - **Override manuel** : `?animal=chiens` via le sélecteur CronLauncher
+#### Cron 1 : `/api/cron/blog?auto=true` (Lun/Mer/Ven 9h UTC)
+1. **Thomas** prépare le contexte (animal, saison, mois, produits Supabase, 3 articles récents même catégorie)
+   - **Sélection animal** : `?auto=true` → `selectLeastUsedCategory()` choisit toujours la catégorie avec le moins d'articles publiés (chiens/chats/oiseaux/rongeurs/reptiles)
+   - **Override manuel** : `?animal=chiens` via le sélecteur CronLauncher (désactive auto)
 2. **Lucas** choisit le sujet selon le **type d'article** (rotation forcée ou override manuel) :
-   - **Rotation type** : `(semaine*3+jourIndex) % 3` → trending → affiliation → pratique → ...
+   - **Rotation type** : `(semaine*3+jourIndex) % 4` → trending → affiliation → pratique → **race** → ...
    - **trending** : sujet activement recherché sur Google (hors saisonniers génériques)
    - **affiliation** : article centré sur un partenaire ou produit Awin avec lien affilié exact ; anti-répétition 30 articles via colonne `featured_partner`
    - **pratique** : guide concret et actionnable ; fallback si affiliation impossible (tous bloqués + aucun produit dispo)
-   - Retourne : SUJET, MOTS_CLES, INTENTION, RAISON, NOM_PRODUIT, LIEN_AFFILIE, IMAGE_PRODUIT, META_DESC
+   - **race** : Lucas reçoit la liste de toutes les races de l'animal (avec photo + contenu, non couvertes en priorité, couvertes en fallback) → choisit la race avec le meilleur potentiel SEO → retourne `RACE_SLUG`
+   - Retourne : SUJET, RACE_SLUG, MOTS_CLES, INTENTION, RAISON, NOM_PRODUIT, LIEN_AFFILIE, IMAGE_PRODUIT, META_DESC
 3. **Marie** rédige l'article (Haiku 4.5, **1400 tokens**, **550-700 mots**, ~12s) → sauvegardé dans Supabase
    - Reçoit : sujet + mots-clés + intention + raison + meta description cible + 3 articles récents pour liens internes
-   - Saison injectée uniquement pour trending et pratique (pas pour affiliation → évite "printemps printemps")
+   - Si type `race` : reçoit aussi lien obligatoire vers `https://www.mespoilus.com/races/[animal]/[slug]`
+   - Saison injectée uniquement pour trending et pratique (pas pour affiliation ni race)
    - Temps de lecture recalculé dynamiquement après génération (`wordCount ÷ 250`, min 1)
-4. **Image** : image produit Awin (téléchargée → Supabase Storage) si affiliation, sinon Pexels → `blog-images`
-5. Résultat écrit dans `cron_state` (slug, title, excerpt) avec status `article_ready`
-6. **Stats Thomas** : tokens = somme Lucas + Marie
+4. **Image** : type `race` → `photo_url` de la race depuis Supabase directement ; affiliation → image produit Awin (téléchargée Storage) ; sinon → Pexels → `blog-images`
+5. **breed_slug** stocké dans `articles` si type race (colonne `breed_slug` - migration `migration_article_breed.sql`)
+6. Résultat écrit dans `cron_state` (slug, title, excerpt) avec status `article_ready`
+7. **Stats Thomas** : tokens = somme Lucas + Marie
 #### Cron 2 : `/api/cron/social` (Lun/Mer/Ven 9h30 UTC)
 1. Lit `cron_state` pour trouver l'article prêt
 2. **Emma** rédige un post Facebook avec le lien EXACT `https://mespoilus.com/blog/[slug]`
@@ -241,7 +244,7 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 ### CronLauncher - Pipelines manuels (Dashboard)
 Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de sync boutique :
 - **Sélecteur animal** : forcer un animal spécifique (chiens, chats, oiseaux, rongeurs, reptiles) ou Auto
-- **Sélecteur type article** : Auto (rotation), Trending, Partenaire/Produit, Conseil pratique
+- **Sélecteur type article** : Auto (rotation), Trending, Partenaire/Produit, Conseil pratique, **Fiche de race**
 | Pipeline | Agents | Ce qui se passe |
 |----------|--------|-----------------|
 | 📝 SEO + Blog + Réseaux | Lucas → Marie → Emma | Article publié + post Facebook (35s d'attente entre les 2 étapes) |
@@ -610,7 +613,12 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 - Léa : mode manuel uniquement (pas d'intégration email automatique prévue)
 - Footer page accueil : lien Admin supprimé, TikTok supprimé, Facebook lié (https://www.facebook.com/profile.php?id=61589487954538) + Instagram lié (https://www.instagram.com/mespoilusofficiel)
 - Lucas cron blog : priorité sujets trending > AWIN affiliés > fallback saisonnier
-- Rotation type d'article cron blog : trending → affiliation → pratique via `(semaine*3+jourIndex)%3` + override manuel CronLauncher
+- Rotation type d'article cron blog : trending → affiliation → pratique → **race** via `(semaine*3+jourIndex)%4` + override manuel CronLauncher
+- Type **race** : Lucas choisit la meilleure race SEO (non encore couverte en priorité) depuis breeds table (photo + content requis) → Marie intègre lien fiche race → image = photo_url Supabase → breed_slug enregistré dans articles
+- Cron blog passe en `?auto=true` : animal = catégorie avec le moins d'articles publiés (plus de rotation fixe)
+- Liens articles/prompts unifiés en `https://www.mespoilus.com/...` partout (blog, social, adoption, newsletter crons)
+- Migration `migration_article_breed.sql` à exécuter : `ALTER TABLE articles ADD COLUMN breed_slug text`
+- Page `/blog/[slug]` : `export const dynamic = 'force-dynamic'` (toujours lire DB fraîche, pas de cache)
 - Anti-répétition partenaires : colonne `featured_partner` sur `articles`, bloque réutilisation pendant 30 articles
 - Lucas enrichi : output cron inclut INTENTION, RAISON, NOM_PRODUIT, LIEN_AFFILIE, IMAGE_PRODUIT, META_DESC
 - Marie enrichie : reçoit contexte Lucas complet + 3 articles récents même catégorie pour liens internes + meta cible
@@ -781,11 +789,9 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 - **CJ sync activity log** : log `activity_logs` ajouté à la fin du cron CanadaPetCare ✅
 - **Colonne `product_type TEXT`** sur `products` : migration `migration_product_type.sql` à exécuter, index GIN. `assignProductType()` dans `awin.ts` détecte le type depuis GPC + titre (ISBN → livres en priorité). `'bd'` retiré (faux positifs couvertures) ✅
 - **Livres Amazon** : `product_type = 'livres'` ajouté dans POST et PATCH de `/api/admin/products` — les nouveaux livres sont automatiquement filtrables. SQL pour les existants : `UPDATE products SET product_type = 'livres' WHERE merchant_name = 'Amazon FR';` ✅
+- **Trouveur de veterinaire** (`VetFinderPanel`) : onglet bleu fixe droite toutes pages publiques (hors admin), panel slide-in. Largeur responsive : `w-full` mobile, `min(88vw,600px)` desktop (breakpoint md). Geocodage + autocomplete Nominatim (OpenStreetMap, gratuit, sans cle, debounce 600ms, dropdown suggestions). Carte + markers Google Maps + Places API nearbySearch. Champ adresse unique avec suggestions en temps reel (worldwide). Layout: bouton GPS + rayon (ligne 1), adresse (ligne 2), bouton rechercher. Carte bords arrondis `rounded-xl border`. Layout scroll unique (form+carte+resultats). `mapReady` state evite recherches silencieuses avant init carte. Lien vet : format `maps/search/?api=1&query_place_id=` (compatible mobile + app Maps). CSP: `geolocation=(self)` dans Permissions-Policy, `fundingchoicesmessages.google.com` dans connect-src. Env: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (Vercel + .env.local). Section 2.9 ajoutee dans politique-confidentialite (Google Maps IP + GPS opt-in non stocke) ✅
 ---
 ## Ce qui reste à faire (code)
-### Outils publics (`/outils/`)
-- **Comparateur croquettes** : comparer 2-3 marques sur critères (protéines, prix/kg, note)
-- **Suivi vaccination** : calendrier des vaccins par animal + rappels
 ### Boutique / Monétisation
 - **Amazon Associates FR** : compte approuvé (ID `mespoilus-21`). Page admin `/produits` opérationnelle pour ajout manuel de livres. Après 3 ventes dans 180 jours → intégration API Product Advertising pour sync automatique
 - Barre de recherche produits ajoutée (`?search=mot`) -filtre par nom et description via `ilike`

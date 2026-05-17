@@ -56,7 +56,7 @@ Résumé : ${excerpt || title}
 
 Le post doit donner envie de lire l'article complet.
 IMPORTANT : tu dois inclure ce lien EXACT à la fin du post, sans le modifier ni le raccourcir :
-https://mespoilus.com/blog/${slug}`;
+https://www.mespoilus.com/blog/${slug}`;
 
     const result = await executeAgentTask('emma', emmaPrompt);
     if (!result.success) throw new Error(result.error ?? 'Emma a échoué');

@@ -4,7 +4,7 @@ import { sendEmail } from '@/lib/resend';
 
 export const maxDuration = 60;
 
-const BASE_URL = 'https://mespoilus.com';
+const BASE_URL = 'https://www.mespoilus.com';
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get('authorization');

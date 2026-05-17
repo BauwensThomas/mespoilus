@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mespoilus.com';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com';
 
 function htmlPage(title: string, message: string, linkLabel?: string, linkHref?: string) {
   return `<!DOCTYPE html>
