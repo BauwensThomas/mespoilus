@@ -19,6 +19,7 @@ const ARTICLE_TYPES = [
   { value: 'affiliation', label: 'Partenaire / Produit', icon: ShoppingBag },
   { value: 'pratique',   label: 'Conseil pratique', icon: Clipboard },
   { value: 'race',       label: 'Fiche de race', icon: BookOpen },
+  { value: 'best_of',   label: 'Sélection produits', icon: Rocket },
 ];
 
 type StepStatus = 'idle' | 'running' | 'done' | 'error';

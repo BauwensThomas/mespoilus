@@ -185,10 +185,21 @@ export async function GET(req: Request) {
       ? recentTitles.map(t => `- ${t}`).join('\n')
       : 'Aucun article récent.';
     const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-    // Rotation forcée du type d'article : trending → affiliation → pratique → race → ...
-    const ARTICLE_TYPES = ['trending', 'affiliation', 'pratique', 'race'] as const;
+    // Rotation du type par animal : chaque animal cycle indépendamment à travers les 5 types
+    let animalArticleCount = 0;
+    try {
+      const { count } = await supabase
+        .from('articles')
+        .select('id', { count: 'exact', head: true })
+        .eq('category', animal)
+        .eq('status', 'published');
+      animalArticleCount = count ?? 0;
+    } catch { /* fallback 0 */ }
+
+    const ARTICLE_TYPES = ['trending', 'affiliation', 'pratique', 'race', 'best_of'] as const;
     type ArticleType = typeof ARTICLE_TYPES[number];
-    const articleTypeIndex = (week * 3 + postIndex) % 4;
+    const ANIMAL_OFFSET: Record<string, number> = { chiens: 0, chats: 1, oiseaux: 2, rongeurs: 3, reptiles: 4 };
+    const articleTypeIndex = (animalArticleCount + (ANIMAL_OFFSET[animal] ?? 0)) % 5;
     const requestedType: ArticleType = (urlType && (ARTICLE_TYPES as readonly string[]).includes(urlType))
       ? urlType as ArticleType
       : ARTICLE_TYPES[articleTypeIndex];
@@ -289,6 +300,16 @@ Critères : volume de recherche Google, popularité de la race, questions fréqu
 Angles possibles : caractère et comportement, est-ce la bonne race pour moi, santé et maladies fréquentes, alimentation et entretien, éducation, convient-il aux familles/seniors/appartement.
 Tu DOIS retourner RACE_SLUG correspondant EXACTEMENT au slug indiqué dans la liste ci-dessus.
 NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT doivent être AUCUN.`,
+
+      best_of: `TYPE IMPOSÉ : SÉLECTION PRODUITS
+Propose un sujet d'article comparatif "Meilleur(s) X pour ${animal}" avec fort potentiel SEO et intention d'achat.
+Exemples : "Meilleure nourriture pour ${animal.replace(/s$/, '')} senior", "Meilleur jouet interactif pour ${animal.replace(/s$/, '')} d'appartement", "Meilleure cage pour ${animal.replace(/s$/, '')}"
+Choisis un angle PRÉCIS avec forte intention d'achat sur Google.
+${partenairesStr ? `Partenaires Awin disponibles (privilégie-les comme produit principal) :\n${partenairesStr}\n` : ''}Pour les produits complémentaires, Marie utilisera des liens de recherche Amazon avec le tag mespoilus-21.
+NOM_PRODUIT : le partenaire/produit Awin principal si pertinent, sinon AUCUN
+LIEN_AFFILIE : son lien affilié si disponible, sinon AUCUN
+IMAGE_PRODUIT : AUCUN (image Pexels sera utilisée)
+RACE_SLUG : AUCUN`,
     };
 
     const lucasPrompt = `Trouve le meilleur sujet d'article SEO pour les propriétaires de ${animal} (${monthName}).
@@ -375,9 +396,17 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
     const productsStr = productsWithLinks
       .map(p => p.affiliate_url ? `- ${p.name} → ${p.affiliate_url}` : `- ${p.name}`)
       .join('\n');
-    const produitSection = nomProduit && lienAffilie
-      ? `\nPRODUIT / PARTENAIRE PRINCIPAL À METTRE EN AVANT :\n- Nom : ${nomProduit}\n- Lien affilié (utilise ce lien EXACT dans le texte, ne l'invente pas) : ${lienAffilie}\n  Ex. dans le texte : [${nomProduit}](${lienAffilie})\n`
-      : `\nIntègre naturellement 1-2 recommandations de produits dans le texte avec leurs liens :\n${productsStr}\nSi aucun lien n'est disponible, renvoie vers www.mespoilus.com/boutique\n`;
+    const produitSection = forcedType === 'best_of'
+      ? `\nSTRUCTURE OBLIGATOIRE POUR CET ARTICLE (sélection produits) :
+Présente un TOP 3 à 5 produits recommandés. Pour chaque produit :
+- Titre H3 : nom du produit
+- 2-3 phrases : pourquoi le choisir, avantages concrets pour l'animal
+- Lien d'achat en markdown${nomProduit && lienAffilie ? `\nProduit principal à mettre en avant en premier : [${nomProduit}](${lienAffilie})` : ''}
+Pour les autres produits, utilise des liens de recherche Amazon (remplace les espaces par +) :
+[Voir sur Amazon](https://www.amazon.fr/s?k=NOM+PRODUIT+${animal}&tag=mespoilus-21)\n`
+      : nomProduit && lienAffilie
+        ? `\nPRODUIT / PARTENAIRE PRINCIPAL À METTRE EN AVANT :\n- Nom : ${nomProduit}\n- Lien affilié (utilise ce lien EXACT dans le texte, ne l'invente pas) : ${lienAffilie}\n  Ex. dans le texte : [${nomProduit}](${lienAffilie})\n`
+        : `\nIntègre naturellement 1-2 recommandations de produits dans le texte avec leurs liens :\n${productsStr}\nSi aucun lien n'est disponible, renvoie vers www.mespoilus.com/boutique\n`;
     const contextLines = [
       forcedType !== 'affiliation' ? `Saison : ${season}` : '',
       intention ? `Ce que cherche le lecteur : ${intention}` : '',
@@ -406,7 +435,7 @@ CONSIGNES :
 - Entre 550 et 700 mots au total
 - Ton chaleureux, bienveillant, comme un ami expert
 - Public : propriétaires francophones (Belgique, France, Suisse, Canada)
-- Intègre au moins un lien interne : [notre boutique](https://www.www.mespoilus.com/boutique) ou [nos annonces d'adoption](https://www.www.mespoilus.com/adoption)
+- Intègre au moins un lien interne : [notre boutique](https://www.mespoilus.com/boutique) ou [nos annonces d'adoption](https://www.mespoilus.com/adoption)
 - Ne jamais inventer de faits médicaux ou vétérinaires sans nuance`;
 
     const marieResult = await executeAgentTask('marie', mariePrompt);
