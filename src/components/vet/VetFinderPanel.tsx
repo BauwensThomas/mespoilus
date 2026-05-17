@@ -272,8 +272,7 @@ export default function VetFinderPanel() {
 
       {/* Panel */}
       <div
-        className={`fixed right-0 top-0 h-full bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${open ? 'translate-x-0' : 'translate-x-full'}`}
-        style={{ width: 'clamp(320px, 40vw, 600px)' }}
+        className={`fixed right-0 top-0 h-full bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out w-full md:w-[min(88vw,600px)] ${open ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 bg-blue-600 text-white shrink-0">
@@ -395,7 +394,7 @@ export default function VetFinderPanel() {
                   {results.map((vet, i) => (
                     <a
                       key={vet.placeId}
-                      href={`https://www.google.com/maps/place/?q=place_id:${vet.placeId}`}
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vet.name)}&query_place_id=${vet.placeId}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 p-2 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all group"
