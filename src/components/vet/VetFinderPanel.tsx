@@ -10,21 +10,13 @@ declare global {
 
 const RADIUS_OPTIONS = [5, 10, 20, 50] as const;
 
-const ANIMALS = [
-  { value: 'tous',    label: 'Tous animaux' },
-  { value: 'chien',   label: 'Chien' },
-  { value: 'chat',    label: 'Chat' },
-  { value: 'oiseau',  label: 'Oiseau / NAC' },
-  { value: 'rongeur', label: 'Rongeur' },
-  { value: 'reptile', label: 'Reptile' },
-] as const;
 
-const COUNTRIES = [
-  { value: 'Belgium',     label: 'Belgique' },
-  { value: 'France',      label: 'France' },
-  { value: 'Switzerland', label: 'Suisse' },
-  { value: 'Luxembourg',  label: 'Luxembourg' },
-] as const;
+
+interface Suggestion {
+  display_name: string;
+  lat: string;
+  lon: string;
+}
 
 interface VetResult {
   name: string;
@@ -37,46 +29,41 @@ interface VetResult {
   isOpen?: boolean;
 }
 
-async function geocodeWithNominatim(rue: string, numero: string, ville: string, pays: string): Promise<{ lat: number; lng: number } | null> {
-  const q = [numero, rue, ville, pays].filter(Boolean).join(', ');
-  const params = new URLSearchParams({ q, format: 'json', limit: '1', addressdetails: '0' });
-
-  const res = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
+async function nominatimSearch(query: string, limit = 5): Promise<Suggestion[]> {
+  const params = new URLSearchParams({ q: query, format: 'json', limit: String(limit), addressdetails: '0' });
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
     headers: { 'Accept-Language': 'fr', 'User-Agent': 'MesPoilus/1.0' },
   });
-  if (!res.ok) return null;
+  if (!res.ok) return [];
   const data = await res.json();
-  if (!data?.length) return null;
-  return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  return Array.isArray(data) ? data : [];
 }
 
 export default function VetFinderPanel() {
-  const [open, setOpen]             = useState(false);
-  const [animal, setAnimal]         = useState('tous');
-  const [radius, setRadius]         = useState(10);
-  const [results, setResults]       = useState<VetResult[]>([]);
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState<string | null>(null);
-  const [geoLoading, setGeoLoading] = useState(false);
-
-  const [rue, setRue]       = useState('');
-  const [numero, setNumero] = useState('');
-  const [ville, setVille]   = useState('');
-  const [pays, setPays]     = useState('Belgium');
+  const [open, setOpen]                       = useState(false);
+  const [mapReady, setMapReady]               = useState(false);
+  const [radius, setRadius]                   = useState(10);
+  const [results, setResults]                 = useState<VetResult[]>([]);
+  const [loading, setLoading]                 = useState(false);
+  const [error, setError]                     = useState<string | null>(null);
+  const [geoLoading, setGeoLoading]           = useState(false);
+  const [address, setAddress]                 = useState('');
+  const [suggestions, setSuggestions]         = useState<Suggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const mapRef         = useRef<HTMLDivElement>(null);
   const mapInstance    = useRef<google.maps.Map | null>(null);
   const locationRef    = useRef<{ lat: number; lng: number } | null>(null);
-  const geoUsed        = useRef(false);
   const markersRef     = useRef<google.maps.Marker[]>([]);
   const circleRef      = useRef<google.maps.Circle | null>(null);
   const mapInitialized = useRef(false);
+  const debounceRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputWrapRef   = useRef<HTMLDivElement>(null);
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
     if (!open || mapInitialized.current) return;
-
     const tryInit = () => {
       if (!window.google?.maps || !mapRef.current) return false;
       mapInitialized.current = true;
@@ -87,13 +74,23 @@ export default function VetFinderPanel() {
         streetViewControl: false,
         fullscreenControl: false,
       });
+      setMapReady(true);
       return true;
     };
-
     if (tryInit()) return;
     const interval = setInterval(() => { if (tryInit()) clearInterval(interval); }, 300);
     return () => clearInterval(interval);
   }, [open]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (inputWrapRef.current && !inputWrapRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const clearOverlays = useCallback(() => {
     markersRef.current.forEach(m => m.setMap(null));
@@ -102,39 +99,60 @@ export default function VetFinderPanel() {
     circleRef.current = null;
   }, []);
 
-  function handleGeolocate() {
-    if (!navigator.geolocation) {
-      setError('Geolocalisation non supportee par votre navigateur.');
-      return;
+  function handleAddressChange(val: string) {
+    setAddress(val);
+    locationRef.current = null;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (val.trim().length < 3) { setSuggestions([]); setShowSuggestions(false); return; }
+    debounceRef.current = setTimeout(async () => {
+      const data = await nominatimSearch(val);
+      setSuggestions(data);
+      setShowSuggestions(data.length > 0);
+    }, 600);
+  }
+
+  function handleSelectSuggestion(s: Suggestion) {
+    const label = s.display_name.split(',').slice(0, 3).join(',').trim();
+    setAddress(label);
+    locationRef.current = { lat: parseFloat(s.lat), lng: parseFloat(s.lon) };
+    setSuggestions([]);
+    setShowSuggestions(false);
+    if (mapInstance.current) {
+      mapInstance.current.setCenter(locationRef.current!);
+      mapInstance.current.setZoom(13);
     }
+  }
+
+  function handleGeolocate() {
+    if (!navigator.geolocation) { setError('Geolocalisation non supportee.'); return; }
     setGeoLoading(true);
     setError(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGeoLoading(false);
         locationRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        geoUsed.current = true;
-        setRue('');
-        setNumero('');
-        setVille('Ma position GPS');
+        setAddress('Ma position GPS');
         if (mapInstance.current) {
-          mapInstance.current.setCenter(locationRef.current);
+          mapInstance.current.setCenter(locationRef.current!);
           mapInstance.current.setZoom(13);
         }
       },
-      () => {
+      (err) => {
         setGeoLoading(false);
-        setError("Impossible d'acceder a votre position. Autorisez la geolocalisation.");
+        if (err.code === err.PERMISSION_DENIED) {
+          setError('Acces refuse. Autorisez la localisation ou entrez votre adresse.');
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          setError('Position GPS indisponible. Entrez votre adresse.');
+        } else {
+          setError('Delai depasse. Reessayez.');
+        }
       },
+      { timeout: 10000, maximumAge: 60000 },
     );
   }
 
   async function handleSearch() {
-    const canSearchGeo = geoUsed.current && locationRef.current && ville === 'Ma position GPS';
-    const canSearchAddress = rue.trim() || ville.trim();
-    if (!canSearchGeo && !canSearchAddress) return;
-    if (!mapInstance.current) return;
-
+    if (!mapInstance.current || !address.trim()) return;
     setLoading(true);
     setError(null);
     setResults([]);
@@ -142,21 +160,19 @@ export default function VetFinderPanel() {
 
     let coords = locationRef.current;
 
-    if (!canSearchGeo) {
-      geoUsed.current = false;
+    if (!coords) {
       try {
-        coords = await geocodeWithNominatim(rue, numero, ville, pays);
-      } catch {
-        coords = null;
-      }
+        const data = await nominatimSearch(address, 1);
+        if (data.length) coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      } catch { coords = null; }
       if (!coords) {
         setLoading(false);
-        setError('Adresse introuvable. Verifiez la rue, ville et pays.');
+        setError('Adresse introuvable. Selectionnez une suggestion ou soyez plus precis.');
         return;
       }
     }
 
-    const { lat, lng } = coords!;
+    const { lat, lng } = coords;
     locationRef.current = { lat, lng };
     const center = new google.maps.LatLng(lat, lng);
     mapInstance.current.setCenter(center);
@@ -173,7 +189,7 @@ export default function VetFinderPanel() {
       fillOpacity: 0.05,
     });
 
-    const keyword = animal !== 'tous' ? `veterinaire ${animal}` : 'veterinaire';
+    const keyword = 'veterinaire';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const service = new (google.maps.places as any).PlacesService(mapInstance.current);
     service.nearbySearch(
@@ -181,14 +197,13 @@ export default function VetFinderPanel() {
       (places: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
         setLoading(false);
         if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-          setError(`Aucun veterinaire dans un rayon de ${radius} km.`);
+          setError(`Aucun veterinaire trouve dans ${radius} km.`);
           return;
         }
         if (status !== google.maps.places.PlacesServiceStatus.OK || !places) {
-          setError('Erreur lors de la recherche. Reessayez.');
+          setError(`Erreur (${status}). Verifiez que Places API est activee.`);
           return;
         }
-
         const vets: VetResult[] = places.map(p => ({
           name:         p.name ?? 'Veterinaire',
           address:      p.vicinity ?? '',
@@ -226,7 +241,7 @@ export default function VetFinderPanel() {
     );
   }
 
-  const canSearch = (geoUsed.current && locationRef.current && ville === 'Ma position GPS') || rue.trim() || ville.trim();
+  const canSearch = mapReady && address.trim().length > 0;
 
   return (
     <>
@@ -258,19 +273,16 @@ export default function VetFinderPanel() {
       {/* Panel */}
       <div
         className={`fixed right-0 top-0 h-full bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${open ? 'translate-x-0' : 'translate-x-full'}`}
-        style={{ width: 'clamp(380px, 40vw, 600px)' }}
+        style={{ width: 'clamp(320px, 40vw, 600px)' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 bg-blue-600 text-white shrink-0">
-          <div className="flex items-center gap-3">
-            <Stethoscope size={18} strokeWidth={1.5} />
-            <div>
-              <h2 className="text-sm font-bold">Trouver un veterinaire</h2>
-              <p className="text-blue-200 text-[11px]">Autour de votre adresse</p>
-            </div>
+        <div className="flex items-center justify-between px-4 py-2 bg-blue-600 text-white shrink-0">
+          <div className="flex items-center gap-2">
+            <Stethoscope size={15} strokeWidth={1.5} />
+            <h2 className="text-sm font-bold">Trouver un veterinaire</h2>
           </div>
-          <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg hover:bg-blue-700 transition-colors">
-            <X size={18} strokeWidth={2} />
+          <button onClick={() => setOpen(false)} className="p-1 rounded-lg hover:bg-blue-700 transition-colors">
+            <X size={16} strokeWidth={2} />
           </button>
         </div>
 
@@ -280,159 +292,147 @@ export default function VetFinderPanel() {
             <p className="text-sm font-semibold text-gray-700">Cle Google Maps manquante</p>
           </div>
         ) : (
-          <>
+          <div className="flex-1 overflow-y-auto">
+
             {/* Formulaire */}
-            <div className="px-5 py-4 space-y-3 shrink-0 border-b border-gray-100">
+            <div className="px-3 py-2 space-y-1.5 border-b border-gray-100">
 
-              {/* Rue + Numero */}
-              <div>
-                <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                  Adresse
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={numero}
-                    onChange={e => { setNumero(e.target.value); geoUsed.current = false; locationRef.current = null; }}
-                    placeholder="N"
-                    className="w-16 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 shrink-0"
-                  />
-                  <input
-                    type="text"
-                    value={rue}
-                    onChange={e => { setRue(e.target.value); geoUsed.current = false; locationRef.current = null; }}
-                    onKeyDown={e => { if (e.key === 'Enter' && canSearch) handleSearch(); }}
-                    placeholder="Rue, avenue, boulevard..."
-                    className="flex-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
-                  />
-                </div>
-              </div>
-
-              {/* Ville + Pays + GPS */}
-              <div className="flex gap-2">
-                <div className="flex-1 relative">
-                  <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" strokeWidth={1.5} />
-                  <input
-                    type="text"
-                    value={ville}
-                    onChange={e => { setVille(e.target.value); geoUsed.current = false; locationRef.current = null; }}
-                    onKeyDown={e => { if (e.key === 'Enter' && canSearch) handleSearch(); }}
-                    placeholder="Ville ou code postal"
-                    className="w-full pl-8 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
-                  />
-                </div>
-                <select
-                  value={pays}
-                  onChange={e => setPays(e.target.value)}
-                  className="px-2 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white shrink-0"
-                >
-                  {COUNTRIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                </select>
-                {/* Bouton GPS */}
+              {/* GPS + Rayon */}
+              <div className="flex gap-1">
                 <button
                   onClick={handleGeolocate}
                   disabled={geoLoading}
-                  title="Utiliser ma position GPS"
-                  className="flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition-all disabled:opacity-50 shrink-0"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition-all disabled:opacity-50 shrink-0 text-xs whitespace-nowrap"
                 >
                   {geoLoading
-                    ? <span className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
-                    : <LocateFixed size={16} strokeWidth={1.5} />
+                    ? <span className="w-3 h-3 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+                    : <LocateFixed size={12} strokeWidth={1.5} />
                   }
+                  {geoLoading ? 'Localisation...' : 'Ma position'}
                 </button>
+                <select
+                  value={radius}
+                  onChange={e => setRadius(Number(e.target.value))}
+                  className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
+                >
+                  {RADIUS_OPTIONS.map(r => <option key={r} value={r}>Rayon : {r} km</option>)}
+                </select>
               </div>
 
-              {/* Animal + Rayon */}
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Animal</label>
-                  <select
-                    value={animal}
-                    onChange={e => setAnimal(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
-                  >
-                    {ANIMALS.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
-                  </select>
+              {/* Adresse avec autocomplete */}
+              <div className="relative" ref={inputWrapRef}>
+                <div className="flex gap-1">
+                  <div className="flex-1 relative">
+                    <MapPin size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" strokeWidth={1.5} />
+                    <input
+                      type="text"
+                      value={address}
+                      onChange={e => handleAddressChange(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && canSearch) { setShowSuggestions(false); handleSearch(); } }}
+                      onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                      placeholder="Entrez votre adresse..."
+                      autoComplete="off"
+                      className="w-full pl-6 pr-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Rayon</label>
-                  <select
-                    value={radius}
-                    onChange={e => setRadius(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
-                  >
-                    {RADIUS_OPTIONS.map(r => <option key={r} value={r}>{r} km</option>)}
-                  </select>
-                </div>
+
+                {/* Suggestions dropdown */}
+                {showSuggestions && (
+                  <div className="absolute left-0 right-0 top-full mt-0.5 bg-white border border-gray-200 rounded-lg shadow-lg z-20 overflow-hidden">
+                    {suggestions.map((s, i) => (
+                      <button
+                        key={i}
+                        onMouseDown={e => { e.preventDefault(); handleSelectSuggestion(s); }}
+                        className="w-full text-left px-2.5 py-1.5 text-xs text-gray-700 hover:bg-blue-50 hover:text-blue-700 border-b border-gray-50 last:border-0 transition-colors flex items-start gap-1.5"
+                      >
+                        <MapPin size={10} className="text-gray-400 shrink-0 mt-0.5" strokeWidth={1.5} />
+                        <span className="line-clamp-2">{s.display_name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <button
                 onClick={handleSearch}
                 disabled={!canSearch || loading}
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="w-full py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"
               >
                 {loading
-                  ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  : <Search size={14} strokeWidth={2} />
+                  ? <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  : <Search size={12} strokeWidth={2} />
                 }
-                {loading ? 'Recherche...' : 'Rechercher'}
+                {loading ? 'Recherche...' : !mapReady ? 'Chargement carte...' : 'Rechercher'}
               </button>
 
               {error && (
-                <p className="text-xs text-red-500 text-center flex items-center justify-center gap-1">
-                  <AlertCircle size={12} /> {error}
+                <p className="text-[11px] text-red-500 flex items-start gap-1 leading-tight">
+                  <AlertCircle size={11} className="shrink-0 mt-0.5" /> {error}
                 </p>
               )}
             </div>
 
             {/* Carte */}
-            <div ref={mapRef} className="w-full shrink-0" style={{ height: '220px' }} />
+            <div className="px-3 py-2">
+              <div className="relative w-full rounded-xl overflow-hidden border border-gray-200" style={{ height: '190px' }}>
+                <div ref={mapRef} className="w-full h-full" />
+                {!mapReady && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+                    <span className="w-6 h-6 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Resultats */}
-            <div className="flex-1 overflow-y-auto">
-              {results.length > 0 ? (
-                <div className="px-4 py-3 space-y-2">
-                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                    {results.length} veterinaire{results.length > 1 ? 's' : ''} trouve{results.length > 1 ? 's' : ''}
-                  </p>
+            {results.length > 0 ? (
+              <div className="px-3 py-1.5">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 px-0.5">
+                  {results.length} veterinaire{results.length > 1 ? 's' : ''}
+                </p>
+                <div className="space-y-1">
                   {results.map((vet, i) => (
                     <a
                       key={vet.placeId}
                       href={`https://www.google.com/maps/place/?q=place_id:${vet.placeId}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all group"
+                      className="flex items-center gap-2 p-2 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all group"
                     >
-                      <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
                         {i + 1}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-gray-900 leading-snug">{vet.name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{vet.address}</p>
-                        {vet.rating && (
-                          <div className="flex items-center gap-1 mt-1">
-                            <Star size={11} className="text-yellow-500 fill-yellow-500" />
-                            <span className="text-xs text-yellow-600 font-medium">{vet.rating.toFixed(1)}</span>
-                            {vet.ratingsTotal && <span className="text-xs text-gray-400">({vet.ratingsTotal})</span>}
+                        <p className="text-xs font-semibold text-gray-900 leading-tight truncate">{vet.name}</p>
+                        <p className="text-[11px] text-gray-500 leading-tight truncate">{vet.address}</p>
+                        {(vet.rating || vet.isOpen !== undefined) && (
+                          <div className="flex items-center gap-2">
+                            {vet.rating && (
+                              <div className="flex items-center gap-0.5">
+                                <Star size={9} className="text-yellow-500 fill-yellow-500" />
+                                <span className="text-[10px] text-yellow-600 font-medium">{vet.rating.toFixed(1)}</span>
+                              </div>
+                            )}
+                            {vet.isOpen === true && <span className="text-[10px] text-green-600 font-medium">Ouvert</span>}
+                            {vet.isOpen === false && <span className="text-[10px] text-red-500">Ferme</span>}
                           </div>
                         )}
-                        {vet.isOpen === true && <span className="text-[10px] text-green-600 font-medium">Ouvert maintenant</span>}
-                        {vet.isOpen === false && <span className="text-[10px] text-red-500 font-medium">Ferme</span>}
                       </div>
-                      <ChevronRight size={13} className="text-gray-300 group-hover:text-blue-500 shrink-0 transition-colors mt-1" />
+                      <ChevronRight size={11} className="text-gray-300 group-hover:text-blue-500 shrink-0 transition-colors" />
                     </a>
                   ))}
                 </div>
-              ) : (
-                !loading && !error && (
-                  <div className="px-5 py-10 text-center">
-                    <MapPin size={32} strokeWidth={1} className="mx-auto mb-3 text-gray-200" />
-                    <p className="text-sm text-gray-400">Entrez une adresse ou utilisez votre position GPS</p>
-                  </div>
-                )
-              )}
-            </div>
-          </>
+              </div>
+            ) : (
+              !loading && !error && (
+                <div className="px-5 py-6 text-center">
+                  <MapPin size={24} strokeWidth={1} className="mx-auto mb-1.5 text-gray-200" />
+                  <p className="text-xs text-gray-400">Entrez une adresse ou utilisez votre position GPS</p>
+                </div>
+              )
+            )}
+          </div>
         )}
       </div>
     </>
