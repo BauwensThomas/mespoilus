@@ -185,20 +185,52 @@ export async function GET(req: Request) {
       ? recentTitles.map(t => `- ${t}`).join('\n')
       : 'Aucun article récent.';
     const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-    // Rotation forcée du type d'article : trending → affiliation → pratique → ...
-    const ARTICLE_TYPES = ['trending', 'affiliation', 'pratique'] as const;
-    const articleTypeIndex = (week * 3 + postIndex) % 3;
-    const requestedType = (urlType && (ARTICLE_TYPES as readonly string[]).includes(urlType))
-      ? urlType as typeof ARTICLE_TYPES[number]
+    // Rotation forcée du type d'article : trending → affiliation → pratique → race → ...
+    const ARTICLE_TYPES = ['trending', 'affiliation', 'pratique', 'race'] as const;
+    type ArticleType = typeof ARTICLE_TYPES[number];
+    const articleTypeIndex = (week * 3 + postIndex) % 4;
+    const requestedType: ArticleType = (urlType && (ARTICLE_TYPES as readonly string[]).includes(urlType))
+      ? urlType as ArticleType
       : ARTICLE_TYPES[articleTypeIndex];
 
     // Fallback affiliation → pratique si tous les partenaires sont bloqués et aucun produit dispo
     const availablePartners = partenairesAnimal.filter(p => !recentlyFeaturedPartners.includes(p.nom));
     const hasAffiliatableProducts = productsWithLinks.some(p => p.affiliate_url);
-    const forcedType = (requestedType === 'affiliation' && availablePartners.length === 0 && !hasAffiliatableProducts)
-      ? 'pratique' as const
+    let forcedType: ArticleType = (requestedType === 'affiliation' && availablePartners.length === 0 && !hasAffiliatableProducts)
+      ? 'pratique'
       : requestedType;
     if (forcedType !== requestedType) console.log('[Cron1] Affiliation: tous bloqués → fallback pratique');
+
+    // ─── SÉLECTION DE RACE (si type race) ────────────────────────────────────
+    let selectedBreed: { name: string; slug: string; animal: string; photo_url: string } | null = null;
+    if (forcedType === 'race') {
+      try {
+        const { data: breedRows } = await supabase
+          .from('breeds')
+          .select('name, slug, animal, photo_url')
+          .not('photo_url', 'is', null)
+          .eq('status', 'published')
+          .limit(100);
+
+        const recentTitlesLower = recentTitles.map(t => t.toLowerCase());
+        const eligible = (breedRows ?? []).filter(
+          (b: { name: string; slug: string; animal: string; photo_url: string }) =>
+            !recentTitlesLower.some(t => t.includes(b.name.toLowerCase()))
+        );
+
+        if (eligible.length > 0) {
+          selectedBreed = eligible[Math.floor(Math.random() * eligible.length)] as typeof selectedBreed;
+          animal = selectedBreed!.animal;
+          console.log(`[Cron1] Race sélectionnée : ${selectedBreed!.name} (${selectedBreed!.animal})`);
+        } else {
+          console.log('[Cron1] Aucune race éligible → fallback pratique');
+          forcedType = 'pratique';
+        }
+      } catch (err) {
+        console.warn('[Cron1] Sélection race erreur:', err);
+        forcedType = 'pratique';
+      }
+    }
 
     const partenairesStr = availablePartners.length
       ? availablePartners.map(p => `- ${p.nom} : ${p.description ?? ''}\n  Lien affilié : ${p.url}`).join('\n')
@@ -207,7 +239,7 @@ export async function GET(req: Request) {
       .map(p => p.affiliate_url ? `- ${p.name} | lien : ${p.affiliate_url}${p.image_url ? ` | image : ${p.image_url}` : ''}` : `- ${p.name}`)
       .join('\n');
 
-    const typeInstructions: Record<typeof forcedType, string> = {
+    const typeInstructions: Record<ArticleType, string> = {
       trending: `TYPE IMPOSÉ : TRENDING
 Trouve un sujet que les propriétaires de ${animal} recherchent ACTIVEMENT sur Google EN CE MOMENT.
 Pense au-delà des saisons : comportements étranges, questions santé fréquentes, tendances alimentation,
@@ -226,6 +258,13 @@ Propose un guide pratique concret et actionnable pour les propriétaires de ${an
 Exemples : soins à domicile, erreurs à éviter, routine quotidienne, alimentation équilibrée,
 activités, premiers secours, comportement, éducation, hygiène.
 Évite les sujets trop génériques -sois précis et utile.`,
+
+      race: `TYPE IMPOSÉ : FICHE RACE
+Tu dois trouver le meilleur angle SEO pour un article sur la race : ${selectedBreed?.name ?? animal}.
+Exemples d'angles : "caractère et comportement", "est-ce la bonne race pour moi ?", "santé et maladies fréquentes",
+"alimentation et entretien", "éducation et exercice", "convient-il aux familles avec enfants ?".
+Choisis l'angle le plus recherché sur Google pour cette race.
+NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT doivent être AUCUN (l'image vient de la fiche race).`,
     };
 
     const lucasPrompt = `Trouve le meilleur sujet d'article SEO pour les propriétaires de ${animal} (${monthName}).
@@ -308,12 +347,16 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       raison ? `Pourquoi ce sujet maintenant : ${raison}` : '',
     ].filter(Boolean).join('\n');
 
+    const breedPageSection = selectedBreed
+      ? `LIEN OBLIGATOIRE : tu dois inclure ce lien vers la fiche race EXACTEMENT tel quel dans l'article :\n[Découvrez notre fiche complète sur le ${selectedBreed.name}](https://mespoilus.com/races/${selectedBreed.slug})\n`
+      : '';
+
     const mariePrompt = `Écris un article de blog sur : ${sujet}
-Animal concerné : ${animal}
+Animal concerné : ${animal}${selectedBreed ? `\nRace concernée : ${selectedBreed.name}` : ''}
 Mots-clés SEO à intégrer naturellement : ${motsCles.join(', ')}
 ${contextLines ? `\nContexte :\n${contextLines}\n` : ''}${metaDesc ? `Meta description cible (155 chars max) : ${metaDesc}\n` : ''}
 ${produitSection}
-${relatedArticles.length ? `Articles récents ${animal} -intègre 1-2 liens internes si pertinent :\n${relatedArticles.map(a => `- [${a.title}](https://mespoilus.com/blog/${a.slug})`).join('\n')}\n` : ''}
+${breedPageSection}${relatedArticles.length ? `Articles récents ${animal} -intègre 1-2 liens internes si pertinent :\n${relatedArticles.map(a => `- [${a.title}](https://mespoilus.com/blog/${a.slug})`).join('\n')}\n` : ''}
 STRUCTURE OBLIGATOIRE :
 1. Introduction accrocheuse (2-3 phrases qui parlent directement au propriétaire)
 2. 3 à 4 sections avec titres H2 clairs et informatifs
@@ -379,7 +422,7 @@ CONSIGNES :
       } catch { /* non-bloquant */ }
     }
 
-    // ─── IMAGE : télécharger pour l'animal + stocker dans Supabase Storage ───
+    // ─── IMAGE : race → photo Supabase directe, sinon Pexels/Awin ─────────────
     let imageUrl: string | null = null;
     if (articleSlug) {
       try {
@@ -387,6 +430,16 @@ CONSIGNES :
         const { data: imgCheck } = await supabase
           .from('articles').select('image_url').eq('slug', articleSlug).maybeSingle();
         imageUrl = imgCheck?.image_url ?? null;
+
+        // TYPE RACE : utiliser la photo de la race stockée dans Supabase
+        if (!imageUrl && selectedBreed?.photo_url) {
+          imageUrl = selectedBreed.photo_url;
+          await supabase.from('articles').update({
+            image_url: imageUrl,
+            image_alt: `Photo de ${selectedBreed.name}`,
+          }).eq('slug', articleSlug);
+          console.log(`[Cron1] Image race "${selectedBreed.name}": photo Supabase ✅`);
+        }
 
         if (!imageUrl) {
           if (imageProduit) {

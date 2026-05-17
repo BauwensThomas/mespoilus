@@ -18,6 +18,7 @@ const ARTICLE_TYPES = [
   { value: 'trending',   label: 'Trending / Actualité', icon: Flame },
   { value: 'affiliation', label: 'Partenaire / Produit', icon: ShoppingBag },
   { value: 'pratique',   label: 'Conseil pratique', icon: Clipboard },
+  { value: 'race',       label: 'Fiche de race', icon: BookOpen },
 ];
 
 type StepStatus = 'idle' | 'running' | 'done' | 'error';
