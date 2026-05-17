@@ -100,7 +100,7 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 - `src/app/layout.tsx` - Minimal, utilise `LayoutShell` + `CookieBanner` + `GoogleAnalytics`
 - `src/components/layout/LayoutShell.tsx` - Client Component :
   - **Admin** → Sidebar (`isOpen`/`onToggle` props) + main (`ml-64` ou `ml-0` avec transition 300ms selon état sidebar)
-  - **Public** → PublicHeader (`h-20`, visible partout) + `PartenairesBandeau` (sticky `top-20 z-30 h-9`) + main
+  - **Public** → PublicHeader (`h-20`, visible partout) + `PartenairesBandeau` (sticky `top-20 z-30 h-9`) + main + `RefugeFinderPanel` + `VetFinderPanel` + `AnimalDayPopup`
 - **`PartenairesBandeau`** (dans `LayoutShell.tsx`) : bande partenaire sticky sous le header public
   - Affiche 1 partenaire aléatoire au chargement : label "Partenaire", nom, drapeaux pays, tag coloré, description tronquée (pas de flèche)
   - Pour Maxi Zoo (`urlsByCountry`) : clic ouvre un picker pays inline (dropdown) avec 🇫🇷/🇧🇪 → redirige vers le bon lien Awin
@@ -191,7 +191,7 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
    - **Sélection animal** : `?auto=true` → `selectLeastUsedCategory()` choisit toujours la catégorie avec le moins d'articles publiés (chiens/chats/oiseaux/rongeurs/reptiles)
    - **Override manuel** : `?animal=chiens` via le sélecteur CronLauncher (désactive auto)
 2. **Lucas** choisit le sujet selon le **type d'article** (rotation forcée ou override manuel) :
-   - **Rotation type** : `(semaine*3+jourIndex) % 4` → trending → affiliation → pratique → **race** → ...
+   - **Rotation type** : `(nb_articles_animal + offset_animal) % 5` → chaque animal cycle indépendamment ; offset par animal (chiens=0, chats=1, oiseaux=2, rongeurs=3, reptiles=4) pour éviter que tous soient sur le même type simultanément
    - **trending** : sujet activement recherché sur Google (hors saisonniers génériques)
    - **affiliation** : article centré sur un partenaire ou produit Awin avec lien affilié exact ; anti-répétition 30 articles via colonne `featured_partner`
    - **pratique** : guide concret et actionnable ; fallback si affiliation impossible (tous bloqués + aucun produit dispo)
@@ -244,7 +244,7 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 ### CronLauncher - Pipelines manuels (Dashboard)
 Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de sync boutique :
 - **Sélecteur animal** : forcer un animal spécifique (chiens, chats, oiseaux, rongeurs, reptiles) ou Auto
-- **Sélecteur type article** : Auto (rotation), Trending, Partenaire/Produit, Conseil pratique, **Fiche de race**
+- **Sélecteur type article** : Auto (rotation), Trending, Partenaire/Produit, Conseil pratique, **Fiche de race**, **Sélection produits**
 | Pipeline | Agents | Ce qui se passe |
 |----------|--------|-----------------|
 | 📝 SEO + Blog + Réseaux | Lucas → Marie → Emma | Article publié + post Facebook (35s d'attente entre les 2 étapes) |
@@ -543,6 +543,8 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 - Sitemap dynamique, robots.txt, Schema.org JSON-LD
 - Google Search Console vérifié + sitemap soumis
 - Bing Webmaster Tools vérifié + sitemap soumis
+- **Sitemap images** : `image_url` (articles) et `photo_url` (races) inclus dans sitemap → indexation Google Images. Dynamique : nouvelles images apparaissent automatiquement ✅
+- **Schema markup enrichi** : articles → `ImageObject` avec `alt` + `logo` publisher ; races → JSON-LD `Article` complet ajoute (etait absent) ; `www.` corrige dans fallback appUrl articles. Valide via Google Rich Results Test (1 element valide detecte). Note : le bot du Rich Results Test retourne parfois "acces impossible" sur les pages ISR Vercel avant premiere visite — le vrai Googlebot indexe normalement via sitemap ✅
 ### next.config.mjs
 - `remotePatterns` : `images.unsplash.com` + `images.pexels.com` + `*.supabase.co` + `cdn.shopify.com` + `flagcdn.com`
 ### Déploiement
@@ -613,8 +615,9 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 - Léa : mode manuel uniquement (pas d'intégration email automatique prévue)
 - Footer page accueil : lien Admin supprimé, TikTok supprimé, Facebook lié (https://www.facebook.com/profile.php?id=61589487954538) + Instagram lié (https://www.instagram.com/mespoilusofficiel)
 - Lucas cron blog : priorité sujets trending > AWIN affiliés > fallback saisonnier
-- Rotation type d'article cron blog : trending → affiliation → pratique → **race** via `(semaine*3+jourIndex)%4` + override manuel CronLauncher
+- Rotation type d'article cron blog : 5 types (trending, affiliation, pratique, race, **best_of**) via `(nb_articles_animal + offset) % 5` — offset par animal pour diversité simultanée + override manuel CronLauncher
 - Type **race** : Lucas choisit la meilleure race SEO (non encore couverte en priorité) depuis breeds table (photo + content requis) → Marie intègre lien fiche race → image = photo_url Supabase → breed_slug enregistré dans articles
+- Type **best_of** : Lucas choisit un sujet "Meilleur X pour [animal]" à fort potentiel SEO/affiliation → Marie rédige top 3-5 produits avec liens Awin si dispo + liens recherche Amazon (`amazon.fr/s?k=...&tag=mespoilus-21`). Pas de fallback nécessaire (Amazon links toujours disponibles)
 - Cron blog passe en `?auto=true` : animal = catégorie avec le moins d'articles publiés (plus de rotation fixe)
 - Liens articles/prompts unifiés en `https://www.mespoilus.com/...` partout (blog, social, adoption, newsletter crons)
 - Migration `migration_article_breed.sql` à exécuter : `ALTER TABLE articles ADD COLUMN breed_slug text`
@@ -655,8 +658,9 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 - **Commentaires articles blog** ✅ : formulaire (prénom + texte, max 1000 chars) sur `/blog/[slug]`, table `article_comments` (status: pending/approved/rejected), API `POST /api/comments/submit` (rate-limit 5/h), section commentaires approuvés affichée au-dessus du formulaire, modération via **`/gestion-blog`** (approuver/rejeter), migration `migration_article_comments.sql` ✅ exécutée
 - **Feature "Fiches races"** : pages `/races`, `/races/[animal]`, `/races/[animal]/[slug]`, cron Haiku génération breeds, table `breeds` Supabase ✅
   - `/races` : 5 catégories en cartes portrait avec photos `hero_photos` + fallback gradient
-  - `/races/[animal]` : grille **6 colonnes** (`lg:grid-cols-6`), barre de recherche (`?q=`), bannière orange standard, toggle liste/grille, **photos individuelles par race** depuis `breeds.photo_url` (affiche "NO IMAGE" si absent), **`revalidate = 3600`**, images **sans `unoptimized`** (WebP + cache CDN Vercel)
-  - `/races/[animal]/[slug]` : photo depuis `breed.photo_url` (plus de `hero_photos`), photo `aspect-[3/4] max-w-xs` centrée, bannière orange, container `max-w-4xl`, stats + caractère + convient_pour + description (3 paragraphes) + soins, **`revalidate = 3600`**
+  - `/races/[animal]` : grille **6 colonnes** (`lg:grid-cols-6`), barre de recherche (`?q=`), bannière orange standard, toggle liste/grille, **photos individuelles par race** depuis `breeds.photo_url`, **`revalidate = 3600`**. **Onglets filtres** : Toutes / Appartement / Enfants / Débutants / Seniors
+  - `/races/[animal]/[slug]` : photo depuis `breed.photo_url`, photo `aspect-[3/4] max-w-xs` centrée, bannière orange, container `max-w-4xl`, stats + caractère + convient_pour + description + soins, **`revalidate = 3600`**
+  - `/races/[animal]/appartement|enfants|debutants|seniors` : **20 pages filtres** (5 animaux × 4 critères) — filtre JS sur `content.convient_pour`, breadcrumb, onglets actifs, JSON-LD `CollectionPage`, metadata uniques, dans sitemap, `generateStaticParams` ✅
   - Cron `/api/cron/breeds` : Haiku 4.5, max_tokens=4096, **1×/semaine dimanche 7h UTC**, batch 10, upsert `animal,slug`, nettoyage JSON robuste + repair, logs JSON complets sur erreur parse
   - **`BREEDS_SEED` : 190 races** (80 chiens, 45 chats, 25 oiseaux, 23 rongeurs, 17 reptiles) — nouvelles races ordonnées **2 par catégorie par semaine** (interleaved)
   - Toggle grille/liste via `?view=list` URL param (composant `ViewToggle.tsx` partagé)
@@ -794,15 +798,18 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
 - **Colonne `product_type TEXT`** sur `products` : migration `migration_product_type.sql` à exécuter, index GIN. `assignProductType()` dans `awin.ts` détecte le type depuis GPC + titre (ISBN → livres en priorité). `'bd'` retiré (faux positifs couvertures) ✅
 - **Livres Amazon** : `product_type = 'livres'` ajouté dans POST et PATCH de `/api/admin/products` — les nouveaux livres sont automatiquement filtrables. SQL pour les existants : `UPDATE products SET product_type = 'livres' WHERE merchant_name = 'Amazon FR';` ✅
 - **Trouveur de veterinaire** (`VetFinderPanel`) : onglet bleu fixe droite toutes pages publiques (hors admin), panel slide-in. Largeur responsive : `w-full` mobile, `min(88vw,600px)` desktop (breakpoint md). Geocodage + autocomplete Nominatim (OpenStreetMap, gratuit, sans cle, debounce 600ms, dropdown suggestions). Carte + markers Google Maps + Places API nearbySearch. Champ adresse unique avec suggestions en temps reel (worldwide). Layout: bouton GPS + rayon (ligne 1), adresse (ligne 2), bouton rechercher. Carte bords arrondis `rounded-xl border`. Layout scroll unique (form+carte+resultats). `mapReady` state evite recherches silencieuses avant init carte. Lien vet : format `maps/search/?api=1&query_place_id=` (compatible mobile + app Maps). CSP: `geolocation=(self)` dans Permissions-Policy, `fundingchoicesmessages.google.com` dans connect-src. Env: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (Vercel + .env.local). Section 2.9 ajoutee dans politique-confidentialite (Google Maps IP + GPS opt-in non stocke) ✅
+- **Trouveur de refuge** (`RefugeFinderPanel`) : meme architecture que `VetFinderPanel` mais en rose (`pink-500`). Onglet fixe droite positionne juste au-dessus du tab veterinaire (`bottom: calc(50% + 80px)`). Icone `Heart`. Recherche via Places API `keyword: 'refuge animaux SPA'` (pas de type specifique Google Maps pour refuges). Markers roses `#db2777`. Fichier : `src/components/refuge/RefugeFinderPanel.tsx`. Ajoute dans `LayoutShell` avant `VetFinderPanel` ✅
+- **AnimalDayPopup** (`src/components/ui/AnimalDayPopup.tsx`) : modal centree avec overlay, s'affiche une seule fois par jour (localStorage `animal-day-seen` = date ISO du jour). Declenchee sur 6 journees mondiales fixes : 4 avr (rat 🐀), 23 mai (tortues 🐢), 31 mai (perroquets 🦜), 8 aout (chat 🐱), 26 aout (chien 🐶), 4 oct (animaux 🐾). CTA "Faites un cadeau a votre animal" redirige vers `/boutique?category={animal}` (ou `/boutique` pour journee generale). Fermeture : clic overlay, bouton croix, ou "Non merci". Ajoute dans `LayoutShell` cote public uniquement (hors admin) ✅
 ---
 ## Ce qui reste à faire (code)
-### Boutique / Monétisation
-- **Amazon Associates FR** : compte approuvé (ID `mespoilus-21`). Page admin `/produits` opérationnelle pour ajout manuel de livres. Après 3 ventes dans 180 jours → intégration API Product Advertising pour sync automatique
-- Barre de recherche produits ajoutée (`?search=mot`) -filtre par nom et description via `ilike`
-### Marketing
-- Stratégie backlinks francophones
-- Lucas : connexion API volume mots-clés (Ahrefs, Semrush)
+### SEO / Contenu (fort impact)
+- ~~Pages "Meilleure race pour..."~~ ✅ fait
+### Monétisation
+- **Amazon Associates FR** : compte approuvé (ID `mespoilus-21`). Attendre 3 ventes dans 180 jours → activer API Product Advertising pour sync automatique
 ### Infrastructure
-- Redis (Upstash) pour rate limiting distribué
-- Monitoring erreurs (Sentry)
-- Backups Supabase automatisés
+- **Monitoring erreurs (Sentry)** : utile pour detecter les pannes cron silencieuses
+- **Backups Supabase automatisés**
+- **Redis (Upstash)** : rate limiting distribue — moins urgent
+### Marketing
+- **Stratégie backlinks francophones**
+- **Lucas : connexion API volume mots-clés** (Ahrefs ou Semrush)

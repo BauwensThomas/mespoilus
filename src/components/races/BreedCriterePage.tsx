@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_URL, type Breed } from '@/lib/breeds-list';
 import BreedsList from '@/components/races/BreedsList';
+import BreedsSearchBar from '@/components/races/BreedsSearchBar';
 
 export type Critere = 'appartement' | 'enfants' | 'debutants' | 'seniors';
 
@@ -45,11 +47,14 @@ export async function getBreedCritereMetadata(
 interface Props {
   params: { animal: string };
   critere: Critere;
+  searchParams?: { q?: string; view?: string };
 }
 
-export default async function BreedCriterePage({ params, critere }: Props) {
+export default async function BreedCriterePage({ params, critere, searchParams }: Props) {
   const animalType = ANIMAL_URL_MAP[params.animal];
   if (!animalType) notFound();
+
+  const q = searchParams?.q?.trim() ?? '';
 
   const supabase = createAdminClient();
   const { data: allBreeds } = await supabase
@@ -60,9 +65,11 @@ export default async function BreedCriterePage({ params, critere }: Props) {
     .not('content', 'is', null)
     .order('name', { ascending: true });
 
-  const breeds = ((allBreeds ?? []) as Breed[]).filter(
-    b => b.content?.convient_pour?.[critere] === true
-  );
+  const breeds = ((allBreeds ?? []) as Breed[]).filter(b => {
+    if (b.content?.convient_pour?.[critere] !== true) return false;
+    if (q) return b.name.toLowerCase().includes(q.toLowerCase());
+    return true;
+  });
 
   const label = CRITERE_LABEL[critere];
   const animalLabel = ANIMAL_LABEL[animalType];
@@ -81,20 +88,12 @@ export default async function BreedCriterePage({ params, critere }: Props) {
 
   return (
     <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
       <div>
-        <div className="flex items-center gap-1.5 text-sm text-gray-400 mb-1">
-          <Link href="/races" className="hover:text-orange-600 transition-colors">Races</Link>
-          <span>/</span>
-          <Link href={`/races/${params.animal}`} className="hover:text-orange-600 transition-colors">{animalLabel}</Link>
-          <span>/</span>
-          <span className="text-gray-600">{label}</span>
-        </div>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">
-          Meilleure race de {animalLabel.toLowerCase()} pour {label.toLowerCase()}
+          {animalLabel}
         </h1>
-        <p className="text-gray-500 text-sm">{CRITERE_INTRO[critere](animalLabelLower)}</p>
+        <p className="text-gray-500 text-sm">Fiches races pour {label.toLowerCase()} : caractère, santé, entretien</p>
       </div>
 
       {/* Onglets filtres */}
@@ -120,6 +119,10 @@ export default async function BreedCriterePage({ params, critere }: Props) {
         ))}
       </div>
 
+      <Suspense>
+        <BreedsSearchBar defaultValue={q} />
+      </Suspense>
+
       <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
         <div>
           <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">{animalLabel} · {label}</p>
@@ -142,7 +145,7 @@ export default async function BreedCriterePage({ params, critere }: Props) {
           </Link>
         </div>
       ) : (
-        <BreedsList breeds={breeds} animalUrl={animalUrl} view="grid" />
+        <BreedsList breeds={breeds} animalUrl={animalUrl} view={searchParams?.view === 'list' ? 'list' : 'grid'} />
       )}
     </div>
   );
