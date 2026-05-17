@@ -58,6 +58,10 @@ export default function PolitiqueConfidentialitePage() {
                 <h3 className="font-medium text-gray-700 mb-2">2.8 Demandes de contact par email</h3>
                 <p>Lorsque vous nous contactez par email (presse, partenariats, questions générales), votre <strong>adresse email</strong> et le contenu de votre message sont utilisés uniquement pour répondre à votre demande. Ces échanges ne sont pas stockés dans une base de données et ne sont pas utilisés à des fins commerciales.</p>
               </div>
+              <div>
+                <h3 className="font-medium text-gray-700 mb-2">2.9 Outil "Trouver un vétérinaire" (Google Maps)</h3>
+                <p>Notre outil de recherche de vétérinaires utilise <strong>Google Maps Platform</strong> (Google Ireland Limited). Le chargement de la carte transmet votre <strong>adresse IP</strong> aux serveurs de Google, conformément à la <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">politique de confidentialité de Google</a>. Si vous utilisez le bouton <em>"Ma position"</em>, votre navigateur vous demande explicitement l'autorisation d'accéder à votre <strong>position GPS</strong>. Cette position est utilisée uniquement pour centrer la carte et lancer la recherche à proximité. Elle n'est jamais transmise à nos serveurs ni stockée dans notre base de données. La géolocalisation n'est activée que sur votre action volontaire et peut être refusée sans impact sur les autres fonctionnalités du site.</p>
+              </div>
             </div>
           </section>
 
@@ -72,6 +76,7 @@ export default function PolitiqueConfidentialitePage() {
                   { traitement: 'Commentaires articles', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Cookies analytiques', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Téléchargement guide PDF', base: 'Consentement (Art. 6.1.a RGPD)' },
+                  { traitement: 'Géolocalisation (vétérinaire)', base: 'Consentement explicite navigateur (Art. 6.1.a RGPD)' },
                   { traitement: 'Cookies essentiels', base: 'Intérêt légitime (Art. 6.1.f RGPD)' },
                   { traitement: 'Logs de sécurité', base: 'Intérêt légitime (Art. 6.1.f RGPD)' },
                   { traitement: 'Facturation', base: 'Obligation légale (Art. 6.1.c RGPD)' },
@@ -122,6 +127,7 @@ export default function PolitiqueConfidentialitePage() {
                   </ul>
                 </li>
                 <li>Google Analytics - Données de navigation anonymisées (si consentement accordé)</li>
+                <li>Google Maps Platform - Adresse IP transmise lors du chargement de la carte vétérinaire (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">politique Google</a>)</li>
                 <li>Resend - Service d'envoi d'emails transactionnels (confirmation d'annonce, notifications)</li>
                 <li>Vercel - Hébergeur du site (infrastructure technique)</li>
                 <li>Supabase - Base de données et stockage des photos (hébergement EU disponible)</li>
