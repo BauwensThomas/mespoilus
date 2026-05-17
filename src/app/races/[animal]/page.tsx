@@ -62,6 +62,24 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
         <p className="text-gray-500 text-sm">Fiches races : caractère, santé, entretien</p>
       </div>
 
+      {/* Onglets filtres */}
+      <div className="flex flex-wrap gap-2">
+        <span className="px-4 py-1.5 rounded-full text-sm font-medium bg-orange-500 border border-orange-500 text-white">
+          Toutes
+        </span>
+        {[
+          { href: `/races/${params.animal}/appartement`, label: 'Appartement' },
+          { href: `/races/${params.animal}/enfants`,     label: 'Enfants' },
+          { href: `/races/${params.animal}/debutants`,   label: 'Débutants' },
+          { href: `/races/${params.animal}/seniors`,     label: 'Seniors' },
+        ].map(({ href, label }) => (
+          <Link key={href} href={href}
+            className="px-4 py-1.5 rounded-full text-sm font-medium border border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-600 transition-colors">
+            {label}
+          </Link>
+        ))}
+      </div>
+
       <Suspense>
         <BreedsSearchBar defaultValue={q} />
       </Suspense>
