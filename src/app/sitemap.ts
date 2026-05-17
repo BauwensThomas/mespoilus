@@ -85,6 +85,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${APP_URL}/races/oiseaux`,  lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
     { url: `${APP_URL}/races/rongeurs`, lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
     { url: `${APP_URL}/races/reptiles`, lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
+    ...(['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'] as const).flatMap(animal =>
+      (['appartement', 'enfants', 'debutants', 'seniors'] as const).map(critere => ({
+        url: `${APP_URL}/races/${animal}/${critere}`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.7,
+      }))
+    ),
     { url: `${APP_URL}/adoption/deposer`,          lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${APP_URL}/mentions-legales`,          lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
     { url: `${APP_URL}/politique-confidentialite`, lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
