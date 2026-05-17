@@ -5,8 +5,10 @@ import { usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import PublicHeader from './PublicHeader';
 import VetFinderPanel from '@/components/vet/VetFinderPanel';
+import RefugeFinderPanel from '@/components/refuge/RefugeFinderPanel';
 import { PARTENAIRES, getFlagUrl } from '@/lib/partenaires';
 import clsx from 'clsx';
+import AnimalDayPopup from '@/components/ui/AnimalDayPopup';
 
 const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/moderation', '/produits', '/guides-admin', '/gestion-races', '/gestion-blog'];
 
@@ -132,7 +134,9 @@ export default function LayoutShell({ children, pendingCount = 0 }: { children: 
       <PublicHeader />
       <PartenairesBandeau />
       <main>{children}</main>
+      <RefugeFinderPanel />
       <VetFinderPanel />
+      <AnimalDayPopup />
     </>
   );
 }

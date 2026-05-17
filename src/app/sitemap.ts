@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = createAdminClient();
     const { data: articles } = await supabase
       .from('articles')
-      .select('slug, published_at, updated_at')
+      .select('slug, published_at, updated_at, image_url')
       .eq('status', 'published')
       .order('published_at', { ascending: false });
 
@@ -21,6 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(article.updated_at ?? article.published_at ?? Date.now()),
       changeFrequency: 'monthly' as const,
       priority: 0.8,
+      ...(article.image_url ? { images: [article.image_url] } : {}),
     }));
   } catch {
     // Supabase unavailable - sitemap without articles
@@ -47,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = createAdminClient();
     const { data: breeds } = await supabase
       .from('breeds')
-      .select('animal, slug, generated_at')
+      .select('animal, slug, generated_at, photo_url')
       .eq('status', 'published')
       .not('content', 'is', null);
 
@@ -57,6 +58,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(b.generated_at ?? Date.now()),
       changeFrequency: 'yearly' as const,
       priority: 0.7,
+      ...(b.photo_url ? { images: [b.photo_url] } : {}),
     }));
   } catch {
     // Supabase unavailable - sitemap without breeds

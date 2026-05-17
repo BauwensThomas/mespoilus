@@ -70,6 +70,23 @@ export default async function BreedPage({ params }: Props) {
   const c = breed.content;
   const gradient = ANIMAL_GRADIENT[animalType];
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com';
+  const breedUrl = `${appUrl}/races/${params.animal}/${params.slug}`;
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: `${breed.name} - Caractère, Santé, Entretien`,
+    description: c.excerpt ?? `Tout sur le ${breed.name} : caractère, santé, entretien et conseils.`,
+    ...(photo ? { image: { '@type': 'ImageObject', url: photo, alt: `${breed.name} - ${ANIMAL_LABEL[animalType]}` } } : {}),
+    datePublished: breed.generated_at ?? undefined,
+    dateModified: breed.generated_at ?? undefined,
+    author: { '@type': 'Organization', name: 'Mes Poilus', url: appUrl },
+    publisher: { '@type': 'Organization', name: 'Mes Poilus', url: appUrl, logo: { '@type': 'ImageObject', url: `${appUrl}/favicon.ico` } },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': breedUrl },
+    inLanguage: 'fr',
+    url: breedUrl,
+  };
+
   const CONVIENT_LABELS: Record<string, string> = {
     appartement: 'Appartement',
     jardin:      'Jardin',
@@ -80,6 +97,10 @@ export default async function BreedPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50 px-6 md:px-8 py-6 space-y-5">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {/* Fil d'ariane + titre */}
       <div>
