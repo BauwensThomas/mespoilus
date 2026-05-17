@@ -201,33 +201,52 @@ export async function GET(req: Request) {
       : requestedType;
     if (forcedType !== requestedType) console.log('[Cron1] Affiliation: tous bloqués → fallback pratique');
 
-    // ─── SÉLECTION DE RACE (si type race) ────────────────────────────────────
-    let selectedBreed: { name: string; slug: string; animal: string; photo_url: string } | null = null;
+    // ─── DONNÉES RACES pour Lucas (si type race) ─────────────────────────────
+    type BreedRow = { name: string; slug: string; animal: string; photo_url: string };
+    let selectedBreed: BreedRow | null = null;
+    let allRaceBreeds: BreedRow[] = [];
+    let uncoveredBreedNames = '';
+    let coveredBreedNames = '';
     if (forcedType === 'race') {
       try {
+        const animalSingular: Record<string, string> = {
+          chiens: 'chien', chats: 'chat', oiseaux: 'oiseau', rongeurs: 'rongeur', reptiles: 'reptile',
+        };
+        const breedAnimal = animalSingular[animal] ?? animal;
+
         const { data: breedRows } = await supabase
           .from('breeds')
           .select('name, slug, animal, photo_url')
           .not('photo_url', 'is', null)
           .eq('status', 'published')
-          .limit(100);
+          .eq('animal', breedAnimal)
+          .limit(200);
 
-        const recentTitlesLower = recentTitles.map(t => t.toLowerCase());
-        const eligible = (breedRows ?? []).filter(
-          (b: { name: string; slug: string; animal: string; photo_url: string }) =>
-            !recentTitlesLower.some(t => t.includes(b.name.toLowerCase()))
-        );
+        allRaceBreeds = (breedRows ?? []) as BreedRow[];
 
-        if (eligible.length > 0) {
-          selectedBreed = eligible[Math.floor(Math.random() * eligible.length)] as typeof selectedBreed;
-          animal = selectedBreed!.animal;
-          console.log(`[Cron1] Race sélectionnée : ${selectedBreed!.name} (${selectedBreed!.animal})`);
-        } else {
-          console.log('[Cron1] Aucune race éligible → fallback pratique');
+        if (allRaceBreeds.length === 0) {
+          console.log('[Cron1] Aucune race avec photo → fallback pratique');
           forcedType = 'pratique';
+        } else {
+          let coveredSlugs: string[] = [];
+          try {
+            const { data: coveredRows } = await supabase
+              .from('articles')
+              .select('breed_slug')
+              .not('breed_slug', 'is', null)
+              .eq('status', 'published');
+            coveredSlugs = (coveredRows ?? []).map((r: { breed_slug: string }) => r.breed_slug).filter(Boolean);
+          } catch { /* migration breed_slug pas encore appliquée */ }
+
+          const uncovered = allRaceBreeds.filter(b => !coveredSlugs.includes(b.slug));
+          const covered   = allRaceBreeds.filter(b =>  coveredSlugs.includes(b.slug));
+
+          uncoveredBreedNames = uncovered.map(b => `- ${b.name} (slug: ${b.slug})`).join('\n');
+          coveredBreedNames   = covered.map(b => `- ${b.name} (slug: ${b.slug})`).join('\n');
+          console.log(`[Cron1] Races ${animal}: ${uncovered.length} non couvertes, ${covered.length} couvertes`);
         }
       } catch (err) {
-        console.warn('[Cron1] Sélection race erreur:', err);
+        console.warn('[Cron1] Races erreur:', err);
         forcedType = 'pratique';
       }
     }
@@ -260,11 +279,15 @@ activités, premiers secours, comportement, éducation, hygiène.
 Évite les sujets trop génériques -sois précis et utile.`,
 
       race: `TYPE IMPOSÉ : FICHE RACE
-Tu dois trouver le meilleur angle SEO pour un article sur la race : ${selectedBreed?.name ?? animal}.
-Exemples d'angles : "caractère et comportement", "est-ce la bonne race pour moi ?", "santé et maladies fréquentes",
-"alimentation et entretien", "éducation et exercice", "convient-il aux familles avec enfants ?".
-Choisis l'angle le plus recherché sur Google pour cette race.
-NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT doivent être AUCUN (l'image vient de la fiche race).`,
+Choisis la race avec le MEILLEUR potentiel SEO parmi les ${animal} ci-dessous, puis trouve l'angle d'article le plus recherché sur Google.
+
+${uncoveredBreedNames ? `RACES NON ENCORE COUVERTES (PRIORITÉ ABSOLUE) :\n${uncoveredBreedNames}` : `Toutes les races ont déjà un article. Choisis celle qui mérite un NOUVEL ANGLE :`}
+${coveredBreedNames && uncoveredBreedNames ? `\nRACES DÉJÀ COUVERTES (ignorer sauf si liste prioritaire vide) :\n${coveredBreedNames}` : coveredBreedNames ? coveredBreedNames : ''}
+
+Critères : volume de recherche Google, popularité de la race, questions fréquentes des propriétaires.
+Angles possibles : caractère et comportement, est-ce la bonne race pour moi, santé et maladies fréquentes, alimentation et entretien, éducation, convient-il aux familles/seniors/appartement.
+Tu DOIS retourner RACE_SLUG correspondant EXACTEMENT au slug indiqué dans la liste ci-dessus.
+NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT doivent être AUCUN.`,
     };
 
     const lucasPrompt = `Trouve le meilleur sujet d'article SEO pour les propriétaires de ${animal} (${monthName}).
@@ -276,6 +299,7 @@ ${recentContext}
 
 Retourne UNIQUEMENT :
 SUJET: [le sujet choisi]
+RACE_SLUG: [slug exact de la race choisie tel quel dans la liste, ou AUCUN si type non-race]
 MOTS_CLES: [mot1, mot2, mot3, mot4, mot5]
 INTENTION: [ce que cherche l'internaute]
 RAISON: [pourquoi ce sujet est pertinent]
@@ -303,6 +327,18 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       imageProduit = (imageMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (imageMatch?.[1]?.trim() ?? '');
       const metaDescMatch = lucasResult.content.match(/META_DESC:\s*(.+)/i);
       metaDesc = metaDescMatch?.[1]?.trim() ?? '';
+
+      // TYPE RACE : résoudre selectedBreed depuis le slug retourné par Lucas
+      if (forcedType === 'race' && allRaceBreeds.length > 0) {
+        const raceSlugMatch = lucasResult.content.match(/RACE_SLUG:\s*(.+)/i);
+        const raceSlug = raceSlugMatch?.[1]?.trim();
+        if (raceSlug && raceSlug !== 'AUCUN') {
+          selectedBreed = allRaceBreeds.find(b => b.slug === raceSlug) ?? allRaceBreeds[0];
+        } else {
+          selectedBreed = allRaceBreeds[0];
+        }
+        console.log(`[Cron1] Race choisie par Lucas : ${selectedBreed?.name ?? 'inconnue'}`);
+      }
 
       // Si affiliation demandée mais Lucas n'a pas retourné de lien → forcer un produit dispo
       // + adapter le sujet pour que l'article parle vraiment de ce produit
@@ -410,6 +446,14 @@ CONSIGNES :
     if (nomProduit && articleSlug) {
       try {
         await supabase.from('articles').update({ featured_partner: nomProduit }).eq('slug', articleSlug);
+      } catch { /* migration non encore appliquée -pas de blocage */ }
+    }
+
+    // Sauvegarder la race utilisée (requiert migration_article_breed.sql)
+    if (forcedType === 'race' && selectedBreed && articleSlug) {
+      try {
+        await supabase.from('articles').update({ breed_slug: selectedBreed.slug }).eq('slug', articleSlug);
+        console.log(`[Cron1] breed_slug "${selectedBreed.slug}" enregistré`);
       } catch { /* migration non encore appliquée -pas de blocage */ }
     }
 
