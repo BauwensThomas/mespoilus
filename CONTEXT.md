@@ -730,6 +730,10 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
   - Quiz "Quel animal pour moi ?" (`/outils/quiz`) : 6 questions, 5 animaux scorés, progression automatique 300ms, résultat avec conseils, `max-w-6xl`
   - Générateur de prénom (`/outils/prenom`) : 5 animaux × 4 styles - Tirage aléatoire de 6, grille 3 cols, **connecté à la table Supabase `prenoms`** (fallback statique si vide), badge "Mis à jour ce mois-ci" si données DB actives
   - Guides PDF gratuits (`/guides`) : page liste avec modal email + download sécurisé, `max-w-6xl`
+  - **Trouver un vétérinaire** (`/outils/veterinaire`) : `VetFinderPanel.tsx`, panel pleine largeur mobile / `min(88vw,600px)` desktop, geocoding via **Nominatim** (OpenStreetMap, gratuit, pas de clé API), autocomplete dropdown debounce 600ms, bouton "Ma position" (géolocalisation navigateur), sélecteur rayon, carte Google Maps JS API avec cercle de recherche + marqueurs (Places API nearbySearch), résultats avec lien `maps/search/?api=1&query_place_id=` (compatible mobile), contours carte blancs arrondis ✅
+  - **next.config.mjs** : `Permissions-Policy: geolocation=(self)` (était `()` → bloquait toute géolocalisation), CSP `connect-src` + `fundingchoicesmessages.google.com` ajouté ✅
+  - **Politique de confidentialité** : section 2.9 "Outil Trouver un vétérinaire (Google Maps)" + géolocalisation dans table base légale + Google Maps Platform dans sous-traitants ✅
+  - Clé API : `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (Maps JS API + Places API activées dans Google Cloud Console)
 - **Cron mensuel prénoms** : `/api/cron/prenoms` (1er du mois, 7h UTC) - Thomas génère 50 prénoms par animal (5 animaux × 4 styles) via Claude Haiku, DELETE+INSERT full refresh, logActivity ✅
   - Table `prenoms` : `(animal TEXT, style TEXT, names TEXT[], generated_at TIMESTAMP, PRIMARY KEY(animal, style))`, RLS public SELECT
   - CronLauncher : pipeline "Prénoms animaux" (pipeline #5) avec icône Sparkles
