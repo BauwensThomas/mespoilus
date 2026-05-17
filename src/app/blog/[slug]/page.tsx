@@ -100,7 +100,7 @@ export default async function ArticlePage({ params }: Props) {
   const heroImage = article.image_url || null;
   const heroAlt = article.image_alt || article.title;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mespoilus.com';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com';
   const articleUrl = `${appUrl}/blog/${article.slug}`;
 
   const jsonLd = {
@@ -108,12 +108,14 @@ export default async function ArticlePage({ params }: Props) {
     '@type': 'Article',
     headline: article.title,
     description: article.meta_description ?? article.excerpt,
-    image: article.image_url ?? undefined,
+    ...(article.image_url ? {
+      image: { '@type': 'ImageObject', url: article.image_url, alt: article.image_alt ?? article.title },
+    } : {}),
     keywords: article.seo_keywords?.join(', '),
     datePublished: article.published_at ?? undefined,
     dateModified: article.updated_at ?? article.published_at ?? undefined,
     author: { '@type': 'Person', name: 'Marie', url: `${appUrl}/agents/marie` },
-    publisher: { '@type': 'Organization', name: 'Mes Poilus', url: appUrl },
+    publisher: { '@type': 'Organization', name: 'Mes Poilus', url: appUrl, logo: { '@type': 'ImageObject', url: `${appUrl}/favicon.ico` } },
     mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl },
     inLanguage: 'fr',
     url: articleUrl,
