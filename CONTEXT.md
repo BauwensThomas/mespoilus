@@ -237,7 +237,7 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 | `/api/cron/adoption-cleanup` | Tous les jours | 3h00 | - | Soft delete annonces ≥60j (status=deleted, PII anonymises) + log activity_logs (meme si 0 annonces) |
 | `/api/cron/adoption-social` | **Chaque mardi** | 19h00 | Emma | `social_posts` + webhook Make.com - Photo réelle annonce - Abandon si 0 annonces |
 | `/api/cron/breeds?batch=10` | **Chaque dimanche** | 7h00 | Haiku | `breeds` (10 races/run, 2 par catégorie interleaved) |
-| `/api/cron/daily-recap` | **Tous les jours** | 20h00 | - | Email recap journalier → `contact@mespoilus.com` : liste tous les logs du jour (`activity_logs`), stats (total, succes, erreurs, tokens). **20h UTC = 22h heure belge ete / 21h hiver**. Loggue lui-meme dans `activity_logs`. |
+| `/api/cron/daily-recap` | **Tous les jours** | 20h00 | - | Email recap journalier → `contact@mespoilus.com` : liste tous les logs du jour (`activity_logs`), stats (total, succes, erreurs, manquants, tokens), **heures en heure belge** + UTC entre parentheses. Section rouge si crons attendus absents des logs (detection par pattern dans `action`). Declenchable manuellement depuis CronLauncher. **20h UTC = 22h heure belge ete / 21h hiver**. Loggue lui-meme dans `activity_logs`. |
 **⚠️ Fiabilité crons Vercel Hobby :** les crons sont tous reconnus (19 au total) mais Vercel Hobby n'a pas de retry. Un cron manqué est silencieux. Pour les crons critiques (blog, social), vérifier régulièrement Vercel Dashboard → Settings → Crons → Last execution.
 **Protection anti-doublons :**
 - Finance → vérifie si `financial_reports.period` existe déjà pour ce mois → abandon si oui
