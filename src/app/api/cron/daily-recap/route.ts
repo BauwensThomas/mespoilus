@@ -127,11 +127,11 @@ export async function GET(req: Request) {
     <div style="margin:0;padding:16px 24px;background:#fef2f2;border-top:1px solid #fecaca">
       <p style="font-size:12px;font-weight:700;color:#dc2626;margin:0 0 8px">Crons attendus non detectes (${missing.length})</p>
       ${missing.map(m => `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-          <span style="color:#dc2626;font-size:12px">!</span>
-          <span style="font-size:12px;color:#374151;font-weight:600">${m.label}</span>
-          <span style="font-size:11px;color:#9ca3af">prevu vers ${m.hour} UTC</span>
-        </div>`).join('')}
+        <p style="margin:4px 0;font-size:12px;color:#374151">
+          <span style="color:#dc2626;font-weight:700;margin-right:8px">!</span>
+          <span style="font-weight:600;margin-right:8px">${m.label}</span>
+          <span style="color:#9ca3af">prevu vers ${m.hour} UTC</span>
+        </p>`).join('')}
     </div>`;
 
   const html = `
