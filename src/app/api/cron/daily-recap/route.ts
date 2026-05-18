@@ -201,7 +201,7 @@ export async function GET(req: Request) {
         }
 
         <div style="padding:16px 24px;border-top:1px solid #f3f4f6;text-align:center">
-          <p style="font-size:11px;color:#9ca3af;margin:0">Mes Poilus - recap automatique envoye chaque soir a 22h heure belge (20h UTC)</p>
+          <p style="font-size:11px;color:#9ca3af;margin:0">Mes Poilus - recap automatique envoye chaque soir à 22h heure belge (20h UTC)</p>
         </div>
       </div>
     </div>`;
