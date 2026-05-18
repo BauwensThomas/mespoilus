@@ -58,7 +58,15 @@ export async function GET(req: Request) {
 
     const { error: delErr } = await supabase
       .from('adoption_posts')
-      .delete()
+      .update({
+        status:         'deleted',
+        deleted_at:     new Date().toISOString(),
+        deleted_by:     'cron',
+        deleted_reason: 'auto_expired',
+        poster_name:    'Anonymisé',
+        email:          null,
+        contact_info:   null,
+      })
       .eq('id', post.id);
 
     if (delErr) {

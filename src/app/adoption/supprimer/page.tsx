@@ -2,26 +2,29 @@
 
 import { Suspense, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Trash2, CheckCircle2, XCircle } from 'lucide-react';
+import { Trash2, CheckCircle2, XCircle, Heart, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
-function SupprimerContent() {
-  const params   = useSearchParams();
-  const router   = useRouter();
-  const id       = params.get('id') ?? '';
-  const token    = params.get('token') ?? '';
+type Reason = 'adopted' | 'error';
 
-  const [status, setStatus]   = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+function SupprimerContent() {
+  const params  = useSearchParams();
+  const router  = useRouter();
+  const id      = params.get('id') ?? '';
+  const token   = params.get('token') ?? '';
+
+  const [reason, setReason]     = useState<Reason | null>(null);
+  const [status, setStatus]     = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
   async function handleDelete() {
-    if (!id || !token) { setErrorMsg('Lien invalide.'); setStatus('error'); return; }
+    if (!id || !token || !reason) return;
     setStatus('loading');
     try {
       const res  = await fetch('/api/adoption/delete', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, token }),
+        body:    JSON.stringify({ id, token, reason }),
       });
       const data = await res.json();
       if (!res.ok) { setErrorMsg(data.error ?? 'Erreur'); setStatus('error'); return; }
@@ -50,8 +53,13 @@ function SupprimerContent() {
       <div className="min-h-screen bg-white flex items-center justify-center px-4">
         <div className="text-center space-y-3">
           <CheckCircle2 size={48} className="text-emerald-500 mx-auto" strokeWidth={1.5} />
-          <h2 className="text-gray-900 font-semibold text-lg">Annonce supprimée !</h2>
-          <p className="text-gray-500 text-sm">Félicitations pour l'adoption ! Redirection…</p>
+          <h2 className="text-gray-900 font-semibold text-lg">Annonce retirée !</h2>
+          <p className="text-gray-500 text-sm">
+            {reason === 'adopted'
+              ? 'Félicitations pour l\'adoption ! Votre animal a trouvé un foyer.'
+              : 'Annonce supprimée avec succès.'}
+          </p>
+          <p className="text-gray-400 text-xs">Redirection en cours…</p>
         </div>
       </div>
     );
@@ -59,19 +67,49 @@ function SupprimerContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="bg-white border border-gray-200 rounded-2xl p-8 max-w-md w-full text-center space-y-5">
-        <div className="flex justify-center">
-          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
-            <Trash2 size={26} className="text-red-500" strokeWidth={1.5} />
+      <div className="bg-white border border-gray-200 rounded-2xl p-8 max-w-md w-full space-y-6">
+
+        <div className="text-center space-y-1.5">
+          <div className="flex justify-center mb-3">
+            <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+              <Trash2 size={26} className="text-red-500" strokeWidth={1.5} />
+            </div>
           </div>
+          <h1 className="text-gray-900 font-bold text-xl">Retirer mon annonce</h1>
+          <p className="text-gray-500 text-sm">Pourquoi souhaitez-vous retirer cette annonce ?</p>
         </div>
 
-        <div className="space-y-1.5">
-          <h1 className="text-gray-900 font-bold text-xl">Supprimer mon annonce</h1>
-          <p className="text-gray-500 text-sm">
-            Votre animal a trouvé un foyer ? Super nouvelle !<br />
-            Cliquez ci-dessous pour retirer votre annonce.
-          </p>
+        {/* Choix de la raison */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => setReason('adopted')}
+            className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${
+              reason === 'adopted'
+                ? 'border-emerald-500 bg-emerald-50'
+                : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50'
+            }`}
+          >
+            <Heart size={24} className={reason === 'adopted' ? 'text-emerald-600' : 'text-gray-400'} strokeWidth={1.5} />
+            <span className={`text-sm font-semibold ${reason === 'adopted' ? 'text-emerald-700' : 'text-gray-600'}`}>
+              Animal adopté
+            </span>
+            <span className="text-xs text-gray-400 text-center leading-tight">Il a trouvé un foyer</span>
+          </button>
+
+          <button
+            onClick={() => setReason('error')}
+            className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${
+              reason === 'error'
+                ? 'border-gray-500 bg-gray-50'
+                : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50/50'
+            }`}
+          >
+            <AlertCircle size={24} className={reason === 'error' ? 'text-gray-600' : 'text-gray-400'} strokeWidth={1.5} />
+            <span className={`text-sm font-semibold ${reason === 'error' ? 'text-gray-700' : 'text-gray-600'}`}>
+              Erreur / Autre
+            </span>
+            <span className="text-xs text-gray-400 text-center leading-tight">Annonce incorrecte</span>
+          </button>
         </div>
 
         {status === 'error' && (
@@ -82,8 +120,8 @@ function SupprimerContent() {
 
         <button
           onClick={handleDelete}
-          disabled={status === 'loading'}
-          className="w-full py-3 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+          disabled={!reason || status === 'loading'}
+          className="w-full py-3 bg-red-500 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
         >
           {status === 'loading' ? (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -93,7 +131,7 @@ function SupprimerContent() {
           {status === 'loading' ? 'Suppression…' : 'Confirmer la suppression'}
         </button>
 
-        <Link href="/adoption" className="block text-sm text-gray-400 hover:text-gray-600 transition-colors">
+        <Link href="/adoption" className="block text-center text-sm text-gray-400 hover:text-gray-600 transition-colors">
           Annuler - Garder mon annonce en ligne
         </Link>
       </div>

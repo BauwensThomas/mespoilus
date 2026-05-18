@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart, ArrowLeft, Mail, ChevronLeft, ChevronRight, User, Trash2, Send, CheckCircle2 } from 'lucide-react';
+import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart, ArrowLeft, Mail, ChevronLeft, ChevronRight, User, Trash2, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import type { AdoptionPost } from '@/types';
 
 const ANIMAL_TYPES = [
@@ -42,6 +42,7 @@ export default function AdoptionDetailPage() {
   const [contactError, setContactError]       = useState('');
   const [deleteOpen, setDeleteOpen]       = useState(false);
   const [deleteCode, setDeleteCode]       = useState('');
+  const [deleteReason, setDeleteReason]   = useState<'adopted' | 'error' | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError]     = useState('');
   const [deleted, setDeleted]             = useState(false);
@@ -72,7 +73,7 @@ export default function AdoptionDetailPage() {
       const res = await fetch('/api/adoption/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, token: deleteCode }),
+        body: JSON.stringify({ id, token: deleteCode, reason: deleteReason ?? 'error' }),
       });
       const data = await res.json();
       if (!res.ok) { setDeleteError(data.error ?? 'Erreur'); setDeleteLoading(false); return; }
@@ -317,7 +318,21 @@ export default function AdoptionDetailPage() {
                   </button>
                 </div>
                 {deleteOpen && (
-                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-2">
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-2.5">
+                    {/* Choix de la raison */}
+                    <p className="text-xs text-gray-500 font-medium">Pourquoi retirez-vous cette annonce ?</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => setDeleteReason('adopted')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${deleteReason === 'adopted' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-300 text-gray-500 hover:border-emerald-400'}`}>
+                        <Heart size={12} strokeWidth={1.5} />
+                        Animal adopté
+                      </button>
+                      <button type="button" onClick={() => setDeleteReason('error')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${deleteReason === 'error' ? 'border-gray-500 bg-gray-100 text-gray-700' : 'border-gray-300 text-gray-500 hover:border-gray-400'}`}>
+                        <AlertCircle size={12} strokeWidth={1.5} />
+                        Erreur / Autre
+                      </button>
+                    </div>
                     <form onSubmit={handleDelete} className="flex gap-2">
                       <input
                         type="text"
@@ -328,8 +343,8 @@ export default function AdoptionDetailPage() {
                         required
                         className="flex-1 min-w-0 bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-mono tracking-widest uppercase text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-300 focus:ring-1 focus:ring-red-200"
                       />
-                      <button type="submit" disabled={deleteLoading}
-                        className="px-3 py-1.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors">
+                      <button type="submit" disabled={deleteLoading || !deleteReason}
+                        className="px-3 py-1.5 bg-red-500 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors">
                         {deleteLoading ? '…' : 'Supprimer'}
                       </button>
                     </form>
