@@ -71,5 +71,14 @@ export async function GET(req: Request) {
     }
   }
 
+  await supabase.from('activity_logs').insert({
+    agent_id: 'thomas', agent_name: 'Thomas',
+    action: sent > 0
+      ? `[Adoption followup] ${sent} email${sent > 1 ? 's' : ''} de relance envoye${sent > 1 ? 's' : ''} (annonces +7j)`
+      : `[Adoption followup] Aucune annonce a relancer`,
+    details: { sent, failed, total: posts?.length ?? 0 },
+    status: 'success',
+  });
+
   return NextResponse.json({ success: true, sent, failed, total: posts?.length ?? 0 });
 }
