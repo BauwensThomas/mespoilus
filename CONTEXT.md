@@ -202,7 +202,8 @@ SENTRY_AUTH_TOKEN # Dans .env.sentry-build-plugin (gitignored) + Vercel env vars
 3. **Marie** rédige l'article (Haiku 4.5, **1400 tokens**, **550-700 mots**, ~12s) → sauvegardé dans Supabase
    - Reçoit : sujet + mots-clés + intention + raison + meta description cible + 3 articles récents pour liens internes
    - Si type `race` : reçoit aussi lien obligatoire vers `https://www.mespoilus.com/races/[animal]/[slug]`
-   - Saison injectée uniquement pour trending et pratique (pas pour affiliation ni race)
+   - **Saison injectée uniquement pour `trending`** (pas pour affiliation, race, pratique, best_of) → évite les titres génériques "au printemps" hors saison
+   - Si partenaire forcé : reçoit `- Marque : X (mentionne ce nom nommément)` + codes promo en section obligatoire
    - Temps de lecture recalculé dynamiquement après génération (`wordCount ÷ 250`, min 1)
 4. **Image** : type `race` → `photo_url` de la race depuis Supabase directement ; affiliation → image produit Awin (téléchargée Storage) ; sinon → Pexels → `blog-images`
 5. **breed_slug** stocké dans `articles` si type race (colonne `breed_slug` - migration `migration_article_breed.sql`)
@@ -210,11 +211,13 @@ SENTRY_AUTH_TOKEN # Dans .env.sentry-build-plugin (gitignored) + Vercel env vars
 7. **Stats Thomas** : tokens = somme Lucas + Marie
 #### Cron 2 : `/api/cron/social` (Lun/Mer/Ven 9h30 UTC)
 1. Lit `cron_state` pour trouver l'article prêt
-2. **Emma** rédige un post Facebook avec le lien EXACT `https://mespoilus.com/blog/[slug]`
-3. `save-social-post` récupère l'`image_url` de l'article (déjà stockée dans Supabase Storage)
-4. Webhook Make.com → **Facebook + Instagram @mespoilusofficiel** ✅ (testé et confirmé fonctionnel)
-5. `cron_state` marqué `done`
-6. **Sofia supprimée de ce cron** - Elle a son propre cron dédié
+2. Lit `featured_partner` et `promo_codes` depuis la table `articles` (colonnes requises : `featured_partner TEXT` migration_featured_partner.sql ✅, `promo_codes TEXT` migration manuelle `ALTER TABLE articles ADD COLUMN IF NOT EXISTS promo_codes TEXT`)
+3. Génère un hashtag partenaire depuis `featured_partner` (ex: "Tuft & Paw" → `#tuftandpaw`, caractères spéciaux normalisés)
+4. **Emma** rédige un post Facebook avec le lien EXACT + codes promo obligatoires + hashtag partenaire
+5. `save-social-post` récupère l'`image_url` de l'article (déjà stockée dans Supabase Storage)
+6. Webhook Make.com → **Facebook + Instagram @mespoilusofficiel** ✅ (testé et confirmé fonctionnel)
+7. `cron_state` marqué `done`
+8. **Sofia supprimée de ce cron** - Elle a son propre cron dédié
 #### URL interne (critique)
 - `saveSocialPost` dans `runner.ts` utilise `NEXT_PUBLIC_APP_URL` EN PREMIER (domaine custom, sans protection Vercel)
 - Ne jamais utiliser `VERCEL_URL` seul pour les fetches internes → retourne 401 (URL hashée protégée)
@@ -248,6 +251,7 @@ SENTRY_AUTH_TOKEN # Dans .env.sentry-build-plugin (gitignored) + Vercel env vars
 Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de sync boutique :
 - **Sélecteur animal** : forcer un animal spécifique (chiens, chats, oiseaux, rongeurs, reptiles) ou Auto
 - **Sélecteur type article** : Auto (rotation), Trending, Partenaire/Produit, Conseil pratique, **Fiche de race**, **Sélection produits**
+- **Panel "Forcer un partenaire"** (`ForcedPartnerPanel`, replié par défaut, style violet) : sélection depuis liste PARTENAIRES → charge automatiquement tous les produits en boutique jusqu'à 500 (filtre `merchant_name ILIKE '%keyword%'` Supabase) + champ recherche produit + sélection radio par `affiliate_url` (unique, évite les doublons de nom) + champ codes promo libre + **image forcée** (upload fichier ou coller URL avec preview et détection d'erreur `onError`). Force `forcedType = 'affiliation'` dans le cron blog + injecte une contrainte absolue dans le prompt Lucas + section "CODES PROMO OBLIGATOIRES" dans le prompt Marie + mention explicite de la marque (`- Marque : X (mentionne ce nom nommément dans l'article)`). Partenaires disponibles : Dogfy Diet, Maxi Zoo, CanadaPetCare, Tuft & Paw.
 | Pipeline | Agents | Ce qui se passe |
 |----------|--------|-----------------|
 | 📝 SEO + Blog + Réseaux | Lucas → Marie → Emma | Article publié + post Facebook (35s d'attente entre les 2 étapes) |
@@ -358,6 +362,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 - `image_url` - URL publique Supabase Storage (ex: `https://xxx.supabase.co/storage/v1/object/public/blog-images/article-slug.jpg`)
 - `image_alt`, `image_credit`, `image_credit_url` - Attribution photographe Pexels
 - `categories TEXT[]` - Multi-catégories (array containment Supabase `@>`)
+- `featured_partner TEXT` - Nom de la marque partenaire mise en avant (ex: "Tuft & Paw") — migration `migration_featured_partner.sql` ✅ — utilisé par le cron social pour le hashtag
+- `promo_codes TEXT` - Codes promo associés à l'article (ex: "ESSENTIALS20 -20%, NEWHOME25 -25%") — migration manuelle : `ALTER TABLE articles ADD COLUMN IF NOT EXISTS promo_codes TEXT;` — utilisé par Emma dans le post social
 #### Table `hero_photos`
 - `id`, `url` (URL publique Supabase Storage), `alt`, `animal_type` (singulier ou pluriel - Normalisé via `ANIMAL_TYPE_MAP`), `active`, `last_used_at`, `created_at`
 - RLS : SELECT public sur `active = true` uniquement

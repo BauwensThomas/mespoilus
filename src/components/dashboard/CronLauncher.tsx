@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard, Rocket, CheckCircle2, XCircle, Clock, BookOpen, Mail, Sparkles, Heart, ChevronDown, ChevronUp, Send } from 'lucide-react';
+import { RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard, Rocket, CheckCircle2, XCircle, Clock, BookOpen, Mail, Sparkles, Heart, ChevronDown, ChevronUp, Send, Tag } from 'lucide-react';
 import clsx from 'clsx';
+import { PARTENAIRES } from '@/lib/partenaires';
 
 const ANIMALS = [
   { value: 'auto-smart',  label: 'Auto (moins utilisée)', icon: Sparkles },
@@ -157,7 +158,7 @@ function useCronRunner() {
     setStates(prev => ({ ...prev, [id]: { ...(prev[id] ?? { status: 'idle', currentStep: 0, countdown: 0, error: '' }), ...patch } }));
   }
 
-  async function run(cron: CronConfig, selectedAnimal: string, selectedType: string) {
+  async function run(cron: CronConfig, selectedAnimal: string, selectedType: string, selectedPartner: string, selectedPromo: string, selectedProductName: string, selectedProductUrl: string, selectedImage: string) {
     const id = cron.id;
     if (getState(id).status === 'running') return;
     setState(id, { status: 'running', currentStep: 0, error: '' });
@@ -172,6 +173,14 @@ function useCronRunner() {
           if (selectedAnimal === 'auto-smart') body.auto = 'true';
           else if (selectedAnimal) body.animal = selectedAnimal;
           if (selectedType) body.type = selectedType;
+          if (selectedPartner) {
+            const p = PARTENAIRES.find(p => p.id === selectedPartner);
+            if (p) body.partner = p.nom;
+          }
+          if (selectedProductName) body.productName = selectedProductName;
+          if (selectedProductUrl) body.productUrl = selectedProductUrl;
+          if (selectedPromo) body.promo = selectedPromo;
+          if (selectedImage) body.forcedImage = selectedImage;
         }
         const r = await fetch('/api/admin/run-cron', {
           method: 'POST',
@@ -204,7 +213,7 @@ function useCronRunner() {
     setState(id, { status: 'idle', currentStep: 0, countdown: 0, error: '' });
   }
 
-  return { getState, run: (cron: CronConfig, animal: string, type: string) => run(cron, animal, type), reset };
+  return { getState, run: (cron: CronConfig, animal: string, type: string, partner: string, promo: string, productName: string, productUrl: string, image: string) => run(cron, animal, type, partner, promo, productName, productUrl, image), reset };
 }
 
 // ─── Hook Awin multi-catégories ───────────────────────────────────────────────
@@ -294,6 +303,393 @@ function useAwinSync() {
   const allDone = AWIN_CATEGORIES.every(c => progress[c.key].status === 'done');
 
   return { progress, launchCategory, launchAll, resetCategory, totalSynced, anyRunning, allDone };
+}
+
+// ─── Composant ForcedPartnerPanel ────────────────────────────────────────────
+
+interface ForcedPartnerPanelProps {
+  partner: string;
+  productName: string;
+  productUrl: string;
+  promo: string;
+  forcedImage: string;
+  onPartnerChange: (v: string) => void;
+  onProductChange: (name: string, url: string) => void;
+  onPromoChange: (v: string) => void;
+  onForcedImageChange: (v: string) => void;
+  disabled: boolean;
+}
+
+interface ProductRow {
+  name: string;
+  affiliate_url: string;
+  price: number;
+  category: string;
+  merchant_name: string;
+}
+
+function ForcedPartnerPanel({ partner, productName, productUrl, promo, forcedImage, onPartnerChange, onProductChange, onPromoChange, onForcedImageChange, disabled }: ForcedPartnerPanelProps) {
+  const [expanded, setExpanded] = useState(false);
+  const [products, setProducts] = useState<ProductRow[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [search, setSearch] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+
+  const selectedPartenaire = PARTENAIRES.find(p => p.id === partner);
+  const merchantKeyword = selectedPartenaire?.merchantKeyword ?? '';
+
+  useEffect(() => {
+    if (!merchantKeyword) { setProducts([]); return; }
+    setLoadingProducts(true);
+    fetch('/api/admin/run-cron', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ step: 'partner-products', partner: merchantKeyword }),
+    })
+      .then(r => r.json())
+      .then(data => setProducts(data.products ?? []))
+      .catch(() => setProducts([]))
+      .finally(() => setLoadingProducts(false));
+  }, [merchantKeyword]);
+
+  const handlePartnerChange = (id: string) => {
+    onPartnerChange(id);
+    onProductChange('', '');
+    onPromoChange('');
+    setProducts([]);
+    setSearch('');
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const r = await fetch('/api/admin/upload-image', { method: 'POST', body: fd });
+      const data = await r.json();
+      if (data.url) { onForcedImageChange(data.url); setImageUrlInput(''); }
+    } catch {}
+    finally { setUploadingImage(false); e.target.value = ''; }
+  };
+
+  const handleImageUrlConfirm = () => {
+    if (imageUrlInput.trim()) { onForcedImageChange(imageUrlInput.trim()); setImageUrlInput(''); }
+  };
+
+  const filteredProducts = search.trim()
+    ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    : products;
+
+  const active = !!partner;
+
+  return (
+    <div className={clsx('border rounded-lg overflow-hidden', active ? 'border-purple-300' : 'border-gray-200')}>
+      <button
+        type="button"
+        onClick={() => setExpanded(v => !v)}
+        className={clsx(
+          'w-full flex items-center justify-between px-2.5 py-2 transition-colors',
+          active ? 'bg-purple-50 hover:bg-purple-100' : 'bg-gray-50 hover:bg-gray-100'
+        )}
+      >
+        <span className={clsx('text-xs font-medium flex items-center gap-1.5 min-w-0 flex-1', active ? 'text-purple-700' : 'text-gray-500')}>
+          <Tag size={12} strokeWidth={1.5} className="flex-shrink-0" />
+          {active && selectedPartenaire ? (
+            <span className="truncate">
+              {selectedPartenaire.emoji} {selectedPartenaire.nom}
+              {productName ? ` — ${productName}` : ''}
+              {promo ? ' + promo' : ''}
+            </span>
+          ) : 'Forcer un partenaire (optionnel)'}
+        </span>
+        {expanded
+          ? <ChevronUp size={13} className={clsx('flex-shrink-0', active ? 'text-purple-400' : 'text-gray-400')} />
+          : <ChevronDown size={13} className={clsx('flex-shrink-0', active ? 'text-purple-400' : 'text-gray-400')} />}
+      </button>
+
+      {expanded && (
+        <div className="px-2.5 pb-2.5 pt-2 flex flex-col gap-2 bg-white">
+          {/* Sélecteur partenaire */}
+          <select
+            value={partner}
+            onChange={e => handlePartnerChange(e.target.value)}
+            disabled={disabled}
+            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-purple-500 disabled:opacity-50"
+          >
+            <option value="">Aucun (auto)</option>
+            {PARTENAIRES.map(p => (
+              <option key={p.id} value={p.id}>{p.emoji} {p.nom}</option>
+            ))}
+          </select>
+
+          {/* Liste produits sélectionnable */}
+          {partner && (
+            loadingProducts ? (
+              <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                <span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />
+                Chargement produits…
+              </div>
+            ) : products.length > 0 ? (
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-400">
+                    {products.length} produit{products.length > 1 ? 's' : ''} — choisir un à mettre en avant :
+                  </p>
+                </div>
+                {/* Recherche */}
+                <input
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Rechercher un produit…"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-purple-400 placeholder-gray-400"
+                />
+                <div className="max-h-52 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50">
+                  {/* Option "aucun produit spécifique" */}
+                  {!search && (
+                    <button
+                      type="button"
+                      onClick={() => onProductChange('', '')}
+                      disabled={disabled}
+                      className={clsx(
+                        'w-full flex items-center gap-2 px-2.5 py-1.5 text-left transition-colors',
+                        !productName ? 'bg-purple-50' : 'hover:bg-gray-50'
+                      )}
+                    >
+                      <span className={clsx('w-3.5 h-3.5 rounded-full border flex-shrink-0 flex items-center justify-center',
+                        !productName ? 'border-purple-500 bg-purple-500' : 'border-gray-300'
+                      )}>
+                        {!productName && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </span>
+                      <span className="text-xs text-gray-500 italic">Aucun produit spécifique</span>
+                    </button>
+                  )}
+                  {filteredProducts.length === 0 ? (
+                    <p className="text-xs text-gray-400 px-2.5 py-2">Aucun résultat</p>
+                  ) : filteredProducts.map((p, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => onProductChange(p.name, p.affiliate_url)}
+                      disabled={disabled}
+                      className={clsx(
+                        'w-full flex items-center gap-2 px-2.5 py-1.5 text-left transition-colors',
+                        productUrl === p.affiliate_url ? 'bg-purple-50' : 'hover:bg-gray-50'
+                      )}
+                    >
+                      <span className={clsx('w-3.5 h-3.5 rounded-full border flex-shrink-0 flex items-center justify-center',
+                        productUrl === p.affiliate_url ? 'border-purple-500 bg-purple-500' : 'border-gray-300'
+                      )}>
+                        {productUrl === p.affiliate_url && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </span>
+                      <span className="text-xs text-gray-700 flex-1" style={{ wordBreak: 'break-word' }}>{p.name}</span>
+                      {p.price > 0 && <span className="text-xs text-gray-400 flex-shrink-0 ml-1">{p.price}€</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-amber-600">Aucun produit en boutique pour ce partenaire</p>
+            )
+          )}
+
+          {/* Codes promo */}
+          <input
+            type="text"
+            value={promo}
+            onChange={e => onPromoChange(e.target.value)}
+            disabled={disabled}
+            placeholder="Codes promo (ex: ESSENTIALS20 -20% litière, NEWHOME25 -25% meubles)"
+            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-purple-500 disabled:opacity-50 placeholder-gray-400"
+          />
+
+          {/* Image forcée */}
+          <div className="space-y-1.5">
+            <p className="text-xs text-gray-400">Image de l'article (optionnel)</p>
+            {forcedImage ? (
+              <div className="flex items-center gap-2">
+                <img
+                  src={forcedImage}
+                  alt=""
+                  className="w-12 h-12 object-cover rounded-lg border border-gray-200 flex-shrink-0 bg-gray-100"
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.add('!flex'); }}
+                />
+                <div className="hidden items-center justify-center w-12 h-12 rounded-lg border border-red-200 bg-red-50 flex-shrink-0 text-red-400 text-[10px] text-center leading-tight px-1">
+                  URL invalide
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-500 truncate">{forcedImage.split('/').pop()}</p>
+                  <button
+                    type="button"
+                    onClick={() => onForcedImageChange('')}
+                    className="text-xs text-red-400 hover:text-red-600 mt-0.5"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={imageUrlInput}
+                    onChange={e => setImageUrlInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleImageUrlConfirm()}
+                    disabled={disabled || uploadingImage}
+                    placeholder="Coller une URL d'image…"
+                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-purple-400 disabled:opacity-50 placeholder-gray-400"
+                  />
+                  {imageUrlInput && (
+                    <button
+                      type="button"
+                      onClick={handleImageUrlConfirm}
+                      className="px-2 py-1.5 rounded-lg text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 flex-shrink-0"
+                    >
+                      OK
+                    </button>
+                  )}
+                </div>
+                <label className={clsx(
+                  'flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-dashed text-xs transition-colors cursor-pointer',
+                  uploadingImage ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-purple-200 text-purple-600 hover:bg-purple-50'
+                )}>
+                  {uploadingImage
+                    ? <><span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />Upload…</>
+                    : <>Importer depuis l'ordinateur</>}
+                  <input type="file" accept="image/*" onChange={handleFileUpload} disabled={disabled || uploadingImage} className="hidden" />
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Composant ContentCronPanel ──────────────────────────────────────────────
+
+type RunFn = (cron: CronConfig, animal: string, type: string, partner: string, promo: string, productName: string, productUrl: string, image: string) => void;
+
+interface ContentCronPanelProps {
+  cron: CronConfig;
+  state: CronState;
+  run: RunFn;
+  onReset: () => void;
+}
+
+function ContentCronPanel({ cron, state, run, onReset }: ContentCronPanelProps) {
+  const [expanded, setExpanded] = useState(false);
+  const [selectedAnimal, setSelectedAnimal] = useState('auto-smart');
+  const [selectedType, setSelectedType] = useState('');
+  const [selectedPartner, setSelectedPartner] = useState('');
+  const [selectedProductName, setSelectedProductName] = useState('');
+  const [selectedProductUrl, setSelectedProductUrl] = useState('');
+  const [selectedPromo, setSelectedPromo] = useState('');
+  const [selectedImage, setSelectedImage] = useState('');
+
+  const isRunning = state.status === 'running';
+  const isWaiting = isRunning && state.countdown > 0;
+  const step = cron.steps[state.currentStep];
+
+  const handleRun = () => {
+    if (state.status === 'idle' || state.status === 'error') {
+      run(cron, selectedAnimal, selectedType, selectedPartner, selectedPromo, selectedProductName, selectedProductUrl, selectedImage);
+    }
+  };
+
+  return (
+    <div className="px-4 py-3.5">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2.5 flex-1 min-w-0">
+          <cron.icon size={18} strokeWidth={1.5} className={clsx('mt-0.5 flex-shrink-0', cron.color)} />
+          <div className="min-w-0">
+            <p className={clsx('text-sm font-semibold', cron.color)}>{cron.label}</p>
+            <p className="text-xs text-gray-500 leading-relaxed mt-0.5">{cron.description}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            onClick={handleRun}
+            disabled={isRunning}
+            className={clsx(
+              'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1',
+              state.status === 'done' ? 'bg-emerald-100 text-emerald-600 cursor-default'
+                : state.status === 'error' ? 'bg-red-100 text-red-500 hover:bg-red-200 cursor-pointer'
+                : isRunning ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'
+            )}
+          >
+            {state.status === 'done' && <><CheckCircle2 size={14} strokeWidth={1.5} />OK</>}
+            {state.status === 'error' && <><XCircle size={14} strokeWidth={1.5} />Retry</>}
+            {isRunning && isWaiting && <><Clock size={14} strokeWidth={1.5} />{state.countdown}s</>}
+            {isRunning && !isWaiting && <><span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />En cours</>}
+            {state.status === 'idle' && 'Lancer'}
+          </button>
+          <button
+            onClick={() => setExpanded(v => !v)}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Statut */}
+      {isRunning && (
+        <p className="text-xs text-amber-600 mt-1.5 ml-7">
+          {isWaiting ? `Pause ${state.countdown}s avant la prochaine étape…` : `${step?.label ?? '…'}`}
+        </p>
+      )}
+      {state.status === 'error' && (
+        <p className="text-xs text-red-500 mt-1.5 ml-7 truncate" title={state.error}>{state.error}</p>
+      )}
+      {state.status === 'done' && (
+        <div className="flex items-center gap-3 mt-1 ml-7">
+          <button onClick={onReset} className="text-xs text-gray-400 hover:text-gray-700">Réinitialiser</button>
+        </div>
+      )}
+
+      {/* Options (replié par défaut) */}
+      {expanded && (
+        <div className="mt-2.5 ml-7 flex flex-col gap-2">
+          <select
+            value={selectedAnimal}
+            onChange={e => setSelectedAnimal(e.target.value)}
+            disabled={isRunning}
+            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-50"
+          >
+            {ANIMALS.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
+          </select>
+          <select
+            value={selectedType}
+            onChange={e => setSelectedType(e.target.value)}
+            disabled={isRunning}
+            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-50"
+          >
+            {ARTICLE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+          <ForcedPartnerPanel
+            partner={selectedPartner}
+            productName={selectedProductName}
+            productUrl={selectedProductUrl}
+            promo={selectedPromo}
+            forcedImage={selectedImage}
+            onPartnerChange={setSelectedPartner}
+            onProductChange={(name, url) => { setSelectedProductName(name); setSelectedProductUrl(url); }}
+            onPromoChange={setSelectedPromo}
+            onForcedImageChange={setSelectedImage}
+            disabled={isRunning}
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── Composant AwinPanel ──────────────────────────────────────────────────────
@@ -567,9 +963,8 @@ function CJSyncPanel() {
 
 export default function CronLauncher() {
   const [open, setOpen] = useState(false);
-  const [selectedAnimal, setSelectedAnimal] = useState('auto-smart');
-  const [selectedType, setSelectedType] = useState('');
   const { getState, run, reset } = useCronRunner();
+  const contentCron = CRONS.find(c => c.id === 'content')!;
 
   return (
     <div className="relative">
@@ -590,8 +985,16 @@ export default function CronLauncher() {
           </div>
 
           <div className="divide-y divide-gray-100">
-            {/* Crons génériques */}
-            {CRONS.map(cron => {
+            {/* Cron SEO + Blog (composant dédié avec options repliables) */}
+            <ContentCronPanel
+              cron={contentCron}
+              state={getState('content')}
+              run={run}
+              onReset={() => reset('content')}
+            />
+
+            {/* Autres crons génériques */}
+            {CRONS.filter(c => c.id !== 'content').map(cron => {
               const state = getState(cron.id);
               const isRunning = state.status === 'running';
               const step = cron.steps[state.currentStep];
@@ -599,26 +1002,6 @@ export default function CronLauncher() {
 
               return (
                 <div key={cron.id} className="px-4 py-3.5">
-                  {cron.id === 'content' && (
-                    <div className="mb-2.5 flex flex-col gap-2">
-                      <select
-                        value={selectedAnimal}
-                        onChange={e => setSelectedAnimal(e.target.value)}
-                        disabled={isRunning}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-50"
-                      >
-                        {ANIMALS.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
-                      </select>
-                      <select
-                        value={selectedType}
-                        onChange={e => setSelectedType(e.target.value)}
-                        disabled={isRunning}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-50"
-                      >
-                        {ARTICLE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                      </select>
-                    </div>
-                  )}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-2.5 flex-1 min-w-0">
                       <cron.icon size={18} strokeWidth={1.5} className={clsx('mt-0.5 flex-shrink-0', cron.color)} />
@@ -628,7 +1011,7 @@ export default function CronLauncher() {
                       </div>
                     </div>
                     <button
-                      onClick={() => (state.status === 'idle' || state.status === 'error') ? run(cron, cron.id === 'content' ? selectedAnimal : '', cron.id === 'content' ? selectedType : '') : undefined}
+                      onClick={() => (state.status === 'idle' || state.status === 'error') ? run(cron, '', '', '', '', '', '', '') : undefined}
                       disabled={isRunning}
                       className={clsx(
                         'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1',

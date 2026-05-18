@@ -91,6 +91,11 @@ export async function GET(req: Request) {
   const urlAnimal = urlParams.get('animal');
   const urlType = urlParams.get('type');
   const urlAuto = urlParams.get('auto') === 'true';
+  const urlPartner = urlParams.get('partner') ?? '';
+  const urlPromo = urlParams.get('promo') ?? '';
+  const urlProductName = urlParams.get('productName') ?? '';
+  const urlProductUrl = urlParams.get('productUrl') ?? '';
+  const urlForcedImage = urlParams.get('forcedImage') ?? '';
 
   let animal = 'chiens';
   let season = 'printemps';
@@ -211,6 +216,10 @@ export async function GET(req: Request) {
       ? 'pratique'
       : requestedType;
     if (forcedType !== requestedType) console.log('[Cron1] Affiliation: tous bloqués → fallback pratique');
+    if (urlPartner) {
+      forcedType = 'affiliation';
+      console.log(`[Cron1] Partenaire forcé: ${urlPartner}${urlPromo ? ` | promos: ${urlPromo}` : ''}`);
+    }
 
     // ─── DONNÉES RACES pour Lucas (si type race) ─────────────────────────────
     type BreedRow = { name: string; slug: string; animal: string; photo_url: string };
@@ -312,7 +321,15 @@ IMAGE_PRODUIT : AUCUN (image Pexels sera utilisée)
 RACE_SLUG : AUCUN`,
     };
 
-    const lucasPrompt = `Trouve le meilleur sujet d'article SEO pour les propriétaires de ${animal} (${monthName}).
+    const forcedPartnerBlock = urlPartner
+      ? [
+          `CONTRAINTE ABSOLUE : le partenaire à mettre en avant est "${urlPartner}". Tu DOIS choisir ce partenaire et aucun autre.`,
+          urlProductName ? `PRODUIT SPÉCIFIQUE FORCÉ : "${urlProductName}"${urlProductUrl ? `. Lien affilié exact : ${urlProductUrl}` : ''}. Tu DOIS choisir ce produit précis.` : '',
+          urlPromo ? `Codes promo à mentionner : ${urlPromo}` : '',
+        ].filter(Boolean).join('\n') + '\n\n'
+      : '';
+
+    const lucasPrompt = `${forcedPartnerBlock}Trouve le meilleur sujet d'article SEO pour les propriétaires de ${animal}${forcedType === 'trending' ? ` (${monthName})` : ''}.
 
 ${typeInstructions[forcedType]}
 
@@ -347,6 +364,9 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       nomProduit = (nomMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (nomMatch?.[1]?.trim() ?? '');
       lienAffilie = (lienMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (lienMatch?.[1]?.trim() ?? '');
       imageProduit = (imageMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (imageMatch?.[1]?.trim() ?? '');
+      // Produit forcé depuis le CronLauncher : override ce que Lucas a retourné
+      if (urlProductName) nomProduit = urlProductName;
+      if (urlProductUrl) lienAffilie = urlProductUrl;
       const metaDescMatch = lucasResult.content.match(/META_DESC:\s*(.+)/i);
       metaDesc = metaDescMatch?.[1]?.trim() ?? '';
 
@@ -405,7 +425,7 @@ Présente un TOP 3 à 5 produits recommandés. Pour chaque produit :
 Pour les autres produits, utilise des liens de recherche Amazon (remplace les espaces par +) :
 [Voir sur Amazon](https://www.amazon.fr/s?k=NOM+PRODUIT+${animal}&tag=mespoilus-21)\n`
       : nomProduit && lienAffilie
-        ? `\nPRODUIT / PARTENAIRE PRINCIPAL À METTRE EN AVANT :\n- Nom : ${nomProduit}\n- Lien affilié (utilise ce lien EXACT dans le texte, ne l'invente pas) : ${lienAffilie}\n  Ex. dans le texte : [${nomProduit}](${lienAffilie})\n`
+        ? `\nPRODUIT / PARTENAIRE PRINCIPAL À METTRE EN AVANT :${urlPartner ? `\n- Marque : ${urlPartner} (mentionne ce nom nommément dans l'article)` : ''}\n- Nom produit : ${nomProduit}\n- Lien affilié (utilise ce lien EXACT dans le texte, ne l'invente pas) : ${lienAffilie}\n  Ex. dans le texte : [${nomProduit}](${lienAffilie})\n`
         : `\nIntègre naturellement 1-2 recommandations de produits dans le texte avec leurs liens :\n${productsStr}\nSi aucun lien n'est disponible, renvoie vers www.mespoilus.com/boutique\n`;
     const contextLines = [
       forcedType !== 'affiliation' ? `Saison : ${season}` : '',
@@ -420,12 +440,16 @@ Pour les autres produits, utilise des liens de recherche Amazon (remplace les es
       ? `LIEN OBLIGATOIRE : tu dois inclure ce lien vers la fiche race EXACTEMENT tel quel dans l'article :\n[Découvrez notre fiche complète sur le ${selectedBreed.name}](https://www.mespoilus.com/races/${animalPlural[selectedBreed.animal] ?? selectedBreed.animal + 's'}/${selectedBreed.slug})\n`
       : '';
 
+    const promoSection = urlPromo
+      ? `\nCODES PROMO À INTÉGRER OBLIGATOIREMENT DANS L'ARTICLE :\n${urlPromo}\nMentionne ces codes promo de façon naturelle dans l'article (ex: "Profitez du code ESSENTIALS20 pour -20% sur la litière").\n`
+      : '';
+
     const mariePrompt = `Écris un article de blog sur : ${sujet}
 Animal concerné : ${animal}${selectedBreed ? `\nRace concernée : ${selectedBreed.name}` : ''}
 Mots-clés SEO à intégrer naturellement : ${motsCles.join(', ')}
 ${contextLines ? `\nContexte :\n${contextLines}\n` : ''}${metaDesc ? `Meta description cible (155 chars max) : ${metaDesc}\n` : ''}
 ${produitSection}
-${breedPageSection}${relatedArticles.length ? `Articles récents ${animal} -intègre 1-2 liens internes si pertinent :\n${relatedArticles.map(a => `- [${a.title}](https://www.mespoilus.com/blog/${a.slug})`).join('\n')}\n` : ''}
+${promoSection}${breedPageSection}${relatedArticles.length ? `Articles récents ${animal} -intègre 1-2 liens internes si pertinent :\n${relatedArticles.map(a => `- [${a.title}](https://www.mespoilus.com/blog/${a.slug})`).join('\n')}\n` : ''}
 STRUCTURE OBLIGATOIRE :
 1. Introduction accrocheuse (2-3 phrases qui parlent directement au propriétaire)
 2. 3 à 4 sections avec titres H2 clairs et informatifs
@@ -476,9 +500,13 @@ CONSIGNES :
     console.log(`[Cron1] Marie : slug=${articleSlug}`);
 
     // Sauvegarder le partenaire mis en avant (requiert migration_featured_partner.sql)
-    if (nomProduit && articleSlug) {
+    if (articleSlug && (nomProduit || urlPromo || urlPartner)) {
       try {
-        await supabase.from('articles').update({ featured_partner: nomProduit }).eq('slug', articleSlug);
+        const partnerLabel = urlPartner || nomProduit;
+        await supabase.from('articles').update({
+          ...(partnerLabel ? { featured_partner: partnerLabel } : {}),
+          ...(urlPromo ? { promo_codes: urlPromo } : {}),
+        }).eq('slug', articleSlug);
       } catch { /* migration non encore appliquée -pas de blocage */ }
     }
 
@@ -507,6 +535,16 @@ CONSIGNES :
         const { data: imgCheck } = await supabase
           .from('articles').select('image_url').eq('slug', articleSlug).maybeSingle();
         imageUrl = imgCheck?.image_url ?? null;
+
+        // Image forcée depuis CronLauncher : priorité absolue
+        if (!imageUrl && urlForcedImage) {
+          imageUrl = urlForcedImage;
+          await supabase.from('articles').update({
+            image_url: imageUrl,
+            image_alt: urlPartner ? `Image ${urlPartner}` : `Image article ${animal}`,
+          }).eq('slug', articleSlug);
+          console.log(`[Cron1] Image forcée utilisée: ${imageUrl.slice(0, 60)} ✅`);
+        }
 
         // TYPE RACE : utiliser la photo de la race stockée dans Supabase
         if (!imageUrl && selectedBreed?.photo_url) {

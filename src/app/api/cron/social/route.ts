@@ -47,16 +47,41 @@ export async function GET(req: Request) {
   const { id: stateId, slug, title, excerpt } = stateRow;
   console.log(`[Cron2] Article trouvé : slug=${slug}`);
 
+  // Lire featured_partner et promo_codes depuis l'article
+  let featuredPartner = '';
+  let promoCodes = '';
+  try {
+    const { data: articleData } = await supabase
+      .from('articles')
+      .select('featured_partner, promo_codes')
+      .eq('slug', slug)
+      .maybeSingle();
+    featuredPartner = articleData?.featured_partner ?? '';
+    promoCodes = articleData?.promo_codes ?? '';
+  } catch { /* non-bloquant */ }
+
+  const partnerHashtag = featuredPartner
+    ? `#${featuredPartner.toLowerCase().replace(/[éèêë]/g, 'e').replace(/[àâä]/g, 'a').replace(/[ùûü]/g, 'u').replace(/[^a-z0-9]/g, '')}`
+    : '';
+
   // ─── ÉTAPE 4 : Emma publie sur les réseaux ────────────────────────────────
   const step4Start = Date.now();
   try {
+    const promoBlock = promoCodes
+      ? `\nCodes promo à mettre en avant dans le post (obligatoire, rends-les visibles et accrocheurs) :\n${promoCodes}\n`
+      : '';
+
+    const partnerBlock = partnerHashtag
+      ? `\nAjoute le hashtag ${partnerHashtag} dans la liste des hashtags.`
+      : '';
+
     const emmaPrompt = `Crée un post Facebook et Instagram pour cet article de conseils :
 Titre : ${title}
 Résumé : ${excerpt || title}
-
+${promoBlock}
 Le post doit donner envie de lire l'article complet.
 IMPORTANT : tu dois inclure ce lien EXACT à la fin du post, sans le modifier ni le raccourcir :
-https://www.mespoilus.com/blog/${slug}`;
+https://www.mespoilus.com/blog/${slug}${partnerBlock}`;
 
     const result = await executeAgentTask('emma', emmaPrompt);
     if (!result.success) throw new Error(result.error ?? 'Emma a échoué');
