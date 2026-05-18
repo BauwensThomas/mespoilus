@@ -46,7 +46,7 @@ export default function ActivityFeed({ logs }: ActivityFeedProps) {
             <p className="text-sm text-gray-500 py-2">Aucune activité pour le moment</p>
           ) : (
             <div className="space-y-0.5 max-h-[calc(10*2.5rem)] overflow-y-auto scrollbar-thin pr-1">
-              {logs.slice(0, 20).map((log) => {
+              {logs.map((log) => {
                 const agent = AGENTS[log.agent_id];
                 return (
                   <div

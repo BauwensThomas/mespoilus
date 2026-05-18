@@ -22,7 +22,7 @@ async function getDashboardData() {
 
     const [statsRes, logsRes, articlesRes, securityRes, allActivityRes, monthlySecurityRes, monthlyArticlesRes, productsRes, lastAwinSyncRes] = await Promise.all([
       supabase.from('agent_stats').select('*'),
-      supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(20),
+      supabase.from('activity_logs').select('*').order('created_at', { ascending: false }),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published'),
       supabase.from('security_logs').select('id', { count: 'exact' }).in('threat_level', ['high', 'critical']),
       supabase.from('activity_logs').select('agent_id, status, tokens_used, created_at'),
