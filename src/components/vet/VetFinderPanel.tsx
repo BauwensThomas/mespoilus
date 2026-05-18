@@ -310,6 +310,8 @@ export default function VetFinderPanel() {
                   {geoLoading ? 'Localisation...' : 'Ma position'}
                 </button>
                 <select
+                  id="vet-radius"
+                  name="vet-radius"
                   value={radius}
                   onChange={e => setRadius(Number(e.target.value))}
                   className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
