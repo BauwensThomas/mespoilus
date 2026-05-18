@@ -32,6 +32,8 @@ export default function BoutiqueSearchBar({ defaultValue = '' }: { defaultValue?
         <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
         <input
           ref={inputRef}
+          id="boutique-search"
+          name="q"
           type="text"
           defaultValue={defaultValue}
           placeholder="Rechercher un produit…"
