@@ -51,6 +51,8 @@ export default function NewsletterForm() {
         <div className="flex-1 relative">
           <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none" />
           <input
+            id="newsletter-email"
+            name="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
