@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard, Rocket, CheckCircle2, XCircle, Clock, BookOpen, Mail, Sparkles, Heart, ChevronDown, ChevronUp } from 'lucide-react';
+import { RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard, Rocket, CheckCircle2, XCircle, Clock, BookOpen, Mail, Sparkles, Heart, ChevronDown, ChevronUp, Send } from 'lucide-react';
 import clsx from 'clsx';
 
 const ANIMALS = [
@@ -125,6 +125,15 @@ const CRONS: CronConfig[] = [
     color: 'text-teal-600',
     borderColor: 'border-teal-400/30',
     steps: [{ key: 'breeds', label: 'Génération fiches races (Haiku × 10)' }],
+  },
+  {
+    id: 'daily-recap',
+    label: 'Récap quotidien',
+    description: 'Envoie le récap du jour par email à contact@mespoilus.com',
+    icon: Send,
+    color: 'text-sky-600',
+    borderColor: 'border-sky-400/30',
+    steps: [{ key: 'daily-recap', label: 'Email récap (tous les logs du jour)' }],
   },
 ];
 

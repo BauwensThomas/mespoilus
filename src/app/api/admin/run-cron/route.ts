@@ -19,6 +19,7 @@ const CRON_PATHS: Record<string, string> = {
   'cj-sync-canada-pet-care': '/api/cron/cj-sync/canada-pet-care',
   'adoption-social':         '/api/cron/adoption-social',
   'breeds':                  '/api/cron/breeds',
+  'daily-recap':             '/api/cron/daily-recap',
 };
 
 export const maxDuration = 120;
