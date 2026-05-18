@@ -17,6 +17,7 @@
     { "path": "/api/cron/adoption-followup",  "schedule": "0 19 * * 6" },
     { "path": "/api/cron/adoption-cleanup",   "schedule": "0 3 * * *"  },
     { "path": "/api/cron/adoption-social",    "schedule": "0 19 * * 2" },
-    { "path": "/api/cron/breeds?batch=10",    "schedule": "0 7 * * 0" }
+    { "path": "/api/cron/breeds?batch=10",    "schedule": "0 7 * * 0" },
+    { "path": "/api/cron/daily-recap",        "schedule": "0 20 * * *" }
   ]
 }
