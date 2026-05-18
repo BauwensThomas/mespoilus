@@ -308,6 +308,8 @@ export default function RefugeFinderPanel() {
                   {geoLoading ? 'Localisation...' : 'Ma position'}
                 </button>
                 <select
+                  id="refuge-radius"
+                  name="refuge-radius"
                   value={radius}
                   onChange={e => setRadius(Number(e.target.value))}
                   className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white"
