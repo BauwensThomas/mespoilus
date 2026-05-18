@@ -9,7 +9,8 @@ Sentry.init({
   dsn: "https://be2b25d58b9617d48f5102aefe1b9487@o4511412620689408.ingest.de.sentry.io/4511412634189904",
   tracesSampleRate: 1,
   sendDefaultPii: true,
-  _experiments: {
-    enableLogs: true,
-  },
+  enableLogs: true,
+  integrations: [
+    Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
+  ],
 });
