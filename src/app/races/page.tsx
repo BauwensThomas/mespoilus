@@ -40,6 +40,17 @@ async function getPhotos(): Promise<Record<AnimalType, string | null>> {
       const urls = byType[animal];
       if (urls.length > 0) result[animal] = urls[Math.floor(Math.random() * urls.length)];
     }
+    // Fallback breeds pour les animaux sans photo hero
+    await Promise.all(ANIMALS.map(async animal => {
+      if (result[animal]) return;
+      const { data: breeds } = await supabase
+        .from('breeds').select('photo_url')
+        .eq('animal', animal).eq('status', 'published').not('photo_url', 'is', null).limit(30);
+      if (breeds && breeds.length > 0) {
+        const pick = breeds[Math.floor(Math.random() * breeds.length)] as { photo_url: string };
+        result[animal] = pick.photo_url;
+      }
+    }));
   } catch { /* fallback null */ }
   return result;
 }
