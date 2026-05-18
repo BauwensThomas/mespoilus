@@ -37,10 +37,10 @@ export default function ActivityFeed({ logs }: ActivityFeedProps) {
           {logs.length > 0 && (
             <span className="text-xs text-gray-400">({logs.length})</span>
           )}
-          {todayCount > 0 && (
-            <span className="text-xs font-semibold text-red-500">aujourd'hui ({todayCount})</span>
-          )}
         </div>
+        {todayCount > 0 && (
+          <span className="text-xs font-semibold text-red-500">aujourd'hui ({todayCount})</span>
+        )}
         <span className="text-xs text-gray-400 uppercase tracking-wide">Live</span>
       </button>
 
