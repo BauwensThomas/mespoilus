@@ -10,8 +10,9 @@ Sentry.init({
   tracesSampleRate: 1,
   profilesSampleRate: 1,
   sendDefaultPii: true,
-  integrations: [nodeProfilingIntegration()],
-  _experiments: {
-    enableLogs: true,
-  },
+  enableLogs: true,
+  integrations: [
+    nodeProfilingIntegration(),
+    Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
+  ],
 });

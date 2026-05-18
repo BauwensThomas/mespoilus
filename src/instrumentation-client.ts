@@ -9,10 +9,11 @@ Sentry.init({
   tracesSampleRate: 1,
   profilesSampleRate: 1,
   sendDefaultPii: true,
-  integrations: [Sentry.browserProfilingIntegration()],
-  _experiments: {
-    enableLogs: true,
-  },
+  enableLogs: true,
+  integrations: [
+    Sentry.browserProfilingIntegration(),
+    Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
+  ],
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
