@@ -248,7 +248,7 @@ SENTRY_AUTH_TOKEN # Dans .env.sentry-build-plugin (gitignored) + Vercel env vars
 - Finance → vérifie si `financial_reports.period` existe déjà pour ce mois → abandon si oui
 - Newsletter → vérifie si une campagne `sent` existe dans les 5 derniers jours → abandon si oui
 ### CronLauncher - Pipelines manuels (Dashboard)
-Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de sync boutique :
+Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de sync boutique + 1 import one-shot :
 - **Sélecteur animal** : forcer un animal spécifique (chiens, chats, oiseaux, rongeurs, reptiles) ou Auto
 - **Sélecteur type article** : Auto (rotation), Trending, Partenaire/Produit, Conseil pratique, **Fiche de race**, **Sélection produits**
 - **Panel "Forcer un partenaire"** (`ForcedPartnerPanel`, replié par défaut, style violet) : sélection depuis liste PARTENAIRES → charge automatiquement tous les produits en boutique jusqu'à 500 (filtre `merchant_name ILIKE '%keyword%'` Supabase) + champ recherche produit + sélection radio par `affiliate_url` (unique, évite les doublons de nom) + champ codes promo libre + **image forcée** (upload fichier ou coller URL avec preview et détection d'erreur `onError`). Force `forcedType = 'affiliation'` dans le cron blog + injecte une contrainte absolue dans le prompt Lucas + section "CODES PROMO OBLIGATOIRES" dans le prompt Marie + mention explicite de la marque (`- Marque : X (mentionne ce nom nommément dans l'article)`). Partenaires disponibles : Dogfy Diet, Maxi Zoo, CanadaPetCare, Tuft & Paw.
@@ -258,6 +258,10 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 | 📊 Finance | Antoine | Rapport financier mensuel → `financial_reports` |
 | 🛡️ Sécurité & Maintenance | Nathalie + Maxime | Audit sécurité + audit technique → `security_logs` + `tech_reports` |
 | 💌 Newsletter | Sofia | Newsletter avec 3 derniers articles → générée + **envoyée automatiquement via Resend** |
+| ✨ Prénoms animaux | Thomas (Haiku) | 50 prénoms par catégorie × 5 animaux → `prenoms` |
+| 🐾 Adoption — Réseaux | Emma | Post Facebook + Instagram sur les dernières annonces d'adoption |
+| ✨ Fiches races | Haiku | 10 fiches races générées → `breeds` |
+| 📧 Récap quotidien | - | Email récap journalier → `contact@mespoilus.com` |
 **Léa** : pas de cron - Répond à la demande sur sa page agent uniquement.
 - **Sync Boutique Awin** (`AwinPanel`) : 7 catégories indépendantes, progression temps réel depuis `awin_sync_progress` — **fermé par défaut** (toggle ChevronDown)
 - **Sync Boutique CJ** (`CJSyncPanel`) : déclenche `/api/cron/cj-sync/canada-pet-care` (scraper sitemap) - Générique, prêt pour futurs affiliés CJ
