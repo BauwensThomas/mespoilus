@@ -77,14 +77,14 @@ export async function GET(req: Request) {
     }
   }
 
-  if (deleted > 0) {
-    await supabase.from('activity_logs').insert({
-      agent_id: 'thomas', agent_name: 'Thomas',
-      action: `[Adoption cleanup] ${deleted} annonce${deleted > 1 ? 's' : ''} expirée${deleted > 1 ? 's' : ''} supprimée${deleted > 1 ? 's' : ''} (${EXPIRY_DAYS}j)`,
-      details: failed > 0 ? { failed } : {},
-      status: 'success',
-    });
-  }
+  await supabase.from('activity_logs').insert({
+    agent_id: 'thomas', agent_name: 'Thomas',
+    action: deleted > 0
+      ? `[Adoption cleanup] ${deleted} annonce${deleted > 1 ? 's' : ''} expirée${deleted > 1 ? 's' : ''} supprimee${deleted > 1 ? 's' : ''} apres ${EXPIRY_DAYS}j`
+      : `[Adoption cleanup] Aucune annonce expiree (seuil ${EXPIRY_DAYS}j)`,
+    details: { deleted, failed, total: posts?.length ?? 0 },
+    status: 'success',
+  });
 
   // Supprimer les alertes adoption non confirmées depuis plus de 7 jours
   const alertExpiry = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
