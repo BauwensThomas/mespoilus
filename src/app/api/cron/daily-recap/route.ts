@@ -8,6 +8,18 @@ export const maxDuration = 30;
 
 const RECAP_EMAIL = 'contact@mespoilus.com';
 
+const BE_TZ = 'Europe/Brussels';
+
+function formatBE(date: Date) {
+  return new Intl.DateTimeFormat('fr-BE', { timeZone: BE_TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
+}
+
+function utcHourToBE(utcHour: number, ref: Date): string {
+  const d = new Date(ref);
+  d.setUTCHours(utcHour, 0, 0, 0);
+  return new Intl.DateTimeFormat('fr-BE', { timeZone: BE_TZ, hour: '2-digit', hour12: false }).format(d) + 'h';
+}
+
 const STATUS_COLOR: Record<string, string> = {
   success: '#16a34a',
   error:   '#dc2626',
@@ -107,13 +119,17 @@ export async function GET(req: Request) {
 
   // Lignes du tableau de logs
   const rows = entries.map(l => {
-    const time = format(new Date(l.created_at), 'HH:mm');
+    const d = new Date(l.created_at);
+    const timeUTC = format(d, 'HH:mm');
+    const timeBE  = formatBE(d);
     const color = STATUS_COLOR[l.status] ?? '#6b7280';
     const badge = STATUS_LABEL[l.status] ?? '?';
     const tokens = l.tokens_used ? `<span style="color:#9ca3af;font-size:11px"> (${l.tokens_used} tok)</span>` : '';
     return `
       <tr style="border-bottom:1px solid #f3f4f6">
-        <td style="padding:8px 12px;color:#6b7280;font-size:12px;white-space:nowrap">${time}</td>
+        <td style="padding:8px 12px;color:#6b7280;font-size:12px;white-space:nowrap">
+          ${timeBE} <span style="color:#d1d5db;font-size:10px">(${timeUTC} UTC)</span>
+        </td>
         <td style="padding:8px 12px;font-size:12px;font-weight:600;color:#374151;white-space:nowrap">${l.agent_name}</td>
         <td style="padding:8px 4px">
           <span style="background:${color}22;color:${color};font-size:11px;font-weight:700;padding:2px 6px;border-radius:99px">${badge}</span>
@@ -130,7 +146,7 @@ export async function GET(req: Request) {
         <p style="margin:4px 0;font-size:12px;color:#374151">
           <span style="color:#dc2626;font-weight:700;margin-right:8px">!</span>
           <span style="font-weight:600;margin-right:8px">${m.label}</span>
-          <span style="color:#9ca3af">prevu vers ${m.hour} UTC</span>
+          <span style="color:#9ca3af">prevu vers ${utcHourToBE(parseInt(m.hour), now)} heure belge (${m.hour} UTC)</span>
         </p>`).join('')}
     </div>`;
 
@@ -184,7 +200,7 @@ export async function GET(req: Request) {
         }
 
         <div style="padding:16px 24px;border-top:1px solid #f3f4f6;text-align:center">
-          <p style="font-size:11px;color:#9ca3af;margin:0">Mes Poilus - recap automatique envoye chaque soir a 20h UTC</p>
+          <p style="font-size:11px;color:#9ca3af;margin:0">Mes Poilus - recap automatique envoye chaque soir a 22h heure belge (20h UTC)</p>
         </div>
       </div>
     </div>`;
