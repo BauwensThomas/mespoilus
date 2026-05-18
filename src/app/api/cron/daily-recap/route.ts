@@ -17,7 +17,8 @@ function formatBE(date: Date) {
 function utcHourToBE(utcHour: number, ref: Date): string {
   const d = new Date(ref);
   d.setUTCHours(utcHour, 0, 0, 0);
-  return new Intl.DateTimeFormat('fr-BE', { timeZone: BE_TZ, hour: '2-digit', hour12: false }).format(d) + 'h';
+  const hour = new Intl.DateTimeFormat('en', { timeZone: BE_TZ, hour: '2-digit', hour12: false }).format(d);
+  return `${hour}h`;
 }
 
 const STATUS_COLOR: Record<string, string> = {
