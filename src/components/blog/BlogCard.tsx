@@ -88,6 +88,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
                 src={imageSrc}
                 alt={imageAlt}
                 fill
+                unoptimized
                 className="object-cover object-center"
                 sizes="(max-width: 768px) 100vw, 384px"
               />
@@ -122,6 +123,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
               src={imageSrc}
               alt={imageAlt}
               fill
+              unoptimized
               className="object-cover object-center transition-smooth group-hover:scale-105"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />

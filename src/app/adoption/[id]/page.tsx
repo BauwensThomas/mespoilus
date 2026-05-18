@@ -162,6 +162,7 @@ export default function AdoptionDetailPage() {
                     src={photos[photoIndex]}
                     alt={`${typeInfo?.label ?? post.animal_type} à adopter`}
                     fill
+                    unoptimized
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, 50vw"
                     priority
@@ -194,7 +195,7 @@ export default function AdoptionDetailPage() {
                         onClick={() => setPhotoIndex(i)}
                         className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${i === photoIndex ? 'border-orange-500' : 'border-transparent'}`}
                       >
-                        <Image src={url} alt="" fill className="object-cover" sizes="64px" />
+                        <Image src={url} alt="" fill unoptimized className="object-cover" sizes="64px" />
                       </button>
                     ))}
                   </div>

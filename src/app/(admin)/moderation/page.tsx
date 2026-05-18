@@ -317,7 +317,7 @@ export default async function ModerationPage({ searchParams }: Props) {
                   <div className="grid grid-cols-5 gap-0.5 bg-gray-100">
                     {post.photo_urls.slice(0, 5).map((url, i) => (
                       <div key={i} className="relative aspect-square overflow-hidden bg-gray-200">
-                        <Image src={url} alt="" fill className="object-cover" sizes="(max-width: 640px) 20vw, 12vw" />
+                        <Image src={url} alt="" fill unoptimized className="object-cover" sizes="(max-width: 640px) 20vw, 12vw" />
                       </div>
                     ))}
                   </div>

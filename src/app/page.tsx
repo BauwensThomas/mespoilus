@@ -196,7 +196,7 @@ export default async function LandingPage() {
               {[heroPhotos[0], heroPhotos[2]].map((photo, i) =>
                 photo ? (
                   <div key={i} className="relative flex-1 rounded-3xl overflow-hidden min-h-0 shadow-lg">
-                    <Image src={photo.url} alt={photo.alt} fill priority className="object-cover" sizes="25vw" />
+                    <Image src={photo.url} alt={photo.alt} fill priority unoptimized className="object-cover" sizes="25vw" />
                   </div>
                 ) : (
                   <div key={i} className="flex-1 rounded-3xl bg-gradient-to-br from-orange-100 to-blue-100 min-h-0" />
@@ -208,7 +208,7 @@ export default async function LandingPage() {
               {[heroPhotos[1], heroPhotos[3]].map((photo, i) =>
                 photo ? (
                   <div key={i} className="relative flex-1 rounded-3xl overflow-hidden min-h-0 shadow-lg">
-                    <Image src={photo.url} alt={photo.alt} fill priority className="object-cover" sizes="25vw" />
+                    <Image src={photo.url} alt={photo.alt} fill priority unoptimized className="object-cover" sizes="25vw" />
                   </div>
                 ) : (
                   <div key={i} className="flex-1 rounded-3xl bg-gradient-to-br from-blue-100 to-orange-100 min-h-0" />
@@ -318,6 +318,7 @@ export default async function LandingPage() {
                       src={imgSrc}
                       alt={`${cat.label}`}
                       fill
+                      unoptimized
                       className="object-cover group-hover:scale-105 transition-smooth"
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                     />

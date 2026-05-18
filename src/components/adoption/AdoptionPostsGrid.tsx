@@ -36,7 +36,7 @@ function GridCard({ post }: { post: AdoptionPost }) {
       {post.photo_urls?.length > 0 ? (
         <div className="relative h-48 overflow-hidden bg-gradient-to-br from-orange-100 to-blue-100">
           <Image src={post.photo_urls[0]} alt={`${typeInfo?.label ?? post.animal_type} à adopter`}
-            fill className="object-cover group-hover:scale-105 transition-transform duration-300"
+            fill unoptimized className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw" />
           {post.photo_urls.length > 1 && (
             <span className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full">
@@ -82,7 +82,7 @@ function ListRow({ post }: { post: AdoptionPost }) {
       <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-orange-100 to-blue-100">
         {post.photo_urls?.length > 0 ? (
           <Image src={post.photo_urls[0]} alt={typeInfo?.label ?? post.animal_type}
-            fill className="object-cover" sizes="64px" />
+            fill unoptimized className="object-cover" sizes="64px" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <PawPrint size={24} className="text-gray-300" strokeWidth={1} />

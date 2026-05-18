@@ -47,7 +47,7 @@ function ListRow({ article }: { article: Article }) {
       <div className={`relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br ${gradient}`}>
         {article.image_url ? (
           <Image src={article.image_url} alt={article.image_alt || article.title}
-            fill className="object-cover" sizes="64px" />
+            fill unoptimized className="object-cover" sizes="64px" />
         ) : (
           <div className="w-full h-full flex items-center justify-center opacity-40">
             <IconComponent size={28} className="text-white" strokeWidth={1} />

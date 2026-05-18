@@ -135,6 +135,7 @@ export default async function BreedPage({ params }: Props) {
               src={photo}
               alt={`${breed.name} - ${ANIMAL_LABEL[animalType]}`}
               fill
+              unoptimized
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 672px"
             />
