@@ -7,7 +7,7 @@ import { fr } from 'date-fns/locale';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, X } from 'lucide-react';
 
 interface ActivityFeedProps {
   logs: ActivityLog[];
@@ -21,9 +21,16 @@ function formatDate(dateStr: string) {
   return format(d, 'd MMM à HH:mm', { locale: fr });
 }
 
+function isSameDay(dateStr: string, filterDate: string) {
+  return dateStr.slice(0, 10) === filterDate;
+}
+
 export default function ActivityFeed({ logs }: ActivityFeedProps) {
   const [open, setOpen] = useState(false);
+  const [dateFilter, setDateFilter] = useState('');
+
   const todayCount = logs.filter(l => isToday(new Date(l.created_at))).length;
+  const filtered = dateFilter ? logs.filter(l => isSameDay(l.created_at, dateFilter)) : logs;
 
   return (
     <div className="card p-4">
@@ -45,12 +52,33 @@ export default function ActivityFeed({ logs }: ActivityFeedProps) {
       </button>
 
       {open && (
-        <div className="mt-3">
-          {logs.length === 0 ? (
-            <p className="text-sm text-gray-500 py-2">Aucune activité pour le moment</p>
+        <div className="mt-3 space-y-2">
+          {/* Filtre date */}
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={e => setDateFilter(e.target.value)}
+              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-1 focus:ring-orange-400"
+            />
+            {dateFilter && (
+              <button
+                onClick={() => setDateFilter('')}
+                className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600"
+              >
+                <X size={13} /> Effacer
+              </button>
+            )}
+            {dateFilter && (
+              <span className="text-xs text-gray-400">{filtered.length} résultat{filtered.length > 1 ? 's' : ''}</span>
+            )}
+          </div>
+
+          {filtered.length === 0 ? (
+            <p className="text-sm text-gray-500 py-2">Aucune activité pour cette date</p>
           ) : (
             <div className="space-y-0.5 max-h-[calc(10*2.5rem)] overflow-y-auto scrollbar-thin pr-1">
-              {logs.map((log) => {
+              {filtered.map((log) => {
                 const agent = AGENTS[log.agent_id];
                 return (
                   <div
