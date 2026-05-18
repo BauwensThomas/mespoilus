@@ -276,6 +276,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 **Pourquoi Pexels pour blog/social :** Unsplash interdit le telechargement et le stockage serveur (ToS) → 403 Forbidden. Pexels l'autorise explicitement.
 **Pourquoi Supabase pour hero/categories :** controle total, rotation automatique, pas de dependance externe, API transformation Supabase NON disponible sur plan gratuit → utiliser URLs directes `/object/public/`.
 **Credits :** `Photo Photographer / Pexels` sur les articles.
+**`unoptimized` sur toutes les images dynamiques :** prop ajoutee sur tous les composants `<Image>` affichant des URLs Supabase Storage (races, blog, adoption, hero, categories). Evite les transformations Vercel (quota Hobby : 5 000/mois). Les images Supabase sont deja des JPEG/WebP optimises — aucun impact visuel.
 ### Make.com -Réseaux sociaux
 - Scénario linéaire : Webhook → **Facebook Pages + Instagram for Business** (@mespoilusofficiel)
 - Instagram reconnecté via Meta Business Suite (compte `@mespoilus` banni → nouveau compte `@mespoilusofficiel` lié à la Page Facebook)
