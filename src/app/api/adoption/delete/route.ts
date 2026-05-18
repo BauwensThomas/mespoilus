@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Soft delete + anonymisation RGPD (données personnelles effacées, stats conservées)
-    await supabase.from('adoption_posts').update({
+    const { error: updateError } = await supabase.from('adoption_posts').update({
       status:         'deleted',
       deleted_at:     new Date().toISOString(),
       deleted_by:     'user',
@@ -36,6 +36,11 @@ export async function POST(req: NextRequest) {
       email:          null,
       contact_info:   null,
     }).eq('id', id);
+
+    if (updateError) {
+      console.error('[adoption:delete] update error:', updateError);
+      return NextResponse.json({ error: 'Erreur lors de la suppression' }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {
