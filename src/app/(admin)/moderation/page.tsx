@@ -7,7 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
 import Image from 'next/image';
-import { CheckCircle2, XCircle, Pencil } from 'lucide-react';
+import { CheckCircle2, XCircle, Pencil, Heart, Clock, User, Bot } from 'lucide-react';
 import DeletePostButton from './DeletePostButton';
 
 export const revalidate = 0;
@@ -29,7 +29,6 @@ async function approvePost(id: string) {
     .eq('id', id);
 
   if (post) {
-    // Envoyer les alertes aux abonnés correspondants
     try {
       const { data: alerts } = await supabase
         .from('adoption_alerts')
@@ -151,74 +150,103 @@ async function deletePost(id: string) {
   revalidatePath('/moderation');
 }
 
-async function getData(status: string) {
+async function getData(status: string, animal?: string, reason?: string) {
   const supabase = createAdminClient();
+
+  let q = supabase
+    .from('adoption_posts')
+    .select('*')
+    .eq('status', status)
+    .order(status === 'deleted' ? 'deleted_at' : 'created_at', { ascending: false });
+
+  if (animal && animal !== 'all') q = q.eq('animal_type', animal);
+
+  if (status === 'deleted' && reason && reason !== 'all') {
+    if (reason === 'adopted')  q = q.eq('deleted_reason', 'adopted');
+    if (reason === 'user')     q = q.eq('deleted_by', 'user').neq('deleted_reason', 'adopted');
+    if (reason === 'auto')     q = q.eq('deleted_by', 'cron');
+  }
+
   const [postsRes, pendingRes] = await Promise.all([
-    supabase
-      .from('adoption_posts')
-      .select('*')
-      .eq('status', status)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('adoption_posts')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending'),
+    q,
+    supabase.from('adoption_posts').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
   ]);
+
   return {
-    posts: (postsRes.data as AdoptionPost[]) ?? [],
+    posts:        (postsRes.data as AdoptionPost[]) ?? [],
     pendingCount: pendingRes.count ?? 0,
   };
 }
 
 const ANIMAL_LABELS: Record<string, string> = {
-  chien: 'Chien',
-  chat: 'Chat',
-  oiseau: 'Oiseau',
-  rongeur: 'Rongeur',
-  reptile: 'Reptile',
-  autre: 'Autre',
+  chien: 'Chien', chat: 'Chat', oiseau: 'Oiseau', rongeur: 'Rongeur', reptile: 'Reptile', autre: 'Autre',
+};
+
+const ANIMALS = ['all', 'chien', 'chat', 'oiseau', 'rongeur', 'reptile', 'autre'] as const;
+const ANIMAL_NAMES: Record<string, string> = { all: 'Tous', chien: 'Chiens', chat: 'Chats', oiseau: 'Oiseaux', rongeur: 'Rongeurs', reptile: 'Reptiles', autre: 'Autre' };
+
+const DELETE_REASONS = [
+  { id: 'all',     label: 'Tous',                  icon: null },
+  { id: 'adopted', label: 'Adopté',                icon: Heart },
+  { id: 'user',    label: 'Supprimé (utilisateur)', icon: User  },
+  { id: 'auto',    label: 'Supprimé auto (60j)',    icon: Bot   },
+] as const;
+
+const DELETED_REASON_LABEL: Record<string, { label: string; color: string }> = {
+  adopted:      { label: 'Adopté',          color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
+  error:        { label: 'Erreur utilisateur', color: 'text-gray-600 bg-gray-50 border-gray-200' },
+  auto_expired: { label: 'Auto 60j',         color: 'text-blue-600 bg-blue-50 border-blue-200'   },
+  admin:        { label: 'Admin',             color: 'text-red-600 bg-red-50 border-red-200'      },
 };
 
 const TABS = [
   { id: 'pending',  label: 'En attente' },
   { id: 'approved', label: 'Approuvées' },
   { id: 'rejected', label: 'Rejetées'   },
+  { id: 'deleted',  label: 'Supprimées' },
 ];
 
 interface Props {
-  searchParams: { status?: string };
+  searchParams: { status?: string; animal?: string; reason?: string };
 }
 
 export default async function ModerationPage({ searchParams }: Props) {
   const activeStatus = searchParams.status ?? 'pending';
-  const { posts, pendingCount } = await getData(activeStatus);
+  const activeAnimal = searchParams.animal ?? 'all';
+  const activeReason = searchParams.reason ?? 'all';
+  const { posts, pendingCount } = await getData(activeStatus, activeAnimal, activeReason);
+
+  function tabHref(status: string) {
+    return `/moderation?status=${status}&animal=${activeAnimal}`;
+  }
+  function animalHref(animal: string) {
+    const base = `/moderation?status=${activeStatus}&animal=${animal}`;
+    return activeStatus === 'deleted' ? `${base}&reason=${activeReason}` : base;
+  }
+  function reasonHref(reason: string) {
+    return `/moderation?status=deleted&animal=${activeAnimal}&reason=${reason}`;
+  }
 
   return (
-    <div className="px-8 py-8 space-y-6 animate-fade-in">
+    <div className="px-8 py-8 space-y-5 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Modération</h1>
-        <p className="text-gray-500 text-base mt-1">Annonces d'adoption à valider</p>
+        <p className="text-gray-500 text-base mt-1">Annonces d'adoption</p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2">
+      {/* Onglets statut */}
+      <div className="flex gap-2 flex-wrap">
         {TABS.map(tab => {
           const isActive = tab.id === activeStatus;
           return (
-            <Link
-              key={tab.id}
-              href={`/moderation?status=${tab.id}`}
+            <Link key={tab.id} href={tabHref(tab.id)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                isActive
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                isActive ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200'
               }`}
             >
               {tab.label}
               {tab.id === 'pending' && pendingCount > 0 && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-                  isActive ? 'bg-white/20 text-white' : 'bg-orange-100 text-orange-600'
-                }`}>
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${isActive ? 'bg-white/20 text-white' : 'bg-orange-100 text-orange-600'}`}>
                   {pendingCount}
                 </span>
               )}
@@ -226,6 +254,45 @@ export default async function ModerationPage({ searchParams }: Props) {
           );
         })}
       </div>
+
+      {/* Filtre animal */}
+      <div className="flex gap-2 flex-wrap">
+        {ANIMALS.map(a => {
+          const isActive = a === activeAnimal;
+          return (
+            <Link key={a} href={animalHref(a)}
+              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                isActive ? 'bg-gray-800 border-gray-800 text-white' : 'border-gray-200 text-gray-600 hover:border-gray-400'
+              }`}
+            >
+              {ANIMAL_NAMES[a]}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Filtre raison (onglet supprimé uniquement) */}
+      {activeStatus === 'deleted' && (
+        <div className="flex gap-2 flex-wrap">
+          {DELETE_REASONS.map(r => {
+            const isActive = r.id === activeReason;
+            const Icon = r.icon;
+            return (
+              <Link key={r.id} href={reasonHref(r.id)}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors flex items-center gap-1.5 ${
+                  isActive ? 'bg-rose-600 border-rose-600 text-white' : 'border-gray-200 text-gray-600 hover:border-rose-400 hover:text-rose-600'
+                }`}
+              >
+                {Icon && <Icon size={11} strokeWidth={1.5} />}
+                {r.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Compteur */}
+      <p className="text-sm text-gray-400">{posts.length} annonce{posts.length !== 1 ? 's' : ''}</p>
 
       {/* Liste */}
       {posts.length === 0 ? (
@@ -235,52 +302,70 @@ export default async function ModerationPage({ searchParams }: Props) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {posts.map(post => {
-            const approve = approvePost.bind(null, post.id);
+            const approve      = approvePost.bind(null, post.id);
             const rejectWithId = rejectPost.bind(null, post.id);
             const deleteWithId = deletePost.bind(null, post.id);
-            const date    = formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: fr });
-            const animalLabel = ANIMAL_LABELS[post.animal_type] ?? post.animal_type;
+            const date         = formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: fr });
+            const animalLabel  = ANIMAL_LABELS[post.animal_type] ?? post.animal_type;
+            const deletedInfo  = post.deleted_reason ? DELETED_REASON_LABEL[post.deleted_reason] : null;
 
             return (
-              <div key={post.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+              <div key={post.id} className={`bg-white border rounded-2xl overflow-hidden ${activeStatus === 'deleted' ? 'border-gray-200 opacity-80' : 'border-gray-200'}`}>
 
                 {/* Photos */}
                 {post.photo_urls?.length > 0 && (
                   <div className="grid grid-cols-5 gap-0.5 bg-gray-100">
                     {post.photo_urls.slice(0, 5).map((url, i) => (
                       <div key={i} className="relative aspect-square overflow-hidden bg-gray-200">
-                        <Image
-                          src={url}
-                          alt=""
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 640px) 20vw, 12vw"
-                        />
+                        <Image src={url} alt="" fill className="object-cover" sizes="(max-width: 640px) 20vw, 12vw" />
                       </div>
                     ))}
                   </div>
                 )}
 
                 <div className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                       <span className="capitalize">{animalLabel}</span>
                       {post.breed && <span className="text-gray-500 font-normal">· {post.breed}</span>}
                     </span>
-                    <span className="text-[10px] text-gray-400">{date}</span>
+                    <span className="text-[10px] text-gray-400 shrink-0">{date}</span>
                   </div>
+
+                  {/* Badge suppression */}
+                  {activeStatus === 'deleted' && deletedInfo && (
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${deletedInfo.color}`}>
+                        {deletedInfo.label}
+                      </span>
+                      {post.deleted_at && (
+                        <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                          <Clock size={10} />
+                          {formatDistanceToNow(new Date(post.deleted_at), { addSuffix: true, locale: fr })}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   <div className="text-xs text-gray-700 space-y-0.5">
                     {post.age    && <p>Âge : {post.age} {post.gender !== 'inconnu' ? `· ${post.gender}` : ''}</p>}
                     <p>Ville : {post.region}</p>
-                    <p className="text-gray-700">Par : {post.poster_name}</p>
-                    <p className="text-gray-700">Email : {post.email}</p>
-                    <p className="text-gray-700">Tél : {post.contact_info}</p>
+                    {activeStatus !== 'deleted' && (
+                      <>
+                        <p>Par : {post.poster_name}</p>
+                        <p>Email : {post.email}</p>
+                        <p>Tél : {post.contact_info}</p>
+                      </>
+                    )}
                   </div>
 
-                  <p className="text-xs text-gray-700 line-clamp-3"><span className="font-semibold">Description : </span>{post.description}</p>
-                  {post.reason && (
-                    <p className="text-xs text-amber-900 line-clamp-2"><span className="font-semibold">Raison : </span>{post.reason}</p>
+                  {activeStatus !== 'deleted' && (
+                    <>
+                      <p className="text-xs text-gray-700 line-clamp-3"><span className="font-semibold">Description : </span>{post.description}</p>
+                      {post.reason && (
+                        <p className="text-xs text-amber-900 line-clamp-2"><span className="font-semibold">Raison : </span>{post.reason}</p>
+                      )}
+                    </>
                   )}
 
                   {post.status === 'pending' && (
@@ -292,11 +377,7 @@ export default async function ModerationPage({ searchParams }: Props) {
                         </button>
                       </form>
                       <form action={rejectWithId} className="space-y-1.5">
-                        <input
-                          name="reason"
-                          type="text"
-                          required
-                          placeholder="Raison du refus (obligatoire)…"
+                        <input name="reason" type="text" required placeholder="Raison du refus (obligatoire)…"
                           className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-red-300 focus:ring-1 focus:ring-red-200"
                         />
                         <button type="submit" className="w-full px-3 py-1.5 bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1">
@@ -307,21 +388,22 @@ export default async function ModerationPage({ searchParams }: Props) {
                     </div>
                   )}
 
-                  <div className="flex gap-2 pt-1 border-t border-gray-100">
-                    <Link href={`/moderation/${post.id}/edit`}
-                      className="flex-1 px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1">
-                      <Pencil size={13} strokeWidth={1.5} />
-                      Modifier
-                    </Link>
-                    <DeletePostButton action={deleteWithId} />
-                  </div>
+                  {activeStatus !== 'deleted' && (
+                    <div className="flex gap-2 pt-1 border-t border-gray-100">
+                      <Link href={`/moderation/${post.id}/edit`}
+                        className="flex-1 px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1">
+                        <Pencil size={13} strokeWidth={1.5} />
+                        Modifier
+                      </Link>
+                      <DeletePostButton action={deleteWithId} />
+                    </div>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       )}
-
     </div>
   );
 }

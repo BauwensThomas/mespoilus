@@ -142,9 +142,12 @@ export interface AdoptionPost {
   reason: string | null;
   contact_info: string;
   photo_urls: string[];
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'deleted';
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
+  deleted_by: 'user' | 'cron' | 'admin' | null;
+  deleted_reason: 'adopted' | 'error' | 'auto_expired' | 'admin' | null;
 }
 
 export interface AwinProduct {
