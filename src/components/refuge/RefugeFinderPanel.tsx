@@ -322,6 +322,8 @@ export default function RefugeFinderPanel() {
                   <div className="flex-1 relative">
                     <MapPin size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" strokeWidth={1.5} />
                     <input
+                      id="refuge-address"
+                      name="refuge-address"
                       type="text"
                       value={address}
                       onChange={e => handleAddressChange(e.target.value)}
