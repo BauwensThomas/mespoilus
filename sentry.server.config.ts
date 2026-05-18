@@ -3,14 +3,15 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
 
 Sentry.init({
   dsn: "https://be2b25d58b9617d48f5102aefe1b9487@o4511412620689408.ingest.de.sentry.io/4511412634189904",
-
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
   tracesSampleRate: 1,
-
-  // Enable sending user PII (Personally Identifiable Information)
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
+  profilesSampleRate: 1,
   sendDefaultPii: true,
+  integrations: [nodeProfilingIntegration()],
+  _experiments: {
+    enableLogs: true,
+  },
 });
