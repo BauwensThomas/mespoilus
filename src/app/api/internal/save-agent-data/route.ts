@@ -172,6 +172,26 @@ async function saveMarie(content: string, overrideImageUrl?: string) {
     }
   }
 
+  // Fallback breeds si Pexels échoue
+  if (!storedImageUrl) {
+    const CAT_TO_ANIMAL: Record<string, string> = { chiens: 'chien', chats: 'chat', oiseaux: 'oiseau', rongeurs: 'rongeur', reptiles: 'reptile' };
+    const animalType = CAT_TO_ANIMAL[category];
+    if (animalType) {
+      try {
+        const breedRes = await dbFetch('breeds', 'GET', undefined,
+          `animal=eq.${animalType}&status=eq.published&photo_url=not.is.null&select=photo_url,name&limit=50`
+        );
+        const breedPhotos = breedRes.data as { photo_url: string; name: string }[] | null;
+        if (breedPhotos && breedPhotos.length > 0) {
+          const pick = breedPhotos[Math.floor(Math.random() * breedPhotos.length)];
+          storedImageUrl = pick.photo_url;
+          imageAlt = pick.name;
+          console.log('[save-agent] Marie image fallback breed:', pick.name);
+        }
+      } catch { /* non-bloquant */ }
+    }
+  }
+
   const res = await dbFetch('articles', 'POST', {
     title, slug, content: articleContent, excerpt, category, categories,
     seo_keywords: seoKeywords, meta_description: metaDescription,

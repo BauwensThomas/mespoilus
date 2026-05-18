@@ -84,7 +84,20 @@ async function getHeroPhotosFromDB(): Promise<(HeroPhoto | null)[]> {
         .in('id', selectedIds);
     }
 
-    return selected;
+    // Fallback breeds pour les slots sans photo hero
+    const SLOT_TO_ANIMAL: Record<string, string> = { chiens: 'chien', chats: 'chat', oiseaux: 'oiseau', rongeurs: 'rongeur' };
+    const final = await Promise.all(selected.map(async (photo, i) => {
+      if (photo) return photo;
+      const animalType = SLOT_TO_ANIMAL[HERO_SLOTS[i]];
+      if (!animalType) return null;
+      const { data: breeds } = await supabase
+        .from('breeds').select('photo_url, name')
+        .eq('animal', animalType).eq('status', 'published').not('photo_url', 'is', null).limit(30);
+      if (!breeds || breeds.length === 0) return null;
+      const pick = breeds[Math.floor(Math.random() * breeds.length)] as { photo_url: string; name: string };
+      return { url: pick.photo_url, alt: pick.name };
+    }));
+    return final;
   } catch {
     return [null, null, null, null];
   }
@@ -117,6 +130,18 @@ async function getCategoryPhotosFromDB(): Promise<Record<string, string>> {
     for (const [type, urls] of Object.entries(byType)) {
       result[type] = urls[Math.floor(Math.random() * urls.length)];
     }
+    // Fallback breeds pour les catégories sans photo hero
+    const CAT_TO_ANIMAL: Record<string, string> = { chiens: 'chien', chats: 'chat', oiseaux: 'oiseau', rongeurs: 'rongeur', reptiles: 'reptile' };
+    await Promise.all(Object.entries(CAT_TO_ANIMAL).map(async ([cat, animalType]) => {
+      if (result[cat]) return;
+      const { data: breeds } = await supabase
+        .from('breeds').select('photo_url')
+        .eq('animal', animalType).eq('status', 'published').not('photo_url', 'is', null).limit(30);
+      if (breeds && breeds.length > 0) {
+        const pick = breeds[Math.floor(Math.random() * breeds.length)] as { photo_url: string };
+        result[cat] = pick.photo_url;
+      }
+    }));
     return result;
   } catch {
     return {};
