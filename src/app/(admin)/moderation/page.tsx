@@ -145,7 +145,7 @@ async function deletePost(id: string) {
     deleted_by:     'admin',
     deleted_reason: 'admin',
     poster_name:    'Anonymisé',
-    email:          null,
+    email:          'supprime@mespoilus.com',
     contact_info:   null,
   }).eq('id', id);
   revalidatePath('/moderation');

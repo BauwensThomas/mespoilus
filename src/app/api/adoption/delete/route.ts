@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       deleted_by:     'user',
       deleted_reason: deletedReason,
       poster_name:    'Anonymisé',
-      email:          null,
+      email:          'supprime@mespoilus.com',
       contact_info:   null,
     }).eq('id', id);
 
