@@ -571,7 +571,7 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
   - Erreurs : captures automatiquement (client + serveur + edge), email alerte sur chaque nouvelle issue
   - Traces : `tracesSampleRate: 1` (100% des pages tracees)
   - Profiling : `profilesSampleRate: 1` (server via Node.js, client via browser)
-  - Logs : `_experiments: { enableLogs: true }` (server + client + edge)
+  - Logs : `enableLogs: true` + `consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] })` sur server + client + edge — capture automatique des `console.log/warn/error`
   - Source maps : uploadees a chaque deploy Vercel via `withSentryConfig`
 - **Alertes email** : regle configuree dans Sentry dashboard, notifie `contact@mespoilus.com` (membre recently active) a chaque nouvelle issue
 - **Metrics** : non disponibles sur plan gratuit Sentry
@@ -587,6 +587,9 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 - **Headers de securite** : `X-DNS-Prefetch-Control`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Document-Policy: js-profiling` (requis pour Sentry browser profiling)
 - **CSP (Content-Security-Policy)** : `script-src` inclut Google, AdSense, Maps, Pinterest (`s.pinimg.com` + `ct.pinterest.com`) ; `connect-src` inclut Supabase, Anthropic, Google Analytics, Sentry (`*.ingest.de.sentry.io` + `*.ingest.sentry.io`), Google CSI (`csi.gstatic.com`), Pinterest ; `frame-src` inclut Google Ads + Pinterest
 - **Sentry config** : `withSentryConfig` wrapper, `widenClientFileUpload: true`, `automaticVercelMonitors: true`, source maps uploadees en CI uniquement (`silent: !process.env.CI`)
+- **Google Maps** : parametre `loading=async` ajoute dans `RefugeFinderPanel.tsx` et `VetFinderPanel.tsx` (supprime warning performance)
+- **Accessibilite formulaires** : `id` + `name` ajoutes sur tous les inputs/selects sans attributs — search bars (blog, adoption, races, boutique), newsletter (`autocomplete="email"`), refuge finder (adresse + rayon), vet finder (adresse + rayon). `<noscript>` Pinterest supprime (warning preload)
+- **Pinterest** : tag de tracking conserve (`s.pinimg.com/ct/core.js`), seul le `<noscript>` fallback img supprime
 ### Déploiement
 - Repo GitHub : `BauwensThomas/mespoilus`
 - CI/CD : Vercel -déploiement automatique sur push `main`
