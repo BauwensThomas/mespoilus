@@ -141,7 +141,7 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 - Évite les articles invisibles sur les pages catégories si `categories[]` est incomplet
 ### Dashboard admin (`/dashboard`)
 - Grille des 9 agents avec statut, stats et dernière activité
-- Feed d'activité : liste verticale compacte, 20 entrées, scrollable, sans icônes
+- **Feed d'activité (`ActivityFeed.tsx`)** : collapsible (ferme par defaut), header affiche total `(N)` + compteur du jour en rouge `aujourd'hui (X)` au centre + "Live" a droite. Quand ouvert : champ date pour filtrer par jour (filtre client, "X resultats" + bouton Effacer), 10 lignes visibles avec scroll. Tous les logs charges sans limite depuis la DB.
 - Stats globales : articles publiés, tâches exécutées, tokens utilisés, alertes sécurité
 - **Chaque stat globale affiche : total all-time + "X ce mois" en ambré**
 - **Totaux ET mensuels calculés depuis `activity_logs` (source unique) → total toujours ≥ ce mois**
@@ -234,7 +234,7 @@ NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'f
 | `/api/cron/newsletter` | **Chaque vendredi** | 10h00 | Sofia | `newsletter_campaigns` + envoi Resend |
 | `/api/cron/prenoms` | **1er de chaque mois** | 7h00 | Thomas (Haiku) | `prenoms` (DELETE + INSERT, 5 animaux × 4 styles × 50 noms) |
 | `/api/cron/adoption-followup` | **Chaque samedi** | 19h00 | - | Email suivi déposant (animal adopté ?) |
-| `/api/cron/adoption-cleanup` | Tous les jours | 3h00 | - | Hard delete annonces ≥60j |
+| `/api/cron/adoption-cleanup` | Tous les jours | 3h00 | - | Soft delete annonces ≥60j (status=deleted, PII anonymises) + log activity_logs (meme si 0 annonces) |
 | `/api/cron/adoption-social` | **Chaque mardi** | 19h00 | Emma | `social_posts` + webhook Make.com - Photo réelle annonce - Abandon si 0 annonces |
 | `/api/cron/breeds?batch=10` | **Chaque dimanche** | 7h00 | Haiku | `breeds` (10 races/run, 2 par catégorie interleaved) |
 **⚠️ Fiabilité crons Vercel Hobby :** les crons sont tous reconnus (18 au total) mais Vercel Hobby n'a pas de retry. Un cron manqué est silencieux. Pour les crons critiques (blog, social), vérifier régulièrement Vercel Dashboard → Settings → Crons → Last execution.
@@ -265,14 +265,16 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 ### Images -Architecture
 | Usage | Source | Stockage |
 |-------|--------|---------|
-| Images articles blog | **Pexels API** (`pexels.ts`) | Supabase Storage `blog-images` |
-| Images posts sociaux | Même image que l'article (lecture Supabase) | Supabase Storage `blog-images` |
-| Hero page accueil (4 cases) | **Supabase `hero_photos`** - Round-robin `last_used_at` | Supabase Storage `hero-photos` |
-| Catégories "Par type d'animal" | **Supabase `hero_photos`** - 1 photo aléatoire par `animal_type` | Supabase Storage `hero-photos` |
-| Photos agents (pages `/agents/[agent]`) | Unsplash `getPhotoForAgent()` | Affiché direct (non stocké) |
-**Pourquoi Pexels pour blog/social :** Unsplash interdit le téléchargement et le stockage serveur (ToS) → 403 Forbidden. Pexels l'autorise explicitement.
-**Pourquoi Supabase pour hero/catégories :** contrôle total, rotation automatique, pas de dépendance externe, API transformation Supabase NON disponible sur plan gratuit → utiliser URLs directes `/object/public/`.
-**Crédits :** `📷 Photographer / Pexels` sur les articles.
+| Images articles blog | **Pexels API** (`pexels.ts`) → fallback photo race (`breeds.photo_url`) | Supabase Storage `blog-images` / URL directe |
+| Images posts sociaux | Meme image que l'article (lecture Supabase) | Supabase Storage `blog-images` |
+| Hero page accueil (4 cases) | **Supabase `hero_photos`** - Round-robin `last_used_at` → fallback `breeds.photo_url` aleatoire | Supabase Storage `hero-photos` / URL directe |
+| Categories "Par type d'animal" | **Supabase `hero_photos`** - 1 photo aleatoire par `animal_type` → fallback `breeds.photo_url` | Supabase Storage `hero-photos` / URL directe |
+| Photos pages `/races` (5 categories) | **Supabase `hero_photos`** → fallback `breeds.photo_url` aleatoire | Supabase Storage `hero-photos` / URL directe |
+| Photos agents (pages `/agents/[agent]`) | Unsplash `getPhotoForAgent()` | Affiche direct (non stocke) |
+**Fallback breeds :** quand `hero_photos` ou Pexels ne fournissent pas d'image, on pioche une photo aleatoire parmi les races publiees avec `photo_url` non null (`breeds` table). 120+ photos disponibles. Zero depend externe.
+**Pourquoi Pexels pour blog/social :** Unsplash interdit le telechargement et le stockage serveur (ToS) → 403 Forbidden. Pexels l'autorise explicitement.
+**Pourquoi Supabase pour hero/categories :** controle total, rotation automatique, pas de dependance externe, API transformation Supabase NON disponible sur plan gratuit → utiliser URLs directes `/object/public/`.
+**Credits :** `Photo Photographer / Pexels` sur les articles.
 ### Make.com -Réseaux sociaux
 - Scénario linéaire : Webhook → **Facebook Pages + Instagram for Business** (@mespoilusofficiel)
 - Instagram reconnecté via Meta Business Suite (compte `@mespoilus` banni → nouveau compte `@mespoilusofficiel` lié à la Page Facebook)
@@ -296,7 +298,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 | Maxime | `saveTechReport` | `tech_reports` |
 | Léa | `saveSupportLog` | `support_logs` |
 **Route `POST /api/internal/save-agent-data`** :
-- Marie → strip code fence, parse frontmatter, **anti-doublon** (vérifie slug existant avant INSERT), si `overrideImageUrl` fourni utilise cette image (sinon `getPhotoForCategory` Pexels 4s timeout), upsert `articles`
+- Marie → strip code fence, parse frontmatter, **anti-doublon** (verifie slug existant avant INSERT), si `overrideImageUrl` fourni utilise cette image (sinon `getPhotoForCategory` Pexels 4s timeout → fallback `breeds.photo_url` aleatoire si Pexels echoue), upsert `articles`
 - Emma → extrait hashtags, cherche image article (slug dans post), fallback Pexels, INSERT `social_posts`, webhook Make.com
 - Nathalie → INSERT `security_logs`
 - Antoine → INSERT `financial_reports`
@@ -399,7 +401,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
   - `getAvailableFilters(animal, pays, gender, race, ageUnit)` : applique les mêmes filtres que `getPosts()` avant d'extraire les valeurs distinctes — les dropdowns ne montrent que les options encore valides
 - **Détail** `/adoption/[id]` : galerie photos (slider + miniatures), fiche lisible (Race/Âge/Sexe/Ville/Description/Raison du don), contact privé via formulaire (reply-to visiteur), suppression par code (discrète, alignée à droite), `max-w-6xl`
 - **Dépôt** `/adoption/deposer` : bloc info (données privées, suppression auto 60j, code de suppression), formulaire 3 colonnes `max-w-4xl`
-- **Suppression** `/adoption/supprimer?id=X&token=Y` : page de confirmation avec Suspense boundary (Next.js 14)
+- **Suppression** `/adoption/supprimer?id=X&token=Y` : page de confirmation avec 2 boutons de raison (animal adopte / erreur), puis confirmation → soft delete + anonymisation RGPD. Suspense boundary (Next.js 14)
 #### Formulaire de dépôt (`AdoptionPostForm.tsx`)
 - Photos : 2 min, 5 max, preview avec suppression individuelle
 - Téléphone : dropdown custom (bouton flag image `flagcdn.com` + code, recherche par nom de pays, séparateur visuel) — zero initial retiré en temps réel (`replace(/^0+/, '')`)
@@ -415,7 +417,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 | `/api/adoption/upload` | POST | Upload photo Supabase Storage `adoption-photos` (5 Mo max) |
 | `/api/adoption/post` | GET | Fetch annonce approuvée par id (champs publics + reason) |
 | `/api/adoption/contact` | POST | Message visiteur → déposant via email (`replyTo: from_email`) — email déposant jamais exposé |
-| `/api/adoption/delete` | POST | Vérification token, suppression hard |
+| `/api/adoption/delete` | POST | Vérification token, **soft delete** (`status='deleted'`, `deleted_by='user'`, `deleted_reason='adopted'\|'error'`, PII anonymises `poster_name='Anonymise'`, `email='supprime@mespoilus.com'`, `contact_info=null`) |
 | `/api/adoption/forgot-token` | POST | Renvoie code + lien direct `/adoption/supprimer?id=X&token=Y` par email (anti-énumération) |
 #### Emails (tous via Resend, aucun "répondez à cet email")
 - Soumission → déposant : confirmation + `contact@mespoilus.com` pour questions
@@ -427,12 +429,17 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 - Follow-up → déposant : email chaque samedi si annonce ≥7j, bouton supprimer si adopté
 - Expiry → déposant : email avant suppression auto à 60j
 #### Modération admin (`/moderation`)
-- Tabs : En attente / Approuvées / Rejetées (badge count sur "En attente")
-- Cards : 5 photos en grille, fiche (animal, race, âge, ville, par/email/tél), description, raison (amber), boutons
-- Actions pending : Approuver (génère delete_token 8 chars hex) / Rejeter (raison obligatoire → email)
-- Actions toutes cartes : **Modifier** (→ `/moderation/[id]/edit`) / **Supprimer** (confirm() côté client via `DeletePostButton.tsx`)
-- Page edit `/moderation/[id]/edit` : formulaire pré-rempli tous champs + statut, server action redirect
-- Badge sidebar : count `pending` fetchée server-side dans `RootLayout`, passé via props à Sidebar, refresh 60s
+- **4 tabs** : En attente / Approuvees / Rejetees / Supprimees (badge count sur "En attente")
+- **Filtre animal** sur tous les onglets : Tous / Chiens / Chats / Oiseaux / Rongeurs / Reptiles / Autre
+- **Filtre raison** (onglet Supprimees uniquement) : Tous / Adopte (Heart) / Supprime utilisateur (User) / Supprime auto 60j (Bot)
+- URL params : `?status=deleted&animal=chien&reason=adopted`
+- Cards supprimees : badge raison colore + timestamp `deleted_at`, PII masques (poster_name, email, contact_info non affiches), pas de boutons d'action
+- Admin peut supprimer une annonce (soft delete : `status='deleted'`, `deleted_by='admin'`, `deleted_reason='admin'`)
+- Cards : 5 photos en grille, fiche (animal, race, age, ville, par/email/tel), description, raison (amber), boutons
+- Actions pending : Approuver (genere delete_token 8 chars hex) / Rejeter (raison obligatoire → email)
+- Actions toutes cartes (sauf supprimees) : **Modifier** (→ `/moderation/[id]/edit`) / **Supprimer** (confirm() cote client via `DeletePostButton.tsx`)
+- Page edit `/moderation/[id]/edit` : formulaire pre-rempli tous champs + statut, server action redirect
+- Badge sidebar : count `pending` fetchee server-side dans `RootLayout`, passe via props a Sidebar, refresh 60s
 #### Alertes adoption par email ✅
 - Table `adoption_alerts` : `email`, `animal` ('tous'/'chien'/…), `country` ('tous'/'Belgique'/…), `confirmed`, `confirm_token` (UUID, sert aussi de token désinscription)
 - **Double opt-in RGPD** : email confirmation envoyé à l'inscription, alerte active seulement après clic
@@ -447,8 +454,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 5 pipelines + 2 panels de 
 #### Crons adoption (`vercel.json`)
 | Route | Schedule | Description |
 |-------|----------|-------------|
-| `/api/cron/adoption-followup` | `0 19 * * 6` (samedi 19h) | Annonces approuvées ≥7j → email "animal adopté ?" avec bouton supprimer. Récurrent chaque samedi (`followup_sent_at IS NULL OR <= 6 days ago`) |
-| `/api/cron/adoption-cleanup` | `0 3 * * *` (quotidien 3h) | Annonces approuvées ≥60j → email expiry → hard delete → log `activity_logs`. **+** suppression alertes `confirmed=false` de plus de 7j |
+| `/api/cron/adoption-followup` | `0 19 * * 6` (samedi 19h) | Annonces approuvées ≥7j → email "animal adopté ?" avec bouton supprimer. Récurrent chaque samedi (`followup_sent_at IS NULL OR <= 6 days ago`). **Loggue toujours dans `activity_logs`** (0 ou N emails envoyés) |
+| `/api/cron/adoption-cleanup` | `0 3 * * *` (quotidien 3h) | Annonces approuvées ≥60j → email expiry → **soft delete** (`status='deleted'`, `deleted_by='cron'`, `deleted_reason='auto_expired'`, PII anonymisés). **Loggue toujours dans `activity_logs`** meme si 0 annonces. **+** suppression alertes `confirmed=false` de plus de 7j |
 | `/api/cron/adoption-social` | `0 19 * * 2` (mardi 19h) | Emma publie un post Facebook/Instagram sur les 3 dernières annonces approuvées. **Abandon automatique si aucune annonce.** Bypass `executeAgentTask` → `runAgent` direct pour contrôler l'image (photo réelle de l'annonce, Supabase Storage). Prompt Emma avec type, race, âge, sexe, ville, description, lien annonce individuel + lien global. Un seul webhook Make.com. |
 #### Colonnes Supabase `adoption_posts` ajoutées
 ```sql
@@ -456,7 +463,13 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS delete_token TEXT;
 ALTER TABLE adoption_posts ALTER COLUMN contact_info DROP NOT NULL;
 ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS followup_sent_at TIMESTAMPTZ;
 ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
+-- Soft delete + RGPD (migration_adoption_soft_delete.sql)
+ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_reason TEXT; -- 'adopted' | 'error' | 'auto_expired' | 'admin'
+ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user' | 'cron' | 'admin'
 ```
+- `email` colonne NOT NULL → anonymisation via `'supprime@mespoilus.com'` (placeholder RGPD)
+- Annonces supprimees non visibles sur le site (filtres `status=eq.approved` auto-excluent `status=deleted`)
 ### Blog (`/blog`) et Boutique (`/boutique`) - Harmonisation bannières ✅
 - Header `text-3xl`, layout `py-6 space-y-5`, filtres pills `px-3 py-1.5`
 - Bannière catégorie : `h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900` (même style que les pages catégories)
@@ -660,7 +673,7 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS reason TEXT;
   - `/races` : 5 catégories en cartes portrait avec photos `hero_photos` + fallback gradient
   - `/races/[animal]` : grille **6 colonnes** (`lg:grid-cols-6`), barre de recherche (`?q=`), bannière orange standard, toggle liste/grille, **photos individuelles par race** depuis `breeds.photo_url`, **`revalidate = 3600`**. **Onglets filtres** : Toutes / Appartement / Enfants / Débutants / Seniors
   - `/races/[animal]/[slug]` : photo depuis `breed.photo_url`, photo `aspect-[3/4] max-w-xs` centrée, bannière orange, container `max-w-4xl`, stats + caractère + convient_pour + description + soins, **`revalidate = 3600`**
-  - `/races/[animal]/appartement|enfants|debutants|seniors` : **20 pages filtres** (5 animaux × 4 critères) — filtre JS sur `content.convient_pour`, breadcrumb, onglets actifs, JSON-LD `CollectionPage`, metadata uniques, dans sitemap, `generateStaticParams` ✅
+  - `/races/[animal]/appartement|enfants|debutants|seniors` : **20 pages filtres** (5 animaux × 4 critères) — filtre JS sur `content.convient_pour`, onglets actifs (sans breadcrumb), barre de recherche `?q=` + toggle vue, JSON-LD `CollectionPage` (dans le div H1 pour eviter gap space-y-5), metadata uniques, dans sitemap, `generateStaticParams`, `searchParams` transmis depuis chaque wrapper ✅
   - Cron `/api/cron/breeds` : Haiku 4.5, max_tokens=4096, **1×/semaine dimanche 7h UTC**, batch 10, upsert `animal,slug`, nettoyage JSON robuste + repair, logs JSON complets sur erreur parse
   - **`BREEDS_SEED` : 190 races** (80 chiens, 45 chats, 25 oiseaux, 23 rongeurs, 17 reptiles) — nouvelles races ordonnées **2 par catégorie par semaine** (interleaved)
   - Toggle grille/liste via `?view=list` URL param (composant `ViewToggle.tsx` partagé)
