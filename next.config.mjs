@@ -27,10 +27,10 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://www.google-analytics.com https://googleads.g.doubleclick.net https://fundingchoicesmessages.google.com https://maps.googleapis.com https://maps.gstatic.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://www.google-analytics.com https://googleads.g.doubleclick.net https://fundingchoicesmessages.google.com https://maps.googleapis.com https://maps.gstatic.com https://s.pinimg.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maps.googleapis.com",
               "img-src 'self' data: https:",
-              "connect-src 'self' https://*.supabase.co https://api.anthropic.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://stats.g.doubleclick.net https://pagead2.googlesyndication.com https://api.unsplash.com https://maps.googleapis.com https://*.googleapis.com https://nominatim.openstreetmap.org https://fundingchoicesmessages.google.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io",
+              "connect-src 'self' https://*.supabase.co https://api.anthropic.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://stats.g.doubleclick.net https://pagead2.googlesyndication.com https://api.unsplash.com https://maps.googleapis.com https://*.googleapis.com https://nominatim.openstreetmap.org https://fundingchoicesmessages.google.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io https://csi.gstatic.com https://ct.pinterest.com",
               "font-src 'self' https://fonts.gstatic.com",
               "frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com",
               "worker-src blob:",
