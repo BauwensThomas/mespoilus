@@ -13,6 +13,7 @@ export interface Partenaire {
   network?: 'awin' | 'cj';
   pays?: string[];
   categories?: string[];
+  merchantKeyword?: string;
 }
 
 export function getFlagUrl(code: string): string {
@@ -34,6 +35,7 @@ export const PARTENAIRES: Partenaire[] = [
     network: 'awin',
     pays: ['FR'],
     categories: ['chiens'],
+    merchantKeyword: 'Dogfy',
   },
   {
     id: 'maxi-zoo',
@@ -50,6 +52,7 @@ export const PARTENAIRES: Partenaire[] = [
     network: 'awin',
     pays: ['FR', 'BE'],
     categories: ['chiens', 'chats'],
+    merchantKeyword: 'Maxi Zoo',
   },
   {
     id: 'canada-pet-care',
@@ -65,5 +68,17 @@ export const PARTENAIRES: Partenaire[] = [
     network: 'cj',
     pays: ['CA', 'US'],
     categories: ['chiens', 'chats'],
+  },
+  {
+    id: 'tuft-and-paw',
+    nom: 'Tuft & Paw',
+    description: 'Litière Crystal Clear et mobilier design pour chats. Produits haut de gamme conçus au Canada.',
+    emoji: '🐾',
+    tag: 'Litière & Mobilier',
+    tagBg: '#f3e8ff', tagText: '#6b21a8',
+    pour: 'Pour les chats',
+    network: 'awin',
+    categories: ['chats'],
+    merchantKeyword: 'Tuft',
   },
 ];

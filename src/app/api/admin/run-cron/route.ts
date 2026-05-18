@@ -29,14 +29,35 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
-  const { step, animal, type, auto, target, bypass } = await req.json() as {
+  const { step, animal, type, auto, target, bypass, partner, promo, productName, productUrl, forcedImage } = await req.json() as {
     step: string;
     animal?: string;
     type?: string;
     auto?: string;
     target?: string;
     bypass?: string;
+    partner?: string;
+    promo?: string;
+    productName?: string;
+    productUrl?: string;
+    forcedImage?: string;
   };
+
+  // ─── Produits par partenaire (lecture directe Supabase par merchant_name) ──
+  if (step === 'partner-products') {
+    const keyword = partner ?? '';
+    if (!keyword) return NextResponse.json({ products: [] });
+    const adminSupabase = createAdminClient();
+    const { data, error } = await adminSupabase
+      .from('products')
+      .select('name, affiliate_url, image_url, price, category, merchant_name')
+      .ilike('merchant_name', `%${keyword}%`)
+      .gt('price', 0)
+      .order('price', { ascending: true })
+      .limit(500);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ products: data ?? [] });
+  }
 
   // ─── Lecture progression Awin (pas d'appel cron, lecture directe Supabase) ──
   if (step === 'awin-progress') {
@@ -62,6 +83,11 @@ export async function POST(req: NextRequest) {
   if (step === 'blog' && auto === 'true') params.set('auto', 'true');
   else if (step === 'blog' && animal && VALID_ANIMALS.includes(animal)) params.set('animal', animal);
   if (step === 'blog' && type && VALID_TYPES.includes(type)) params.set('type', type);
+  if (step === 'blog' && partner) params.set('partner', partner);
+  if (step === 'blog' && promo) params.set('promo', promo);
+  if (step === 'blog' && productName) params.set('productName', productName);
+  if (step === 'blog' && productUrl) params.set('productUrl', productUrl);
+  if (step === 'blog' && forcedImage) params.set('forcedImage', forcedImage);
   if (step === 'newsletter' && bypass === 'true') params.set('bypass', 'true');
   if (step === 'newsletter' && target) params.set('target', target);
   const queryParams = params.toString() ? `?${params.toString()}` : '';
