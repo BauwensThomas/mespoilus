@@ -58,10 +58,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 pintrk('track', 'pagevisit', { event_id: 'eventId0001' });`
             }}
           />
-        <noscript>
-          <img height="1" width="1" style={{display:'none'}} alt=""
-            src="https://ct.pinterest.com/v3/?event=init&tid=2614006217840&pd[em]=&noscript=1" />
-        </noscript>
         {/* end Pinterest Tag */}
       </head>
       <body className="min-h-screen">

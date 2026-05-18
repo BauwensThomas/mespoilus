@@ -244,7 +244,7 @@ export default function RefugeFinderPanel() {
     <>
       {apiKey && (
         <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly`}
+          src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly&loading=async`}
           strategy="afterInteractive"
         />
       )}
