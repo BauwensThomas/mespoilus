@@ -23,6 +23,7 @@ function formatDate(dateStr: string) {
 
 export default function ActivityFeed({ logs }: ActivityFeedProps) {
   const [open, setOpen] = useState(false);
+  const todayCount = logs.filter(l => isToday(new Date(l.created_at))).length;
 
   return (
     <div className="card p-4">
@@ -34,7 +35,10 @@ export default function ActivityFeed({ logs }: ActivityFeedProps) {
           {open ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
           <h2 className="text-base font-semibold text-gray-900">Activité récente</h2>
           {logs.length > 0 && (
-            <span className="text-xs text-gray-400 ml-1">({logs.length})</span>
+            <span className="text-xs text-gray-400">({logs.length})</span>
+          )}
+          {todayCount > 0 && (
+            <span className="text-xs font-semibold text-red-500">aujourd'hui ({todayCount})</span>
           )}
         </div>
         <span className="text-xs text-gray-400 uppercase tracking-wide">Live</span>
