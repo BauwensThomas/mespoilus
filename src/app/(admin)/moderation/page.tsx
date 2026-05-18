@@ -139,7 +139,15 @@ async function rejectPost(id: string, formData: FormData) {
 async function deletePost(id: string) {
   'use server';
   const supabase = createAdminClient();
-  await supabase.from('adoption_posts').delete().eq('id', id);
+  await supabase.from('adoption_posts').update({
+    status:         'deleted',
+    deleted_at:     new Date().toISOString(),
+    deleted_by:     'admin',
+    deleted_reason: 'admin',
+    poster_name:    'Anonymisé',
+    email:          null,
+    contact_info:   null,
+  }).eq('id', id);
   revalidatePath('/moderation');
 }
 

@@ -8,8 +8,10 @@ export async function POST(req: NextRequest) {
   if (!allowed) return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans 1h.' }, { status: 429 });
 
   try {
-    const { id, token } = await req.json();
+    const { id, token, reason } = await req.json();
     if (!id || !token) return NextResponse.json({ error: 'Données manquantes' }, { status: 400 });
+
+    const deletedReason = reason === 'adopted' ? 'adopted' : 'error';
 
     const supabase = createAdminClient();
     const { data: post } = await supabase
@@ -24,7 +26,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Code incorrect' }, { status: 403 });
     }
 
-    await supabase.from('adoption_posts').delete().eq('id', id);
+    // Soft delete + anonymisation RGPD (données personnelles effacées, stats conservées)
+    await supabase.from('adoption_posts').update({
+      status:         'deleted',
+      deleted_at:     new Date().toISOString(),
+      deleted_by:     'user',
+      deleted_reason: deletedReason,
+      poster_name:    'Anonymisé',
+      email:          null,
+      contact_info:   null,
+    }).eq('id', id);
 
     return NextResponse.json({ success: true });
   } catch (err) {
