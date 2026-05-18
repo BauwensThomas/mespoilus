@@ -138,6 +138,7 @@ export default async function ArticlePage({ params }: Props) {
             alt={heroAlt}
             fill
             priority
+            unoptimized
             className="object-cover"
             sizes="100vw"
           />

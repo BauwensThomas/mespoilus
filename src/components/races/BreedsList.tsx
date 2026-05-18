@@ -31,6 +31,7 @@ function GridCard({ breed, animalUrl }: { breed: BreedItem; animalUrl: string })
             src={breed.photo_url}
             alt={breed.name}
             fill
+            unoptimized
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
           />
@@ -71,6 +72,7 @@ function ListRow({ breed, animalUrl }: { breed: BreedItem; animalUrl: string }) 
             src={breed.photo_url}
             alt={breed.name}
             fill
+            unoptimized
             className="object-cover"
             sizes="56px"
           />
