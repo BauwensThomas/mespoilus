@@ -64,7 +64,7 @@ export async function GET(req: Request) {
         deleted_by:     'cron',
         deleted_reason: 'auto_expired',
         poster_name:    'Anonymisé',
-        email:          null,
+        email:          'supprime@mespoilus.com',
         contact_info:   null,
       })
       .eq('id', post.id);
