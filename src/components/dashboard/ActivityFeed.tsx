@@ -6,6 +6,8 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import clsx from 'clsx';
 import Link from 'next/link';
+import { useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface ActivityFeedProps {
   logs: ActivityLog[];
@@ -20,38 +22,53 @@ function formatDate(dateStr: string) {
 }
 
 export default function ActivityFeed({ logs }: ActivityFeedProps) {
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="card p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-semibold text-gray-900">Activité récente</h2>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between"
+      >
+        <div className="flex items-center gap-2">
+          {open ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
+          <h2 className="text-base font-semibold text-gray-900">Activité récente</h2>
+          {logs.length > 0 && (
+            <span className="text-xs text-gray-400 ml-1">({logs.length})</span>
+          )}
+        </div>
         <span className="text-xs text-gray-400 uppercase tracking-wide">Live</span>
-      </div>
+      </button>
 
-      {logs.length === 0 ? (
-        <p className="text-sm text-gray-500 py-2">Aucune activité pour le moment</p>
-      ) : (
-        <div className="space-y-0.5 max-h-64 overflow-y-auto scrollbar-thin pr-1">
-          {logs.slice(0, 20).map((log) => {
-            const agent = AGENTS[log.agent_id];
-            return (
-              <div
-                key={log.id}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-150"
-              >
-                <Link
-                  href={`/agents/${log.agent_id}`}
-                  className={clsx('text-sm font-semibold flex-shrink-0 w-16 hover:underline', agent?.color ?? 'text-gray-600')}
-                >
-                  {log.agent_name}
-                </Link>
-                <StatusBadge status={log.status} />
-                <p className="text-sm text-gray-700 flex-1 truncate">{log.action}</p>
-                <span className="text-xs text-gray-400 flex-shrink-0">
-                  {formatDate(log.created_at)}
-                </span>
-              </div>
-            );
-          })}
+      {open && (
+        <div className="mt-3">
+          {logs.length === 0 ? (
+            <p className="text-sm text-gray-500 py-2">Aucune activité pour le moment</p>
+          ) : (
+            <div className="space-y-0.5 max-h-[calc(10*2.5rem)] overflow-y-auto scrollbar-thin pr-1">
+              {logs.slice(0, 20).map((log) => {
+                const agent = AGENTS[log.agent_id];
+                return (
+                  <div
+                    key={log.id}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-150"
+                  >
+                    <Link
+                      href={`/agents/${log.agent_id}`}
+                      className={clsx('text-sm font-semibold flex-shrink-0 w-16 hover:underline', agent?.color ?? 'text-gray-600')}
+                    >
+                      {log.agent_name}
+                    </Link>
+                    <StatusBadge status={log.status} />
+                    <p className="text-sm text-gray-700 flex-1 truncate">{log.action}</p>
+                    <span className="text-xs text-gray-400 flex-shrink-0">
+                      {formatDate(log.created_at)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
