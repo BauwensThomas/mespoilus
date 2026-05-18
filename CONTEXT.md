@@ -52,6 +52,7 @@ Chaque agent utilise l'API Anthropic (Claude) et fonctionne de façon autonome. 
 | Style | Tailwind CSS - Thème clair public `bg-gray-50`, admin clair `bg-white/bg-gray-50` |
 | Base de données | Supabase (PostgreSQL) |
 | IA | API Anthropic - Claude Opus 4.7 / Sonnet 4.6 / Haiku 4.5 |
+| Monitoring erreurs | Sentry (`@sentry/nextjs` v10) - Erreurs, traces, profiling, logs |
 | Images blog/social | **Pexels API** (téléchargement + stockage autorisés, 200 req/h gratuit) |
 | Images hero & catégories | **Supabase table `hero_photos`** - Rotation round-robin via `last_used_at`, `revalidate = 3600` |
 | Images agents (pages `/agents/[agent]`) | Unsplash API - Affichage uniquement, non stockées |
@@ -76,6 +77,7 @@ CRON_SECRET
 MAKE_WEBHOOK_URL # Webhook Make.com - Facebook + Instagram (@mespoilusofficiel)
 NEXT_PUBLIC_APP_URL # Ex: https://www.mespoilus.com (OBLIGATOIRE pour fetches internes Vercel)
 NEXT_PUBLIC_ADSENSE_ENABLED # 'true' une fois AdSense approuvé (actuellement 'false')
+SENTRY_AUTH_TOKEN # Dans .env.sentry-build-plugin (gitignored) + Vercel env vars (Production+Preview) - NE JAMAIS COMMITTER
 
 ---
 ## Ce qui est fait
@@ -554,6 +556,26 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 - GA `G-QE9XSS18YQ` - Chargement conditionnel RGPD
 - AdSense `ca-pub-3549294158319032` - En attente approbation
 - Emplacements : blog liste, blog article, adoption, accueil
+
+### Monitoring erreurs - Sentry ✅
+- **Package** : `@sentry/nextjs` v10 + `@sentry/profiling-node`
+- **DSN** : `https://be2b25d58b9617d48f5102aefe1b9487@o4511412620689408.ingest.de.sentry.io/4511412634189904` (region EU/Allemagne)
+- **SENTRY_AUTH_TOKEN** : dans `.env.sentry-build-plugin` (gitignored) + variable Vercel (Production+Preview)
+- **Fichiers de config** :
+  - `sentry.server.config.ts` : init serveur, `nodeProfilingIntegration()`, logs + profiling activés
+  - `sentry.edge.config.ts` : init edge, logs activés
+  - `src/instrumentation.ts` : register() charge server/edge config
+  - `src/instrumentation-client.ts` : init client, `browserProfilingIntegration()`, logs + profiling activés
+  - `src/app/global-error.tsx` : error boundary React global
+- **Fonctionnalites actives** :
+  - Erreurs : captures automatiquement (client + serveur + edge), email alerte sur chaque nouvelle issue
+  - Traces : `tracesSampleRate: 1` (100% des pages tracees)
+  - Profiling : `profilesSampleRate: 1` (server via Node.js, client via browser)
+  - Logs : `_experiments: { enableLogs: true }` (server + client + edge)
+  - Source maps : uploadees a chaque deploy Vercel via `withSentryConfig`
+- **Alertes email** : regle configuree dans Sentry dashboard, notifie `contact@mespoilus.com` (membre recently active) a chaque nouvelle issue
+- **Metrics** : non disponibles sur plan gratuit Sentry
+- **Sentry trace data** : injecte dans les metadata via `Sentry.getTraceData()` dans `layout.tsx`
 ### SEO & Indexation
 - Sitemap dynamique, robots.txt, Schema.org JSON-LD
 - Google Search Console vérifié + sitemap soumis
@@ -562,6 +584,9 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 - **Schema markup enrichi** : articles → `ImageObject` avec `alt` + `logo` publisher ; races → JSON-LD `Article` complet ajoute (etait absent) ; `www.` corrige dans fallback appUrl articles. Valide via Google Rich Results Test (1 element valide detecte). Note : le bot du Rich Results Test retourne parfois "acces impossible" sur les pages ISR Vercel avant premiere visite — le vrai Googlebot indexe normalement via sitemap ✅
 ### next.config.mjs
 - `remotePatterns` : `images.unsplash.com` + `images.pexels.com` + `*.supabase.co` + `cdn.shopify.com` + `flagcdn.com`
+- **Headers de securite** : `X-DNS-Prefetch-Control`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Document-Policy: js-profiling` (requis pour Sentry browser profiling)
+- **CSP (Content-Security-Policy)** : `script-src` inclut Google, AdSense, Maps, Pinterest (`s.pinimg.com` + `ct.pinterest.com`) ; `connect-src` inclut Supabase, Anthropic, Google Analytics, Sentry (`*.ingest.de.sentry.io` + `*.ingest.sentry.io`), Google CSI (`csi.gstatic.com`), Pinterest ; `frame-src` inclut Google Ads + Pinterest
+- **Sentry config** : `withSentryConfig` wrapper, `widenClientFileUpload: true`, `automaticVercelMonitors: true`, source maps uploadees en CI uniquement (`silent: !process.env.CI`)
 ### Déploiement
 - Repo GitHub : `BauwensThomas/mespoilus`
 - CI/CD : Vercel -déploiement automatique sur push `main`
