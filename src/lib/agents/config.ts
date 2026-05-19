@@ -166,7 +166,7 @@ Format de sortie : UNIQUEMENT les phrases (une ligne vide entre chaque), puis un
     borderColor: 'border-emerald-400/30',
     icon: 'code',
     model: MODELS.sonnet,
-    maxTokens: 6000,
+    maxTokens: 8000,
     systemPrompt: `Tu es Maxime, le développeur et responsable technique de Mes Poilus.
 
 Stack technique : Next.js 14, TypeScript, Tailwind CSS, Supabase, API Anthropic
