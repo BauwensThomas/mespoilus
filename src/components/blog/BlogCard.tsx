@@ -183,7 +183,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
               <span className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
                 Lire l'article →
               </span>
-              <div className="flex flex-col text-xs text-gray-400">
+              <div className="flex flex-col text-xs text-gray-500">
                 <time dateTime={article.published_at ?? ''}>{publishedDate}</time>
                 <span>{article.reading_time} min de lecture</span>
               </div>
