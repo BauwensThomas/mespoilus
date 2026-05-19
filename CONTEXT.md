@@ -36,7 +36,7 @@ Chaque agent utilise l'API Anthropic (Claude) et fonctionne de façon autonome. 
 | ✍️ **Marie** | Rédactrice de contenu | **Haiku 4.5** | **4000** | Articles de blog (550-700 mots), guides pratiques, conseils |
 | 🔍 **Lucas** | Spécialiste SEO | Sonnet 4.6 | **4000** | Recherche mots-clés, optimisation on-page, stratégie francophone |
 | 📱 **Emma** | Réseaux sociaux | Haiku 4.5 | 2000 | Posts Facebook + Instagram (@mespoilusofficiel), hashtags, lien article complet |
-| 💻 **Maxime** | Développeur & Maintenance | Sonnet 4.6 | 6000 | Performances, bugs, Next.js / Supabase, Core Web Vitals |
+| 💻 **Maxime** | Développeur & Maintenance | Sonnet 4.6 | **8000** | Performances, bugs, Next.js / Supabase, Core Web Vitals |
 | 💬 **Léa** | Support client | Haiku 4.5 | 3000 | Réponses emails clients, commandes, FAQ - À la demande uniquement (pas de cron) |
 | 📊 **Antoine** | Finance | Sonnet 4.6 | 4000 | Revenus €, marges, rapports financiers, projections |
 | 🛡️ **Nathalie** | Sécurité | Sonnet 4.6 | 8000 | Détection intrusions, blocage IPs, audits, alertes |
@@ -191,9 +191,9 @@ SENTRY_AUTH_TOKEN # Dans .env.sentry-build-plugin (gitignored) + Vercel env vars
 ### Contexte Supabase réel (`src/lib/agents/context.ts`)
 - `buildEnrichedPrompt(agentId, baseTask, supabase)` - Injecte les vraies données avant d'appeler l'agent
 - **Antoine** : articles publiés, posts sociaux, tokens consommés, coût API estimé (mois courant vs mois précédent)
-- **Nathalie** : incidents de sécurité, IPs bloquées, 5 derniers incidents
+- **Nathalie** : incidents de sécurité, IPs bloquées, 5 derniers incidents + **liste des mesures déjà en place** (middleware, CRON_SECRET, RLS, headers, Sentry, budget cap) pour éviter les faux positifs
 - **Lucas** : titres des 15 derniers articles (évite les doublons)
-- **Maxime** : erreurs dans les logs, 5 dernières erreurs avec détail
+- **Maxime** : erreurs dans les logs, 5 dernières erreurs avec détail + **liste stack/architecture déjà en place** (maxDuration, streaming, Sentry, maxTokens 8000) pour éviter les suggestions redondantes
 - **Sofia** : 3 derniers articles publiés (titre, lien, résumé) + année en cours → génère newsletter sans saisie manuelle
 - Utilisé dans orchestration, délégation, et crons finance/security
 ### Blog automatique - Pipeline complet
@@ -387,6 +387,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
   - Toutes les autres tables → RLS activé sans policy (accès anon bloqué, service role bypass)
 - Les rapports Nathalie/Maxime sont informatifs uniquement - Pas de corrections automatiques
 - Workflow mensuel : lire les rapports du 1er du mois → appliquer les corrections manuellement
+- **Contexte enrichi** : Nathalie et Maxime reçoivent la liste des mesures déjà en place → leurs rapports se concentrent sur les vrais manques, pas sur ce qui est déjà implémenté
 - **Protection temps réel** : c'est le middleware qui bloque les IPs, détecte SQLi/XSS, rate limiting - Pas Nathalie
 - **Nathalie = auditrice mensuelle** : lit les logs enregistrés par le middleware et formule des recommandations
 - **Sécurité compte admin** : mot de passe fort (20+ chars) ✅. MFA nécessiterait du code supplémentaire dans l'app.
@@ -642,8 +643,10 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 - Sitemap dynamique, robots.txt (`disallow`: `/dashboard/`, `/agents/`, `/orchestrate/`, `/adoption-admin/`, `/blog-admin/`, `/races-admin/`, `/produits-admin/`, `/boutique-admin/`, `/guides-admin/`, `/api/`, `/login`), Schema.org JSON-LD
 - Google Search Console vérifié + sitemap soumis
 - Bing Webmaster Tools vérifié + sitemap soumis
-- **Sitemap images** : `image_url` (articles) et `photo_url` (races) inclus dans sitemap → indexation Google Images. Dynamique : nouvelles images apparaissent automatiquement ✅
-- **Schema markup enrichi** : articles → `ImageObject` avec `alt` + `logo` publisher ; races → JSON-LD `Article` complet ajoute (etait absent) ; `www.` corrige dans fallback appUrl articles. Valide via Google Rich Results Test (1 element valide detecte). Note : le bot du Rich Results Test retourne parfois "acces impossible" sur les pages ISR Vercel avant premiere visite — le vrai Googlebot indexe normalement via sitemap ✅
+- **Sitemap images** : `image_url` (articles), `photo_url` (races), `photo_urls[0]` (annonces adoption) inclus dans sitemap → indexation Google Images ✅
+- **Schema markup enrichi** : articles → `ImageObject` avec `alt` + `logo` publisher ; races → JSON-LD `Article` complet ; adoption → JSON-LD `ItemPage` + `BreadcrumbList` par annonce ✅
+- **Pages adoption indexables** : `/adoption/[id]` converti en Server Component (`generateMetadata` dynamique par annonce : titre race+ville, description, OG tags, Twitter Card) + `AdoptionDetailClient.tsx` pour la partie interactive. Annonces approuvées ajoutées au sitemap.
+- **Pages outils** : `/outils/age`, `/outils/prenom`, `/outils/quiz`, `/outils/nutrition` — `layout.tsx` Server Component ajouté sur chaque outil avec metadata statiques (titre, description, OG, canonical). Pages toujours `use client` pour l'interactivité.
 ### next.config.mjs
 - `poweredByHeader: false` — supprime le header `X-Powered-By: Next.js` (info leak)
 - `remotePatterns` : `images.unsplash.com` + `images.pexels.com` + `*.supabase.co` + `cdn.shopify.com` + `flagcdn.com`
