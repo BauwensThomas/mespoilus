@@ -245,7 +245,7 @@ export default function VetFinderPanel() {
 
   return (
     <>
-      {apiKey && (
+      {apiKey && open && (
         <Script
           src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly&loading=async`}
           strategy="afterInteractive"
@@ -280,7 +280,7 @@ export default function VetFinderPanel() {
             <Stethoscope size={15} strokeWidth={1.5} />
             <h2 className="text-sm font-bold">Trouver un veterinaire</h2>
           </div>
-          <button onClick={() => setOpen(false)} className="p-1 rounded-lg hover:bg-blue-700 transition-colors">
+          <button onClick={() => setOpen(false)} aria-label="Fermer le panneau veterinaire" className="p-1 rounded-lg hover:bg-blue-700 transition-colors">
             <X size={16} strokeWidth={2} />
           </button>
         </div>
@@ -312,6 +312,7 @@ export default function VetFinderPanel() {
                 <select
                   id="vet-radius"
                   name="vet-radius"
+                  aria-label="Rayon de recherche"
                   value={radius}
                   onChange={e => setRadius(Number(e.target.value))}
                   className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"

@@ -69,7 +69,7 @@ export default function NewsletterForm() {
           type="submit"
           disabled={status === 'loading'}
           aria-label="S'inscrire à la newsletter"
-          className="bg-white text-orange-600 font-semibold px-8 py-3.5 rounded-xl text-sm
+          className="bg-white text-orange-700 font-semibold px-8 py-3.5 rounded-xl text-sm
                      hover:bg-orange-50 active:bg-orange-100 transition-colors duration-200
                      disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap shadow-lg hover:shadow-xl
                      focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-500"

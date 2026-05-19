@@ -236,8 +236,8 @@ export default async function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
               href="/blog"
-              className="bg-orange-600 hover:bg-orange-500 text-white font-semibold px-8 py-4
-                         rounded-xl transition-smooth text-base shadow-lg shadow-orange-600/20 focus-ring"
+              className="bg-orange-700 hover:bg-orange-600 text-white font-semibold px-8 py-4
+                         rounded-xl transition-smooth text-base shadow-lg shadow-orange-700/20 focus-ring"
               aria-label="Découvrir nos conseils"
             >
               Découvrir nos conseils
@@ -265,14 +265,14 @@ export default async function LandingPage() {
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <span className="text-orange-600 text-sm font-semibold uppercase tracking-widest">Le blog</span>
+            <span className="text-orange-700 text-sm font-semibold uppercase tracking-widest">Le blog</span>
             <h2 className="text-4xl font-bold text-gray-900 mt-2">Nos derniers conseils</h2>
           </div>
 
           {articles.length === 0 ? (
             <div className="text-center py-16 bg-orange-50 rounded-2xl border border-orange-100">
               <p className="text-gray-600 font-medium">Les premiers articles arrivent bientôt !</p>
-              <Link href="/blog" className="inline-flex items-center gap-2 mt-4 text-orange-600 font-semibold hover:text-orange-700 focus-ring">
+              <Link href="/blog" className="inline-flex items-center gap-2 mt-4 text-orange-700 font-semibold hover:text-orange-800 focus-ring">
                 Voir le blog <ChevronRight size={16} />
               </Link>
             </div>
@@ -285,7 +285,7 @@ export default async function LandingPage() {
           )}
 
           <div className="text-center mt-10">
-            <Link href="/blog" className="inline-flex items-center gap-2 text-orange-600 font-semibold hover:text-orange-700 focus-ring">
+            <Link href="/blog" className="inline-flex items-center gap-2 text-orange-700 font-semibold hover:text-orange-800 focus-ring">
               Voir tous les articles <ChevronRight size={16} />
             </Link>
           </div>
@@ -296,7 +296,7 @@ export default async function LandingPage() {
       <section id="categories" className="py-20 px-6 bg-gradient-to-b from-gray-50 to-orange-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <span className="text-orange-600 text-sm font-semibold uppercase tracking-widest">Explorer</span>
+            <span className="text-orange-700 text-sm font-semibold uppercase tracking-widest">Explorer</span>
             <h2 className="text-4xl font-bold text-gray-900 mt-2">Par type d'animal</h2>
             <p className="text-gray-600 mt-3 text-lg">Trouvez les conseils adaptés à votre compagnon</p>
           </div>
@@ -339,7 +339,7 @@ export default async function LandingPage() {
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10">
-            <span className="text-orange-600 text-sm font-semibold uppercase tracking-widest">Gratuit</span>
+            <span className="text-orange-700 text-sm font-semibold uppercase tracking-widest">Gratuit</span>
             <h2 className="text-4xl font-bold text-gray-900 mt-2">Outils pratiques</h2>
             <p className="text-gray-500 mt-3 text-base">Calculez, testez et trouvez en quelques secondes</p>
           </div>
