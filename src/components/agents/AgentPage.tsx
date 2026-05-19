@@ -253,7 +253,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
           priority
           className="object-cover"
           sizes="100vw"
-          unoptimized={!isExternalImage}
+          unoptimized={isExternalImage}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-white via-white/60 to-transparent" />
         <div className={clsx('absolute inset-0 opacity-20', agent.bgColor)} />
