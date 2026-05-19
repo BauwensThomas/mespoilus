@@ -7,7 +7,7 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
 export async function POST(req: NextRequest) {
   const ip = getClientIP(req);
-  const { allowed } = checkRateLimit(`upload:${ip}`, 3_600_000, 25);
+  const { allowed } = await checkRateLimit(`upload:${ip}`, 3_600_000, 25);
   if (!allowed) return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 });
 
   try {

@@ -5,7 +5,7 @@ import { sendEmail } from '@/lib/resend';
 
 export async function POST(req: NextRequest) {
   const ip = getClientIP(req);
-  const { allowed } = checkRateLimit(`adoption:${ip}`, 3_600_000, 5);
+  const { allowed } = await checkRateLimit(`adoption:${ip}`, 3_600_000, 5);
 
   if (!allowed) {
     return NextResponse.json({ error: 'Trop de soumissions. Réessayez dans 1h.' }, { status: 429 });

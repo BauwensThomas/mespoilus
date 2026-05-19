@@ -33,7 +33,7 @@ export async function POST(
   }
 
   // Rate limiting strict sur les API agents (10 req/min)
-  const { allowed, remaining, resetAt } = checkRateLimit(`agent:${ip}`, 60_000, 10);
+  const { allowed, remaining, resetAt } = await checkRateLimit(`agent:${ip}`, 60_000, 10);
   if (!allowed) {
     return NextResponse.json(
       { error: 'Limite de requêtes atteinte. Réessayez dans 60 secondes.' },

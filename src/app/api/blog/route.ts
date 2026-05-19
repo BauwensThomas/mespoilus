@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   const ip = getClientIP(request);
-  const { allowed } = checkRateLimit(`blog:${ip}`, 60_000, 30);
+  const { allowed } = await checkRateLimit(`blog:${ip}`, 60_000, 30);
 
   if (!allowed) {
     return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 });
