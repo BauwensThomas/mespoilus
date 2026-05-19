@@ -5,7 +5,7 @@ import sharp from 'sharp';
 export const maxDuration = 300;
 
 const BUCKET = 'hero-photos';
-const MAX_WIDTH = 1200;
+const MAX_WIDTH = 600;
 const QUALITY = 80;
 const SKIP_BELOW_KB = 100;
 
