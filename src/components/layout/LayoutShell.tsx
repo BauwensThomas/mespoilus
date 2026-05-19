@@ -10,7 +10,7 @@ import { PARTENAIRES, getFlagUrl } from '@/lib/partenaires';
 import clsx from 'clsx';
 import AnimalDayPopup from '@/components/ui/AnimalDayPopup';
 
-const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/moderation', '/produits', '/guides-admin', '/gestion-races', '/gestion-blog'];
+const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/adoption-admin', '/produits-admin', '/guides-admin', '/races-admin', '/blog-admin', '/boutique-admin'];
 
 function PartenairesBandeau() {
   const [index, setIndex] = useState(0);

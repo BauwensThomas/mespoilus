@@ -14,6 +14,7 @@ export interface Partenaire {
   pays?: string[];
   categories?: string[];
   merchantKeyword?: string;
+  recommend?: boolean;
 }
 
 export function getFlagUrl(code: string): string {
@@ -72,13 +73,15 @@ export const PARTENAIRES: Partenaire[] = [
   {
     id: 'tuft-and-paw',
     nom: 'Tuft & Paw',
-    description: 'Litière Crystal Clear et mobilier design pour chats. Produits haut de gamme conçus au Canada.',
+    description: 'Litière Crystal Clear, nourriture fraiche et mobilier design pour chats. Produits haut de gamme conçus au Canada.',
     emoji: '🐾',
-    tag: 'Litière & Mobilier',
+    tag: 'Litière, Nourriture & Mobilier',
     tagBg: '#f3e8ff', tagText: '#6b21a8',
     pour: 'Pour les chats',
     network: 'awin',
+    pays: ['US'],
     categories: ['chats'],
     merchantKeyword: 'Tuft',
+    recommend: false,
   },
 ];

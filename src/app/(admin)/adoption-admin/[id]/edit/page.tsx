@@ -22,8 +22,8 @@ async function updatePost(id: string, formData: FormData) {
     status:       formData.get('status') as string,
     updated_at:   new Date().toISOString(),
   }).eq('id', id);
-  revalidatePath('/moderation');
-  redirect('/moderation');
+  revalidatePath('/adoption-admin');
+  redirect('/adoption-admin');
 }
 
 const ANIMAL_TYPES = ['chien','chat','oiseau','rongeur','reptile','autre'];
@@ -40,7 +40,7 @@ export default async function EditPostPage({ params }: Props) {
   return (
     <div className="px-8 py-8 max-w-2xl space-y-6 animate-fade-in">
       <div className="flex items-center gap-3">
-        <Link href="/moderation" className="text-sm text-gray-400 hover:text-gray-700 transition-colors">← Retour</Link>
+        <Link href="/adoption-admin" className="text-sm text-gray-400 hover:text-gray-700 transition-colors">← Retour</Link>
         <h1 className="text-2xl font-bold text-gray-900">Modifier l'annonce</h1>
       </div>
 
@@ -117,7 +117,7 @@ export default async function EditPostPage({ params }: Props) {
             className="bg-orange-600 hover:bg-orange-500 text-white font-semibold px-6 py-2 rounded-xl text-sm transition-colors">
             Enregistrer
           </button>
-          <Link href="/moderation"
+          <Link href="/adoption-admin"
             className="px-6 py-2 rounded-xl text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
             Annuler
           </Link>

@@ -66,7 +66,7 @@ export default function PartenairesSection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {PARTENAIRES.map((p) => (
+          {PARTENAIRES.filter(p => p.recommend !== false).map((p) => (
             <div
               key={p.id}
               className="group bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4 hover:shadow-lg hover:border-orange-200 transition-all shadow-md"

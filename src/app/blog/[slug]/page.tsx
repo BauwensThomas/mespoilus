@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { Article } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -9,7 +9,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import AdBanner from '@/components/ui/AdBanner';
 import CommentForm from '@/components/blog/CommentForm';
-import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle } from 'lucide-react';
+import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle, Pencil } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -123,8 +123,26 @@ export default async function ArticlePage({ params }: Props) {
 
   const CategoryIcon = CATEGORY_ICONS[article.category] || PawPrint;
 
+  const supabaseUser = createClient();
+  const { data: { user } } = await supabaseUser.auth.getUser();
+  const isAdmin = !!user;
+
   return (
     <div className="min-h-screen bg-white animate-fade-in">
+      {isAdmin && (
+        <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2 bg-gray-900/95 backdrop-blur text-white text-xs">
+          <Pencil size={13} strokeWidth={1.5} className="text-orange-400" />
+          <span className="text-gray-400">Mode admin</span>
+          <Link href={`/blog-admin/${article.slug}/edit`}
+            className="px-2.5 py-1 bg-orange-500 hover:bg-orange-400 text-white rounded-md font-medium transition-colors">
+            Modifier l'article
+          </Link>
+          <Link href="/blog-admin?tab=articles"
+            className="px-2.5 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md transition-colors">
+            Tous les articles
+          </Link>
+        </div>
+      )}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

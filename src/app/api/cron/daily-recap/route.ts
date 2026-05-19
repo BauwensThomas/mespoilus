@@ -217,8 +217,15 @@ export async function GET(req: Request) {
     });
     console.log(`[daily-recap] email envoye pour ${today}`);
   } catch (err) {
-    console.error('[daily-recap] erreur envoi email:', err);
-    return NextResponse.json({ error: 'Email failed' }, { status: 500 });
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error('[daily-recap] erreur envoi email:', errMsg);
+    await supabase.from('activity_logs').insert({
+      agent_id: 'thomas', agent_name: 'Thomas',
+      action: `[Recap quotidien] ECHEC envoi email - ${errMsg}`,
+      details: { error: errMsg },
+      status: 'error',
+    });
+    return NextResponse.json({ error: 'Email failed', detail: errMsg }, { status: 500 });
   }
 
   await supabase.from('activity_logs').insert({

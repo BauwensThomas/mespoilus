@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { RefreshCw, Check, X, ImageOff, Upload, Link, Trash2 } from 'lucide-react';
+import { RefreshCw, Check, X, ImageOff, Upload, Link, Trash2, Search, FileText } from 'lucide-react';
 import clsx from 'clsx';
 
 const ANIMAL_TABS = [
@@ -18,6 +18,17 @@ const ANIMAL_LABEL: Record<string, string> = {
   chien: 'Chien', chat: 'Chat', oiseau: 'Oiseau', rongeur: 'Rongeur', reptile: 'Reptile',
 };
 
+interface BreedContent {
+  excerpt?: string;
+  description?: string;
+  origine?: string;
+  poids?: string;
+  taille?: string;
+  esperance_vie?: string;
+  niveau_activite?: string;
+  caractere?: string[];
+}
+
 interface Breed {
   id: string;
   name: string;
@@ -25,6 +36,7 @@ interface Breed {
   animal: string;
   photo_url: string | null;
   status: string;
+  content?: BreedContent | null;
 }
 
 export default function AdminRacesPage() {
@@ -39,6 +51,11 @@ export default function AdminRacesPage() {
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [hasFile, setHasFile] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [editingContentId, setEditingContentId] = useState<string | null>(null);
+  const [contentDraft, setContentDraft] = useState<BreedContent>({});
+  const [savingContent, setSavingContent] = useState(false);
+  const [savedContentId, setSavedContentId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const fetchBreeds = useCallback(async () => {
@@ -141,7 +158,43 @@ export default function AdminRacesPage() {
     if (fileRef.current) fileRef.current.value = '';
   }
 
-  const displayed = filter === 'all' ? breeds : breeds.filter(b => b.animal === filter);
+  function startEditContent(b: Breed) {
+    setEditingContentId(b.id);
+    setContentDraft({
+      excerpt:         b.content?.excerpt ?? '',
+      description:     b.content?.description ?? '',
+      origine:         b.content?.origine ?? '',
+      poids:           b.content?.poids ?? '',
+      taille:          b.content?.taille ?? '',
+      esperance_vie:   b.content?.esperance_vie ?? '',
+      niveau_activite: b.content?.niveau_activite ?? '',
+      caractere:       b.content?.caractere ?? [],
+    });
+  }
+
+  async function saveContent(b: Breed) {
+    setSavingContent(true);
+    try {
+      const merged = { ...(b.content ?? {}), ...contentDraft };
+      const r = await fetch('/api/admin/breeds', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: b.id, content: merged }),
+      });
+      const data = await r.json();
+      if (data.success) {
+        setBreeds(prev => prev.map(br => br.id === b.id ? { ...br, content: merged } : br));
+        setSavedContentId(b.id);
+        setTimeout(() => setSavedContentId(null), 2000);
+        setEditingContentId(null);
+      }
+    } catch { /* ignore */ }
+    finally { setSavingContent(false); }
+  }
+
+  const displayed = breeds
+    .filter(b => filter === 'all' || b.animal === filter)
+    .filter(b => !search || b.name.toLowerCase().includes(search.toLowerCase()));
   const withPhoto = displayed.filter(b => b.photo_url).length;
   const withoutPhoto = displayed.length - withPhoto;
 
@@ -158,35 +211,57 @@ export default function AdminRacesPage() {
         </button>
       </div>
 
-      {/* Onglets filtres */}
-      <div className="flex flex-wrap gap-2">
-        {ANIMAL_TABS.map(tab => {
-          const noPhoto = tab.id === 'all'
-            ? breeds.filter(b => !b.photo_url).length
-            : breeds.filter(b => b.animal === tab.id && !b.photo_url).length;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setFilter(tab.id)}
-              className={clsx(
-                'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors',
-                filter === tab.id
-                  ? 'bg-orange-600 text-white border-orange-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
-              )}
-            >
+      {/* Recherche + filtres */}
+      <div className="space-y-3">
+        <div className="relative max-w-xs">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" strokeWidth={1.5} />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Rechercher une race..."
+            className="w-full pl-8 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-orange-400"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <X size={13} />
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {ANIMAL_TABS.map(tab => {
+            const total = tab.id === 'all'
+              ? breeds.length
+              : breeds.filter(b => b.animal === tab.id).length;
+            const noPhoto = tab.id === 'all'
+              ? breeds.filter(b => !b.photo_url).length
+              : breeds.filter(b => b.animal === tab.id && !b.photo_url).length;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setFilter(tab.id)}
+                className={clsx(
+                  'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
+                  filter === tab.id ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                )}
+              >
                 {tab.label}
-              {noPhoto > 0 && (
                 <span className={clsx(
                   'text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center',
-                  filter === tab.id ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600'
+                  filter === tab.id ? 'bg-white/30 text-white' : 'bg-gray-200 text-gray-500'
                 )}>
-                  {noPhoto}
+                  {total}
                 </span>
-              )}
-            </button>
-          );
-        })}
+                {noPhoto > 0 && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center bg-red-500 text-white">
+                    {noPhoto}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Stats */}
@@ -246,7 +321,12 @@ export default function AdminRacesPage() {
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {savedId === b.id && (
                     <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                      <Check size={13} strokeWidth={2} /> Sauvegardé
+                      <Check size={13} strokeWidth={2} /> Photo sauvegardée
+                    </span>
+                  )}
+                  {savedContentId === b.id && (
+                    <span className="text-xs text-blue-600 font-semibold flex items-center gap-1">
+                      <Check size={13} strokeWidth={2} /> Texte sauvegardé
                     </span>
                   )}
 
@@ -265,8 +345,24 @@ export default function AdminRacesPage() {
                     </button>
                   )}
 
-                  {/* Ajouter / Modifier */}
-                  {savedId !== b.id && (
+                  {/* Bouton texte */}
+                  {savedId !== b.id && savedContentId !== b.id && editingId !== b.id && (
+                    <button
+                      onClick={() => editingContentId === b.id ? setEditingContentId(null) : startEditContent(b)}
+                      className={clsx(
+                        'flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-colors',
+                        editingContentId === b.id
+                          ? 'bg-gray-100 text-gray-600 border-gray-300'
+                          : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100'
+                      )}
+                    >
+                      <FileText size={12} strokeWidth={1.5} />
+                      {editingContentId === b.id ? 'Annuler' : 'Texte'}
+                    </button>
+                  )}
+
+                  {/* Ajouter / Modifier photo */}
+                  {savedId !== b.id && editingContentId !== b.id && (
                     <button
                       onClick={() => editingId === b.id ? cancelEdit() : startEdit(b)}
                       className={clsx(
@@ -284,7 +380,66 @@ export default function AdminRacesPage() {
                 </div>
               </div>
 
-              {/* Formulaire inline */}
+              {/* Panel édition contenu */}
+              {editingContentId === b.id && (
+                <div className="border-t border-gray-100 px-4 py-4 bg-blue-50/40 space-y-3">
+                  <p className="text-xs font-semibold text-blue-700">Modifier le texte</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {([
+                      ['excerpt',         'Résumé'],
+                      ['origine',         'Origine'],
+                      ['poids',           'Poids'],
+                      ['taille',          'Taille'],
+                      ['esperance_vie',   'Espérance de vie'],
+                      ['niveau_activite', 'Niveau d\'activité'],
+                    ] as [keyof BreedContent, string][]).map(([field, label]) => (
+                      <div key={field} className={field === 'excerpt' ? 'col-span-2' : ''}>
+                        <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">{label}</label>
+                        <input
+                          type="text"
+                          value={(contentDraft[field] as string) ?? ''}
+                          onChange={e => setContentDraft(prev => ({ ...prev, [field]: e.target.value }))}
+                          className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-400 bg-white"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Description (HTML)</label>
+                    <textarea
+                      rows={4}
+                      value={contentDraft.description ?? ''}
+                      onChange={e => setContentDraft(prev => ({ ...prev, description: e.target.value }))}
+                      className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-400 bg-white font-mono resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Caractère (virgules)</label>
+                    <input
+                      type="text"
+                      value={(contentDraft.caractere ?? []).join(', ')}
+                      onChange={e => setContentDraft(prev => ({ ...prev, caractere: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+                      className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-400 bg-white"
+                      placeholder="affectueux, joueur, curieux…"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => saveContent(b)}
+                      disabled={savingContent}
+                      className="flex items-center gap-1.5 text-xs px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-40 font-medium"
+                    >
+                      <Check size={13} strokeWidth={2} />
+                      {savingContent ? 'Sauvegarde…' : 'Enregistrer'}
+                    </button>
+                    <button onClick={() => setEditingContentId(null)} className="p-2 text-gray-400 hover:text-gray-700 border border-gray-300 rounded-lg transition-colors">
+                      <X size={14} strokeWidth={1.5} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Formulaire inline photo */}
               {editingId === b.id && (
                 <div className="border-t border-gray-100 px-4 py-4 bg-gray-50 space-y-3">
 
