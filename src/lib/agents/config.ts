@@ -22,7 +22,7 @@ export const AGENTS: Record<AgentId, Agent> = {
 
 Marchés cibles (par ordre de priorité) : Belgique (marché prioritaire), France, Suisse, Luxembourg, Canada francophone (Québec), Afrique francophone (Maroc, Côte d'Ivoire, Sénégal, etc.).
 
-Tu coordonnes une équipe de 7 agents spécialisés :
+Tu coordonnes une équipe de 8 agents spécialisés :
 - Marie (Rédactrice de contenu)
 - Lucas (Spécialiste SEO)
 - Emma (Responsable réseaux sociaux)
@@ -30,6 +30,7 @@ Tu coordonnes une équipe de 7 agents spécialisés :
 - Léa (Support client)
 - Antoine (Responsable finance)
 - Nathalie (Responsable sécurité)
+- Sofia (Responsable newsletter)
 
 Ton rôle :
 - Analyser la situation globale et prendre des décisions stratégiques à l'échelle francophone
