@@ -17,6 +17,9 @@ export async function executeAgentTask(
     ? `${task}\n\nContexte supplémentaire :\n${JSON.stringify(context, null, 2)}`
     : task;
 
+  // Capturé hors du try pour être accessible dans le catch (ex: max_tokens)
+  let capturedTokens = 0;
+
   try {
     const { content, inputTokens, outputTokens, stopReason } = await runAgent(
       agent.systemPrompt,
@@ -25,13 +28,18 @@ export async function executeAgentTask(
       agent.maxTokens ?? 3000
     );
 
+    capturedTokens = inputTokens + outputTokens;
+
     if (stopReason === 'max_tokens') {
       console.error(`[${agentId}] TRUNCATED — stop_reason=max_tokens (${outputTokens} tokens générés)`);
-      throw new Error(`Article tronqué : limite de tokens atteinte (${outputTokens} tokens). Augmenter maxTokens.`);
+      const duration = Date.now() - startTime;
+      const message = `Article tronqué : limite de tokens atteinte (${outputTokens} tokens). Augmenter maxTokens.`;
+      await logActivity(agentId, agent.name, task.slice(0, 200), 'error', duration, { error: message }, capturedTokens);
+      await updateAgentStats(agentId, 'error', capturedTokens);
+      return { success: false, content: '', tokens_used: capturedTokens, duration_ms: duration, error: message };
     }
 
     const duration = Date.now() - startTime;
-    const totalTokens = inputTokens + outputTokens;
 
     let extraDetails: Record<string, unknown> = {};
     if (agentId === 'marie') {
@@ -56,26 +64,26 @@ export async function executeAgentTask(
       content_length: content.length,
       content: agentId !== 'marie' ? content : undefined,
       ...extraDetails,
-    }, totalTokens);
-    await updateAgentStats(agentId, 'success', totalTokens);
+    }, capturedTokens);
+    await updateAgentStats(agentId, 'success', capturedTokens);
 
     return {
       success: true,
       content,
-      tokens_used: totalTokens,
+      tokens_used: capturedTokens,
       duration_ms: duration,
     };
   } catch (error) {
     const duration = Date.now() - startTime;
     const message = error instanceof Error ? error.message : 'Erreur inconnue';
 
-    await logActivity(agentId, agent.name, task.slice(0, 200), 'error', duration, { error: message });
-    await updateAgentStats(agentId, 'error', 0);
+    await logActivity(agentId, agent.name, task.slice(0, 200), 'error', duration, { error: message }, capturedTokens);
+    await updateAgentStats(agentId, 'error', capturedTokens);
 
     return {
       success: false,
       content: '',
-      tokens_used: 0,
+      tokens_used: capturedTokens,
       duration_ms: duration,
       error: message,
     };

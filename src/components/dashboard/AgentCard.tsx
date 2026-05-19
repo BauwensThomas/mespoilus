@@ -44,7 +44,7 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
 
   const completed = total?.tasks ?? stat?.tasks_completed ?? 0;
   const failed = total?.failed ?? stat?.tasks_failed ?? 0;
-  const score = completed + failed > 0 ? (completed / (completed + failed)) * 100 : 0;
+  const score = completed + failed > 0 ? (completed / (completed + failed)) * 100 : null;
 
   return (
     <Link href={`/agents/${agent.id}`} className="block group">
@@ -100,13 +100,18 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
             label="Tâches"
             value={total?.tasks ?? stat?.tasks_completed ?? 0}
             monthly={monthly?.tasks ?? 0}
+            failed={failed}
           />
           <Stat
             label="Tokens"
             value={formatTokens(total?.tokens ?? stat?.total_tokens_used ?? 0)}
             monthly={formatTokens(monthly?.tokens ?? 0)}
           />
-          <Stat label="Score" value={`${score.toFixed(0)}%`} highlight={score >= 80} />
+          <Stat
+            label="Score"
+            value={score !== null ? `${score.toFixed(0)}%` : '—'}
+            highlight={score !== null && score >= 80}
+          />
         </div>
 
         {/* Footer */}
@@ -121,16 +126,24 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
   );
 }
 
-function Stat({ label, value, highlight, monthly }: {
+function Stat({ label, value, highlight, monthly, failed }: {
   label: string;
   value: string | number;
   highlight?: boolean;
   monthly?: string | number;
+  failed?: number;
 }) {
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 text-center">
-      <div className={clsx('text-base font-bold', highlight ? 'text-emerald-600' : 'text-gray-900')}>
-        {value}
+      <div className="flex items-center justify-center gap-1">
+        <span className={clsx('text-base font-bold', highlight ? 'text-emerald-600' : 'text-gray-900')}>
+          {value}
+        </span>
+        {failed !== undefined && failed > 0 && (
+          <span className="text-[10px] font-bold text-red-500 bg-red-50 border border-red-200 rounded px-1 leading-4">
+            {failed}✕
+          </span>
+        )}
       </div>
       <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-0.5">{label}</div>
       {monthly !== undefined && (
