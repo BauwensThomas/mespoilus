@@ -105,8 +105,18 @@ Base tes analyses et recommandations sur ces chiffres réels mois par mois.`;
 - 5 derniers incidents :
 ${recentStr}
 
-Stack à auditer : Next.js 14, Supabase, API Anthropic, Vercel, endpoints /api/cron/* et /api/internal/*.
-Fournis un audit complet et des recommandations concrètes.`;
+Mesures de sécurité déjà en place (NE PAS les signaler comme manquantes) :
+- Middleware Edge actif : rate limiting (60 req/min global, 10/min par agent), détection SQLi/XSS/path traversal, blocage IP automatique (mémoire + table blocked_ips)
+- Toutes les routes /api/cron/* protégées par Bearer CRON_SECRET
+- Toutes les routes /api/internal/* protégées par header x-internal-secret
+- RLS activé sur les 25 tables Supabase (articles et products avec policies publiques, toutes les autres bloquées pour anon)
+- Headers HTTP de sécurité configurés dans next.config.mjs : CSP, X-Frame-Options (SAMEORIGIN), X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- X-Powered-By supprimé (poweredByHeader: false)
+- Monitoring erreurs Sentry actif (toutes erreurs client + serveur + edge capturées)
+- Budget cap API Anthropic fixé à 20 €/mois
+
+Stack à auditer : Next.js 14, Supabase, API Anthropic, Vercel.
+Concentre-toi uniquement sur ce qui manque réellement. Ne répète pas ce qui est déjà en place ci-dessus.`;
     }
 
     if (agentId === 'lucas') {
@@ -199,8 +209,15 @@ Génère la newsletter en te basant sur ces articles. Format JSON requis : { "su
 - Dernières erreurs :
 ${errorsStr}
 
-Stack : Next.js 14 App Router, TypeScript, Tailwind CSS, Supabase, API Anthropic, déployé sur Vercel.
-Fournis un rapport technique avec diagnostic, impact et recommandations.`;
+Architecture et mesures déjà en place (NE PAS les signaler comme manquantes) :
+- Stack : Next.js 14 App Router, TypeScript, Tailwind CSS, Supabase (PostgreSQL), API Anthropic, Vercel Hobby
+- Agents IA en streaming via /api/internal/save-agent-data (timeout propre, évite les limites Vercel)
+- maxDuration configurés par route : 60s (routes simples), 120s (blog/newsletter), 300s (security, prenoms, breeds)
+- Vercel Hobby : 1-300s de maxDuration autorisé (confirmé dans Project Settings)
+- Monitoring erreurs Sentry actif (traces, profiling, logs console capturés)
+- maxTokens Maxime : 8000 (mis à jour mai 2026)
+
+Concentre-toi uniquement sur les vraies erreurs dans les logs et les problèmes de performance réels. Ne propose pas de refactoring ou d'architectures déjà en place.`;
     }
   } catch { /* non-bloquant */ }
 
