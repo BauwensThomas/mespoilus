@@ -5,6 +5,7 @@ import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 import { PARTENAIRES } from '@/lib/partenaires';
 import { sendEmail } from '@/lib/resend';
+import { getGscInsights, formatGscForLucas } from '@/lib/gsc';
 import { cronEmailWrapper, statsRow, sectionBlock, errorBlock } from '@/lib/cron-email';
 
 export const runtime = 'nodejs';
@@ -323,6 +324,16 @@ IMAGE_PRODUIT : AUCUN (image Pexels sera utilisée)
 RACE_SLUG : AUCUN`,
     };
 
+    // Données GSC pour enrichir le contexte SEO de Lucas
+    let gscContext = '';
+    try {
+      const gscInsights = await Promise.race([
+        getGscInsights(),
+        new Promise<null>(r => setTimeout(() => r(null), 8000)),
+      ]);
+      if (gscInsights) gscContext = formatGscForLucas(gscInsights);
+    } catch { /* non-bloquant */ }
+
     const forcedPartnerBlock = urlPartner
       ? [
           `CONTRAINTE ABSOLUE : le partenaire à mettre en avant est "${urlPartner}". Tu DOIS choisir ce partenaire et aucun autre.`,
@@ -334,7 +345,7 @@ RACE_SLUG : AUCUN`,
     const lucasPrompt = `${forcedPartnerBlock}Trouve le meilleur sujet d'article SEO pour les propriétaires de ${animal}${forcedType === 'trending' ? ` (${monthName})` : ''}.
 
 ${typeInstructions[forcedType]}
-
+${gscContext ? `\n${gscContext}\nUtilise ces données GSC pour orienter ton choix : privilégie les requêtes à fort potentiel (impressions élevées, mauvaise position ou CTR faible) en lien avec les ${animal}.\n` : ''}
 Articles déjà publiés (à ne pas dupliquer) :
 ${recentContext}
 
