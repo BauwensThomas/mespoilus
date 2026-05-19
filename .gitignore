@@ -48,6 +48,9 @@ __pycache__/
 *$py.class
 *.so
 
-
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Backups (RGPD - ne jamais commiter)
+/backups/
+backup-supabase.ps1
