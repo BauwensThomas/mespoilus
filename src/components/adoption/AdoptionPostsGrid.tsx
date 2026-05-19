@@ -105,7 +105,7 @@ function ListRow({ post }: { post: AdoptionPost }) {
         </p>
       </div>
       <div className="flex-shrink-0 text-right">
-        <p className="text-xs text-gray-400 mb-1">{date}</p>
+        <p className="text-xs text-gray-500 mb-1">{date}</p>
         <span className="text-xs font-medium text-orange-600 group-hover:underline">Voir →</span>
       </div>
     </Link>
