@@ -19,7 +19,7 @@ export function cronEmailWrapper(title: string, subtitle: string, body: string):
   return `
     <div style="font-family:sans-serif;max-width:720px;margin:0 auto;color:#111;background:#f9fafb;padding:24px">
       <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
-        <div style="background:linear-gradient(135deg,#ea580c,#111827);padding:20px 24px">
+        <div style="background-color:#ea580c;background:linear-gradient(135deg,#ea580c,#111827);padding:20px 24px">
           <p style="color:#fff;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px">${subtitle}</p>
           <h1 style="color:#fff;font-size:20px;font-weight:700;margin:0">Mes Poilus — ${title}</h1>
         </div>
