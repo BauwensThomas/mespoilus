@@ -490,6 +490,7 @@ function ArticleCard({ article }: { article: Article }) {
             src={imgSrc}
             alt={article.image_alt ?? article.title}
             fill
+            unoptimized
             className="object-cover group-hover:scale-105 transition-smooth"
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
