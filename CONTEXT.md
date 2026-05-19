@@ -154,6 +154,15 @@ SENTRY_AUTH_TOKEN # Dans .env.sentry-build-plugin (gitignored) + Vercel env vars
 - **CronLauncher** : menu déroulant `w-96` avec 5 pipelines manuels, textes `text-sm`/`text-xs` lisibles
 - **Typographie admin agrandie** : titres sections `text-base`, valeurs stats `text-2xl`, descriptions `text-sm`, labels `text-sm` - Plus aucun `text-[9px]`/`text-[10px]` dans les composants dashboard
 - `revalidate = 30`
+### Orchestration image override (`/orchestrate`)
+- Zone image optionnelle sous la textarea : **upload depuis l'ordinateur** (→ `/api/admin/upload-image` → Supabase Storage `blog-images`) ou **coller une URL**
+- Preview avec bouton croix rouge pour supprimer, spinner pendant l'upload
+- `overrideImageUrl` envoyé dans le body POST `/api/orchestrate`
+- **Si pipeline Marie → Emma** : skip Pexels, article mis à jour avec l'image fournie ; Emma utilise cette image pour le post social
+- **Si Emma seule + image** : Emma génère un post libre sur l'objectif (sans chercher le dernier article) ; l'image est envoyée au webhook Make.com
+- **Sans image** : comportement inchangé (Pexels pour les articles, image du dernier article pour Emma standalone)
+- Image Supabase Storage → fonctionne avec Instagram ; URL externe → fonctionne avec Facebook mais peut être rejetée par Instagram
+
 ### Pages agents (`/agents/[agent]`)
 - Photo ambiante Unsplash en hero (fallback SVG thématique)
 - Zone de saisie de tâche avec **streaming en temps réel** de la réponse Claude
@@ -346,11 +355,16 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 - Retourne `{ url: string }` (URL publique)
 
 **Route `POST /api/internal/save-social-post`** :
-- Cherche `image_url` sur l'article le plus récent avec image (Supabase)
+- Accepte `overrideImageUrl?: string` dans le body — si fourni, skip le fetch auto d'image
+- Sinon : cherche `image_url` sur l'article le plus récent avec image (Supabase)
 - **Filtre URL** : n'utilise que les URLs commençant par `NEXT_PUBLIC_SUPABASE_URL` (Supabase Storage) → rejette les CDN externes (Awin, etc.) que Instagram refuse
 - Fallback : `getPhotoForCategory` Pexels → stockage dans Supabase Storage
 - INSERT `social_posts` (facebook + instagram)
 - Webhook Make.com avec `image_url` uniquement si non null
+
+**`executeAgentTask(agentId, task, context?, overrideImageUrl?)`** :
+- 4e param optionnel `overrideImageUrl` — passé à `saveSocialPost` quand `agentId === 'emma'`
+- `saveSocialPost(content, overrideImageUrl?)` : transmet l'override à `save-social-post`
 ### Blog public (`/blog`)
 - Articles sauvegardés automatiquement dans Supabase
 - Images stockées dans Supabase Storage `blog-images`
@@ -367,7 +381,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 - Détection : SQL injection, XSS, path traversal, LFI
 - Blocage IP automatique (mémoire + Supabase `blocked_ips`)
 - Headers de sécurité sur toutes les routes
-- **RLS activé sur les 15 tables** ✅
+- **RLS activé sur toutes les tables** ✅
   - `articles` → policy SELECT `status = 'published'` (lecture publique)
   - `products` → policy SELECT `true` (lecture publique totale — colonne `in_stock` supprimée)
   - Toutes les autres tables → RLS activé sans policy (accès anon bloqué, service role bypass)
@@ -376,8 +390,10 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 - **Protection temps réel** : c'est le middleware qui bloque les IPs, détecte SQLi/XSS, rate limiting - Pas Nathalie
 - **Nathalie = auditrice mensuelle** : lit les logs enregistrés par le middleware et formule des recommandations
 - **Sécurité compte admin** : mot de passe fort (20+ chars) ✅. MFA nécessiterait du code supplémentaire dans l'app.
-### Base de données Supabase (16 tables)
-`articles` · `activity_logs` · `security_logs` · `social_posts` · `financial_reports` · `agent_stats` · `blocked_ips` · `newsletter_subscribers` · `newsletter_campaigns` · `adoption_posts` · `products` · `cron_state` · `seo_reports` · `tech_reports` · `support_logs` · `hero_photos` · `prenoms` · `pdf_guides` · `pdf_downloads` · `pdf_consents`
+### Base de données Supabase (25 tables)
+`activity_logs` · `adoption_alerts` · `adoption_posts` · `agent_stats` · `article_comments` · `articles` · `awin_sync_progress` · `blocked_ips` · `breeds` · `cron_state` · `financial_reports` · `hero_photos` · `newsletter_campaigns` · `newsletter_subscribers` · `pdf_consents` · `pdf_downloads` · `pdf_guides` · `prenoms` · `products` · `products_hidden` · `security_logs` · `seo_reports` · `social_posts` · `support_logs` · `tech_reports`
+
+**`products_hidden`** : PK `affiliate_url TEXT`. Produits exclus de la boutique publique. RLS service_role. Migration `src/lib/supabase/products_hidden.sql`.
 **Colonne ajoutée :** `activity_logs.tokens_used INTEGER DEFAULT 0` - Migration : `src/lib/supabase/migration_tokens.sql` ✅
 #### Colonnes clés `articles`
 - `image_url` - URL publique Supabase Storage (ex: `https://xxx.supabase.co/storage/v1/object/public/blog-images/article-slug.jpg`)
@@ -413,6 +429,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 | `src/lib/supabase/migration_featured_partner.sql` | Colonne `featured_partner TEXT` sur `articles` - Anti-répétition partenaires 30 articles ✅ |
 | `src/lib/supabase/migration_awin_categories.sql` | Colonne `categories TEXT[]` sur `products` + GIN index (⚠️ à exécuter) |
 | `src/lib/supabase/migration_drop_in_stock.sql` | Supprime colonne `in_stock` de `products` + RLS `USING (true)` ✅ |
+| `src/lib/supabase/products_hidden.sql` | Table `products_hidden` (PK affiliate_url) + RLS ✅ |
 | `src/lib/supabase/migration_rls_awin_progress.sql` | RLS sur `awin_sync_progress` (⚠️ à exécuter) |
 ### Newsletter (Sofia)
 - `src/lib/resend.ts` - Client Resend via fetch natif
@@ -612,7 +629,7 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 - **Metrics** : non disponibles sur plan gratuit Sentry
 - **Sentry trace data** : injecte dans les metadata via `Sentry.getTraceData()` dans `layout.tsx`
 ### SEO & Indexation
-- Sitemap dynamique, robots.txt, Schema.org JSON-LD
+- Sitemap dynamique, robots.txt (`disallow`: `/dashboard/`, `/agents/`, `/orchestrate/`, `/adoption-admin/`, `/blog-admin/`, `/races-admin/`, `/produits-admin/`, `/boutique-admin/`, `/guides-admin/`, `/api/`, `/login`), Schema.org JSON-LD
 - Google Search Console vérifié + sitemap soumis
 - Bing Webmaster Tools vérifié + sitemap soumis
 - **Sitemap images** : `image_url` (articles) et `photo_url` (races) inclus dans sitemap → indexation Google Images. Dynamique : nouvelles images apparaissent automatiquement ✅
