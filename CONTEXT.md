@@ -32,7 +32,7 @@ Chaque agent utilise l'API Anthropic (Claude) et fonctionne de façon autonome. 
 
 | Agent | Rôle | Modèle Claude | maxTokens | Responsabilités |
 |-------|------|--------------|-----------|-----------------|
-| 👔 **Thomas** | CEO Orchestrateur | Opus 4.7 | 3000 | Stratégie globale, priorisation, coordination, rapports |
+| 👔 **Thomas** | CEO Orchestrateur | Opus 4.7 | 3000 | Stratégie globale, priorisation, coordination des 8 autres agents, rapports |
 | ✍️ **Marie** | Rédactrice de contenu | **Haiku 4.5** | **4000** | Articles de blog (550-700 mots), guides pratiques, conseils |
 | 🔍 **Lucas** | Spécialiste SEO | Sonnet 4.6 | **4000** | Recherche mots-clés, optimisation on-page, stratégie francophone |
 | 📱 **Emma** | Réseaux sociaux | Haiku 4.5 | 2000 | Posts Facebook + Instagram (@mespoilusofficiel), hashtags, lien article complet |
@@ -151,7 +151,7 @@ SENTRY_AUTH_TOKEN # Dans .env.sentry-build-plugin (gitignored) + Vercel env vars
 - Score agent : calculé dynamiquement depuis `activity_logs` (success / (success + error) * 100)
 - **Chaque card agent affiche : tâches total + ce mois, tokens total + ce mois**
 - **Auto-refresh toutes les 30 secondes** via `AutoRefresh.tsx` (client component, `router.refresh()`)
-- **CronLauncher** : menu déroulant `w-96` avec 5 pipelines manuels, textes `text-sm`/`text-xs` lisibles
+- **CronLauncher** : menu déroulant `w-96` avec 8 pipelines manuels, textes `text-sm`/`text-xs` lisibles
 - **Typographie admin agrandie** : titres sections `text-base`, valeurs stats `text-2xl`, descriptions `text-sm`, labels `text-sm` - Plus aucun `text-[9px]`/`text-[10px]` dans les composants dashboard
 - `revalidate = 30`
 ### Orchestration image override (`/orchestrate`)
@@ -241,16 +241,16 @@ SENTRY_AUTH_TOKEN # Dans .env.sentry-build-plugin (gitignored) + Vercel env vars
 | `/api/cron/awin-sync/livres` | Tous les jours | 3h40 | -| `products` |
 | `/api/cron/awin-sync/general` | Tous les jours | 4h00 | -| `products` |
 | `/api/cron/cj-sync/canada-pet-care` | Tous les jours | 5h00 | -| `products` (scraping sitemap canadapetcare.com, ~82 produits, USD, 🇨🇦) |
-| `/api/cron/blog` | Lun / Mer / Ven | 9h00 | Lucas + Marie | `articles` + Pexels Storage |
-| `/api/cron/social` | Lun / Mer / Ven | 9h30 | Emma | `social_posts` + webhook Facebook |
-| `/api/cron/finance` | **1er de chaque mois** | 8h00 | Antoine | `financial_reports` |
-| `/api/cron/security` | **1er de chaque mois** | 8h00 | Nathalie + Maxime | `security_logs` + `tech_reports` |
-| `/api/cron/newsletter` | **Chaque vendredi** | 10h00 | Sofia | `newsletter_campaigns` + envoi Resend |
-| `/api/cron/prenoms` | **1er de chaque mois** | 7h00 | Thomas (Haiku) | `prenoms` (DELETE + INSERT, 5 animaux × 4 styles × 50 noms) |
+| `/api/cron/blog` | Lun / Mer / Ven | 9h00 | Lucas + Marie | `articles` + Pexels Storage + **email notification** a `contact@mespoilus.com` |
+| `/api/cron/social` | Lun / Mer / Ven | 9h30 | Emma | `social_posts` + webhook Facebook + **email notification** a `contact@mespoilus.com` |
+| `/api/cron/finance` | **1er de chaque mois** | 8h00 | Antoine | `financial_reports` + **email rapport complet** a `contact@mespoilus.com` |
+| `/api/cron/security` | **1er de chaque mois** | 8h00 | Nathalie + Maxime (parallele) | `security_logs` + `tech_reports` + **email audit** a `contact@mespoilus.com` — `maxDuration = 300` |
+| `/api/cron/newsletter` | **Chaque vendredi** | 10h00 | Sofia | `newsletter_campaigns` + envoi Resend + **email confirmation** a `contact@mespoilus.com` |
+| `/api/cron/prenoms` | **1er de chaque mois** | 7h00 | Thomas (Haiku) | `prenoms` (DELETE + INSERT, 5 animaux × 4 styles × 50 noms) + **email notification** a `contact@mespoilus.com` |
 | `/api/cron/adoption-followup` | **Chaque samedi** | 19h00 | - | Email suivi déposant (animal adopté ?) |
 | `/api/cron/adoption-cleanup` | Tous les jours | 3h00 | - | Soft delete annonces ≥60j (status=deleted, PII anonymises) + log activity_logs (meme si 0 annonces) |
-| `/api/cron/adoption-social` | **Chaque mardi** | 19h00 | Emma | `social_posts` + webhook Make.com - Photo réelle annonce - Abandon si 0 annonces |
-| `/api/cron/breeds?batch=10` | **Chaque dimanche** | 7h00 | Haiku | `breeds` (10 races/run, 2 par catégorie interleaved) |
+| `/api/cron/adoption-social` | **Chaque mardi** | 19h00 | Emma | `social_posts` + webhook Make.com - Photo réelle annonce - Abandon si 0 annonces + **email notification** a `contact@mespoilus.com` |
+| `/api/cron/breeds?batch=10` | **Chaque dimanche** | 7h00 | Haiku | `breeds` (10 races/run, 2 par catégorie interleaved) + **email notification** a `contact@mespoilus.com` |
 | `/api/cron/daily-recap` | **Tous les jours** | 20h00 | - | Email recap journalier → `contact@mespoilus.com` : liste tous les logs du jour (`activity_logs`), stats (total, succes, erreurs, manquants, tokens), **heures en heure belge** + UTC entre parentheses. Section rouge si crons attendus absents des logs (detection par pattern dans `action`). Declenchable manuellement depuis CronLauncher. **20h UTC = 22h heure belge ete / 21h hiver**. Loggue lui-meme dans `activity_logs`. |
 **⚠️ Fiabilité crons Vercel Hobby :** les crons sont tous reconnus (19 au total) mais Vercel Hobby n'a pas de retry. Un cron manqué est silencieux. Pour les crons critiques (blog, social), vérifier régulièrement Vercel Dashboard → Settings → Crons → Last execution.
 **Daily-recap fiabilité :** en cas d'échec `sendEmail`, l'erreur est loggée dans `activity_logs` (agent Thomas, status error) pour traçabilité. Un non-déclenchement Vercel reste silencieux (pas de log du tout).
@@ -319,7 +319,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 - Payload webhook : `{ content (sans hashtags), hashtags (string), image_url (URL Supabase Storage) }`
 - `image_url` omis du payload si null → évite les erreurs Make.com `Missing required parameter`
 ### Post-processing streaming (`src/lib/agents/runner.ts`)
-**Architecture :** Vercel Hobby = timeout 60s (`maxDuration = 60` configuré sur toutes les routes cron). Solution streaming : appel à `/api/internal/save-agent-data` (route interne, timeout propre).
+**Architecture :** `maxDuration` par route cron : 60s pour les routes simples (social), 120s pour blog/newsletter, **300s pour security (Nathalie + Maxime en parallèle) et prenoms/breeds** — Vercel Hobby permet 1-300s. Solution streaming : appel à `/api/internal/save-agent-data` (route interne, timeout propre).
 - `streamAgentTask` collecte le contenu complet au fil des chunks
 - Au `done`, appelle `POST /api/internal/save-agent-data`
 - Tokens réels capturés via callback `onComplete` → `stream.finalMessage()`
@@ -418,6 +418,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 | Fichier | Description |
 |---------|-------------|
 | `src/lib/supabase/schema.sql` | Schéma initial complet |
+| `src/lib/supabase/migration_activity_stats_rpc.sql` | Fonction RPC `get_agent_stats_aggregated(start_of_month)` — agrégation stats dashboard cote DB (evite limite 1000 lignes Supabase) |
 | `src/lib/supabase/migration_complete.sql` | Migration si schéma initial déjà appliqué |
 | `src/lib/supabase/migration_categories.sql` | Colonne `categories TEXT[]` |
 | `src/lib/supabase/migration_newsletter.sql` | Tables newsletter |
@@ -431,6 +432,15 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 | `src/lib/supabase/migration_drop_in_stock.sql` | Supprime colonne `in_stock` de `products` + RLS `USING (true)` ✅ |
 | `src/lib/supabase/products_hidden.sql` | Table `products_hidden` (PK affiliate_url) + RLS ✅ |
 | `src/lib/supabase/migration_rls_awin_progress.sql` | RLS sur `awin_sync_progress` (⚠️ à exécuter) |
+### Notifications email crons (`src/lib/cron-email.ts`)
+- Helpers partagés pour les emails de notification de tous les pipelines cron
+- `mdToHtml(md)` — convertit Markdown basique en HTML (titres, gras, italique, listes, code)
+- `cronEmailWrapper(title, subtitle, body)` — enveloppe HTML commune (header orange dégradé, fond gris clair, footer)
+- `statsRow(stats[])` — ligne de badges colorés (ex: "Generees: 5 / Restantes: 120 / Tokens: 12 345")
+- `sectionBlock(title, content, borderColor?, bgColor?)` — bloc avec bordure colorée à gauche (titre + contenu HTML)
+- `errorBlock(errors[])` — section rouge listant les erreurs (n'affiche rien si tableau vide)
+- Utilisé par : cron blog, social, finance, security, newsletter, prenoms, adoption-social, breeds
+
 ### Newsletter (Sofia)
 - `src/lib/resend.ts` - Client Resend via fetch natif
 - Sofia génère HTML en JSON `{ subject, preview_text, content_html }`, sauvegardé en `draft`
@@ -635,6 +645,7 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 - **Sitemap images** : `image_url` (articles) et `photo_url` (races) inclus dans sitemap → indexation Google Images. Dynamique : nouvelles images apparaissent automatiquement ✅
 - **Schema markup enrichi** : articles → `ImageObject` avec `alt` + `logo` publisher ; races → JSON-LD `Article` complet ajoute (etait absent) ; `www.` corrige dans fallback appUrl articles. Valide via Google Rich Results Test (1 element valide detecte). Note : le bot du Rich Results Test retourne parfois "acces impossible" sur les pages ISR Vercel avant premiere visite — le vrai Googlebot indexe normalement via sitemap ✅
 ### next.config.mjs
+- `poweredByHeader: false` — supprime le header `X-Powered-By: Next.js` (info leak)
 - `remotePatterns` : `images.unsplash.com` + `images.pexels.com` + `*.supabase.co` + `cdn.shopify.com` + `flagcdn.com`
 - **Headers de securite** : `X-DNS-Prefetch-Control`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Document-Policy: js-profiling` (requis pour Sentry browser profiling)
 - **CSP (Content-Security-Policy)** : `script-src` inclut Google, AdSense, Maps, Pinterest (`s.pinimg.com` + `ct.pinterest.com`) ; `connect-src` inclut Supabase, Anthropic, Google Analytics, Sentry (`*.ingest.de.sentry.io` + `*.ingest.sentry.io`), Google CSI (`csi.gstatic.com`), Pinterest ; `frame-src` inclut Google Ads + Pinterest
@@ -656,6 +667,7 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 ### Migrations Supabase en attente ⚠️
 - ✅ `migration_awin_categories.sql` — colonne `categories TEXT[]` + GIN index sur `products` (vérifié en DB)
 - ✅ `migration_rls_awin_progress.sql` — RLS sur `awin_sync_progress` (vérifié : anon=[], service_role=données)
+- ✅ `migration_activity_stats_rpc.sql` — fonction RPC `get_agent_stats_aggregated` exécutée en DB
 
 ### Actions manuelles en attente ⚠️
 - ✅ **SQL Supabase** : faux positifs Maxi Zoo supprimés + colonne `product_type` migrée + Amazon FR tagué `livres`
@@ -663,6 +675,8 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 - **Amazon Associates** : générer 3 ventes dans les 180 jours pour valider le compte et débloquer l'API PA
 - **120 races générées + photos ajoutées** ✅ — 70 nouvelles races en DB à partir du 25 mai 2026 (cron breeds bloqué avant cette date)
 - ✅ **Migration article_comments** : exécutée dans Supabase Dashboard
+- ✅ **Budget cap Anthropic** : limite mensuelle fixée à 20 € sur console.anthropic.com
+- **Next.js upgrade** : vulnérabilités npm détectées (1 high, 1 moderate) sur Next.js 14.2.35 — fix = upgrade vers Next.js 15/16 (breaking change, à planifier)
 
 ### Actions déjà effectuées ✅
 - Site public (blog, adoption, boutique, pages légales) : **thème clair complet** ✅
