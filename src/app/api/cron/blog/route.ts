@@ -6,6 +6,7 @@ import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 import { PARTENAIRES } from '@/lib/partenaires';
 import { sendEmail } from '@/lib/resend';
 import { getGscInsights, formatGscForLucas } from '@/lib/gsc';
+import { getDailyTrends, formatTrendsForLucas, getAnimalSuggestions, formatSuggestionsForLucas, type TrendingItem } from '@/lib/trends';
 import { cronEmailWrapper, statsRow, sectionBlock, errorBlock } from '@/lib/cron-email';
 
 export const runtime = 'nodejs';
@@ -324,14 +325,19 @@ IMAGE_PRODUIT : AUCUN (image Pexels sera utilisée)
 RACE_SLUG : AUCUN`,
     };
 
-    // Données GSC pour enrichir le contexte SEO de Lucas
+    // Données GSC + Google Trends pour enrichir le contexte SEO de Lucas
     let gscContext = '';
+    let trendsContext = '';
+    let suggestionsContext = '';
     try {
-      const gscInsights = await Promise.race([
-        getGscInsights(),
-        new Promise<null>(r => setTimeout(() => r(null), 8000)),
+      const [gscInsights, trends, suggestions] = await Promise.all([
+        Promise.race([getGscInsights(), new Promise<null>(r => setTimeout(() => r(null), 8000))]),
+        Promise.race([getDailyTrends(), new Promise<TrendingItem[]>(r => setTimeout(() => r([]), 5000))]),
+        Promise.race([getAnimalSuggestions(animal), new Promise<string[]>(r => setTimeout(() => r([]), 5000))]),
       ]);
       if (gscInsights) gscContext = formatGscForLucas(gscInsights);
+      if (trends.length > 0) trendsContext = formatTrendsForLucas(trends);
+      if (suggestions.length > 0) suggestionsContext = formatSuggestionsForLucas(animal, suggestions);
     } catch { /* non-bloquant */ }
 
     const forcedPartnerBlock = urlPartner
@@ -345,7 +351,7 @@ RACE_SLUG : AUCUN`,
     const lucasPrompt = `${forcedPartnerBlock}Trouve le meilleur sujet d'article SEO pour les propriétaires de ${animal}${forcedType === 'trending' ? ` (${monthName})` : ''}.
 
 ${typeInstructions[forcedType]}
-${gscContext ? `\n${gscContext}\nUtilise ces données GSC pour orienter ton choix : privilégie les requêtes à fort potentiel (impressions élevées, mauvaise position ou CTR faible) en lien avec les ${animal}.\n` : ''}
+${suggestionsContext ? `\n${suggestionsContext}\nCe sont les vraies recherches Google en ce moment sur les ${animal}. Utilise l'une d'elles comme sujet ou angle d'article.\n` : ''}${trendsContext && forcedType === 'trending' ? `\n${trendsContext}\nTendances générales du jour — si l'une peut être reliée aux ${animal}, c'est un excellent angle. Sinon, ignore-les.\n` : ''}${gscContext ? `\n${gscContext}\nUtilise ces données GSC pour orienter ton choix : privilégie les requêtes à fort potentiel (impressions élevées, mauvaise position ou CTR faible) en lien avec les ${animal}.\n` : ''}
 Articles déjà publiés (à ne pas dupliquer) :
 ${recentContext}
 
