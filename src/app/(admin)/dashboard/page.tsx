@@ -20,12 +20,12 @@ async function getDashboardData() {
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const [statsRes, logsRes, articlesRes, securityRes, allActivityRes, monthlySecurityRes, monthlyArticlesRes, productsRes, lastAwinSyncRes] = await Promise.all([
+    const [statsRes, logsRes, articlesRes, securityRes, statsRpcRes, monthlySecurityRes, monthlyArticlesRes, productsRes, lastAwinSyncRes] = await Promise.all([
       supabase.from('agent_stats').select('*'),
-      supabase.from('activity_logs').select('*').order('created_at', { ascending: false }),
+      supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published'),
       supabase.from('security_logs').select('id', { count: 'exact' }).in('threat_level', ['high', 'critical']),
-      supabase.from('activity_logs').select('agent_id, status, tokens_used, created_at'),
+      supabase.rpc('get_agent_stats_aggregated', { start_of_month: startOfMonth.toISOString() }),
       supabase.from('security_logs').select('id', { count: 'exact' }).in('threat_level', ['high', 'critical']).gte('created_at', startOfMonth.toISOString()),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published').gte('published_at', startOfMonth.toISOString()),
       supabase.from('products').select('id', { count: 'exact' }),
@@ -48,29 +48,21 @@ async function getDashboardData() {
       lastAwinSync = lastAwinSyncRes.data[0].created_at;
     }
 
-    // Calcul totaux + mensuels depuis activity_logs (source unique)
-    const totalByAgent: Record<string, TotalAgentStat> = {};
-    const monthlyByAgent: Record<string, MonthlyAgentStat> = {};
-    let totalTasks = 0, totalTokens = 0, monthlyTasks = 0, monthlyTokens = 0;
-
-    for (const row of (allActivityRes.data ?? [])) {
-      if (!totalByAgent[row.agent_id]) totalByAgent[row.agent_id] = { tasks: 0, tokens: 0, failed: 0 };
-      if (!monthlyByAgent[row.agent_id]) monthlyByAgent[row.agent_id] = { tasks: 0, tokens: 0 };
-
-      const isThisMonth = new Date(row.created_at) >= startOfMonth;
-      const tokens = row.tokens_used ?? 0;
-
-      if (row.status === 'success') {
-        totalByAgent[row.agent_id].tasks++;
-        totalTasks++;
-        if (isThisMonth) { monthlyByAgent[row.agent_id].tasks++; monthlyTasks++; }
-      } else if (row.status === 'error') {
-        totalByAgent[row.agent_id].failed++;
-      }
-      totalByAgent[row.agent_id].tokens += tokens;
-      totalTokens += tokens;
-      if (isThisMonth) { monthlyByAgent[row.agent_id].tokens += tokens; monthlyTokens += tokens; }
-    }
+    // Agrégation cote DB via RPC (evite la limite Supabase 1000 lignes)
+    const rpc = (statsRpcRes.data ?? {}) as {
+      total_by_agent?: Record<string, TotalAgentStat>;
+      monthly_by_agent?: Record<string, MonthlyAgentStat>;
+      global_total_tasks?: number;
+      global_total_tokens?: number;
+      global_monthly_tasks?: number;
+      global_monthly_tokens?: number;
+    };
+    const totalByAgent: Record<string, TotalAgentStat> = rpc.total_by_agent ?? {};
+    const monthlyByAgent: Record<string, MonthlyAgentStat> = rpc.monthly_by_agent ?? {};
+    const totalTasks = Number(rpc.global_total_tasks ?? 0);
+    const totalTokens = Number(rpc.global_total_tokens ?? 0);
+    const monthlyTasks = Number(rpc.global_monthly_tasks ?? 0);
+    const monthlyTokens = Number(rpc.global_monthly_tokens ?? 0);
 
     return { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, totalByAgent, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts, totalProducts, lastAwinSync };
   } catch {
