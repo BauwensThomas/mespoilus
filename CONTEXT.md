@@ -391,6 +391,11 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 - **Protection temps réel** : c'est le middleware qui bloque les IPs, détecte SQLi/XSS, rate limiting - Pas Nathalie
 - **Nathalie = auditrice mensuelle** : lit les logs enregistrés par le middleware et formule des recommandations
 - **Sécurité compte admin** : mot de passe fort (20+ chars) ✅. MFA nécessiterait du code supplémentaire dans l'app.
+- **RLS renforcé (19 mai 2026)** : toutes les tables internes ont maintenant une policy explicite `USING (false)` — anon/authenticated bloqués, service_role bypass automatique ✅
+- **REVOKE EXECUTE** : `get_agent_stats_aggregated` et `increment_agent_stat` inaccessibles via REST public — seuls `postgres` et `service_role` peuvent les appeler ✅
+- **search_path=public** fixé sur les 3 fonctions publiques (anti-injection de schéma) ✅
+- **blog-images listing** : policy SELECT restreinte — listing désactivé, accès objet direct uniquement ✅
+- **Backup DB** : `backup-supabase.ps1` (gitignored) — `pg_dump` vers `/backups/` local, rétention 90j. À planifier via Windows Task Scheduler tous les lundis 3h.
 ### Base de données Supabase (25 tables)
 `activity_logs` · `adoption_alerts` · `adoption_posts` · `agent_stats` · `article_comments` · `articles` · `awin_sync_progress` · `blocked_ips` · `breeds` · `cron_state` · `financial_reports` · `hero_photos` · `newsletter_campaigns` · `newsletter_subscribers` · `pdf_consents` · `pdf_downloads` · `pdf_guides` · `prenoms` · `products` · `products_hidden` · `security_logs` · `seo_reports` · `social_posts` · `support_logs` · `tech_reports`
 
@@ -433,6 +438,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 | `src/lib/supabase/migration_drop_in_stock.sql` | Supprime colonne `in_stock` de `products` + RLS `USING (true)` ✅ |
 | `src/lib/supabase/products_hidden.sql` | Table `products_hidden` (PK affiliate_url) + RLS ✅ |
 | `src/lib/supabase/migration_rls_awin_progress.sql` | RLS sur `awin_sync_progress` (⚠️ à exécuter) |
+| `src/lib/supabase/migration_rls_policies.sql` | Policy "admin only" USING (false) sur toutes les tables internes ✅ exécuté |
+| `src/lib/supabase/migration_security_revoke_rpc.sql` | REVOKE EXECUTE sur fonctions SECURITY DEFINER pour anon/authenticated ✅ exécuté |
 ### Notifications email crons (`src/lib/cron-email.ts`)
 - Helpers partagés pour les emails de notification de tous les pipelines cron
 - `mdToHtml(md)` — convertit Markdown basique en HTML (titres, gras, italique, listes, code)
@@ -653,7 +660,9 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 - **Headers de securite** : `X-DNS-Prefetch-Control`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Document-Policy: js-profiling` (requis pour Sentry browser profiling)
 - **CSP (Content-Security-Policy)** : `script-src` inclut Google, AdSense, Maps, Pinterest (`s.pinimg.com` + `ct.pinterest.com`) ; `connect-src` inclut Supabase, Anthropic, Google Analytics, Sentry (`*.ingest.de.sentry.io` + `*.ingest.sentry.io`), Google CSI (`csi.gstatic.com`), Pinterest ; `frame-src` inclut Google Ads + Pinterest
 - **Sentry config** : `withSentryConfig` wrapper, `widenClientFileUpload: true`, `automaticVercelMonitors: true`, source maps uploadees en CI uniquement (`silent: !process.env.CI`)
+- **`unoptimized: true`** : optimisation Vercel désactivée sur toutes les images — quota Hobby (1000/mois) dépassé → erreur 402. Images servies directement depuis CDNs sources (Shopify, Supabase, Unsplash). Aucun impact visuel.
 - **Google Maps** : parametre `loading=async` ajoute dans `RefugeFinderPanel.tsx` et `VetFinderPanel.tsx` (supprime warning performance)
+- **Accessibilite contraste** : `text-gray-400` → `text-gray-500` sur date/durée lecture (`BlogCard.tsx`) et date annonces adoption (`AdoptionPostsGrid.tsx`) — ratio WCAG AA respecté (4.6:1)
 - **Accessibilite formulaires** : `id` + `name` ajoutes sur tous les inputs/selects sans attributs — search bars (blog, adoption, races, boutique), newsletter (`autocomplete="email"`), refuge finder (adresse + rayon), vet finder (adresse + rayon). `<noscript>` Pinterest supprime (warning preload)
 - **Pinterest** : tag de tracking conserve (`s.pinimg.com/ct/core.js`), seul le `<noscript>` fallback img supprime
 ### Déploiement
@@ -680,6 +689,7 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 - ✅ **Migration article_comments** : exécutée dans Supabase Dashboard
 - ✅ **Budget cap Anthropic** : limite mensuelle fixée à 20 € sur console.anthropic.com
 - **Next.js upgrade** : vulnérabilités npm détectées (1 high, 1 moderate) sur Next.js 14.2.35 — fix = upgrade vers Next.js 15/16 (breaking change, à planifier)
+- **AdSense** : demande d'approbation soumise le 06 mai 2026, en cours d'examen (2-4 semaines). `NEXT_PUBLIC_ADSENSE_ENABLED=false` jusqu'à approbation.
 
 ### Actions déjà effectuées ✅
 - Site public (blog, adoption, boutique, pages légales) : **thème clair complet** ✅
