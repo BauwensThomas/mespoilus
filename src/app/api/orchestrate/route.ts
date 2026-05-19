@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: { objective?: string };
+  let body: { objective?: string; overrideImageUrl?: string };
   try {
     body = await request.json();
   } catch {
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
   }
 
   const objective = sanitizeInput(rawObjective);
+  const overrideImageUrl = body.overrideImageUrl?.trim() || undefined;
   const supabase = createAdminClient();
 
   try {
@@ -163,31 +164,35 @@ Ton bienveillant et pratique, destiné aux propriétaires francophones.`;
           }
         }
 
-        // Image Pexels si pas encore d'image
+        // Image : override si fourni, sinon Pexels
         if (articleSlug) {
           try {
-            const { data: imgCheck } = await supabase
-              .from('articles')
-              .select('image_url')
-              .eq('slug', articleSlug)
-              .maybeSingle();
+            if (overrideImageUrl) {
+              await supabase.from('articles').update({ image_url: overrideImageUrl }).eq('slug', articleSlug);
+            } else {
+              const { data: imgCheck } = await supabase
+                .from('articles')
+                .select('image_url')
+                .eq('slug', articleSlug)
+                .maybeSingle();
 
-            if (!imgCheck?.image_url) {
-              const photo = await Promise.race([
-                getPhotoForCategory(category),
-                new Promise<null>((r) => setTimeout(() => r(null), 5000)),
-              ]);
-              if (photo) {
-                const stored = await Promise.race([
-                  downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`),
+              if (!imgCheck?.image_url) {
+                const photo = await Promise.race([
+                  getPhotoForCategory(category),
                   new Promise<null>((r) => setTimeout(() => r(null), 5000)),
                 ]);
-                await supabase.from('articles').update({
-                  image_url: stored ?? photo.url,
-                  image_alt: photo.alt,
-                  image_credit: photo.credit,
-                  image_credit_url: photo.creditUrl,
-                }).eq('slug', articleSlug);
+                if (photo) {
+                  const stored = await Promise.race([
+                    downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`),
+                    new Promise<null>((r) => setTimeout(() => r(null), 5000)),
+                  ]);
+                  await supabase.from('articles').update({
+                    image_url: stored ?? photo.url,
+                    image_alt: photo.alt,
+                    image_credit: photo.credit,
+                    image_credit_url: photo.creditUrl,
+                  }).eq('slug', articleSlug);
+                }
               }
             }
           } catch { /* non-bloquant */ }
@@ -213,7 +218,7 @@ Le post doit donner envie de lire l'article.
 IMPORTANT : tu dois inclure ce lien EXACT à la fin du post, sans le modifier ni le raccourcir :
 https://mespoilus.com/blog/${articleSlug}`;
 
-          const emmaResult = await executeAgentTask('emma', emmaPrompt);
+          const emmaResult = await executeAgentTask('emma', emmaPrompt, undefined, overrideImageUrl);
           results.push({ agent: 'emma', success: emmaResult.success, content: emmaResult.content, priority: 2 });
         } else {
           results.push({
@@ -240,25 +245,40 @@ https://mespoilus.com/blog/${articleSlug}`;
     } else {
       // ── Agents sans pipeline blog ──────────────────────────────────────
       const taskPromises = plan.tasks.slice(0, 4).map(async (t): Promise<AgentResult> => {
-        // Emma seule : poster à propos du dernier article publié
+        // Emma seule
         if (t.agent === 'emma') {
-          const { data } = await supabase
-            .from('articles')
-            .select('slug, title, excerpt')
-            .eq('status', 'published')
-            .order('published_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+          let emmaPrompt: string;
 
-          if (data) {
-            const emmaPrompt = `Crée un post Facebook et Instagram pour cet article :
+          if (overrideImageUrl) {
+            // Image fournie par l'utilisateur : post libre sur l'objectif
+            emmaPrompt = `${t.task}
+
+Objectif de la campagne : ${objective}
+
+Crée un post engageant pour Facebook et Instagram en lien avec cet objectif.
+Sois chaleureux, spontané et ajoute des hashtags pertinents à la fin.
+Ne mentionne pas d'image dans le texte du post.`;
+          } else {
+            // Pas d'image : poster à propos du dernier article publié
+            const { data } = await supabase
+              .from('articles')
+              .select('slug, title, excerpt')
+              .eq('status', 'published')
+              .order('published_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (!data) {
+              return { agent: 'emma', success: false, content: 'Aucun article publié trouvé.', priority: t.priority };
+            }
+            emmaPrompt = `Crée un post Facebook et Instagram pour cet article :
 Titre : ${data.title}
 Résumé : ${data.excerpt || data.title}
 IMPORTANT : inclure ce lien EXACT : https://mespoilus.com/blog/${data.slug}`;
-            const result = await executeAgentTask('emma', emmaPrompt);
-            return { agent: 'emma', success: result.success, content: result.content, priority: t.priority };
           }
-          return { agent: 'emma', success: false, content: 'Aucun article publié trouvé.', priority: t.priority };
+
+          const result = await executeAgentTask('emma', emmaPrompt, undefined, overrideImageUrl);
+          return { agent: 'emma', success: result.success, content: result.content, priority: t.priority };
         }
 
         const enriched = await buildEnrichedPrompt(t.agent, t.task, supabase);

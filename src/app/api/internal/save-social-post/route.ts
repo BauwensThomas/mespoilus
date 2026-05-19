@@ -65,9 +65,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { content, hashtags } = await req.json() as { content: string; hashtags: string[] };
+  const { content, hashtags, overrideImageUrl } = await req.json() as { content: string; hashtags: string[]; overrideImageUrl?: string };
 
-  const imageUrl = await getImageUrl();
+  const imageUrl = overrideImageUrl ?? await getImageUrl();
+  if (overrideImageUrl) console.log('[save-post] image override:', overrideImageUrl.slice(0, 80));
 
   for (const platform of ['facebook', 'instagram']) {
     const r = await supabaseFetch('social_posts', 'POST', { content, platform, hashtags, status: 'draft' });

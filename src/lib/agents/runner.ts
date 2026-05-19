@@ -7,7 +7,8 @@ import { revalidatePath } from 'next/cache';
 export async function executeAgentTask(
   agentId: AgentId,
   task: string,
-  context?: Record<string, unknown>
+  context?: Record<string, unknown>,
+  overrideImageUrl?: string
 ): Promise<AgentTaskResult> {
   const agent = getAgent(agentId);
   const startTime = Date.now();
@@ -39,7 +40,7 @@ export async function executeAgentTask(
     } else if (agentId === 'nathalie') {
       await saveSecurityAnalysis(content);
     } else if (agentId === 'emma') {
-      await saveSocialPost(content);
+      await saveSocialPost(content, overrideImageUrl);
     } else if (agentId === 'antoine') {
       await saveFinancialReport(content, task);
     } else if (agentId === 'sofia') {
@@ -346,8 +347,8 @@ async function saveSecurityAnalysis(content: string) {
   }
 }
 
-async function saveSocialPost(content: string) {
-  console.log('[Emma] saveSocialPost start');
+async function saveSocialPost(content: string, overrideImageUrl?: string) {
+  console.log('[Emma] saveSocialPost start', overrideImageUrl ? '(image override)' : '');
 
   const postContent = content.trim();
   const hashtags = postContent.match(/#[\wÀ-ɏ]+/g) || [];
@@ -369,7 +370,7 @@ async function saveSocialPost(content: string) {
         'Content-Type': 'application/json',
         'x-internal-secret': process.env.CRON_SECRET ?? '',
       },
-      body: JSON.stringify({ content: postContent, hashtags }),
+      body: JSON.stringify({ content: postContent, hashtags, ...(overrideImageUrl ? { overrideImageUrl } : {}) }),
       signal: ctrl.signal,
     }).catch(() => {});
     clearTimeout(t);
