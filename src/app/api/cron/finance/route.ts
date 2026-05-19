@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
 import { buildEnrichedPrompt } from '@/lib/agents/context';
+import { sendEmail } from '@/lib/resend';
+import { cronEmailWrapper, mdToHtml, sectionBlock } from '@/lib/cron-email';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -55,11 +57,32 @@ export async function GET(req: Request) {
     const duration = Date.now() - globalStart;
     await logActivity('thomas', 'Thomas', `Cron finance : rapport ${month} généré`, 'success', duration, { period: month }, result.tokens_used ?? 0);
 
+    try {
+      const body = sectionBlock('Rapport Antoine', mdToHtml(result.content), '#0d9488', '#f0fdfa');
+      await sendEmail({
+        to: 'contact@mespoilus.com',
+        subject: `[Mes Poilus] Rapport financier — ${month}`,
+        html: cronEmailWrapper(`Rapport financier — ${month}`, 'Finance Antoine', body),
+      });
+      console.log('[Cron Finance] Email rapport envoye');
+    } catch (emailErr) {
+      console.error('[Cron Finance] Email erreur:', emailErr instanceof Error ? emailErr.message : emailErr);
+    }
+
     console.log(`[Cron Finance] Terminé en ${duration}ms`);
     return NextResponse.json({ success: true, duration_ms: duration, period: month });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erreur inconnue';
     await logActivity('thomas', 'Thomas', `Cron finance erreur: ${msg}`, 'error', Date.now() - globalStart);
+    try {
+      const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      await sendEmail({
+        to: 'contact@mespoilus.com',
+        subject: `[Mes Poilus] Rapport financier ECHEC — ${month}`,
+        html: cronEmailWrapper(`Echec finance — ${date}`, 'Finance Antoine',
+          `<div style="padding:16px;background:#fef2f2;border-radius:8px;color:#dc2626;font-size:13px">Antoine n'a pas pu generer le rapport : ${msg}</div>`),
+      });
+    } catch { /* non-bloquant */ }
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }

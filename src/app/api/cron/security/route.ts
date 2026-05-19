@@ -3,9 +3,10 @@ import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
 import { buildEnrichedPrompt } from '@/lib/agents/context';
 import { sendEmail } from '@/lib/resend';
+import { mdToHtml } from '@/lib/cron-email';
 
 export const runtime = 'nodejs';
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 async function logActivity(
   agentId: string, agentName: string, action: string,
@@ -19,20 +20,6 @@ async function logActivity(
   } catch { /* non-bloquant */ }
 }
 
-function mdToHtml(md: string): string {
-  return md
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/^#### (.+)$/gm, '<h4 style="color:#374151;font-size:13px;font-weight:700;margin:14px 0 4px">$1</h4>')
-    .replace(/^### (.+)$/gm, '<h3 style="color:#1f2937;font-size:14px;font-weight:700;margin:18px 0 6px">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 style="color:#111827;font-size:16px;font-weight:700;margin:22px 0 8px;padding-bottom:4px;border-bottom:1px solid #e5e7eb">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 style="color:#111827;font-size:18px;font-weight:700;margin:20px 0 8px">$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^- (.+)$/gm, '<li style="margin:3px 0;color:#374151">$1</li>')
-    .replace(/(<li[^>]*>[\s\S]*?<\/li>\n?)+/g, (m) => `<ul style="padding-left:20px;margin:8px 0">${m}</ul>`)
-    .replace(/\n\n/g, '<br><br>')
-    .replace(/\n/g, '<br>');
-}
 
 function buildAuditEmail(
   date: string,
@@ -92,41 +79,36 @@ export async function GET(req: Request) {
   let nathalieContent: string | null = null;
   let maximeContent: string | null = null;
 
-  // ── Nathalie : audit de sécurité ─────────────────────────────────────────
-  try {
-    const nathaliePrompt = await buildEnrichedPrompt(
-      'nathalie',
-      'Effectue un audit de sécurité complet de l\'application. Analyse les incidents récents, évalue le niveau de risque global et donne les 5 actions prioritaires à entreprendre.',
-      supabase
-    );
-    const nathalieResult = await executeAgentTask('nathalie', nathaliePrompt);
-    if (!nathalieResult.success) throw new Error(nathalieResult.error ?? 'Nathalie a échoué');
+  // ── Nathalie + Maxime en parallèle ────────────────────────────────────────
+  const [nathaliePrompt, maximePrompt] = await Promise.all([
+    buildEnrichedPrompt('nathalie', 'Effectue un audit de sécurité complet de l\'application. Analyse les incidents récents, évalue le niveau de risque global et donne les 5 actions prioritaires à entreprendre.', supabase),
+    buildEnrichedPrompt('maxime', 'Effectue un audit technique complet de l\'application. Analyse les erreurs dans les logs, identifie les problèmes de performance et propose les corrections prioritaires.', supabase),
+  ]);
+
+  const [nathalieResult, maximeResult] = await Promise.all([
+    executeAgentTask('nathalie', nathaliePrompt).catch(err => ({ success: false, content: '', error: err instanceof Error ? err.message : 'Erreur inconnue', tokens_used: 0, duration_ms: 0 })),
+    executeAgentTask('maxime', maximePrompt).catch(err => ({ success: false, content: '', error: err instanceof Error ? err.message : 'Erreur inconnue', tokens_used: 0, duration_ms: 0 })),
+  ]);
+
+  if (nathalieResult.success) {
     nathalieContent = nathalieResult.content;
     await logActivity('thomas', 'Thomas', 'Cron sécurité : audit Nathalie terminé', 'success', nathalieResult.duration_ms ?? 0, {}, nathalieResult.tokens_used ?? 0);
     console.log('[Cron Security] Nathalie OK');
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Erreur inconnue';
+  } else {
+    const msg = nathalieResult.error ?? 'Nathalie a échoué';
     errors.push(`Nathalie: ${msg}`);
-    await logActivity('thomas', 'Thomas', `Cron sécurité erreur Nathalie: ${msg}`, 'error', 0);
+    await logActivity('thomas', 'Thomas', `Cron sécurité erreur Nathalie: ${msg}`, 'error', nathalieResult.duration_ms ?? 0, {}, nathalieResult.tokens_used ?? 0);
     console.error('[Cron Security] Nathalie erreur:', msg);
   }
 
-  // ── Maxime : audit technique ──────────────────────────────────────────────
-  try {
-    const maximePrompt = await buildEnrichedPrompt(
-      'maxime',
-      'Effectue un audit technique complet de l\'application. Analyse les erreurs dans les logs, identifie les problèmes de performance et propose les corrections prioritaires.',
-      supabase
-    );
-    const maximeResult = await executeAgentTask('maxime', maximePrompt);
-    if (!maximeResult.success) throw new Error(maximeResult.error ?? 'Maxime a échoué');
+  if (maximeResult.success) {
     maximeContent = maximeResult.content;
     await logActivity('thomas', 'Thomas', 'Cron sécurité : audit Maxime terminé', 'success', maximeResult.duration_ms ?? 0, {}, maximeResult.tokens_used ?? 0);
     console.log('[Cron Security] Maxime OK');
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Erreur inconnue';
+  } else {
+    const msg = maximeResult.error ?? 'Maxime a échoué';
     errors.push(`Maxime: ${msg}`);
-    await logActivity('thomas', 'Thomas', `Cron sécurité erreur Maxime: ${msg}`, 'error', 0);
+    await logActivity('thomas', 'Thomas', `Cron sécurité erreur Maxime: ${msg}`, 'error', maximeResult.duration_ms ?? 0, {}, maximeResult.tokens_used ?? 0);
     console.error('[Cron Security] Maxime erreur:', msg);
   }
 

@@ -4,6 +4,8 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 import { PARTENAIRES } from '@/lib/partenaires';
+import { sendEmail } from '@/lib/resend';
+import { cronEmailWrapper, statsRow, sectionBlock, errorBlock } from '@/lib/cron-email';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -672,6 +674,41 @@ CONSIGNES :
   );
 
   console.log(`[Cron1] Terminé en ${totalDuration}ms -slug=${articleSlug}`);
+
+  // ── Email notification ─────────────────────────────────────────────────────
+  try {
+    const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const animalLabel = { chiens: 'Chiens', chats: 'Chats', oiseaux: 'Oiseaux', rongeurs: 'Rongeurs', reptiles: 'Reptiles' }[animal] ?? animal;
+    const body = articleSlug
+      ? statsRow([
+          { label: 'Animal', value: animalLabel },
+          { label: 'Tokens', value: pipelineTokens.toLocaleString('fr-FR'), color: '#8b5cf6' },
+          { label: 'Durée', value: `${Math.round(totalDuration / 1000)}s`, color: '#6b7280' },
+        ]) +
+        sectionBlock('Article publié', `
+          <p style="margin:0 0 8px"><strong>${articleTitle}</strong></p>
+          ${articleExcerpt ? `<p style="margin:0 0 12px;color:#6b7280">${articleExcerpt}</p>` : ''}
+          ${sujet !== articleTitle ? `<p style="margin:0 0 6px;font-size:12px"><span style="color:#9ca3af">Sujet Lucas :</span> ${sujet}</p>` : ''}
+          ${motsCles.length ? `<p style="margin:0 0 6px;font-size:12px"><span style="color:#9ca3af">Mots-clés :</span> ${motsCles.join(', ')}</p>` : ''}
+          ${nomProduit ? `<p style="margin:0 0 6px;font-size:12px"><span style="color:#9ca3af">Partenaire :</span> ${nomProduit}</p>` : ''}
+          <p style="margin:12px 0 0"><a href="https://www.mespoilus.com/blog/${articleSlug}" style="color:#ea580c;font-weight:600">Lire l'article →</a></p>
+        `, '#8b5cf6', '#faf5ff') +
+        errorBlock(errors)
+      : `<div style="padding:16px;background:#fef2f2;border-radius:8px;color:#dc2626;font-size:13px">
+          L'article n'a pas pu etre publie. ${errors[0] ?? 'Erreur inconnue.'}
+         </div>` + errorBlock(errors.slice(1));
+
+    await sendEmail({
+      to: 'contact@mespoilus.com',
+      subject: articleSlug
+        ? `[Mes Poilus] Article publie — ${articleTitle}`
+        : `[Mes Poilus] Cron blog ECHEC — ${date}`,
+      html: cronEmailWrapper(articleSlug ? `Nouvel article — ${date}` : `Echec blog — ${date}`, 'Pipeline SEO + Blog', body),
+    });
+    console.log('[Cron1] Email notification envoyee');
+  } catch (err) {
+    console.error('[Cron1] Email erreur:', err instanceof Error ? err.message : err);
+  }
 
   return NextResponse.json({
     success: !!articleSlug,
