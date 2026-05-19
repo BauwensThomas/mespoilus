@@ -16,7 +16,7 @@ async function getPost(id: string): Promise<AdoptionPost | null> {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from('adoption_posts')
-      .select('id, poster_name, animal_type, breed, age, gender, region, description, reason, photo_urls, status, created_at, updated_at, contact_info, deleted_at, deleted_by, deleted_reason')
+      .select('id, poster_name, email, animal_type, breed, age, gender, region, description, reason, photo_urls, status, created_at, updated_at, contact_info, deleted_at, deleted_by, deleted_reason')
       .eq('id', id)
       .eq('status', 'approved')
       .single();
