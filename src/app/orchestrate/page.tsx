@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import clsx from 'clsx';
 import { AGENTS } from '@/lib/agents/config';
-import { Rocket, Clipboard, CheckCircle2, XCircle, Briefcase } from 'lucide-react';
+import { Rocket, Clipboard, CheckCircle2, XCircle, Briefcase, ImagePlus, X, Link } from 'lucide-react';
 
 interface AgentResult {
   agent: string;
@@ -26,6 +26,32 @@ export default function OrchestratePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Image override
+  const [overrideImageUrl, setOverrideImageUrl] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleFileUpload(file: File) {
+    if (!file.type.startsWith('image/')) return;
+    setUploadingImage(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const r = await fetch('/api/admin/upload-image', { method: 'POST', body: fd });
+      const data = await r.json();
+      if (data.url) { setOverrideImageUrl(data.url); setUrlInput(''); setShowUrlInput(false); }
+    } catch { /* non-bloquant */ } finally {
+      setUploadingImage(false);
+    }
+  }
+
+  function handleUrlConfirm() {
+    const url = urlInput.trim();
+    if (url) { setOverrideImageUrl(url); setUrlInput(''); setShowUrlInput(false); }
+  }
+
   async function runOrchestration() {
     if (!objective.trim() || isLoading) return;
 
@@ -37,7 +63,7 @@ export default function OrchestratePage() {
       const res = await fetch('/api/orchestrate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ objective }),
+        body: JSON.stringify({ objective, ...(overrideImageUrl ? { overrideImageUrl } : {}) }),
       });
 
       const data = await res.json();
@@ -90,6 +116,80 @@ export default function OrchestratePage() {
           value={objective}
           onChange={(e) => setObjective(e.target.value)}
         />
+
+        {/* Zone image optionnelle */}
+        <div>
+          <p className="text-xs font-medium text-gray-600 mb-2">
+            Image (optionnel) — utilisée par Emma pour le post social
+          </p>
+          {overrideImageUrl ? (
+            <div className="relative inline-block">
+              <img
+                src={overrideImageUrl}
+                alt="Image sélectionnée"
+                onError={() => setOverrideImageUrl('')}
+                className="h-24 w-auto rounded-lg border border-gray-200 object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => setOverrideImageUrl('')}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+              >
+                <X size={10} strokeWidth={2.5} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Upload fichier */}
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); e.target.value = ''; }} />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploadingImage}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-gray-300 transition-all disabled:opacity-50"
+              >
+                {uploadingImage ? (
+                  <span className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <ImagePlus size={13} strokeWidth={1.5} />
+                )}
+                {uploadingImage ? 'Upload…' : 'Depuis l\'ordinateur'}
+              </button>
+
+              {/* URL */}
+              {showUrlInput ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={urlInput}
+                    onChange={e => setUrlInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleUrlConfirm()}
+                    placeholder="https://…"
+                    autoFocus
+                    className="w-52 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-orange-400 placeholder-gray-400"
+                  />
+                  {urlInput && (
+                    <button type="button" onClick={handleUrlConfirm} className="text-xs px-2 py-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+                      OK
+                    </button>
+                  )}
+                  <button type="button" onClick={() => { setShowUrlInput(false); setUrlInput(''); }} className="text-gray-400 hover:text-gray-600">
+                    <X size={13} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowUrlInput(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-gray-300 transition-all"
+                >
+                  <Link size={13} strokeWidth={1.5} />
+                  Depuis une URL
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="flex items-center gap-3">
           <button
