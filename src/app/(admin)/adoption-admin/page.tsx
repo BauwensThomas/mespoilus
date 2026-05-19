@@ -9,6 +9,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { CheckCircle2, XCircle, Pencil, Heart, Clock, User, Bot } from 'lucide-react';
 import DeletePostButton from './DeletePostButton';
+import ModerationSearchInput from './SearchInput';
 
 export const revalidate = 0;
 
@@ -92,7 +93,7 @@ async function approvePost(id: string) {
     }
   }
 
-  revalidatePath('/moderation');
+  revalidatePath('/adoption-admin');
 }
 
 async function rejectPost(id: string, formData: FormData) {
@@ -132,7 +133,7 @@ async function rejectPost(id: string, formData: FormData) {
     }
   }
 
-  revalidatePath('/moderation');
+  revalidatePath('/adoption-admin');
 }
 
 async function deletePost(id: string) {
@@ -147,10 +148,10 @@ async function deletePost(id: string) {
     email:          'supprime@mespoilus.com',
     contact_info:   null,
   }).eq('id', id);
-  revalidatePath('/moderation');
+  revalidatePath('/adoption-admin');
 }
 
-async function getData(status: string, animal?: string, reason?: string) {
+async function getData(status: string, animal?: string, reason?: string, search?: string) {
   const supabase = createAdminClient();
 
   let q = supabase
@@ -167,14 +168,33 @@ async function getData(status: string, animal?: string, reason?: string) {
     if (reason === 'auto')     q = q.eq('deleted_by', 'cron');
   }
 
-  const [postsRes, pendingRes] = await Promise.all([
+  if (search) {
+    q = q.or(`poster_name.ilike.%${search}%,region.ilike.%${search}%,description.ilike.%${search}%`);
+  }
+
+  const [postsRes, animalCountsRes, pendingCount, approvedCount, rejectedCount, deletedCount] = await Promise.all([
     q,
+    supabase.from('adoption_posts').select('animal_type').eq('status', status),
     supabase.from('adoption_posts').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('adoption_posts').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
+    supabase.from('adoption_posts').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
+    supabase.from('adoption_posts').select('id', { count: 'exact', head: true }).eq('status', 'deleted'),
   ]);
+
+  const animalCounts: Record<string, number> = {};
+  for (const row of (animalCountsRes.data ?? [])) {
+    animalCounts[row.animal_type] = (animalCounts[row.animal_type] ?? 0) + 1;
+  }
 
   return {
     posts:        (postsRes.data as AdoptionPost[]) ?? [],
-    pendingCount: pendingRes.count ?? 0,
+    animalCounts,
+    statusCounts: {
+      pending:  pendingCount.count  ?? 0,
+      approved: approvedCount.count ?? 0,
+      rejected: rejectedCount.count ?? 0,
+      deleted:  deletedCount.count  ?? 0,
+    },
   };
 }
 
@@ -207,47 +227,84 @@ const TABS = [
 ];
 
 interface Props {
-  searchParams: { status?: string; animal?: string; reason?: string };
+  searchParams: { status?: string; animal?: string; reason?: string; q?: string };
 }
 
 export default async function ModerationPage({ searchParams }: Props) {
   const activeStatus = searchParams.status ?? 'pending';
   const activeAnimal = searchParams.animal ?? 'all';
   const activeReason = searchParams.reason ?? 'all';
-  const { posts, pendingCount } = await getData(activeStatus, activeAnimal, activeReason);
+  const activeSearch = searchParams.q ?? '';
+  const { posts, animalCounts, statusCounts } = await getData(activeStatus, activeAnimal, activeReason, activeSearch);
+
+  const qParam = activeSearch ? `&q=${encodeURIComponent(activeSearch)}` : '';
 
   function tabHref(status: string) {
-    return `/moderation?status=${status}&animal=${activeAnimal}`;
+    return `/adoption-admin?status=${status}&animal=${activeAnimal}${qParam}`;
   }
   function animalHref(animal: string) {
-    const base = `/moderation?status=${activeStatus}&animal=${animal}`;
+    const base = `/adoption-admin?status=${activeStatus}&animal=${animal}${qParam}`;
     return activeStatus === 'deleted' ? `${base}&reason=${activeReason}` : base;
   }
   function reasonHref(reason: string) {
-    return `/moderation?status=deleted&animal=${activeAnimal}&reason=${reason}`;
+    return `/adoption-admin?status=deleted&animal=${activeAnimal}&reason=${reason}${qParam}`;
   }
 
   return (
     <div className="px-8 py-8 space-y-5 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Modération</h1>
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Adoption</h1>
         <p className="text-gray-500 text-base mt-1">Annonces d'adoption</p>
       </div>
 
       {/* Onglets statut */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-1 border-b border-gray-200">
         {TABS.map(tab => {
           const isActive = tab.id === activeStatus;
+          const count = statusCounts[tab.id as keyof typeof statusCounts] ?? 0;
           return (
             <Link key={tab.id} href={tabHref(tab.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                isActive ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                isActive ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
               {tab.label}
-              {tab.id === 'pending' && pendingCount > 0 && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${isActive ? 'bg-white/20 text-white' : 'bg-orange-100 text-orange-600'}`}>
-                  {pendingCount}
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
+                isActive ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'
+              }`}>
+                {count}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Recherche */}
+      <ModerationSearchInput
+        key={`${activeStatus}-${activeAnimal}-${activeReason}`}
+        defaultValue={activeSearch}
+        status={activeStatus}
+        animal={activeAnimal}
+        reason={activeReason}
+      />
+
+      {/* Filtre animal */}
+      <div className="flex flex-wrap gap-1.5">
+        {ANIMALS.map(a => {
+          const isActive = a === activeAnimal;
+          const count = a === 'all' ? null : (animalCounts[a] ?? 0);
+          return (
+            <Link key={a} href={animalHref(a)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                isActive ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {ANIMAL_NAMES[a]}
+              {count !== null && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
+                  isActive ? 'bg-white/30 text-white' : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {count}
                 </span>
               )}
             </Link>
@@ -255,32 +312,16 @@ export default async function ModerationPage({ searchParams }: Props) {
         })}
       </div>
 
-      {/* Filtre animal */}
-      <div className="flex gap-2 flex-wrap">
-        {ANIMALS.map(a => {
-          const isActive = a === activeAnimal;
-          return (
-            <Link key={a} href={animalHref(a)}
-              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                isActive ? 'bg-gray-800 border-gray-800 text-white' : 'border-gray-200 text-gray-600 hover:border-gray-400'
-              }`}
-            >
-              {ANIMAL_NAMES[a]}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Filtre raison (onglet supprimé uniquement) */}
+      {/* Filtre raison (onglet supprime uniquement) */}
       {activeStatus === 'deleted' && (
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex flex-wrap gap-1.5">
           {DELETE_REASONS.map(r => {
             const isActive = r.id === activeReason;
             const Icon = r.icon;
             return (
               <Link key={r.id} href={reasonHref(r.id)}
-                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors flex items-center gap-1.5 ${
-                  isActive ? 'bg-rose-600 border-rose-600 text-white' : 'border-gray-200 text-gray-600 hover:border-rose-400 hover:text-rose-600'
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  isActive ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 {Icon && <Icon size={11} strokeWidth={1.5} />}
@@ -390,7 +431,7 @@ export default async function ModerationPage({ searchParams }: Props) {
 
                   {activeStatus !== 'deleted' && (
                     <div className="flex gap-2 pt-1 border-t border-gray-100">
-                      <Link href={`/moderation/${post.id}/edit`}
+                      <Link href={`/adoption-admin/${post.id}/edit`}
                         className="flex-1 px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1">
                         <Pencil size={13} strokeWidth={1.5} />
                         Modifier

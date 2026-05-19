@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AGENTS } from '@/lib/agents/config';
 import { logout } from '@/app/actions/auth';
-import { Zap, Target, Shield, BookOpen, ShoppingBag, PawPrint, LogOut, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Mail, Home, ChevronLeft, Menu, FileText, ClipboardList } from 'lucide-react';
+import { Zap, Target, Shield, BookOpen, ShoppingBag, Package, PawPrint, LogOut, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Mail, Home, ChevronLeft, Menu, FileText, ClipboardList } from 'lucide-react';
 import clsx from 'clsx';
 
 function getAgentIcon(iconId: string) {
@@ -24,15 +24,15 @@ function getAgentIcon(iconId: string) {
 }
 
 const navItems = [
-  { href: '/',             label: 'Accueil',          icon: Home,          isPublic: true  },
-  { href: '/dashboard',    label: 'Dashboard',        icon: Zap,           isPublic: false },
-  { href: '/orchestrate',  label: 'Orchestrer',       icon: Target,        isPublic: false },
-  { href: '/moderation',   label: 'Adoption',         icon: Shield,        isPublic: false },
-  { href: '/gestion-blog', label: 'Blog',             icon: BookOpen,      isPublic: false },
-  { href: '/boutique',     label: 'Boutique',         icon: ShoppingBag,   isPublic: true  },
-  { href: '/produits',     label: 'Produits affiliés',icon: ShoppingBag,   isPublic: false },
-  { href: '/gestion-races',label: 'Fiches races',     icon: ClipboardList, isPublic: false },
-  { href: '/guides-admin', label: 'Guides PDF',       icon: FileText,      isPublic: false },
+  { href: '/',               label: 'Accueil',          icon: Home,          isPublic: true  },
+  { href: '/dashboard',      label: 'Dashboard',        icon: Zap,           isPublic: false },
+  { href: '/orchestrate',    label: 'Orchestrer',       icon: Target,        isPublic: false },
+  { href: '/adoption-admin', label: 'Adoption',         icon: Shield,        isPublic: false },
+  { href: '/blog-admin',     label: 'Blog',             icon: BookOpen,      isPublic: false },
+  { href: '/boutique-admin', label: 'Boutique',         icon: ShoppingBag,   isPublic: false },
+  { href: '/produits-admin', label: 'Produits affiliés',icon: Package,       isPublic: false },
+  { href: '/races-admin',    label: 'Fiches races',     icon: ClipboardList, isPublic: false },
+  { href: '/guides-admin',   label: 'Guides PDF',       icon: FileText,      isPublic: false },
 ];
 
 interface SidebarProps {
@@ -119,7 +119,7 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
         <nav className="px-3 pt-3 pb-1">
           {navItems.map(({ href, label, icon: Icon, isPublic }) => {
             const isActive = href === '/' ? pathname === '/' : pathname === href;
-            const isMod = href === '/moderation';
+            const isMod = href === '/adoption-admin';
             return (
               <Link
                 key={href}
@@ -141,12 +141,12 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
                     {pendingCount > 99 ? '99+' : pendingCount}
                   </span>
                 )}
-                {href === '/gestion-races' && noPhotoCount > 0 && (
+                {href === '/races-admin' && noPhotoCount > 0 && (
                   <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white min-w-[18px] text-center">
                     {noPhotoCount > 99 ? '99+' : noPhotoCount}
                   </span>
                 )}
-                {href === '/gestion-blog' && commentCount > 0 && (
+                {href === '/blog-admin' && commentCount > 0 && (
                   <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white min-w-[18px] text-center">
                     {commentCount > 99 ? '99+' : commentCount}
                   </span>

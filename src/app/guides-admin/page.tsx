@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { FileText, Plus, Pencil, Trash2, Upload, X, Check, Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { FileText, Plus, Pencil, Trash2, Upload, X, Check, Eye, EyeOff, ExternalLink, Search } from 'lucide-react';
 
 const CATEGORIES = [
   { id: 'chiens',   label: 'Chiens',   color: 'bg-orange-100 text-orange-700' },
@@ -39,6 +39,7 @@ const EMPTY_FORM = {
 export default function GuidesAdminPage() {
   const [guides, setGuides] = useState<Guide[]>([]);
   const [filterCat, setFilterCat] = useState('all');
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -176,26 +177,47 @@ export default function GuidesAdminPage() {
         </button>
       </div>
 
-      {/* Onglets catégorie */}
-      <div className="flex flex-wrap gap-2">
-        {[{ id: 'all', label: 'Tous' }, ...CATEGORIES].map(cat => (
-          <button
-            key={cat.id}
-            onClick={() => setFilterCat(cat.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-              filterCat === cat.id
-                ? 'bg-orange-600 text-white border-orange-600'
-                : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
-            }`}
-          >
-            {cat.label}
-            {cat.id !== 'all' && (
-              <span className="ml-1.5 text-[10px] opacity-70">
-                {guides.filter(g => g.category === cat.id).length}
-              </span>
-            )}
-          </button>
-        ))}
+      {/* Recherche + filtres */}
+      <div className="space-y-3">
+        <div className="relative max-w-xs">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" strokeWidth={1.5} />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Rechercher un guide..."
+            className="w-full pl-8 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-orange-400"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <X size={13} />
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {[{ id: 'all', label: 'Tous' }, ...CATEGORIES].map(cat => {
+            const count = cat.id === 'all' ? null : guides.filter(g => g.category === cat.id).length;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setFilterCat(cat.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  filterCat === cat.id ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {cat.label}
+                {count !== null && (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
+                    filterCat === cat.id ? 'bg-white/30 text-white' : 'bg-gray-200 text-gray-500'
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Formulaire add/edit */}
@@ -363,7 +385,10 @@ export default function GuidesAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {guides.filter(g => filterCat === 'all' || g.category === filterCat).map((g, i) => {
+              {guides
+                .filter(g => filterCat === 'all' || g.category === filterCat)
+                .filter(g => !search || g.title.toLowerCase().includes(search.toLowerCase()))
+                .map((g, i) => {
                 const cat = catInfo(g.category);
                 return (
                   <tr key={g.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${i === guides.length - 1 ? 'border-b-0' : ''}`}>

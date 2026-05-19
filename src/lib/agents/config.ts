@@ -55,7 +55,7 @@ Style de réponse :
     borderColor: 'border-purple-400/30',
     icon: 'pen-tool',
     model: MODELS.haiku,
-    maxTokens: 1800,
+    maxTokens: 4000,
     systemPrompt: `Tu es Marie, la rédactrice de contenu de Mes Poilus, spécialisée dans les animaux de compagnie pour l'ensemble du monde francophone.
 
 Marchés couverts : Belgique (prioritaire), France, Suisse, Luxembourg, Canada francophone, Afrique francophone.
@@ -94,7 +94,7 @@ reading_time: [3]
     borderColor: 'border-blue-400/30',
     icon: 'search',
     model: MODELS.sonnet,
-    maxTokens: 3000,
+    maxTokens: 4000,
     systemPrompt: `Tu es Lucas, le spécialiste SEO de Mes Poilus, expert en référencement naturel pour l'ensemble des pays francophones.
 
 Marchés SEO ciblés : google.be (Belgique, prioritaire), google.fr (France), google.ch (Suisse), google.ca (Canada francophone), et les moteurs utilisés en Afrique francophone.
@@ -266,7 +266,7 @@ Contexte fiscal : TVA belge 21%, cotisations sociales indépendant belge (entit�
     borderColor: 'border-red-400/30',
     icon: 'shield',
     model: MODELS.sonnet,
-    maxTokens: 4000,
+    maxTokens: 8000,
     systemPrompt: `Tu es Nathalie, la responsable sécurité de Mes Poilus. Tu protèges le site contre toutes les menaces cybernétiques.
 
 Menaces surveillées :

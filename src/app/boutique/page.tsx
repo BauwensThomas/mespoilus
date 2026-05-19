@@ -6,7 +6,7 @@ import BoutiqueSearchBar from '@/components/boutique/BoutiqueSearchBar';
 import BoutiqueSortSelect, { type SortValue } from '@/components/boutique/BoutiqueSortSelect';
 import BoutiqueTypeFilter from '@/components/boutique/BoutiqueTypeFilter';
 import BoutiqueProductsGrid from '@/components/boutique/BoutiqueProductsGrid';
-import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronLeft, ChevronRight, Store, BookOpen } from 'lucide-react';
+import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronLeft, ChevronRight, BookOpen, Pencil } from 'lucide-react';
 import { Suspense } from 'react';
 import ViewToggle from '@/components/ui/ViewToggle';
 
@@ -66,13 +66,24 @@ async function getMerchants(category?: string): Promise<string[]> {
   }
 }
 
+async function getHiddenUrls(): Promise<string[]> {
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase.from('products_hidden').select('affiliate_url');
+    return data?.map(r => r.affiliate_url) ?? [];
+  } catch {
+    return [];
+  }
+}
+
 async function getProducts(
   category: string | undefined,
   search: string | undefined,
   affiliate: string | undefined,
   page: number,
   sort: SortValue,
-  productTypes: string[]
+  productTypes: string[],
+  hiddenUrls: string[]
 ): Promise<{ products: AwinProduct[]; total: number }> {
   try {
     const supabase = createAdminClient();
@@ -103,6 +114,10 @@ async function getProducts(
       dataQ  = dataQ.in('product_type', productTypes);
       countQ = countQ.in('product_type', productTypes);
     }
+    hiddenUrls.forEach(url => {
+      dataQ  = dataQ.neq('affiliate_url', url);
+      countQ = countQ.neq('affiliate_url', url);
+    });
 
     dataQ = dataQ.range(offset, offset + PAGE_SIZE - 1);
 
@@ -144,14 +159,16 @@ export default async function BoutiquePage({ searchParams }: Props) {
   // Vérifier si admin connecté (cookies → session Supabase)
   let isAdmin = false;
   let merchants: string[] = [];
+  let hiddenUrls: string[] = [];
   try {
     const authClient = createClient();
     const { data: { user } } = await authClient.auth.getUser();
     isAdmin = !!user;
-    if (isAdmin) merchants = await getMerchants(category);
+    if (isAdmin) [merchants, hiddenUrls] = await Promise.all([getMerchants(category), getHiddenUrls()]);
   } catch { /* non-bloquant */ }
 
-  const { products, total } = await getProducts(category, search, affiliate, page, sort, productTypes);
+  // Admin voit tout (y compris les masques, grisés) ; visiteur ne voit pas les masques
+  const { products, total } = await getProducts(category, search, affiliate, page, sort, productTypes, isAdmin ? [] : hiddenUrls);
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const activeCat  = CATEGORIES.find(c => c.id === (category ?? 'all')) ?? CATEGORIES[0];
   const hasSynced  = total > 0;
@@ -164,7 +181,45 @@ export default async function BoutiquePage({ searchParams }: Props) {
   if (productTypes.length > 0) baseParams.set('types', productTypes.join(','));
 
   return (
-    <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5 pb-20">
+    <div className="min-h-screen bg-white pb-20">
+      {/* Barre admin sticky */}
+      {isAdmin && (
+        <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2 bg-gray-900/95 backdrop-blur text-white text-xs flex-wrap">
+          <Pencil size={13} strokeWidth={1.5} className="text-orange-400" />
+          <span className="text-gray-400">Mode admin</span>
+          <Link href="/boutique-admin"
+            className="flex items-center gap-1 px-2.5 py-1 bg-orange-500 hover:bg-orange-400 text-white rounded-md font-medium transition-colors">
+            Gerer les produits
+          </Link>
+          {merchants.length > 0 && (
+            <>
+              <div className="w-px h-4 bg-gray-600" />
+              <span className="text-gray-500 text-[10px] uppercase tracking-widest">Affilie</span>
+              <Link
+                href={category ? `/boutique?category=${category}` : '/boutique'}
+                className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
+                  !affiliate ? 'bg-orange-500 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                }`}
+              >
+                Tous
+              </Link>
+              {merchants.map(m => (
+                <Link
+                  key={m}
+                  href={`/boutique?affiliate=${encodeURIComponent(m)}${category ? `&category=${category}` : ''}`}
+                  className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
+                    affiliate === m ? 'bg-orange-500 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                  }`}
+                >
+                  {m}
+                </Link>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="px-6 md:px-8 py-6 space-y-5">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Boutique</h1>
@@ -198,36 +253,6 @@ export default async function BoutiquePage({ searchParams }: Props) {
         <BoutiqueTypeFilter currentTypes={productTypes} />
       </div>
 
-      {/* Filtre affilié — admin uniquement */}
-      {isAdmin && merchants.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-2">
-          <p className="text-xs font-semibold text-amber-700 uppercase tracking-widest flex items-center gap-1.5">
-            <Store size={13} />
-            Filtre affilié (admin)
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={category ? `/boutique?category=${category}` : '/boutique'}
-              className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
-                !affiliate ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-500 hover:text-amber-700'
-              }`}
-            >
-              Tous les affiliés
-            </Link>
-            {merchants.map(m => (
-              <Link
-                key={m}
-                href={`/boutique?affiliate=${encodeURIComponent(m)}${category ? `&category=${category}` : ''}`}
-                className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
-                  affiliate === m ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-500 hover:text-amber-700'
-                }`}
-              >
-                {m}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Recherche + Tri */}
       <div className="flex flex-wrap items-center gap-3">
@@ -284,6 +309,8 @@ export default async function BoutiquePage({ searchParams }: Props) {
             category={category}
             search={search}
             view={searchParams.view === 'list' ? 'list' : 'grid'}
+            isAdmin={isAdmin}
+            initialHiddenUrls={hiddenUrls}
           />
 
           {/* Pagination */}
@@ -361,6 +388,8 @@ export default async function BoutiquePage({ searchParams }: Props) {
           )}
         </div>
       )}
+
+      </div>{/* fin px-6 py-6 */}
 
       {/* Footer disclaimer */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-6 py-3">

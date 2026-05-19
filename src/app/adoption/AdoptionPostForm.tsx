@@ -24,6 +24,7 @@ const COUNTRIES = [
   'Madagascar', 'Mali', 'Maurice', 'Niger', 'République Centrafricaine',
   'République Démocratique du Congo', 'République du Congo', 'Rwanda',
   'Sénégal', 'Seychelles', 'Tchad', 'Togo', 'Vanuatu',
+  'Autre',
 ];
 
 // Flag emoji + dial code — sorted with BE first, then alphabetically
@@ -244,7 +245,7 @@ function flagToISO(flag: string): string | null {
 
 const EMPTY = {
   poster_name: '', email: '', animal_type: '', breed: '',
-  age_number: '', age_unit: 'ans', gender: 'inconnu', country: 'Belgique', region: '', description: '',
+  age_number: '', age_unit: 'ans', gender: 'inconnu', country: 'Belgique', customCountry: '', region: '', description: '',
   reason: '', indicatif: '+32', contact_phone: '',
 };
 
@@ -311,14 +312,15 @@ export default function AdoptionPostForm() {
         photoUrls.push(data.url);
         setUploadProgress(i + 1);
       }
-      const { country, region, indicatif, contact_phone, age_number, age_unit, ...rest } = form;
+      const { country, customCountry, region, indicatif, contact_phone, age_number, age_unit, ...rest } = form;
+      const resolvedCountry = country === 'Autre' ? (customCountry.trim() || 'Autre') : country;
       const res = await fetch('/api/adoption/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...rest,
           age: `${age_number} ${age_unit}`,
-          region: region ? `${region}, ${country}` : country,
+          region: region ? `${region}, ${resolvedCountry}` : resolvedCountry,
           contact_phone: `${indicatif} ${contact_phone.trim().replace(/^0+/, '')}`,
           photo_urls: photoUrls,
         }),
@@ -506,9 +508,19 @@ export default function AdoptionPostForm() {
         </div>
         <div>
           <label className="block text-xs text-gray-800 mb-1.5 font-medium">Pays *</label>
-          <select required value={form.country} onChange={e => set('country', e.target.value)} className={inputCls}>
+          <select required value={form.country} onChange={e => { set('country', e.target.value); if (e.target.value !== 'Autre') set('customCountry', ''); }} className={inputCls}>
             {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
+          {form.country === 'Autre' && (
+            <input
+              type="text"
+              required
+              value={form.customCountry}
+              onChange={e => set('customCountry', e.target.value)}
+              placeholder="Précisez votre pays..."
+              className={`${inputCls} mt-2`}
+            />
+          )}
         </div>
         <div>
           <label className="block text-xs text-gray-800 mb-1.5 font-medium">Région / Ville *</label>

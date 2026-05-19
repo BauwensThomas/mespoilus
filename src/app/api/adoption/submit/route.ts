@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
             <p><strong>Animal :</strong> ${animal_type}${breed ? ` · ${breed}` : ''}${age ? ` · ${age}` : ''}</p>
             <p><strong>Région :</strong> ${region.trim()}</p>
             <p><strong>Description :</strong> ${description.trim()}</p>
-            <p><a href="https://mespoilus.com/moderation" style="color:#f59e0b">→ Accéder à la modération</a></p>
+            <p><a href="https://mespoilus.com/adoption-admin" style="color:#f59e0b">→ Accéder à la modération</a></p>
           </div>
         `,
       });

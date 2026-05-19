@@ -33,13 +33,13 @@ Chaque agent utilise l'API Anthropic (Claude) et fonctionne de façon autonome. 
 | Agent | Rôle | Modèle Claude | maxTokens | Responsabilités |
 |-------|------|--------------|-----------|-----------------|
 | 👔 **Thomas** | CEO Orchestrateur | Opus 4.7 | 3000 | Stratégie globale, priorisation, coordination, rapports |
-| ✍️ **Marie** | Rédactrice de contenu | **Haiku 4.5** | **1800** | Articles de blog (550-700 mots), guides pratiques, conseils |
-| 🔍 **Lucas** | Spécialiste SEO | Sonnet 4.6 | **3000** | Recherche mots-clés, optimisation on-page, stratégie francophone |
+| ✍️ **Marie** | Rédactrice de contenu | **Haiku 4.5** | **4000** | Articles de blog (550-700 mots), guides pratiques, conseils |
+| 🔍 **Lucas** | Spécialiste SEO | Sonnet 4.6 | **4000** | Recherche mots-clés, optimisation on-page, stratégie francophone |
 | 📱 **Emma** | Réseaux sociaux | Haiku 4.5 | 2000 | Posts Facebook + Instagram (@mespoilusofficiel), hashtags, lien article complet |
 | 💻 **Maxime** | Développeur & Maintenance | Sonnet 4.6 | 6000 | Performances, bugs, Next.js / Supabase, Core Web Vitals |
 | 💬 **Léa** | Support client | Haiku 4.5 | 3000 | Réponses emails clients, commandes, FAQ - À la demande uniquement (pas de cron) |
 | 📊 **Antoine** | Finance | Sonnet 4.6 | 4000 | Revenus €, marges, rapports financiers, projections |
-| 🛡️ **Nathalie** | Sécurité | Sonnet 4.6 | 4000 | Détection intrusions, blocage IPs, audits, alertes |
+| 🛡️ **Nathalie** | Sécurité | Sonnet 4.6 | 8000 | Détection intrusions, blocage IPs, audits, alertes |
 | 💌 **Sofia** | Newsletter | Sonnet 4.6 | 4000 | Newsletter hebdomadaire, sélection articles, envoi Resend |
 
 ---
@@ -92,7 +92,7 @@ SENTRY_AUTH_TOKEN # Dans .env.sentry-build-plugin (gitignored) + Vercel env vars
 - Bloc AdSense entre newsletter et footer : sans padding vertical (vide jusqu'à approbation AdSense)
 - `revalidate = 3600`
 ### Authentification admin (Supabase Auth)
-- **Middleware** `src/middleware.ts` - Protège `/dashboard`, `/agents/*`, `/orchestrate`, `/moderation` etc.
+- **Middleware** `src/middleware.ts` - Protège `/dashboard`, `/agents/*`, `/orchestrate`, `/adoption-admin`, `/blog-admin`, `/races-admin`, `/produits-admin` etc.
 - Routes admin sans session → redirect `/login?redirect=...`
 - API routes sans session → `401 Unauthorized`
 - **Page login** `src/app/login/page.tsx` - Fond blanc clair, formulaire clair
@@ -244,9 +244,26 @@ SENTRY_AUTH_TOKEN # Dans .env.sentry-build-plugin (gitignored) + Vercel env vars
 | `/api/cron/breeds?batch=10` | **Chaque dimanche** | 7h00 | Haiku | `breeds` (10 races/run, 2 par catégorie interleaved) |
 | `/api/cron/daily-recap` | **Tous les jours** | 20h00 | - | Email recap journalier → `contact@mespoilus.com` : liste tous les logs du jour (`activity_logs`), stats (total, succes, erreurs, manquants, tokens), **heures en heure belge** + UTC entre parentheses. Section rouge si crons attendus absents des logs (detection par pattern dans `action`). Declenchable manuellement depuis CronLauncher. **20h UTC = 22h heure belge ete / 21h hiver**. Loggue lui-meme dans `activity_logs`. |
 **⚠️ Fiabilité crons Vercel Hobby :** les crons sont tous reconnus (19 au total) mais Vercel Hobby n'a pas de retry. Un cron manqué est silencieux. Pour les crons critiques (blog, social), vérifier régulièrement Vercel Dashboard → Settings → Crons → Last execution.
+**Daily-recap fiabilité :** en cas d'échec `sendEmail`, l'erreur est loggée dans `activity_logs` (agent Thomas, status error) pour traçabilité. Un non-déclenchement Vercel reste silencieux (pas de log du tout).
 **Protection anti-doublons :**
 - Finance → vérifie si `financial_reports.period` existe déjà pour ce mois → abandon si oui
 - Newsletter → vérifie si une campagne `sent` existe dans les 5 derniers jours → abandon si oui
+### Page admin Boutique (`/boutique-admin`)
+- Onglets affiliés : `Tous` | `Awin` | `Amazon` | `CanadaPetCare`
+- Quand onglet `Awin` sélectionné : **sous-filtre marchand** (pills) chargé depuis `/api/admin/products-merchants` — permet de filtrer par marchand Awin spécifique (Dogfy Diet, Maxi Zoo, Tuft & Paw, etc.)
+- Bouton "Cacher/Afficher" sur chaque produit (admin) → table `products_hidden`
+- Counts mis à jour en temps réel via `/api/admin/products-counts`
+
+### Page admin Fiches races (`/races-admin`)
+- Liste toutes les races avec statut (published/draft/pending), photo, actions
+- **Bouton "Photo"** : upload ou URL → `PATCH /api/admin/breeds` avec `photo_url`
+- **Bouton "Texte"** (bleu, icône FileText) : édition inline du contenu textuel de chaque fiche
+  - Champs éditables : `excerpt`, `origine`, `poids`, `taille`, `esperance_vie`, `niveau_activite`, `description` (textarea HTML brut), `caractere` (tags séparés par virgules)
+  - Données stockées dans colonne `content JSONB` de la table `breeds`
+  - API `PATCH /api/admin/breeds` accepte `{ id, content }` pour mise à jour partielle
+- Flash "Texte sauvegardé" et "Photo sauvegardée" après succès
+- API `GET /api/admin/breeds` retourne aussi la colonne `content`
+
 ### CronLauncher - Pipelines manuels (Dashboard)
 Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de sync boutique + 1 import one-shot :
 - **Sélecteur animal** : forcer un animal spécifique (chiens, chats, oiseaux, rongeurs, reptiles) ou Auto
@@ -267,7 +284,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 - **Sync Boutique CJ** (`CJSyncPanel`) : déclenche `/api/cron/cj-sync/canada-pet-care` (scraper sitemap) - Générique, prêt pour futurs affiliés CJ
 - **Import CanadaPetCare** (`CanadaPetCareImportPanel`) : scraping one-shot `/api/admin/import-canada-pet-care` - Utile pour import initial ou réimport forcé. Invalide le cache `/boutique` via `revalidatePath` après import.
 - **Pipeline "Adoption — Réseaux"** : déclenche `/api/cron/adoption-social` — icône Heart rose, 1 étape (Emma → Facebook + Instagram)
-### Page admin Produits affiliés (`/produits`)
+### Page admin Produits affiliés (`/produits-admin`)
 - Renommée "Produits affiliés" (était "Livres Amazon") - Sidebar icône `ShoppingBag`
 - **Onglets affiliés** en haut : `Amazon Livres` | `CanadaPetCare` (extensible via `AFFILIATE_SOURCES`)
 - **Amazon** : formulaire ajout livre (ASIN + image + prix + catégories animales), liste éditable avec catégories
@@ -422,7 +439,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 - Âge : **obligatoire**, nombre 1–99 + select mois/ans → stocké `"3 mois"` ou `"2 ans"`
 - **Type "Autre"** : quand sélectionné, le champ "Race/Espèce" devient "Quel animal ? *" (obligatoire) — placeholder "ex : Cheval, Cochon, Araignée…" (animaux hors des 5 catégories). Valeur stockée dans `breed`.
 - Indicatif dérivé de l'emoji via `flagToISO()` (Unicode Regional Indicator → ISO 2 lettres → `flagcdn.com/20x15/{iso}.png`)
-- Pays : liste 35 pays francophones
+- Pays : liste 35 pays francophones + option **"Autre"** → affiche un champ texte libre "Quel pays ?" si sélectionné, valeur résolue avant envoi
 - Submit : `contact_phone: \`${indicatif} ${num.replace(/^0+/, '')}\`` combiné avant envoi
 #### API routes adoption
 | Route | Méthode | Description |
@@ -435,14 +452,14 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 | `/api/adoption/forgot-token` | POST | Renvoie code + lien direct `/adoption/supprimer?id=X&token=Y` par email (anti-énumération) |
 #### Emails (tous via Resend, aucun "répondez à cet email")
 - Soumission → déposant : confirmation + `contact@mespoilus.com` pour questions
-- Soumission → admin : notification avec lien `/moderation`
+- Soumission → admin : notification avec lien `/adoption-admin`
 - Approbation → déposant : annonce en ligne + code de suppression (monospace 26px)
 - Refus → déposant : raison incluse, contact `contact@mespoilus.com`
 - Contact visiteur → déposant : message + `replyTo: from_email` (répondre va au visiteur)
 - Forgot-token → déposant : code + bouton "Supprimer mon annonce" (lien direct)
 - Follow-up → déposant : email chaque samedi si annonce ≥7j, bouton supprimer si adopté
 - Expiry → déposant : email avant suppression auto à 60j
-#### Modération admin (`/moderation`)
+#### Modération admin (`/adoption-admin`)
 - **4 tabs** : En attente / Approuvees / Rejetees / Supprimees (badge count sur "En attente")
 - **Filtre animal** sur tous les onglets : Tous / Chiens / Chats / Oiseaux / Rongeurs / Reptiles / Autre
 - **Filtre raison** (onglet Supprimees uniquement) : Tous / Adopte (Heart) / Supprime utilisateur (User) / Supprime auto 60j (Bot)
@@ -451,8 +468,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 - Admin peut supprimer une annonce (soft delete : `status='deleted'`, `deleted_by='admin'`, `deleted_reason='admin'`)
 - Cards : 5 photos en grille, fiche (animal, race, age, ville, par/email/tel), description, raison (amber), boutons
 - Actions pending : Approuver (genere delete_token 8 chars hex) / Rejeter (raison obligatoire → email)
-- Actions toutes cartes (sauf supprimees) : **Modifier** (→ `/moderation/[id]/edit`) / **Supprimer** (confirm() cote client via `DeletePostButton.tsx`)
-- Page edit `/moderation/[id]/edit` : formulaire pre-rempli tous champs + statut, server action redirect
+- Actions toutes cartes (sauf supprimees) : **Modifier** (→ `/adoption-admin/[id]/edit`) / **Supprimer** (confirm() cote client via `DeletePostButton.tsx`)
+- Page edit `/adoption-admin/[id]/edit` : formulaire pre-rempli tous champs + statut, server action redirect
 - Badge sidebar : count `pending` fetchee server-side dans `RootLayout`, passe via props a Sidebar, refresh 60s
 #### Alertes adoption par email ✅
 - Table `adoption_alerts` : `email`, `animal` ('tous'/'chien'/…), `country` ('tous'/'Belgique'/…), `confirmed`, `confirm_token` (UUID, sert aussi de token désinscription)
@@ -495,6 +512,11 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 - **Pagination** : 48 produits/page, param `?page=N`, compte exact via requête Supabase parallèle `{ count: 'exact', head: true }`
 - **Tri client** : `BoutiqueSortSelect.tsx` (select) avec 4 options via param `?sort=` : `stock` (dispo en premier + prix asc, défaut), `price_asc`, `price_desc`, `name_asc`
 - **Filtre admin affilié** : panel amber visible uniquement si session admin connectée -liste des marchands par catégorie, param `?affiliate=Merchant+Name`. `getMerchants()` fait 2 requêtes : existence check pour marchands connus non-Awin (`Amazon FR`, `CanadaPetCare`) + requête dynamique pour marchands Awin (limit 5000). Évite la limite de lignes Supabase qui tronquait les résultats sur "Tous".
+- **Table `products_hidden`** : liste de `affiliate_url` (PK) à exclure de la boutique publique. Migration `migration_products_hidden.sql`. Produits cachés filtrés côté boutique via sous-requête Supabase.
+- **Bouton "Cacher" admin** : visible sur chaque card produit si admin connecté, cache/décache via `/api/admin/products-hidden` (POST/DELETE). Badge "Caché" sur les produits cachés.
+- API `/api/admin/products-hidden` : GET liste, POST cache, DELETE décache
+- API `/api/admin/products-counts` : counts par affilié/marchand pour les badges
+- API `/api/admin/products-merchants` : liste des marchands Awin distincts (pour sous-filtre)
 - **Toggle grille/liste** (`BoutiqueProductsGrid.tsx`) : bouton LayoutGrid/List en haut de la grille produits, préférence `localStorage('boutique-view')`. ListRow : thumbnail 64×64, drapeau + marchand, nom tronqué, description, prix, bouton "Voir"
 - `ProductCard` : image `unoptimized` (CDN Awin externe), nom, description, prix + devise, drapeau marchand, bouton "Voir" (orange). Pas de filtre ni badge stock — tous les produits sont affichés
 - **Drapeaux** via `flagcdn.com` : table override `MERCHANT_COUNTRY` pour cas connus (ex: `'tuft & paw' → 'us'`, `'canadapetcare' → 'ca'`), puis suffixe marchand (`Zooplus FR` → fr), puis devise (USD→us, CAD→ca, GBP→gb). EUR sans pays connu = pas de drapeau
@@ -549,15 +571,18 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 ### Sidebar admin -Fonctionnalités ✅
 - **Lien Accueil** : premier item nav (icône `Home`, href `/`) - Accès direct au site public
 - **Fermable** : bouton `ChevronLeft` dans le header sidebar pour fermer, bouton `Menu` flottant `fixed left-3 top-4` pour rouvrir. Transition `translate-x-0` / `-translate-x-full` (300ms). `ml-64`/`ml-0` sur le `<main>` synchronisé via `sidebarOpen` dans `LayoutShell`.
-- **Badge modération** : pastille orange sur l'item "Modération" affichant le nombre d'annonces adoption `pending`. Route `/api/admin/pending-count` (GET → `{ count: number }`). Consultée au chargement + toutes les 60s (setInterval).
+- **Badge modération** : pastille orange sur l'item "Adoption" (lien `/adoption-admin`) affichant le nombre d'annonces `pending`. Route `/api/admin/pending-count` (GET → `{ count: number }`). Consultée au chargement + toutes les 60s (setInterval).
+- **Routes admin renommées** : `/moderation` → `/adoption-admin`, `/gestion-blog` → `/blog-admin`, `/gestion-races` → `/races-admin`, `/produits` → `/produits-admin`
 - **Typographie agents agrandie** : nom `text-sm`, rôle `text-xs`, icône `size=17`
 #### Interface `Partenaire` (`src/lib/partenaires.ts`)
 - `pays: string[]` (codes ISO), `network: 'awin' | 'cj'`
 - `tagColor` (classes Tailwind, pour PartenairesSection et BoutiquePartenairesRotating)
 - `tagBg` / `tagText` (valeurs CSS hex, pour BoutiquePartenairesCarousel -inline styles)
-- Partenaires actifs : **Dogfy Diet** (Awin, FR, chiens), **Maxi Zoo** (Awin, FR+BE -picker pays popup), **Tuft & Paw** (Awin, US, chats)
+- Partenaires actifs : **Dogfy Diet** (Awin, FR, chiens), **Maxi Zoo** (Awin, FR+BE -picker pays popup), **CanadaPetCare** (CJ, CA/US, chiens+chats), **Tuft & Paw** (Awin, US 🇺🇸, chats - `recommend: false`)
 - **Maxi Zoo** : `urlsByCountry: { FR: awinmid=68698, BE: awinmid=68696 }` - Clic ouvre un popup (bandeau) ou modal (section) pour choisir FR 🇫🇷 ou BE 🇧🇪
+- **Tuft & Paw** : tag `'Litière, Nourriture & Mobilier'`, description inclut litière + nourriture fraîche + mobilier design, `recommend: false` → exclue de la section "Nos recommandations" landing
 - CanadaPetCare : produits dans boutique via scraping sitemap (pas de section partenaire dédiée)
+- **Champ `recommend?: boolean`** sur l'interface `Partenaire` : `false` → exclu de `PartenairesSection.tsx` (filtre `p.recommend !== false`)
 - Carousel actif à partir de **3 partenaires** (flèches + animation)
 #### Fix Tailwind config
 - `./src/lib/**/*.{js,ts,jsx,tsx}` ajouté au `content` de `tailwind.config.ts`
