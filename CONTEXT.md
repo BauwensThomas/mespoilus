@@ -419,6 +419,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 #### Supabase Storage
 - Bucket `blog-images` : **public**, upsert activé -images articles
 - Bucket `hero-photos` : **public** -photos hero & catégories, organisées en sous-dossiers par animal_type
+  - **Compression one-shot** : `GET /api/admin/compress-hero-images` (connecté admin) — Sharp, max 1200px, JPEG 80%, skip < 100 KB. À relancer manuellement après ajout de nouvelles photos. Aucun redéploiement nécessaire. Résultat : 97 MB → 19 MB (-80%) sur 164 images (mai 2026).
 - Bucket `adoption-photos` : **public**, limite 5 Mo -photos annonces adoption
 #### Fichiers SQL
 | Fichier | Description |
