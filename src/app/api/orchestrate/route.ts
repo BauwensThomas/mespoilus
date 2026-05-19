@@ -37,7 +37,7 @@ type AgentResult = { agent: string; success: boolean; content: string; priority:
 
 export async function POST(request: NextRequest) {
   const ip = getClientIP(request);
-  const { allowed } = checkRateLimit(`orchestrate:${ip}`, 60_000, 3);
+  const { allowed } = await checkRateLimit(`orchestrate:${ip}`, 60_000, 3);
 
   if (!allowed) {
     return NextResponse.json(

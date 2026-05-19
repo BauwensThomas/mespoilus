@@ -5,7 +5,7 @@ import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
   const ip = getClientIP(req);
-  const { allowed } = checkRateLimit(`adoption-contact:${ip}`, 3_600_000, 5);
+  const { allowed } = await checkRateLimit(`adoption-contact:${ip}`, 3_600_000, 5);
   if (!allowed) return NextResponse.json({ error: 'Trop de messages. Réessayez dans 1h.' }, { status: 429 });
 
   try {

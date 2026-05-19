@@ -8,7 +8,7 @@ export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   const ip = getClientIP(request);
-  const { allowed } = checkRateLimit(`security:${ip}`, 60_000, 2);
+  const { allowed } = await checkRateLimit(`security:${ip}`, 60_000, 2);
 
   if (!allowed) {
     return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 });

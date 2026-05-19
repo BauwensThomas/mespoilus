@@ -14,7 +14,7 @@ const ANIMAL_LABELS: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   const ip = getClientIP(req);
-  const { allowed } = checkRateLimit(`alert-sub:${ip}`, 3_600_000, 5);
+  const { allowed } = await checkRateLimit(`alert-sub:${ip}`, 3_600_000, 5);
   if (!allowed) return NextResponse.json({ error: 'Trop de tentatives, réessayez dans 1h.' }, { status: 429 });
 
   const { email, animal = 'tous', country = 'tous' } = await req.json();

@@ -7,7 +7,7 @@ const BASE_URL = 'https://mespoilus.com';
 
 export async function POST(req: NextRequest) {
   const ip = getClientIP(req);
-  const { allowed } = checkRateLimit(`forgot-token:${ip}`, 3_600_000, 5);
+  const { allowed } = await checkRateLimit(`forgot-token:${ip}`, 3_600_000, 5);
   if (!allowed) return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans 1h.' }, { status: 429 });
 
   try {
