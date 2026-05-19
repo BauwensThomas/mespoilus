@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
-import { sendBulkNewsletter } from '@/lib/resend';
+import { sendBulkNewsletter, sendEmail } from '@/lib/resend';
+import { cronEmailWrapper, statsRow, sectionBlock } from '@/lib/cron-email';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -137,6 +138,29 @@ Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": 
       duration, { sent, failed, total: emails.length }, result.tokens_used ?? 0
     );
     console.log(`[Cron Newsletter] Envoyée à ${sent}/${emails.length} abonnés en ${duration}ms`);
+
+    try {
+      const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      const articlesHtml = articles.map((a: { title: string; slug: string }) =>
+        `<p style="margin:4px 0;font-size:13px">• <a href="https://www.mespoilus.com/blog/${a.slug}" style="color:#ea580c">${a.title}</a></p>`
+      ).join('');
+      const body = statsRow([
+        { label: 'Envoyes', value: sent, color: '#16a34a' },
+        { label: 'Echecs', value: failed, color: failed > 0 ? '#dc2626' : '#9ca3af' },
+        { label: 'Total abonnes', value: emails.length },
+      ]) +
+      sectionBlock('Sujet de la newsletter', `<p style="margin:0;font-weight:600">${campaign.subject}</p>`, '#8b5cf6', '#faf5ff') +
+      sectionBlock('Articles inclus', articlesHtml, '#ea580c', '#fff7ed');
+
+      await sendEmail({
+        to: 'contact@mespoilus.com',
+        subject: `[Mes Poilus] Newsletter envoyee — ${sent}/${emails.length} abonnes`,
+        html: cronEmailWrapper(`Newsletter — ${date}`, 'Newsletter Sofia', body),
+      });
+      console.log('[Cron Newsletter] Email confirmation envoye');
+    } catch (emailErr) {
+      console.error('[Cron Newsletter] Email erreur:', emailErr instanceof Error ? emailErr.message : emailErr);
+    }
 
     return NextResponse.json({ success: true, duration_ms: duration, sent, failed, total: emails.length });
   } catch (err) {

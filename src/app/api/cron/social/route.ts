@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
+import { sendEmail } from '@/lib/resend';
+import { cronEmailWrapper, sectionBlock, errorBlock } from '@/lib/cron-email';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -111,6 +113,27 @@ https://www.mespoilus.com/blog/${slug}${partnerBlock}`;
   );
 
   console.log(`[Cron2] Terminé en ${totalDuration}ms`);
+
+  // ── Email notification ─────────────────────────────────────────────────────
+  try {
+    const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const body = sectionBlock('Post publie sur Facebook & Instagram', `
+      <p style="margin:0 0 8px"><a href="https://www.mespoilus.com/blog/${slug}" style="color:#ea580c;font-weight:600">${title}</a></p>
+      ${excerpt ? `<p style="margin:0 0 12px;color:#6b7280;font-size:12px">${excerpt}</p>` : ''}
+      <p style="margin:12px 0 0;font-size:12px;color:#9ca3af">Post genere par Emma et envoye via Make.com → Facebook + Instagram</p>
+    `, '#ec4899', '#fdf2f8') + errorBlock(errors);
+
+    await sendEmail({
+      to: 'contact@mespoilus.com',
+      subject: errors.length === 0
+        ? `[Mes Poilus] Post Facebook publie — ${title}`
+        : `[Mes Poilus] Post Facebook ECHEC — ${date}`,
+      html: cronEmailWrapper(`Post reseaux — ${date}`, 'Pipeline Social Emma', body),
+    });
+    console.log('[Cron2] Email notification envoyee');
+  } catch (err) {
+    console.error('[Cron2] Email erreur:', err instanceof Error ? err.message : err);
+  }
 
   return NextResponse.json({
     success: errors.length === 0,

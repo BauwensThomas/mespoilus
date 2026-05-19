@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { runAgent } from '@/lib/anthropic';
 import { getAgent } from '@/lib/agents/config';
 import { createAdminClient } from '@/lib/supabase/server';
+import { sendEmail } from '@/lib/resend';
+import { cronEmailWrapper, sectionBlock } from '@/lib/cron-email';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -131,6 +133,26 @@ Consignes :
     successful_tasks: 1,
     last_active: new Date().toISOString(),
   }, { onConflict: 'agent_id', ignoreDuplicates: false });
+
+  try {
+    const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const annoncesHtml = posts.map((p, i) => {
+      const label = ANIMAL_LABEL[p.animal_type] ?? p.animal_type;
+      return `<p style="margin:4px 0;font-size:13px">• ${label}${p.breed ? ` — ${p.breed}` : ''}${p.region ? `, ${p.region}` : ''} <a href="https://www.mespoilus.com/adoption/${p.id}" style="color:#ea580c;font-size:12px">voir</a></p>`;
+    }).join('');
+    const postPreview = emmaContent.slice(0, 300) + (emmaContent.length > 300 ? '…' : '');
+    const body = sectionBlock(`${posts.length} annonce${posts.length > 1 ? 's' : ''} mise${posts.length > 1 ? 's' : ''} en avant`, annoncesHtml, '#f43f5e', '#fff1f2') +
+      sectionBlock('Preview du post Emma', `<p style="margin:0;white-space:pre-wrap;font-size:13px">${postPreview}</p>`, '#ec4899', '#fdf2f8');
+
+    await sendEmail({
+      to: 'contact@mespoilus.com',
+      subject: `[Mes Poilus] Post adoption publie — ${posts.length} annonce${posts.length > 1 ? 's' : ''}`,
+      html: cronEmailWrapper(`Adoption reseaux — ${date}`, 'Pipeline Adoption Emma', body),
+    });
+    console.log('[Cron adoption-social] Email notification envoyee');
+  } catch (emailErr) {
+    console.error('[Cron adoption-social] Email erreur:', emailErr instanceof Error ? emailErr.message : emailErr);
+  }
 
   return NextResponse.json({ success: true, posts: posts.length, duration_ms: duration });
 }
