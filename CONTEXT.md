@@ -312,7 +312,8 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 **Pourquoi Pexels pour blog/social :** Unsplash interdit le telechargement et le stockage serveur (ToS) → 403 Forbidden. Pexels l'autorise explicitement.
 **Pourquoi Supabase pour hero/categories :** controle total, rotation automatique, pas de dependance externe, API transformation Supabase NON disponible sur plan gratuit → utiliser URLs directes `/object/public/`.
 **Credits :** `Photo Photographer / Pexels` sur les articles.
-**`unoptimized` sur toutes les images dynamiques :** prop ajoutee sur tous les composants `<Image>` affichant des URLs Supabase Storage (races, blog, adoption, hero, categories). Evite les transformations Vercel (quota Hobby : 5 000/mois). Les images Supabase sont deja des JPEG/WebP optimises — aucun impact visuel.
+**`unoptimized` sur les images Supabase Storage :** prop ajoutee sur tous les composants `<Image>` affichant des URLs Supabase Storage (races, blog, adoption, hero, categories). Evite les transformations Vercel (quota Hobby : **1 000/mois**). Les images Supabase sont deja des JPEG/WebP optimises — aucun impact visuel.
+**Exception agents (Unsplash) :** `AgentPage.tsx` utilise `unoptimized={isExternalImage}` — les URLs Unsplash (http) sont servies directement par le CDN Unsplash (optimisation native), pas par Vercel. Bug fixe (etait `!isExternalImage` → consommait le quota inutilement).
 ### Make.com -Réseaux sociaux
 - Scénario linéaire : Webhook → **Facebook Pages + Instagram for Business** (@mespoilusofficiel)
 - Instagram reconnecté via Meta Business Suite (compte `@mespoilus` banni → nouveau compte `@mespoilusofficiel` lié à la Page Facebook)
@@ -419,7 +420,7 @@ Bouton "🚀 Lancer un cron" → menu déroulant avec 8 pipelines + 2 panels de 
 #### Supabase Storage
 - Bucket `blog-images` : **public**, upsert activé -images articles
 - Bucket `hero-photos` : **public** -photos hero & catégories, organisées en sous-dossiers par animal_type
-  - **Compression one-shot** : `GET /api/admin/compress-hero-images` (connecté admin) — Sharp, max 1200px, JPEG 80%, skip < 100 KB. À relancer manuellement après ajout de nouvelles photos. Aucun redéploiement nécessaire. Résultat : 97 MB → 19 MB (-80%) sur 164 images (mai 2026).
+  - **Compression one-shot** : `GET /api/admin/compress-hero-images` (connecté admin) — Sharp, **max 600px**, JPEG 80%, skip < 100 KB. À relancer via CronLauncher → "Compression images hero" après ajout de nouvelles photos. Aucun redéploiement nécessaire. Résultat initial (à 1200px) : 97 MB → 19 MB (-80%) sur 164 images (mai 2026). Re-run à 600px à faire pour optimiser mobile/desktop (images affichées max ~400px).
 - Bucket `adoption-photos` : **public**, limite 5 Mo -photos annonces adoption
 #### Fichiers SQL
 | Fichier | Description |
@@ -762,6 +763,19 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
   - `browserslist` ajouté dans `package.json` (élimine polyfills JS legacy)
   - Image `sizes` corrigés sur landing + BlogCard (50vw/33vw selon breakpoint)
   - Contraste orange-600 conservé volontairement (choix utilisateur)
+- **PageSpeed session 3 (19 mai 2026)** : corrections SEO + performances + accessibilité :
+  - `robots: { index: false }` → `{ index: true, follow: true }` dans `layout.tsx` — bloquait toute indexation Google/Bing ✅
+  - `metadataBase` hardcodé `https://www.mespoilus.com` + `og:siteName`, `og:locale: fr_FR`, `og:type: website` ✅
+  - `unoptimized: true` dans `next.config.mjs` retiré (causait score 61 mobile : images servies à 4000px) ✅
+  - Google Maps lazy loading : `{apiKey && open && <Script ... />}` dans `VetFinderPanel` et `RefugeFinderPanel` — charge ~200KB JS Maps uniquement si panel ouvert ✅
+  - Accessibilité : `aria-label` sur boutons fermer Vet/Refuge, `id/name` sur selects rayon, `text-gray-400` → `text-gray-500` sur dates blog/adoption ✅
+  - Contraste WCAG AA : orange-600 (#ea580c, ratio 3:1 KO) → **orange-700** (#c2410c, ratio 4.8:1 ✅) sur tous les boutons/labels primaires (PublicHeader Boutique, page accueil CTAs, PartenairesSection, NewsletterForm) ✅
+  - Bug agents Unsplash : `unoptimized={!isExternalImage}` → `unoptimized={isExternalImage}` (`AgentPage.tsx`) — images Unsplash étaient optimisées par Vercel → quota consommé + erreur ✅
+  - **Sharp** installé (`npm install sharp`) — requis pour la route de compression ✅
+  - **compress-hero-images** route créée + bouton CronLauncher ("Compression images hero", icône bleue) ✅
+  - **Pinterest** déplacé de `<head>` vers `<Script strategy="afterInteractive">` — hors chemin critique LCP ✅
+  - **Preconnect Supabase** : `<link rel="preconnect" href={NEXT_PUBLIC_SUPABASE_URL}>` dans `<head>` ✅
+  - Score actuel : **mobile 98/96/100/100** ✅ — desktop en attente re-run compression 600px
 - Google Search Console + Bing Webmaster Tools : sitemaps soumis, pages découvertes, indexation en cours
 - ads.txt en ligne (`/public/ads.txt`, pub-3549294158319032) -AdSense en révision
 - AdBanner : gardé par `NEXT_PUBLIC_ADSENSE_ENABLED` (false = invisible, zéro impact layout). Deux hooks `useEffect` en premier (règle React hooks). Label unifié "Annonce". Ajouté sur `/outils/age`, `/outils/prenom`, `/outils/quiz`
@@ -923,6 +937,11 @@ ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS deleted_by TEXT;    -- 'user
 - **Trouveur de veterinaire** (`VetFinderPanel`) : onglet bleu fixe droite toutes pages publiques (hors admin), panel slide-in. Largeur responsive : `w-full` mobile, `min(88vw,600px)` desktop (breakpoint md). Geocodage + autocomplete Nominatim (OpenStreetMap, gratuit, sans cle, debounce 600ms, dropdown suggestions). Carte + markers Google Maps + Places API nearbySearch. Champ adresse unique avec suggestions en temps reel (worldwide). Layout: bouton GPS + rayon (ligne 1), adresse (ligne 2), bouton rechercher. Carte bords arrondis `rounded-xl border`. Layout scroll unique (form+carte+resultats). `mapReady` state evite recherches silencieuses avant init carte. Lien vet : format `maps/search/?api=1&query_place_id=` (compatible mobile + app Maps). CSP: `geolocation=(self)` dans Permissions-Policy, `fundingchoicesmessages.google.com` dans connect-src. Env: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (Vercel + .env.local). Section 2.9 ajoutee dans politique-confidentialite (Google Maps IP + GPS opt-in non stocke) ✅
 - **Trouveur de refuge** (`RefugeFinderPanel`) : meme architecture que `VetFinderPanel` mais en rose (`pink-500`). Onglet fixe droite positionne juste au-dessus du tab veterinaire (`bottom: calc(50% + 80px)`). Icone `Heart`. Recherche via Places API `keyword: 'refuge animaux SPA'` (pas de type specifique Google Maps pour refuges). Markers roses `#db2777`. Fichier : `src/components/refuge/RefugeFinderPanel.tsx`. Ajoute dans `LayoutShell` avant `VetFinderPanel` ✅
 - **AnimalDayPopup** (`src/components/ui/AnimalDayPopup.tsx`) : modal centree avec overlay, s'affiche une seule fois par jour (localStorage `animal-day-seen` = date ISO du jour). Declenchee sur 6 journees mondiales fixes : 4 avr (rat 🐀), 23 mai (tortues 🐢), 31 mai (perroquets 🦜), 8 aout (chat 🐱), 26 aout (chien 🐶), 4 oct (animaux 🐾). CTA "Faites un cadeau a votre animal" redirige vers `/boutique?category={animal}` (ou `/boutique` pour journee generale). Fermeture : clic overlay, bouton croix, ou "Non merci". Ajoute dans `LayoutShell` cote public uniquement (hors admin) ✅
+- **Sécurité Supabase renforcée (mai 2026)** : 19 tables internes protegees avec policy `USING (false)` (anon/authenticated bloques, service_role bypass automatique) ✅. REVOKE EXECUTE sur `get_agent_stats_aggregated` et `increment_agent_stat` (REST public bloque) ✅. `SET search_path = public` sur les 3 fonctions SECURITY DEFINER (anti-injection schema) ✅. Policy SELECT bucket `blog-images` supprimee (listing desactive, acces objet direct uniquement) ✅. SQL : `migration_rls_policies.sql` + `migration_security_revoke_rpc.sql` executes ✅
+- **Backup DB** : script `backup-supabase.ps1` (gitignore) — `pg_dump` vers `/backups/` local, retention 90j. Windows Task Scheduler tous les lundis 3h. `.gitignore` mis a jour avec `backup-supabase.ps1` et `/backups/` (RGPD — jamais committer) ✅
+- **Compression images hero** (`/api/admin/compress-hero-images`) : route admin GET, Sharp, **max 600px**, JPEG 80%, skip < 100 KB, recursive sur bucket `hero-photos`. Bouton dans CronLauncher → panel "Compression images hero" (bleu, `ImageIcon`). Resultat premier run (1200px) : 164 images, 97 MB → 19 MB (-80%), 0 erreur. Re-run a 600px a faire via CronLauncher apres deploiement ✅
+- **Pinterest performance** : script deplace de `<head>` inline vers `<Script strategy="afterInteractive">` — hors chemin critique LCP, 132ms execution main thread reportes apres hydration ✅
+- **Preconnect Supabase** : `<link rel="preconnect" href={NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous">` dans layout `<head>` — connexion etablie plus tot pour les images Storage ✅
 ---
 ## Ce qui reste à faire (code)
 ### SEO / Contenu (fort impact)
