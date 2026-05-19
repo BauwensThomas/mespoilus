@@ -136,7 +136,7 @@ export default function AgePage() {
               onChange={e => setYears(Number(e.target.value))}
               className="w-full accent-orange-600"
             />
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>1 an</span>
               <span>{selectedAnimal.maxAge} ans</span>
             </div>
@@ -155,7 +155,7 @@ export default function AgePage() {
           )}
         </div>
 
-        <p className="text-xs text-gray-400 text-center mt-4">
+        <p className="text-xs text-gray-500 text-center mt-4">
           Les conversions sont des approximations basées sur les moyennes scientifiques pour chaque espèce.
         </p>
 

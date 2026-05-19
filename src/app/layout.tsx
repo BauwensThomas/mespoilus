@@ -1,11 +1,11 @@
 import * as Sentry from '@sentry/nextjs';
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import './globals.css';
 import LayoutShell from '@/components/layout/LayoutShell';
 import CookieBanner from '@/components/ui/CookieBanner';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import AdSense from '@/components/analytics/AdSense';
+import PinterestTag from '@/components/analytics/PinterestTag';
 import { createAdminClient } from '@/lib/supabase/server';
 
 async function getPendingCount(): Promise<number> {
@@ -57,21 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <CookieBanner />
         <GoogleAnalytics />
         <AdSense />
-        <Script
-          id="pinterest-tag"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `!function(e){if(!window.pintrk){window.pintrk = function () {
-              window.pintrk.queue.push(Array.prototype.slice.call(arguments))};var
-              n=window.pintrk;n.queue=[],n.version="3.0";var
-              t=document.createElement("script");t.async=!0;t.src=e;var
-              r=document.getElementsByTagName("script")[0];
-              r.parentNode.insertBefore(t,r)}}("https://s.pinimg.com/ct/core.js");
-              pintrk('load', '2614006217840', {em: ''});
-              pintrk('page');
-              pintrk('track', 'pagevisit', { event_id: 'eventId0001' });`
-          }}
-        />
+        <PinterestTag />
       </body>
     </html>
   );

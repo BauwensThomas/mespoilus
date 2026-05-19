@@ -124,7 +124,7 @@ export default async function RacesPage() {
         })}
       </div>
 
-      <p className="text-xs text-gray-400 text-center">
+      <p className="text-xs text-gray-500 text-center">
         Nouvelles fiches ajoutées régulièrement. Les informations sont des moyennes indicatives.
       </p>
     </div>

@@ -9,7 +9,7 @@ export default function CookieResetButton() {
   return (
     <button
       onClick={reset}
-      className="mt-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 rounded-lg text-sm transition-colors"
+      className="mt-2 px-4 py-2 bg-amber-50 border border-amber-300 text-amber-700 hover:bg-amber-100 rounded-lg text-sm transition-colors"
     >
       Réinitialiser mes préférences cookies
     </button>

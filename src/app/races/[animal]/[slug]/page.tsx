@@ -104,7 +104,7 @@ export default async function BreedPage({ params }: Props) {
 
       {/* Fil d'ariane + titre */}
       <div>
-        <div className="flex items-center gap-1.5 text-sm text-gray-400 mb-1">
+        <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-1">
           <Link href="/races" className="hover:text-orange-600 transition-colors">Races</Link>
           <span>/</span>
           <Link href={`/races/${params.animal}`} className="hover:text-orange-600 transition-colors">{ANIMAL_LABEL[animalType]}</Link>
@@ -246,7 +246,7 @@ export default async function BreedPage({ params }: Props) {
           </Link>
         </div>
 
-        <p className="text-xs text-gray-400 text-center pb-4">
+        <p className="text-xs text-gray-500 text-center pb-4">
           Les informations sont des moyennes indicatives. Chaque animal est unique.
         </p>
 

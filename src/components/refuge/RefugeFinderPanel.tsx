@@ -389,7 +389,7 @@ export default function RefugeFinderPanel() {
             {/* Resultats */}
             {results.length > 0 ? (
               <div className="px-3 py-1.5">
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 px-0.5">
+                <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1 px-0.5">
                   {results.length} refuge{results.length > 1 ? 's' : ''}
                 </p>
                 <div className="space-y-1">
@@ -429,7 +429,7 @@ export default function RefugeFinderPanel() {
               !loading && !error && (
                 <div className="px-5 py-6 text-center">
                   <Heart size={24} strokeWidth={1} className="mx-auto mb-1.5 text-gray-200" />
-                  <p className="text-xs text-gray-400">Entrez une adresse ou utilisez votre position GPS</p>
+                  <p className="text-xs text-gray-500">Entrez une adresse ou utilisez votre position GPS</p>
                 </div>
               )
             )}

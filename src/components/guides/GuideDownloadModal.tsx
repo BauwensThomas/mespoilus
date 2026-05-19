@@ -134,7 +134,7 @@ export default function GuideDownloadModal({ guide, onClose }: GuideDownloadModa
               </label>
 
               {/* RGPD notice */}
-              <p className="text-xs text-gray-400 leading-relaxed">
+              <p className="text-xs text-gray-500 leading-relaxed">
                 Votre email est utilisé uniquement pour vous envoyer ce guide.{' '}
                 <a
                   href="/politique-confidentialite"

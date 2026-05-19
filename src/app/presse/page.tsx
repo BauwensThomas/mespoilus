@@ -36,7 +36,7 @@ export default async function PressePage() {
     { label: 'Outils gratuits', value: '4' },
   ];
 
-  const description = `Mes Poilus est un site de référence francophone dédié aux animaux de compagnie. Il propose des articles de conseils vétérinaires et pratiques, des fiches races détaillées, des outils interactifs (calculateur d'âge, quiz, générateur de prénoms) et une section adoption pour aider les animaux à trouver un foyer. Le contenu est rédigé de manière claire et accessible, avec pour objectif d'accompagner chaque propriétaire d'animal au quotidien.`;
+  const description = `Mes Poilus est un site de référence francophone dédié aux animaux de compagnie. Il propose des articles de conseils vétérinaires et pratiques, des fiches races détaillées, des outils interactifs (calculateur d'âge, calculateur nutritionnel, quiz, générateur de prénoms, guides PDF gratuits), une section adoption entre particuliers et une boutique de produits animaliers sélectionnés via des partenaires affiliés. Le contenu est rédigé de manière claire et accessible, avec pour objectif d'accompagner chaque propriétaire d'animal au quotidien.`;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -68,7 +68,7 @@ export default async function PressePage() {
               <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
                 <p className="text-xs font-semibold text-orange-700 uppercase tracking-widest mb-2">Description courte (à copier-coller)</p>
                 <p className="text-sm text-gray-800 leading-relaxed italic">
-                  "Mes Poilus est le guide de référence francophone pour les propriétaires d'animaux de compagnie : conseils, fiches races, outils pratiques et petites annonces d'adoption."
+                  "Mes Poilus est le guide de référence francophone pour les propriétaires d'animaux de compagnie : conseils vétérinaires, fiches races, outils pratiques, petites annonces d'adoption et sélection de produits animaliers."
                 </p>
               </div>
             </section>
@@ -93,7 +93,7 @@ export default async function PressePage() {
                 {[
                   { title: 'Blog de conseils', desc: 'Articles pratiques sur la santé, l\'alimentation et le comportement des animaux.' },
                   { title: 'Fiches races', desc: 'Fiches détaillées (caractère, soins, convient pour) pour chiens, chats, oiseaux, rongeurs et reptiles.' },
-                  { title: 'Outils interactifs', desc: 'Calculateur d\'âge, quiz "quel animal pour moi ?", générateur de prénoms, guides PDF gratuits.' },
+                  { title: 'Outils interactifs', desc: 'Calculateur d\'âge, calculateur nutritionnel, quiz "quel animal pour moi ?", générateur de prénoms, guides PDF gratuits.' },
                   { title: 'Adoption', desc: 'Annonces d\'adoption entre particuliers avec alertes email personnalisées.' },
                   { title: 'Boutique', desc: 'Sélection de produits animaliers via des partenaires affiliés de confiance.' },
                 ].map(({ title, desc }) => (
@@ -163,6 +163,7 @@ export default async function PressePage() {
                   { href: '/blog', label: 'Blog' },
                   { href: '/races', label: 'Fiches races' },
                   { href: '/adoption', label: 'Adoption' },
+                  { href: '/boutique', label: 'Boutique' },
                   { href: 'https://www.instagram.com/mespoilusofficiel', label: 'Instagram', external: true },
                   { href: 'https://www.facebook.com/profile.php?id=61589487954538', label: 'Facebook', external: true },
                 ].map(({ href, label, external }) => (

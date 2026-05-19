@@ -158,7 +158,7 @@ export default function AdoptionAlertForm() {
                   </button>
                 </form>
 
-                <p className="text-xs text-gray-400 text-center mt-3">
+                <p className="text-xs text-gray-500 text-center mt-3">
                   Un email de confirmation vous sera envoyé. Désabonnement en 1 clic.
                 </p>
               </>
