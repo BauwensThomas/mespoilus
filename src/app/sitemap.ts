@@ -7,6 +7,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let articleEntries: MetadataRoute.Sitemap = [];
   let guideEntries: MetadataRoute.Sitemap = [];
   let breedEntries: MetadataRoute.Sitemap = [];
+  let adoptionEntries: MetadataRoute.Sitemap = [];
 
   try {
     const supabase = createAdminClient();
@@ -64,6 +65,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Supabase unavailable - sitemap without breeds
   }
 
+  try {
+    const supabase = createAdminClient();
+    const { data: adoptionPosts } = await supabase
+      .from('adoption_posts')
+      .select('id, created_at, photo_urls')
+      .eq('status', 'approved');
+
+    adoptionEntries = (adoptionPosts ?? []).map((post) => ({
+      url: `${APP_URL}/adoption/${post.id}`,
+      lastModified: new Date(post.created_at ?? Date.now()),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+      ...(post.photo_urls?.[0] ? { images: [post.photo_urls[0]] } : {}),
+    }));
+  } catch {
+    // Supabase unavailable - sitemap without adoption posts
+  }
+
   return [
     { url: `${APP_URL}/`,         lastModified: new Date(), changeFrequency: 'weekly', priority: 1.0 },
     { url: `${APP_URL}/blog`,          lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
@@ -102,5 +121,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...articleEntries,
     ...guideEntries,
     ...breedEntries,
+    ...adoptionEntries,
   ];
 }
