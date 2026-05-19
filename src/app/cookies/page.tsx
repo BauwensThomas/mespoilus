@@ -14,7 +14,7 @@ export default function CookiesPage() {
       <div className="max-w-6xl mx-auto px-6 py-12">
 
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Politique de cookies</h1>
-        <p className="text-gray-500 text-sm mb-12">Conforme au RGPD et à la recommandation de l'APD belge - Dernière mise à jour : mai 2026</p>
+        <p className="text-gray-600 text-sm mb-12">Conforme au RGPD et à la recommandation de l'APD belge - Dernière mise à jour : mai 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 
@@ -35,7 +35,7 @@ export default function CookiesPage() {
                 </div>
                 <p className="text-gray-600 mb-3">Indispensables au fonctionnement du site. Ils ne peuvent pas être désactivés.</p>
                 <table className="w-full text-xs">
-                  <thead><tr className="text-gray-500"><th className="text-left py-1">Cookie</th><th className="text-left py-1">Durée</th><th className="text-left py-1">Rôle</th></tr></thead>
+                  <thead><tr className="text-gray-600"><th className="text-left py-1">Cookie</th><th className="text-left py-1">Durée</th><th className="text-left py-1">Rôle</th></tr></thead>
                   <tbody className="text-gray-600">
                     <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">sb-access-token</td><td className="py-1.5 pr-4">Session</td><td className="py-1.5">Authentification Supabase</td></tr>
                     <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">mespoilus_cookie_consent</td><td className="py-1.5 pr-4">12 mois</td><td className="py-1.5">Mémorisation de votre choix cookie</td></tr>
@@ -51,10 +51,43 @@ export default function CookiesPage() {
                 </div>
                 <p className="text-gray-600 mb-3">Nous permettent de comprendre comment vous utilisez le site (pages visitées, durée de visite, provenance). Ces données sont anonymisées.</p>
                 <table className="w-full text-xs">
-                  <thead><tr className="text-gray-500"><th className="text-left py-1">Cookie</th><th className="text-left py-1">Durée</th><th className="text-left py-1">Rôle</th></tr></thead>
+                  <thead><tr className="text-gray-600"><th className="text-left py-1">Cookie</th><th className="text-left py-1">Durée</th><th className="text-left py-1">Rôle</th></tr></thead>
                   <tbody className="text-gray-600">
                     <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">_ga</td><td className="py-1.5 pr-4">13 mois</td><td className="py-1.5">Google Analytics - Identifiant utilisateur</td></tr>
                     <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">_ga_*</td><td className="py-1.5 pr-4">13 mois</td><td className="py-1.5">Google Analytics - Session</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="bg-gray-100 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
+                  <h3 className="font-medium text-gray-900">Cookies publicitaires — Google AdSense</h3>
+                  <span className="ml-auto text-xs bg-orange-400/10 text-orange-500 border border-orange-400/20 px-2 py-0.5 rounded-full">Avec consentement</span>
+                </div>
+                <p className="text-gray-600 mb-3">Permettent l'affichage de publicités personnalisées via Google AdSense. Ces cookies ne sont déposés qu'avec votre accord.</p>
+                <table className="w-full text-xs">
+                  <thead><tr className="text-gray-600"><th className="text-left py-1">Cookie</th><th className="text-left py-1">Durée</th><th className="text-left py-1">Rôle</th></tr></thead>
+                  <tbody className="text-gray-600">
+                    <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">_gcl_au</td><td className="py-1.5 pr-4">3 mois</td><td className="py-1.5">Google AdSense - Mesure des conversions publicitaires</td></tr>
+                    <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">IDE</td><td className="py-1.5 pr-4">13 mois</td><td className="py-1.5">Google DoubleClick - Ciblage publicitaire</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="bg-gray-100 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                  <h3 className="font-medium text-gray-900">Cookies marketing — Pinterest</h3>
+                  <span className="ml-auto text-xs bg-red-400/10 text-red-500 border border-red-400/20 px-2 py-0.5 rounded-full">Avec consentement</span>
+                </div>
+                <p className="text-gray-600 mb-3">Permettent le suivi des visites provenant de Pinterest et la mesure des performances de nos contenus sur ce réseau. Ces cookies ne sont déposés qu'avec votre accord.</p>
+                <table className="w-full text-xs">
+                  <thead><tr className="text-gray-600"><th className="text-left py-1">Cookie</th><th className="text-left py-1">Durée</th><th className="text-left py-1">Rôle</th></tr></thead>
+                  <tbody className="text-gray-600">
+                    <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">_pinterest_sess</td><td className="py-1.5 pr-4">Session</td><td className="py-1.5">Pinterest - Session de suivi</td></tr>
+                    <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">_pin_unauth_id</td><td className="py-1.5 pr-4">12 mois</td><td className="py-1.5">Pinterest - Identifiant visiteur anonyme</td></tr>
+                    <tr className="border-t border-gray-200"><td className="py-1.5 pr-4">_derived_epik</td><td className="py-1.5 pr-4">12 mois</td><td className="py-1.5">Pinterest - Mesure des conversions</td></tr>
                   </tbody>
                 </table>
               </div>

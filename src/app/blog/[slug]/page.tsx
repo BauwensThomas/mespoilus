@@ -208,14 +208,14 @@ export default async function ArticlePage({ params }: Props) {
                 </div>
                 <div>
                   <div className="text-xs font-semibold" style={{ color: '#1f2937' }}>Marie</div>
-                  <div className="text-[10px]" style={{ color: '#9ca3af' }}>Rédactrice</div>
+                  <div className="text-[10px] text-gray-500">Rédactrice</div>
                 </div>
               </div>
               {publishedDate && (
-                <div className="text-xs" style={{ color: '#9ca3af' }}>Publié le {publishedDate}</div>
+                <div className="text-xs text-gray-500">Publié le {publishedDate}</div>
               )}
               {article.reading_time && (
-                <div className="text-xs" style={{ color: '#9ca3af' }}>{article.reading_time} min de lecture</div>
+                <div className="text-xs text-gray-500">{article.reading_time} min de lecture</div>
               )}
             </div>
           </header>

@@ -11,7 +11,7 @@ export default function PolitiqueConfidentialitePage() {
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <div className="max-w-6xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Politique de confidentialité</h1>
-        <p className="text-gray-500 text-sm mb-12">Conforme au RGPD (Règlement UE 2016/679) - Dernière mise à jour : mai 2026</p>
+        <p className="text-gray-600 text-sm mb-12">Conforme au RGPD (Règlement UE 2016/679) - Dernière mise à jour : mai 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 
@@ -19,7 +19,7 @@ export default function PolitiqueConfidentialitePage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">1. Responsable du traitement</h2>
             <div className="space-y-2 text-sm">
               <p>Mes Poilus</p>
-              <p><span className="text-gray-500">Email :</span> contact@mespoilus.com</p>
+              <p><span className="text-gray-600">Email :</span> contact@mespoilus.com</p>
             </div>
           </section>
 
@@ -83,7 +83,7 @@ export default function PolitiqueConfidentialitePage() {
                 ].map(({ traitement, base }) => (
                   <div key={traitement} className="flex gap-4 py-2 border-b border-gray-200">
                     <span className="text-gray-700 w-52 shrink-0">{traitement}</span>
-                    <span className="text-gray-500">{base}</span>
+                    <span className="text-gray-600">{base}</span>
                   </div>
                 ))}
               </div>
@@ -105,7 +105,7 @@ export default function PolitiqueConfidentialitePage() {
               ].map(({ type, duree }) => (
                 <div key={type} className="flex gap-4 py-2 border-b border-gray-200">
                   <span className="text-gray-700 w-52 shrink-0">{type}</span>
-                  <span className="text-gray-500">{duree}</span>
+                  <span className="text-gray-600">{duree}</span>
                 </div>
               ))}
             </div>
@@ -127,10 +127,13 @@ export default function PolitiqueConfidentialitePage() {
                   </ul>
                 </li>
                 <li>Google Analytics - Données de navigation anonymisées (si consentement accordé)</li>
+                <li>Google AdSense - Affichage de publicités, cookies publicitaires déposés uniquement avec consentement (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">politique Google</a>)</li>
                 <li>Google Maps Platform - Adresse IP transmise lors du chargement de la carte vétérinaire (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">politique Google</a>)</li>
+                <li>Pinterest - Suivi de l'audience et mesure des performances via le tag Pinterest, cookies déposés uniquement avec consentement (<a href="https://policy.pinterest.com/fr/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">politique Pinterest</a>)</li>
                 <li>Resend - Service d'envoi d'emails transactionnels (confirmation d'annonce, notifications)</li>
                 <li>Vercel - Hébergeur du site (infrastructure technique)</li>
                 <li>Supabase - Base de données et stockage des photos (hébergement EU disponible)</li>
+                <li>Sentry - Outil de surveillance des erreurs techniques (stack traces, logs d'erreurs) ; aucune donnée personnelle volontairement transmise (<a href="https://sentry.io/privacy/" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">politique Sentry</a>)</li>
               </ul>
               <p>Tout transfert hors UE est encadré par les clauses contractuelles types de la Commission européenne.</p>
             </div>

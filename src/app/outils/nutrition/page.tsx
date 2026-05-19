@@ -232,8 +232,8 @@ export default function NutritionPage() {
             {/* Densité calorique */}
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-2">
-                <Info size={14} strokeWidth={1.5} className="text-gray-400 flex-shrink-0" />
-                <p className="text-xs text-gray-500">Valeurs pré-remplies avec les moyennes standard. Vérifiez sur l'emballage de votre marque pour plus de précision.</p>
+                <Info size={14} strokeWidth={1.5} className="text-gray-500 flex-shrink-0" />
+                <p className="text-xs text-gray-600">Valeurs pré-remplies avec les moyennes standard. Vérifiez sur l'emballage de votre marque pour plus de précision.</p>
               </div>
               {(foodType === 'croquettes' || foodType === 'mixte') && (
                 <div className="flex items-center gap-3">

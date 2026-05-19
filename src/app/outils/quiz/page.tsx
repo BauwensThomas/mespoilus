@@ -229,7 +229,7 @@ export default function QuizPage() {
 
         {/* Barre de progression */}
         <div className="mb-6">
-          <div className="flex justify-between text-xs text-gray-400 mb-2">
+          <div className="flex justify-between text-xs text-gray-500 mb-2">
             <span>Question {currentQ + 1} sur {QUESTIONS.length}</span>
             <span>{Math.round((currentQ / QUESTIONS.length) * 100)}%</span>
           </div>

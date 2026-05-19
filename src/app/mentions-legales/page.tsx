@@ -13,24 +13,24 @@ export default function MentionsLegalesPage() {
       <div className="max-w-6xl mx-auto px-6 py-12">
 
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Mentions légales</h1>
-        <p className="text-gray-500 text-sm mb-12">Conformes au droit belge - Dernière mise à jour : mai 2026</p>
+        <p className="text-gray-600 text-sm mb-12">Conformes au droit belge - Dernière mise à jour : mai 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">1. Éditeur du site</h2>
             <div className="space-y-2 text-sm">
-              <p><span className="text-gray-500">Dénomination :</span> Mes Poilus</p>
-              <p><span className="text-gray-500">Email :</span> contact@mespoilus.com</p>
-              <p><span className="text-gray-500">Pays :</span> Belgique</p>
+              <p><span className="text-gray-600">Dénomination :</span> Mes Poilus</p>
+              <p><span className="text-gray-600">Email :</span> contact@mespoilus.com</p>
+              <p><span className="text-gray-600">Pays :</span> Belgique</p>
             </div>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">2. Responsable de publication</h2>
             <div className="space-y-2 text-sm">
-              <p><span className="text-gray-500">Entité :</span> Mes Poilus</p>
-              <p><span className="text-gray-500">Email :</span> contact@mespoilus.com</p>
+              <p><span className="text-gray-600">Entité :</span> Mes Poilus</p>
+              <p><span className="text-gray-600">Email :</span> contact@mespoilus.com</p>
             </div>
           </section>
 
@@ -39,15 +39,15 @@ export default function MentionsLegalesPage() {
             <div className="space-y-4 text-sm">
               <div>
                 <p className="text-gray-600 font-medium mb-1">Hébergement du site</p>
-                <p><span className="text-gray-500">Hébergeur :</span> Vercel Inc.</p>
-                <p><span className="text-gray-500">Adresse :</span> 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis</p>
-                <p><span className="text-gray-500">Site web :</span> <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">vercel.com</a></p>
+                <p><span className="text-gray-600">Hébergeur :</span> Vercel Inc.</p>
+                <p><span className="text-gray-600">Adresse :</span> 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis</p>
+                <p><span className="text-gray-600">Site web :</span> <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">vercel.com</a></p>
               </div>
               <div>
                 <p className="text-gray-600 font-medium mb-1">Nom de domaine</p>
-                <p><span className="text-gray-500">Registrar :</span> LWS (LWS SARL)</p>
-                <p><span className="text-gray-500">Adresse :</span> 4 rue Léon Jouhaux, 75010 Paris, France</p>
-                <p><span className="text-gray-500">Site web :</span> <a href="https://www.lws.fr" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">lws.fr</a></p>
+                <p><span className="text-gray-600">Registrar :</span> LWS (LWS SARL)</p>
+                <p><span className="text-gray-600">Adresse :</span> 4 rue Léon Jouhaux, 75010 Paris, France</p>
+                <p><span className="text-gray-600">Site web :</span> <a href="https://www.lws.fr" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">lws.fr</a></p>
               </div>
             </div>
           </section>
