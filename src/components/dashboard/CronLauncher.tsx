@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard, Rocket, CheckCircle2, XCircle, Clock, BookOpen, Mail, Sparkles, Heart, ChevronDown, ChevronUp, Send, Tag } from 'lucide-react';
+import { RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard, Rocket, CheckCircle2, XCircle, Clock, BookOpen, Mail, Sparkles, Heart, ChevronDown, ChevronUp, Send, Tag, ImageIcon } from 'lucide-react';
 import clsx from 'clsx';
 import { PARTENAIRES } from '@/lib/partenaires';
 
@@ -959,6 +959,64 @@ function CJSyncPanel() {
   );
 }
 
+// ─── Compress Hero Images Panel ──────────────────────────────────────────────
+
+function CompressHeroImagesPanel() {
+  const [status, setStatus] = useState<StepStatus>('idle');
+  const [result, setResult] = useState<string>('');
+
+  const launch = async () => {
+    if (status === 'running') return;
+    setStatus('running');
+    setResult('');
+    try {
+      const r = await fetch('/api/admin/compress-hero-images');
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
+      setResult(`${data.compressed}/${data.total} compressées — ${data.saved}`);
+      setStatus('done');
+    } catch (err) {
+      setResult(err instanceof Error ? err.message : 'Erreur');
+      setStatus('error');
+    }
+  };
+
+  return (
+    <div className="px-4 py-3.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2.5 flex-1 min-w-0">
+          <ImageIcon size={18} strokeWidth={1.5} className="mt-0.5 flex-shrink-0 text-sky-600" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-sky-600">Compression images hero</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {status === 'running' ? 'Compression en cours (~2 min)…'
+                : status === 'done' ? `✓ ${result}`
+                : status === 'error' ? result
+                : 'Sharp · max 1200px · JPEG 80% · À relancer après ajout de photos'}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={status === 'done' ? () => { setStatus('idle'); setResult(''); } : launch}
+          disabled={status === 'running'}
+          className={clsx(
+            'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1',
+            status === 'done' ? 'bg-emerald-100 text-emerald-600 cursor-pointer'
+              : status === 'error' ? 'bg-red-100 text-red-500 hover:bg-red-200 cursor-pointer'
+              : status === 'running' ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-sky-100 text-sky-700 hover:bg-sky-200 cursor-pointer'
+          )}
+        >
+          {status === 'done' && <><CheckCircle2 size={14} strokeWidth={1.5} />Reset</>}
+          {status === 'error' && <><XCircle size={14} strokeWidth={1.5} />Retry</>}
+          {status === 'running' && <><span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />En cours</>}
+          {status === 'idle' && 'Lancer'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 export default function CronLauncher() {
@@ -1054,6 +1112,9 @@ export default function CronLauncher() {
 
             {/* Import CanadaPetCare depuis sitemap */}
             <CanadaPetCareImportPanel />
+
+            {/* Compression images hero (Sharp) */}
+            <CompressHeroImagesPanel />
           </div>
 
           <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 flex items-start gap-2">
