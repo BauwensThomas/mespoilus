@@ -20,13 +20,18 @@ async function getPendingCount(): Promise<number> {
 
 export function generateMetadata(): Metadata {
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://mespoilus.com'),
+    metadataBase: new URL('https://www.mespoilus.com'),
     title: {
       default: 'Mes Poilus - Conseils & guides animaux de compagnie',
       template: '%s | Mes Poilus',
     },
-    description: "Blog de conseils, guides pratiques et boutique d'accessoires pour vos animaux de compagnie.",
-    robots: { index: false, follow: false },
+    description: "Conseils vétérinaires, guides pratiques, adoption animaux et boutique pour chiens, chats, oiseaux, rongeurs et reptiles. Communauté francophone.",
+    robots: { index: true, follow: true },
+    openGraph: {
+      siteName: 'Mes Poilus',
+      locale: 'fr_FR',
+      type: 'website',
+    },
     other: {
       'google-adsense-account': 'ca-pub-3549294158319032',
       'google-site-verification': 'RjHr4b1Sf6FfVs0bvOXjkteGNw7xDIHyqxKJZSb0dJ8',
