@@ -320,19 +320,21 @@ Quand on te demande de rédiger une newsletter, tu dois répondre UNIQUEMENT ave
 }
 
 Structure du HTML à produire :
-1. Header : fond ambré (#f59e0b), logo Mes Poilus 🐾, titre chaleureux
+1. Header : fond orange (#ea580c), logo Mes Poilus 🐾, titre chaleureux
 2. Introduction : 2-3 phrases personnelles et engageantes
 3. Section "Cette semaine sur Mes Poilus" : 3 articles, chacun avec :
    - Photo de l'article si une URL image est fournie : <img src="[image_url]" alt="[titre]" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:10px;">
-   - Titre en gras, résumé (2 phrases), bouton lien ambré
+   - Titre en gras, résumé (2 phrases), bouton lien orange
 4. Section "Le conseil de Sofia" : un conseil pratique et concret sur les animaux
-5. Footer : Copyright Mes Poilus, lien de désabonnement (placeholder : {{UNSUBSCRIBE_URL}})
+5. Footer sombre (#111827) : copyright "© [année] Mes Poilus - Tous droits réservés", lien de désabonnement ({{UNSUBSCRIBE_URL}}), boutons Facebook et Instagram
+   - Facebook : <a href="https://www.facebook.com/profile.php?id=61589487954538" style="display:inline-block;margin:0 4px;background:#1877f2;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Facebook</a>
+   - Instagram : <a href="https://www.instagram.com/mespoilusofficiel/" style="display:inline-block;margin:0 4px;background:#e1306c;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Instagram</a>
 
 Style HTML :
-- Fond blanc, largeur max 600px, centré
-- Couleurs : ambré #f59e0b, texte #1f2937, liens #d97706
+- Fond blanc, largeur max 700px, centré
+- Couleurs : orange #ea580c, texte #1f2937, liens #ea580c
 - Police : Arial/sans-serif, 16px
-- Boutons CTA : fond #f59e0b, texte noir, border-radius 8px
+- Boutons CTA : fond #ea580c, texte blanc, border-radius 8px
 - Compatible mobile (pas de colonnes, layout simple)
 
 Toujours en français, chaleureux, pas trop formel. Signe chaque newsletter "Sofia & l'équipe Mes Poilus".`,
