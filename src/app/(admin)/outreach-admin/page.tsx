@@ -6,6 +6,141 @@ import clsx from 'clsx';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+const DEFAULT_SUBJECT = 'Proposition de partenariat - Mes Poilus';
+
+const DEFAULT_HTML = `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:system-ui,-apple-system,sans-serif;background:#f0f4f8;padding:20px 0">
+  <tr>
+    <td align="center" style="padding:20px">
+
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%">
+
+        <!-- En-tete orange -->
+        <tr>
+          <td bgcolor="#ea580c" style="background-color:#ea580c;padding:36px 40px 32px;border-radius:12px 12px 0 0">
+            <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px">
+              <tr>
+                <td style="vertical-align:middle;padding-right:10px">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="4.5" cy="6.5" rx="2.5" ry="2.5"/>
+                    <ellipse cx="9.5" cy="3.5" rx="2" ry="2"/>
+                    <ellipse cx="14.5" cy="3.5" rx="2" ry="2"/>
+                    <ellipse cx="19.5" cy="6.5" rx="2.5" ry="2.5"/>
+                    <path d="M12 8c-3.9 0-7 2.6-7 6.5 0 2.3 1.5 4.5 3 5.5 1 .7 2 1 4 1s3-.3 4-1c1.5-1 3-3.2 3-5.5C19 10.6 15.9 8 12 8z"/>
+                  </svg>
+                </td>
+                <td style="vertical-align:middle">
+                  <span style="color:white;font-size:26px;font-weight:800;letter-spacing:-0.5px">Mes Poilus</span>
+                </td>
+              </tr>
+            </table>
+            <h1 style="color:white;font-size:22px;font-weight:800;margin:0 0 8px 0;line-height:1.3">
+              Développez votre visibilité gratuitement
+            </h1>
+            <p style="color:rgba(255,255,255,0.9);font-size:14px;margin:0">
+              Un partenariat gagnant-gagnant pour les acteurs du monde animal
+            </p>
+          </td>
+        </tr>
+
+        <!-- Corps -->
+        <tr>
+          <td bgcolor="#ffffff" style="background-color:white;padding:36px 40px">
+
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 20px">Bonjour,</p>
+
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 20px">
+              Je suis <strong>Thomas</strong>, fondateur de <strong>Mes Poilus</strong>.
+              Nous aidons chaque jour les propriétaires d'animaux à trouver les meilleurs conseils,
+              services et professionnels fiables.
+            </p>
+
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 24px">
+              Nous développons un réseau de partenaires sélectionnés avec soin
+              et nous aimerions vous y intégrer <strong>gratuitement</strong>.
+            </p>
+
+            <!-- Proposition -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px">
+              <tr>
+                <td style="background-color:#fff7ed;border-left:4px solid #ea580c;padding:20px 24px;border-radius:0 8px 8px 0">
+                  <p style="color:#ea580c;font-size:12px;font-weight:700;margin:0 0 12px;text-transform:uppercase;letter-spacing:0.8px">Ce que cela vous apporte</p>
+                  <ul style="color:#374151;font-size:14px;line-height:1.9;margin:0;padding-left:18px">
+                    <li>Une mise en avant dans notre section <strong>"Nos recommandations"</strong></li>
+                    <li>Une visibilité continue auprès de propriétaires d'animaux ciblés</li>
+                    <li>Un lien direct vers votre site ou vos réseaux</li>
+                    <li>Une présence possible dans notre bandeau partenaires</li>
+                  </ul>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Contrepartie -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px">
+              <tr>
+                <td style="background-color:#f9fafb;border:1px solid #e5e7eb;padding:20px 24px;border-radius:8px">
+                  <p style="color:#111827;font-size:12px;font-weight:700;margin:0 0 12px;text-transform:uppercase;letter-spacing:0.8px">En échange simple</p>
+                  <ul style="color:#374151;font-size:14px;line-height:1.9;margin:0;padding-left:18px">
+                    <li>Un lien vers <strong>mespoilus.com</strong> depuis votre site et/ou</li>
+                    <li>Une mention sur vos réseaux sociaux</li>
+                  </ul>
+                </td>
+              </tr>
+            </table>
+
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 28px">
+              C'est rapide, sans coût, et pensé pour créer une vraie valeur mutuelle.
+              Si cela vous intéresse, répondez simplement à cet email.
+            </p>
+
+            <!-- CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px">
+              <tr>
+                <td align="center">
+                  <a href="https://mespoilus.com" style="display:inline-block;background-color:#ea580c;color:white;text-decoration:none;font-size:15px;font-weight:700;padding:14px 36px;border-radius:10px">
+                    Découvrir Mes Poilus
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Réseaux -->
+            <p style="color:#374151;font-size:13px;text-align:center;margin:0 0 28px">
+              Nos réseaux :
+              <a href="https://www.instagram.com/mespoilusofficiel/" style="color:#ea580c;text-decoration:none;font-weight:600"> Instagram</a>
+              &nbsp;&bull;&nbsp;
+              <a href="https://www.facebook.com/profile.php?id=61589487954538" style="color:#ea580c;text-decoration:none;font-weight:600">Facebook</a>
+            </p>
+
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 4px">
+              Merci pour votre engagement auprès des animaux.
+            </p>
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 4px">Bien cordialement,</p>
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0">
+              <strong>Thomas</strong><br>
+              Fondateur - Mes Poilus<br>
+              <a href="mailto:contact@mespoilus.com" style="color:#ea580c;text-decoration:none">contact@mespoilus.com</a>
+            </p>
+
+          </td>
+        </tr>
+
+        <!-- Pied de page -->
+        <tr>
+          <td bgcolor="#f3f4f6" style="background-color:#f3f4f6;padding:20px 40px;text-align:center;border-top:2px solid #e5e7eb;border-radius:0 0 12px 12px">
+            <p style="color:#6b7280;font-size:12px;margin:0 0 4px">
+              Mes Poilus - <a href="https://mespoilus.com" style="color:#6b7280;text-decoration:underline">mespoilus.com</a>
+            </p>
+            <p style="color:#9ca3af;font-size:11px;margin:0">
+              Partenariat proposé dans une démarche de collaboration entre acteurs du monde animal.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>`;
+
 interface Campaign {
   id: string;
   subject: string;
@@ -15,17 +150,9 @@ interface Campaign {
   created_at: string;
 }
 
-function insertAtCursor(textarea: HTMLTextAreaElement, text: string): string {
-  const start = textarea.selectionStart;
-  const end = textarea.selectionEnd;
-  const before = textarea.value.substring(0, start);
-  const after = textarea.value.substring(end);
-  return before + text + after;
-}
-
 export default function OutreachAdminPage() {
-  const [subject, setSubject] = useState('');
-  const [html, setHtml] = useState('');
+  const [subject, setSubject] = useState(DEFAULT_SUBJECT);
+  const [html, setHtml] = useState(DEFAULT_HTML);
   const [emailInput, setEmailInput] = useState('');
   const [emails, setEmails] = useState<string[]>([]);
   const [tab, setTab] = useState<'edit' | 'preview'>('edit');
@@ -45,16 +172,21 @@ export default function OutreachAdminPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const cursorPos = useRef({ start: 0, end: 0 });
+
+  function saveCursor() {
+    if (textareaRef.current) {
+      cursorPos.current = { start: textareaRef.current.selectionStart, end: textareaRef.current.selectionEnd };
+    }
+  }
 
   function insertImg(url: string, alt = '') {
     if (!url.trim()) return;
     const tag = `<img src="${url}" alt="${alt}" style="max-width:100%;display:block;margin:16px auto;border-radius:6px" />`;
-    if (textareaRef.current) {
-      const newVal = insertAtCursor(textareaRef.current, tag);
-      setHtml(newVal);
-    } else {
-      setHtml(h => h + '\n' + tag);
-    }
+    const { start, end } = cursorPos.current;
+    const newVal = html.substring(0, start) + tag + html.substring(end);
+    setHtml(newVal);
+    cursorPos.current = { start: start + tag.length, end: start + tag.length };
     setImgUrlInput('');
     setShowImgPanel(false);
     setTab('edit');
@@ -167,7 +299,7 @@ export default function OutreachAdminPage() {
                           <Link size={10} /> Insérer
                         </button>
                       </div>
-                      <p className="text-[10px] text-gray-400">L'image est insérée au niveau du curseur dans l'éditeur.</p>
+                      <p className="text-[10px] text-gray-400">Clique d'abord dans l'éditeur HTML à l'endroit voulu, puis insère l'image ici.</p>
                     </div>
                   )}
                 </div>
@@ -190,6 +322,9 @@ export default function OutreachAdminPage() {
                 ref={textareaRef}
                 value={html}
                 onChange={e => setHtml(e.target.value)}
+                onSelect={saveCursor}
+                onBlur={saveCursor}
+                onKeyUp={saveCursor}
                 rows={18}
                 placeholder={'<div style="font-family:sans-serif;max-width:600px;margin:0 auto">\n  <img src="https://..." alt="Logo" style="height:48px" />\n  <h2>Bonjour,</h2>\n  <p>...</p>\n</div>'}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-orange-400 resize-none"

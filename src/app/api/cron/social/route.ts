@@ -43,6 +43,7 @@ export async function GET(req: Request) {
 
   if (!stateRow?.slug) {
     console.log('[Cron2] Aucun article prêt dans cron_state, abandon.');
+    await logActivity('thomas', 'Thomas', '[Cron social] abandon - aucun article_ready dans cron_state', 'error', Date.now() - globalStart);
     return NextResponse.json({ success: false, reason: 'no_article_ready' });
   }
 
