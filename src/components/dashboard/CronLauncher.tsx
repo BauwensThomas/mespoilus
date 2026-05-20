@@ -182,6 +182,9 @@ function useCronRunner() {
           if (selectedPromo) body.promo = selectedPromo;
           if (selectedImage) body.forcedImage = selectedImage;
         }
+        if (step.key === 'newsletter') {
+          body.bypass = 'true';
+        }
         const r = await fetch('/api/admin/run-cron', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

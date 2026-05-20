@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendBulkNewsletter, sendEmail } from '@/lib/resend';
-import { cronEmailWrapper, emailWrapper, statsRow, sectionBlock } from '@/lib/cron-email';
+import { cronEmailWrapper, statsRow, sectionBlock } from '@/lib/cron-email';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -114,7 +114,7 @@ Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": 
     // ── Étape 4 : Envoi via Resend ────────────────────────────────────────────
     const { sent, failed } = await sendBulkNewsletter({
       subject: campaign.subject,
-      html: emailWrapper(campaign.subject, campaign.content_html),
+      html: campaign.content_html,
       subscribers: emails,
     });
 
