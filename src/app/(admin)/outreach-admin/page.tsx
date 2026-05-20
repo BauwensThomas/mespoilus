@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Plus, X, Mail, RefreshCw, Upload, Image, Link, History } from 'lucide-react';
+import { Send, Plus, X, Mail, RefreshCw, Upload, Image, Link, History, Monitor, Smartphone } from 'lucide-react';
 import clsx from 'clsx';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -12,7 +12,7 @@ const DEFAULT_HTML = `<table width="100%" cellpadding="0" cellspacing="0" border
   <tr>
     <td align="center" style="padding:20px">
 
-      <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%">
+      <table width="860" cellpadding="0" cellspacing="0" border="0" style="max-width:860px;width:100%">
 
         <!-- En-tete orange -->
         <tr>
@@ -157,6 +157,7 @@ export default function OutreachAdminPage() {
   const [imgSize, setImgSize] = useState('100%');
   const [history, setHistory] = useState<Campaign[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
 
   useEffect(() => {
     fetch('/api/admin/outreach').then(r => r.json()).then(d => { setHistory(Array.isArray(d) ? d : []); setLoadingHistory(false); }).catch(() => setLoadingHistory(false));
@@ -541,6 +542,20 @@ export default function OutreachAdminPage() {
               </label>
             </div>
 
+            {/* Toggle desktop/mobile au-dessus de l'apercu */}
+            <div className="flex items-center justify-end mb-1.5">
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+                <button type="button" onClick={() => setPreviewMode('desktop')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${previewMode === 'desktop' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                  <Monitor size={13} strokeWidth={1.5} /> Ordi
+                </button>
+                <button type="button" onClick={() => setPreviewMode('mobile')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${previewMode === 'mobile' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                  <Smartphone size={13} strokeWidth={1.5} /> Mobile
+                </button>
+              </div>
+            </div>
+
             {/* Split : éditeur gauche + apercu droite */}
             <div className="flex gap-3" style={{ height: '680px' }}>
               <textarea
@@ -553,11 +568,19 @@ export default function OutreachAdminPage() {
                 placeholder={'<div style="...">\n  ...\n</div>'}
                 className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-orange-400 resize-none"
               />
-              <iframe
-                ref={iframeRef}
-                className="flex-1 border border-gray-200 rounded-lg bg-white"
-                title="Apercu editable"
-              />
+              <div
+                className={`flex-1 border border-gray-200 rounded-lg overflow-hidden ${previewMode === 'mobile' ? 'bg-gray-100 flex justify-center py-4' : ''}`}
+                style={{ display: previewMode === 'desktop' ? 'flex' : undefined, flexDirection: 'column' }}
+              >
+                <iframe
+                  ref={iframeRef}
+                  className="border-0 bg-white"
+                  title="Apercu editable"
+                  style={previewMode === 'mobile'
+                    ? { width: '390px', height: '640px', flexShrink: 0, borderRadius: '8px' }
+                    : { flex: 1, borderRadius: '0.5rem' }}
+                />
+              </div>
             </div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden"
               onChange={e => { if (e.target.files?.[0]) uploadImage(e.target.files[0]); e.target.value = ''; }} />
