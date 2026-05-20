@@ -3,9 +3,10 @@
 const LOGO_URL = 'https://ccpkrprfvbgsvobudlam.supabase.co/storage/v1/object/public/partner-logos/logo.jpg';
 
 export function emailWrapper(title: string, body: string): string {
-  return `<div style="font-family:sans-serif;width:100%;background:#f9fafb;padding:16px 0">
+  return `<style>@media only screen and (max-width:600px){.ew-out{padding:0 1mm!important}.ew-in{border-radius:0!important;box-shadow:none!important}}</style>
+  <div class="ew-out" style="font-family:sans-serif;width:100%;background:#f9fafb;padding:16px 0">
     <div style="max-width:860px;width:100%;margin:0 auto">
-    <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+    <div class="ew-in" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
       <div style="background-color:#ea580c;padding:20px 24px">
         <table cellpadding="0" cellspacing="0" border="0"><tr>
           <td style="vertical-align:middle;padding-right:12px"><img src="${LOGO_URL}" width="36" height="36" alt="Mes Poilus" style="display:block;border:0"></td>
