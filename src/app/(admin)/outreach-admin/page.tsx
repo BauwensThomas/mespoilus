@@ -19,14 +19,7 @@ const DEFAULT_HTML = `<table width="100%" cellpadding="0" cellspacing="0" border
           <td bgcolor="#ea580c" style="background-color:#ea580c;padding:36px 40px 32px;border-radius:12px 12px 0 0">
             <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px">
               <tr>
-                <td style="vertical-align:middle;padding-right:10px">
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="11" cy="4" r="2"/>
-                    <circle cx="18" cy="8" r="2"/>
-                    <circle cx="20" cy="16" r="2"/>
-                    <path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/>
-                  </svg>
-                </td>
+                <td style="vertical-align:middle;padding-right:10px"><img src="https://ccpkrprfvbgsvobudlam.supabase.co/storage/v1/object/public/partner-logos/logo.jpg" width="40" height="40" alt="Mes Poilus" style="display:block;border:0"></td>
                 <td style="vertical-align:middle">
                   <span style="color:white;font-size:26px;font-weight:800;letter-spacing:-0.5px">Mes Poilus</span>
                 </td>
@@ -143,6 +136,7 @@ const DEFAULT_HTML = `<table width="100%" cellpadding="0" cellspacing="0" border
 interface Campaign {
   id: string;
   subject: string;
+  html: string;
   emails: string[];
   sent_count: number;
   failed_count: number;
@@ -171,7 +165,153 @@ export default function OutreachAdminPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const cursorPos = useRef({ start: 0, end: 0 });
+  const fromPreview = useRef(false);
+  const iframeCleanup = useRef<(() => void) | null>(null);
+  const lastFocused = useRef<'html' | 'visual'>('visual');
+  const htmlHistory = useRef<string[]>([DEFAULT_HTML]);
+  const historyIdx = useRef(0);
+
+  function writeIframe(content: string) {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
+    if (!doc) return;
+    if (iframeCleanup.current) iframeCleanup.current();
+    doc.open(); doc.write(content); doc.close();
+    doc.designMode = 'on';
+
+    let selectedEl: HTMLElement | null = null;
+
+    const inputHandler = () => {
+      if (selectedEl) { selectedEl.style.outline = ''; selectedEl = null; }
+      lastFocused.current = 'visual';
+      fromPreview.current = true;
+      setHtml(doc.documentElement.outerHTML);
+    };
+
+    const clickHandler = (e: Event) => {
+      lastFocused.current = 'visual';
+      const el = e.target as HTMLElement;
+      if (!el || el.tagName === 'HTML' || el.tagName === 'BODY') return;
+
+      if (selectedEl && selectedEl !== el) selectedEl.style.outline = '';
+      selectedEl = el;
+      el.style.outline = '2px solid #ea580c';
+
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+      const currentHtml = textarea.value;
+
+      // Chrome normalise les couleurs CSS donc outerHTML ne correspond pas au textarea.
+      // On cherche par contenu texte qui lui n'est jamais modifie par le navigateur.
+      const trimmed = (el.textContent ?? '').trim();
+      let idx = trimmed ? currentHtml.indexOf(trimmed) : -1;
+
+      // Repli : mot le plus long si le texte complet ne correspond pas
+      if (idx === -1 && trimmed) {
+        const longest = trimmed.split(/\s+/).sort((a, b) => b.length - a.length)[0];
+        if (longest && longest.length >= 4) idx = currentHtml.indexOf(longest);
+      }
+      if (idx === -1) return;
+
+      const tagStart = currentHtml.lastIndexOf('<', idx);
+      if (tagStart === -1) return;
+      const closeTag = currentHtml.indexOf('</', idx + trimmed.length);
+      const tagEnd = closeTag !== -1 ? currentHtml.indexOf('>', closeTag) + 1 : idx + trimmed.length;
+
+      textarea.focus();
+      textarea.setSelectionRange(tagStart, Math.max(tagEnd, tagStart + 1));
+      // Scroll jusqu'a la selection
+      const linesBefore = currentHtml.substring(0, tagStart).split('\n').length;
+      textarea.scrollTop = Math.max(0, (linesBefore - 3) * 16);
+    };
+
+    doc.addEventListener('input', inputHandler);
+    doc.addEventListener('click', clickHandler);
+    iframeCleanup.current = () => {
+      doc.removeEventListener('input', inputHandler);
+      doc.removeEventListener('click', clickHandler);
+    };
+  }
+
+  function execFormat(cmd: string, value?: string) {
+    const textarea = textareaRef.current;
+
+    if (lastFocused.current === 'html' && textarea) {
+      // --- Undo textarea ---
+      if (cmd === 'undo') {
+        if (historyIdx.current > 0) {
+          historyIdx.current--;
+          const prev = htmlHistory.current[historyIdx.current];
+          setHtml(prev);
+          const pos = Math.min(cursorPos.current.start, prev.length);
+          requestAnimationFrame(() => {
+            textarea.focus();
+            textarea.setSelectionRange(pos, pos);
+          });
+        }
+        return;
+      }
+      // --- Insertion de balises dans le textarea ---
+      const { start, end } = cursorPos.current;
+      const selected = html.substring(start, end);
+      const inner = selected || 'TEXTE ICI';
+      const FONT_SIZES: Record<string, string> = { '1':'10px','3':'16px','5':'24px','7':'48px' };
+      let tag = '';
+      if (cmd === 'insertHTML')     tag = value ?? '';
+      else if (cmd === 'bold')      tag = `<strong>${inner}</strong>`;
+      else if (cmd === 'italic')    tag = `<em>${inner}</em>`;
+      else if (cmd === 'underline') tag = `<u>${inner}</u>`;
+      else if (cmd === 'foreColor') tag = `<span style="color:${value}">${inner}</span>`;
+      else if (cmd === 'fontSize')  tag = `<span style="font-size:${FONT_SIZES[value??'3']??'16px'}">${inner}</span>`;
+      else return;
+      const next = html.substring(0, start) + tag + html.substring(end);
+      const pos = start + tag.length;
+      setHtml(next);
+      cursorPos.current = { start: pos, end: pos };
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(pos, pos);
+      });
+      return;
+    }
+
+    // --- Appliquer dans le visuel (iframe designMode) ---
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
+    if (!doc) return;
+    doc.execCommand(cmd, false, value);
+    fromPreview.current = true;
+    setHtml(doc.documentElement.outerHTML);
+  }
+
+  useEffect(() => { writeIframe(html); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (fromPreview.current) {
+      fromPreview.current = false;
+      return;
+    }
+    const t = setTimeout(() => writeIframe(html), 400);
+    return () => clearTimeout(t);
+  }, [html]);
+
+  function handleHtmlChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    lastFocused.current = 'html';
+    const value = e.target.value;
+    let h = htmlHistory.current.slice(0, historyIdx.current + 1);
+    // Si l'etat courant n'est pas encore dans l'historique (ex: apres edition visuelle),
+    // l'ajouter comme baseline pour que undo revienne a cet etat et pas a DEFAULT_HTML
+    if (h[h.length - 1] !== html) h.push(html);
+    h.push(value);
+    if (h.length > 100) h.shift();
+    htmlHistory.current = h;
+    historyIdx.current = h.length - 1;
+    setHtml(value);
+  }
 
   function saveCursor() {
     if (textareaRef.current) {
@@ -288,9 +428,9 @@ export default function OutreachAdminPage() {
                       <div>
                         <p className="text-[10px] text-gray-500 mb-1.5 font-medium">Taille</p>
                         <div className="flex gap-1">
-                          {[{ label: 'Pleine', value: '100%' }, { label: '50%', value: '50%' }, { label: '300px', value: '300px' }, { label: '200px', value: '200px' }].map(opt => (
+                          {[{ label: 'Pleine', value: '100%' }, { label: '200px', value: '200px' }, { label: '300px', value: '300px' }].map(opt => (
                             <button key={opt.value} type="button" onClick={() => setImgSize(opt.value)}
-                              className={`flex-1 text-[10px] py-1 rounded-md border transition-colors ${imgSize === opt.value ? 'bg-orange-600 text-white border-orange-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                              className={`flex-1 text-[11px] py-1 px-1 rounded-md border transition-colors ${imgSize === opt.value ? 'bg-orange-600 text-white border-orange-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                               {opt.label}
                             </button>
                           ))}
@@ -349,25 +489,75 @@ export default function OutreachAdminPage() {
               </div>
             </div>
 
+            {/* Barre de formatage visuel */}
+            <div className="flex items-center gap-1 px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg mb-2 flex-wrap">
+              <button type="button" title="Annuler (Ctrl+Z)"
+                onMouseDown={e => { e.preventDefault(); execFormat('undo'); }}
+                className="px-2 py-1 text-sm text-gray-700 hover:bg-gray-200 rounded transition-colors">&#8617;</button>
+              <button type="button" title="Inserer un paragraphe"
+                onMouseDown={e => { e.preventDefault(); execFormat('insertHTML', '<p>TEXTE ICI</p>'); }}
+                className="px-2 py-1 text-xs font-mono text-gray-700 hover:bg-gray-200 rounded transition-colors">&lt;p&gt;</button>
+              <button type="button" title="Saut de ligne"
+                onMouseDown={e => { e.preventDefault(); execFormat('insertHTML', '<br>'); }}
+                className="px-2 py-1 text-xs font-mono text-gray-700 hover:bg-gray-200 rounded transition-colors">&lt;br&gt;</button>
+              <button type="button" title="Inserer un lien"
+                onMouseDown={e => { e.preventDefault(); execFormat('insertHTML', '<a href="">TEXTE ICI</a>'); }}
+                className="px-2 py-1 text-xs font-mono text-gray-700 hover:bg-gray-200 rounded transition-colors">&lt;a&gt;</button>
+              <div className="w-px h-5 bg-gray-300 mx-0.5" />
+              <button type="button" title="Gras"
+                onMouseDown={e => { e.preventDefault(); execFormat('bold'); }}
+                className="px-2 py-1 text-sm font-bold text-gray-700 hover:bg-gray-200 rounded transition-colors">B</button>
+              <button type="button" title="Italique"
+                onMouseDown={e => { e.preventDefault(); execFormat('italic'); }}
+                className="px-2 py-1 text-sm italic text-gray-700 hover:bg-gray-200 rounded transition-colors">I</button>
+              <button type="button" title="Souligne"
+                onMouseDown={e => { e.preventDefault(); execFormat('underline'); }}
+                className="px-2 py-1 text-sm underline text-gray-700 hover:bg-gray-200 rounded transition-colors">U</button>
+              <div className="w-px h-5 bg-gray-300 mx-0.5" />
+              <select title="Taille"
+                onMouseDown={e => e.stopPropagation()}
+                onChange={e => { execFormat('fontSize', e.target.value); (e.target as HTMLSelectElement).value = ''; }}
+                value=""
+                className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-700 bg-white">
+                <option value="" disabled>Taille</option>
+                <option value="1">Petit</option>
+                <option value="3">Normal</option>
+                <option value="5">Grand</option>
+                <option value="7">Tres grand</option>
+              </select>
+              <div className="w-px h-5 bg-gray-300 mx-0.5" />
+              {[['#374151','Gris fonce'],['#6b7280','Gris'],['#9ca3af','Gris clair'],['#ea580c','Orange'],['#ffffff','Blanc'],['#000000','Noir']].map(([color, label]) => (
+                <button key={color} type="button" title={label}
+                  onMouseDown={e => { e.preventDefault(); execFormat('foreColor', color); }}
+                  className="w-5 h-5 rounded-full border border-gray-300 hover:scale-110 transition-transform flex-shrink-0"
+                  style={{ backgroundColor: color }} />
+              ))}
+              <div className="w-px h-5 bg-gray-300 mx-0.5" />
+              <label title="Couleur personnalisee" className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
+                <input type="color" defaultValue="#374151"
+                  onChange={e => execFormat('foreColor', e.target.value)}
+                  className="w-5 h-5 rounded cursor-pointer border-0 p-0" />
+                Autre
+              </label>
+            </div>
+
             {/* Split : éditeur gauche + apercu droite */}
-            <div className="flex gap-3" style={{ height: '520px' }}>
+            <div className="flex gap-3" style={{ height: '680px' }}>
               <textarea
                 ref={textareaRef}
                 value={html}
-                onChange={e => setHtml(e.target.value)}
+                onChange={handleHtmlChange}
                 onSelect={saveCursor}
                 onBlur={saveCursor}
                 onKeyUp={saveCursor}
                 placeholder={'<div style="...">\n  ...\n</div>'}
                 className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-orange-400 resize-none"
               />
-              <div className="flex-1 border border-gray-200 rounded-lg overflow-hidden bg-white">
-                {html ? (
-                  <iframe srcDoc={html} className="w-full h-full" sandbox="allow-same-origin" title="Apercu email" />
-                ) : (
-                  <div className="h-full flex items-center justify-center text-gray-300 text-sm">Apercu</div>
-                )}
-              </div>
+              <iframe
+                ref={iframeRef}
+                className="flex-1 border border-gray-200 rounded-lg bg-white"
+                title="Apercu editable"
+              />
             </div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden"
               onChange={e => { if (e.target.files?.[0]) uploadImage(e.target.files[0]); e.target.value = ''; }} />
@@ -478,6 +668,41 @@ export default function OutreachAdminPage() {
                   {c.failed_count > 0 && (
                     <span className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-medium">{c.failed_count} echecs</span>
                   )}
+                  <button
+                    type="button"
+                    title="Telecharger le rapport JSON"
+                    onClick={() => {
+                      const report = {
+                        subject: c.subject,
+                        sent_at: c.created_at,
+                        sent_count: c.sent_count,
+                        failed_count: c.failed_count,
+                        emails: c.emails,
+                      };
+                      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `campagne-${c.id}.json`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="text-xs text-gray-400 hover:text-orange-500 border border-gray-200 hover:border-orange-300 px-2 py-0.5 rounded-full transition-colors"
+                  >JSON</button>
+                  <button
+                    type="button"
+                    title="Telecharger le visuel HTML"
+                    onClick={() => {
+                      const blob = new Blob([c.html ?? ''], { type: 'text/html' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `campagne-${c.id}.html`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="text-xs text-gray-400 hover:text-orange-500 border border-gray-200 hover:border-orange-300 px-2 py-0.5 rounded-full transition-colors"
+                  >HTML</button>
                 </div>
               </div>
             ))}

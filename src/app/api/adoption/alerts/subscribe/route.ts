@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/resend';
 import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
+import { emailWrapper } from '@/lib/cron-email';
 
 const ANIMAL_LABELS: Record<string, string> = {
   tous:    'Tous les animaux',
@@ -60,28 +61,21 @@ export async function POST(req: NextRequest) {
     await sendEmail({
       to: normalizedEmail,
       subject: 'Confirmez votre alerte adoption - Mes Poilus',
-      html: `
-        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111827">
-          <h2 style="color:#f97316;margin-bottom:8px">Confirmez votre alerte adoption</h2>
-          <p>Vous avez demandé a etre alerte pour :</p>
-          <ul style="margin:8px 0 16px;padding-left:20px">
-            <li><strong>Animal :</strong> ${animalLabel}</li>
-            <li><strong>Pays :</strong> ${countryLabel}</li>
-          </ul>
-          <p>Cliquez ci-dessous pour activer vos alertes :</p>
-          <p style="text-align:center;margin:28px 0">
-            <a href="${confirmUrl}" style="background:#f97316;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;font-size:15px">
-              Confirmer mes alertes
-            </a>
-          </p>
-          <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0">
-          <p style="font-size:11px;color:#9ca3af;text-align:center">
-            Si vous n'avez pas demande cette alerte, ignorez cet email.<br>
-            <a href="${unsubscribeUrl}" style="color:#9ca3af">Se desinscrire</a>
-          </p>
-          <p>L'equipe Mes Poilus</p>
-        </div>
-      `,
+      html: emailWrapper('Confirmez votre alerte adoption', `
+        <p>Vous avez demande a etre alerte pour :</p>
+        <ul style="margin:8px 0 16px;padding-left:20px">
+          <li><strong>Animal :</strong> ${animalLabel}</li>
+          <li><strong>Pays :</strong> ${countryLabel}</li>
+        </ul>
+        <p>Cliquez ci-dessous pour activer vos alertes :</p>
+        <p style="text-align:center;margin:28px 0">
+          <a href="${confirmUrl}" style="background:#ea580c;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;font-size:15px">Confirmer mes alertes</a>
+        </p>
+        <p style="font-size:11px;color:#9ca3af;text-align:center">
+          Si vous n'avez pas demande cette alerte, ignorez cet email.<br>
+          <a href="${unsubscribeUrl}" style="color:#9ca3af">Se desinscrire</a>
+        </p>
+      `),
     });
   } catch (e) {
     console.error('[adoption-alerts] email confirmation error:', e);

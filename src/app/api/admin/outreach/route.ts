@@ -8,7 +8,7 @@ export async function GET() {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('outreach_campaigns')
-    .select('id, subject, emails, sent_count, failed_count, created_at')
+    .select('id, subject, html, emails, sent_count, failed_count, created_at')
     .order('created_at', { ascending: false })
     .limit(20);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

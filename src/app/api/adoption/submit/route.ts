@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 import { sendEmail } from '@/lib/resend';
+import { emailWrapper } from '@/lib/cron-email';
 
 export async function POST(req: NextRequest) {
   const ip = getClientIP(req);
@@ -64,16 +65,12 @@ export async function POST(req: NextRequest) {
       await sendEmail({
         to: cleanEmail,
         subject: "Votre annonce d'adoption est en cours de validation",
-        html: `
-          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111">
-            <h2 style="color:#f59e0b">Annonce bien reçue !</h2>
-            <p>Bonjour <strong>${cleanName}</strong>,</p>
-            <p>Votre annonce d'adoption pour votre <strong>${animal_type}</strong> (${region.trim()}) a bien été soumise.</p>
-            <p>Elle sera vérifiée par notre équipe et publiée dès validation si elle respecte nos conditions.</p>
-            <p style="color:#6b7280;font-size:13px">Si vous avez des questions, contactez-nous à <a href="mailto:contact@mespoilus.com" style="color:#f59e0b">contact@mespoilus.com</a>.</p>
-            <p>-L'équipe Mes Poilus 🐾</p>
-          </div>
-        `,
+        html: emailWrapper('Annonce bien reçue !', `
+          <p>Bonjour <strong>${cleanName}</strong>,</p>
+          <p>Votre annonce d'adoption pour votre <strong>${animal_type}</strong> (${region.trim()}) a bien été soumise.</p>
+          <p>Elle sera vérifiée par notre équipe et publiée dès validation si elle respecte nos conditions.</p>
+          <p style="color:#6b7280;font-size:13px">Si vous avez des questions, contactez-nous à <a href="mailto:contact@mespoilus.com" style="color:#ea580c">contact@mespoilus.com</a>.</p>
+        `),
       });
     } catch (mailErr) {
       console.error('[adoption:submit] mail confirmation error:', mailErr);
@@ -86,12 +83,12 @@ export async function POST(req: NextRequest) {
         subject: `Nouvelle annonce d'adoption à vérifier -${animal_type} (${region.trim()})`,
         html: `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111">
-            <h2 style="color:#f59e0b">Nouvelle annonce à modérer</h2>
+            <h2 style="color:#ea580c">Nouvelle annonce à modérer</h2>
             <p><strong>Déposant :</strong> ${cleanName} (${cleanEmail})</p>
             <p><strong>Animal :</strong> ${animal_type}${breed ? ` · ${breed}` : ''}${age ? ` · ${age}` : ''}</p>
             <p><strong>Région :</strong> ${region.trim()}</p>
             <p><strong>Description :</strong> ${description.trim()}</p>
-            <p><a href="https://mespoilus.com/adoption-admin" style="color:#f59e0b">→ Accéder à la modération</a></p>
+            <p><a href="https://mespoilus.com/adoption-admin" style="color:#ea580c">→ Accéder à la modération</a></p>
           </div>
         `,
       });

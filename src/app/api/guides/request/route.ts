@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/resend';
+import { emailWrapper } from '@/lib/cron-email';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com';
 
@@ -78,19 +79,14 @@ export async function POST(req: NextRequest) {
     await sendEmail({
       to: normalizedEmail,
       subject: `Votre guide PDF : ${guide.title}`,
-      html: `
-<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
-  <h2 style="color:#ea580c">Votre guide est prêt !</h2>
-  <p>Bonjour,</p>
-  <p>Merci pour votre intérêt ! Voici votre lien pour télécharger <strong>${guide.title}</strong> :</p>
-  <a href="${downloadUrl}" style="display:inline-block;background:#ea580c;color:white;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:bold;margin:16px 0">
-    Télécharger mon guide PDF
-  </a>
-  <p style="color:#6b7280;font-size:13px">Ce lien est valable 24 heures.</p>
-  <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
-  <p style="color:#9ca3af;font-size:12px">Mes Poilus — mespoilus.com</p>
-</div>
-      `.trim(),
+      html: emailWrapper('Votre guide est pret !', `
+        <p>Bonjour,</p>
+        <p>Merci pour votre interet ! Voici votre lien pour telecharger <strong>${guide.title}</strong> :</p>
+        <p style="text-align:center;margin:24px 0">
+          <a href="${downloadUrl}" style="display:inline-block;background:#ea580c;color:#fff;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px">Telecharger mon guide PDF</a>
+        </p>
+        <p style="color:#6b7280;font-size:13px">Ce lien est valable 24 heures.</p>
+      `),
     });
 
     return NextResponse.json({ success: true });

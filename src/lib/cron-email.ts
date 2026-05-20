@@ -1,5 +1,27 @@
 // Helper partagé pour les emails de notification des crons
 
+const LOGO_URL = 'https://ccpkrprfvbgsvobudlam.supabase.co/storage/v1/object/public/partner-logos/logo.jpg';
+
+export function emailWrapper(title: string, body: string): string {
+  return `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#f9fafb;padding:16px 0">
+    <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+      <div style="background-color:#ea580c;padding:20px 24px">
+        <table cellpadding="0" cellspacing="0" border="0"><tr>
+          <td style="vertical-align:middle;padding-right:12px"><img src="${LOGO_URL}" width="36" height="36" alt="Mes Poilus" style="display:block;border:0"></td>
+          <td style="vertical-align:middle"><span style="color:white;font-size:18px;font-weight:700;letter-spacing:-0.3px">Mes Poilus</span></td>
+        </tr></table>
+        <h1 style="color:white;font-size:17px;font-weight:700;margin:10px 0 0;line-height:1.3">${title}</h1>
+      </div>
+      <div style="padding:24px 28px">${body}</div>
+      <div style="padding:14px 24px;border-top:1px solid #f3f4f6;text-align:center">
+        <p style="font-size:11px;color:#9ca3af;margin:0 0 10px">Mes Poilus - <a href="https://mespoilus.com" style="color:#9ca3af">mespoilus.com</a></p>
+        <a href="https://www.facebook.com/profile.php?id=61589487954538" style="display:inline-block;margin:0 4px;background:#1877f2;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Facebook</a>
+        <a href="https://www.instagram.com/mespoilusofficiel/" style="display:inline-block;margin:0 4px;background:#e1306c;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Instagram</a>
+      </div>
+    </div>
+  </div>`;
+}
+
 export function mdToHtml(md: string): string {
   return md
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -20,8 +42,12 @@ export function cronEmailWrapper(title: string, subtitle: string, body: string):
     <div style="font-family:sans-serif;max-width:720px;margin:0 auto;color:#111;background:#f9fafb;padding:24px">
       <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
         <div style="background-color:#ea580c;background:linear-gradient(135deg,#ea580c,#111827);padding:20px 24px">
-          <p style="color:#fff;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px">${subtitle}</p>
-          <h1 style="color:#fff;font-size:20px;font-weight:700;margin:0">Mes Poilus - ${title}</h1>
+          <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px"><tr>
+            <td style="vertical-align:middle;padding-right:12px"><img src="${LOGO_URL}" width="36" height="36" alt="Mes Poilus" style="display:block;border:0"></td>
+            <td style="vertical-align:middle"><span style="color:white;font-size:18px;font-weight:700">Mes Poilus</span></td>
+          </tr></table>
+          <p style="color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px">${subtitle}</p>
+          <h1 style="color:#fff;font-size:20px;font-weight:700;margin:0">${title}</h1>
         </div>
         <div style="padding:24px 28px">${body}</div>
         <div style="padding:14px 24px;border-top:1px solid #f3f4f6;text-align:center">
