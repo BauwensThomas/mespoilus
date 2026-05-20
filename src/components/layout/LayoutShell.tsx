@@ -17,7 +17,7 @@ interface DbPartenaire {
   display_mode?: string;
 }
 
-const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/adoption-admin', '/produits-admin', '/guides-admin', '/races-admin', '/blog-admin', '/boutique-admin', '/partenaires-admin'];
+const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/adoption-admin', '/produits-admin', '/guides-admin', '/races-admin', '/blog-admin', '/boutique-admin', '/partenaires-admin', '/outreach-admin'];
 
 function PartenairesBandeau() {
   const [partenaires, setPartenaires] = useState<DbPartenaire[]>([]);
