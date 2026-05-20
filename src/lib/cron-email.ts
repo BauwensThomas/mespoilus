@@ -3,19 +3,19 @@
 const LOGO_URL = 'https://ccpkrprfvbgsvobudlam.supabase.co/storage/v1/object/public/partner-logos/logo.jpg';
 
 export function emailWrapper(title: string, body: string): string {
-  return `<style>@media only screen and (max-width:600px){.ew-out{padding:0 1mm!important}.ew-in{border-radius:0!important;box-shadow:none!important}}</style>
+  return `<style>@media only screen and (max-width:600px){.ew-out{padding:0 1mm!important}.ew-in{border-radius:0!important;box-shadow:none!important}.ew-hd{padding:16px 14px!important}.ew-bd{padding:16px 14px!important}.ew-ft{padding:12px 14px!important}}</style>
   <div class="ew-out" style="font-family:sans-serif;width:100%;background:#f9fafb;padding:16px 0">
     <div style="max-width:860px;width:100%;margin:0 auto">
     <div class="ew-in" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
-      <div style="background-color:#ea580c;padding:20px 24px">
+      <div class="ew-hd" style="background-color:#ea580c;padding:20px 24px">
         <table cellpadding="0" cellspacing="0" border="0"><tr>
           <td style="vertical-align:middle;padding-right:12px"><img src="${LOGO_URL}" width="36" height="36" alt="Mes Poilus" style="display:block;border:0"></td>
           <td style="vertical-align:middle"><span style="color:white;font-size:18px;font-weight:700;letter-spacing:-0.3px">Mes Poilus</span></td>
         </tr></table>
         <h1 style="color:white;font-size:17px;font-weight:700;margin:10px 0 0;line-height:1.3">${title}</h1>
       </div>
-      <div style="padding:24px 28px">${body}</div>
-      <div style="padding:14px 24px;border-top:1px solid #f3f4f6;text-align:center">
+      <div class="ew-bd" style="padding:24px 28px">${body}</div>
+      <div class="ew-ft" style="padding:14px 24px;border-top:1px solid #f3f4f6;text-align:center">
         <p style="font-size:11px;color:#9ca3af;margin:0 0 10px">Mes Poilus - <a href="https://mespoilus.com" style="color:#9ca3af">mespoilus.com</a></p>
         <a href="https://www.facebook.com/profile.php?id=61589487954538" style="display:inline-block;margin:0 4px;background:#1877f2;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Facebook</a>
         <a href="https://www.instagram.com/mespoilusofficiel/" style="display:inline-block;margin:0 4px;background:#e1306c;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Instagram</a>
