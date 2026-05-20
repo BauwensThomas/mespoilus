@@ -65,7 +65,7 @@ async function getArticles(category: string, search?: string): Promise<Article[]
       .from('articles')
       .select('*')
       .eq('status', 'published')
-      .or(`category.eq.${category},categories.cs.{${category}}`)
+      .eq('category', category)
       .order('published_at', { ascending: false })
       .limit(24);
     if (search) query = query.or(`title.ilike.%${search}%,excerpt.ilike.%${search}%`);

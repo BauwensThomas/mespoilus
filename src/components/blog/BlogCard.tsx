@@ -73,15 +73,16 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
       href={`/blog/${article.slug}`}
       className={clsx(
         'block group focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 rounded-2xl',
-        'bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-gray-200 transition-all duration-300 h-full',
-        featured ? 'flex flex-col md:flex-row ring-2 ring-orange-400/50' : 'flex flex-col'
+        featured
+          ? 'flex flex-col md:flex-row md:items-center gap-6 p-5 bg-orange-50/40 border border-orange-300 rounded-2xl transition-all duration-300 hover:shadow-lg'
+          : 'bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-gray-200 transition-all duration-300 h-full flex flex-col'
       )}
       aria-label={`Lire l'article: ${article.title}`}
     >
       {/* Image de l'article */}
       {featured ? (
         /* Vedette : conteneur carré = image carrée → 0 bord gris */
-        <div className="relative w-full h-64 md:w-96 md:h-96 flex-shrink-0 overflow-hidden bg-gray-50">
+        <div className={clsx('relative w-full h-64 md:w-96 md:h-96 flex-shrink-0 bg-gradient-to-br', gradient)} style={{ overflow: 'hidden', borderRadius: '1rem', border: '2px solid rgba(251,146,60,0.6)' }}>
           {imageSrc ? (
             <>
               <Image
@@ -117,7 +118,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
         </div>
       ) : (
         /* Carte normale : hauteur fixe, object-cover */
-        <div className={clsx('relative w-full h-48 overflow-hidden flex-shrink-0 bg-gradient-to-br', gradient)}>
+        <div className={clsx('relative w-full h-48 flex-shrink-0 bg-gradient-to-br', gradient)} style={{ overflow: 'hidden', borderRadius: '0 0 1rem 1rem', borderBottom: '2px solid rgba(251,146,60,0.6)' }}>
           {imageSrc ? (
             <Image
               src={imageSrc}
@@ -132,7 +133,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
               <IconComponent size={64} className="text-white" strokeWidth={1} />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
           <div className="absolute top-3 left-3 flex items-center gap-2 flex-wrap">
             <span className={clsx('badge border text-xs font-semibold px-3 py-1.5', categoryStyle)}>{article.category}</span>
           </div>
@@ -152,7 +153,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
 
         {/* Contenu */}
         {featured ? (
-          <div className="flex flex-col justify-between p-7 md:p-10 flex-1 bg-white">
+          <div className="flex flex-col justify-between flex-1">
             {/* Haut */}
             <div className="flex flex-col gap-3">
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors leading-snug">

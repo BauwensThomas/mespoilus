@@ -337,3 +337,10 @@
     @apply focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2;
   }
 }
+
+/* Images dans les articles : 100% sur mobile */
+@media (max-width: 640px) {
+  .article-content figure img {
+    width: 100% !important;
+  }
+}
