@@ -238,23 +238,24 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
 
   const quickTasks = QUICK_TASKS[agent.id] ?? [];
   const agentHint = AGENT_HINTS[agent.id] ?? null;
-  const heroSrc = photo?.url ?? placeholderSrc ?? '/images/agents/thomas.svg';
+  const heroSrc = photo?.url ?? null;
   const heroAlt = photo?.alt ?? `${agent.name} - ${agent.role}`;
-  const isExternalImage = heroSrc.startsWith('http');
 
   return (
     <div className="animate-fade-in">
       {/* Hero */}
       <div className="relative w-full h-52 overflow-hidden bg-white">
-        <Image
-          src={heroSrc}
-          alt={heroAlt}
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-          unoptimized={isExternalImage}
-        />
+        {heroSrc && (
+          <Image
+            src={heroSrc}
+            alt={heroAlt}
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
+            unoptimized
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-white via-white/60 to-transparent" />
         <div className={clsx('absolute inset-0 opacity-20', agent.bgColor)} />
 
