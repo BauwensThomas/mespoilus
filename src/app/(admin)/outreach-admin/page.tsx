@@ -162,6 +162,7 @@ export default function OutreachAdminPage() {
   const [uploading, setUploading] = useState(false);
   const [imgUrlInput, setImgUrlInput] = useState('');
   const [showImgPanel, setShowImgPanel] = useState(false);
+  const [imgSize, setImgSize] = useState('100%');
   const [history, setHistory] = useState<Campaign[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
 
@@ -182,7 +183,10 @@ export default function OutreachAdminPage() {
 
   function insertImg(url: string, alt = '') {
     if (!url.trim()) return;
-    const tag = `<img src="${url}" alt="${alt}" style="max-width:100%;display:block;margin:16px auto;border-radius:6px" />`;
+    const sizeStyle = imgSize === '100%'
+      ? 'max-width:100%;width:100%;display:block;margin:16px auto;border-radius:6px'
+      : `width:${imgSize};max-width:100%;display:block;margin:16px auto;border-radius:6px`;
+    const tag = `<img src="${url}" alt="${alt}" style="${sizeStyle}" />`;
     const { start, end } = cursorPos.current;
     const newVal = html.substring(0, start) + tag + html.substring(end);
     setHtml(newVal);
@@ -190,6 +194,15 @@ export default function OutreachAdminPage() {
     setImgUrlInput('');
     setShowImgPanel(false);
     setTab('edit');
+  }
+
+  function removeImg(src: string) {
+    const escaped = src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    setHtml(h => h.replace(new RegExp(`<img[^>]*src="${escaped}"[^>]*/?>`, 'gi'), ''));
+  }
+
+  function getImagesFromHtml(): string[] {
+    return [...html.matchAll(/<img[^>]*src="([^"]+)"[^>]*\/?>/gi)].map(m => m[1]);
   }
 
   async function uploadImage(file: File) {
@@ -271,8 +284,22 @@ export default function OutreachAdminPage() {
                     <Image size={11} /> Insérer image
                   </button>
                   {showImgPanel && (
-                    <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-gray-200 rounded-xl shadow-xl p-3 w-72 space-y-2">
+                    <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-gray-200 rounded-xl shadow-xl p-3 w-80 space-y-3">
                       <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Insérer une image</p>
+
+                      {/* Taille */}
+                      <div>
+                        <p className="text-[10px] text-gray-500 mb-1.5 font-medium">Taille</p>
+                        <div className="flex gap-1">
+                          {[{ label: 'Pleine', value: '100%' }, { label: '50%', value: '50%' }, { label: '300px', value: '300px' }, { label: '200px', value: '200px' }].map(opt => (
+                            <button key={opt.value} type="button" onClick={() => setImgSize(opt.value)}
+                              className={`flex-1 text-[10px] py-1 rounded-md border transition-colors ${imgSize === opt.value ? 'bg-orange-600 text-white border-orange-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       {/* Upload */}
                       <button
                         type="button"
@@ -282,6 +309,7 @@ export default function OutreachAdminPage() {
                       >
                         {uploading ? <><span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> Upload en cours...</> : <><Upload size={11} /> Uploader un fichier</>}
                       </button>
+
                       {/* URL directe */}
                       <div className="flex gap-1.5">
                         <input
@@ -299,7 +327,25 @@ export default function OutreachAdminPage() {
                           <Link size={10} /> Insérer
                         </button>
                       </div>
-                      <p className="text-[10px] text-gray-400">Clique d'abord dans l'éditeur HTML à l'endroit voulu, puis insère l'image ici.</p>
+
+                      <p className="text-[10px] text-gray-400">Clique dans l'éditeur à l'endroit voulu, puis insère ici.</p>
+
+                      {/* Images déjà dans le mail */}
+                      {getImagesFromHtml().length > 0 && (
+                        <div className="border-t border-gray-100 pt-2 space-y-1.5">
+                          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Images dans le mail</p>
+                          {getImagesFromHtml().map((src, i) => (
+                            <div key={i} className="flex items-center gap-2 bg-gray-50 rounded-lg p-1.5">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={src} alt="" className="w-10 h-8 object-cover rounded flex-shrink-0 border border-gray-200" />
+                              <span className="text-[10px] text-gray-500 truncate flex-1 min-w-0">{src.split('/').pop()}</span>
+                              <button type="button" onClick={() => removeImg(src)} className="text-gray-300 hover:text-red-500 flex-shrink-0 transition-colors">
+                                <X size={13} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
