@@ -338,7 +338,7 @@ Structure du HTML à produire :
 
 Style HTML :
 - Conteneur extérieur : width:100%, background:#f9fafb
-- Conteneur intérieur : max-width:680px, width:100%, margin:0 auto, fond blanc, border-radius:12px
+- Conteneur intérieur : max-width:860px, width:100%, margin:0 auto, fond blanc, border-radius:12px
 - Couleurs : orange #ea580c, texte #1f2937, liens #ea580c
 - Police : Arial/sans-serif, 16px
 - Boutons CTA : fond #ea580c, texte blanc, border-radius 8px, padding 12px 24px

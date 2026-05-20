@@ -4,7 +4,7 @@ const LOGO_URL = 'https://ccpkrprfvbgsvobudlam.supabase.co/storage/v1/object/pub
 
 export function emailWrapper(title: string, body: string): string {
   return `<div style="font-family:sans-serif;width:100%;background:#f9fafb;padding:16px 0">
-    <div style="max-width:680px;width:100%;margin:0 auto">
+    <div style="max-width:860px;width:100%;margin:0 auto">
     <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
       <div style="background-color:#ea580c;padding:20px 24px">
         <table cellpadding="0" cellspacing="0" border="0"><tr>
