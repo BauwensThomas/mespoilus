@@ -3,7 +3,8 @@
 const LOGO_URL = 'https://ccpkrprfvbgsvobudlam.supabase.co/storage/v1/object/public/partner-logos/logo.jpg';
 
 export function emailWrapper(title: string, body: string): string {
-  return `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#f9fafb;padding:16px 0">
+  return `<div style="font-family:sans-serif;width:100%;background:#f9fafb;padding:16px 0">
+    <div style="max-width:680px;width:100%;margin:0 auto">
     <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
       <div style="background-color:#ea580c;padding:20px 24px">
         <table cellpadding="0" cellspacing="0" border="0"><tr>
@@ -18,6 +19,7 @@ export function emailWrapper(title: string, body: string): string {
         <a href="https://www.facebook.com/profile.php?id=61589487954538" style="display:inline-block;margin:0 4px;background:#1877f2;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Facebook</a>
         <a href="https://www.instagram.com/mespoilusofficiel/" style="display:inline-block;margin:0 4px;background:#e1306c;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Instagram</a>
       </div>
+    </div>
     </div>
   </div>`;
 }
