@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AGENTS } from '@/lib/agents/config';
 import { logout } from '@/app/actions/auth';
-import { Zap, Target, Shield, BookOpen, ShoppingBag, Package, PawPrint, LogOut, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Mail, Home, ChevronLeft, Menu, FileText, ClipboardList } from 'lucide-react';
+import { Zap, Target, Shield, BookOpen, ShoppingBag, Package, PawPrint, LogOut, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Mail, Home, ChevronLeft, Menu, FileText, ClipboardList, Star } from 'lucide-react';
 import clsx from 'clsx';
 
 function getAgentIcon(iconId: string) {
@@ -32,7 +32,8 @@ const navItems = [
   { href: '/boutique-admin', label: 'Boutique',         icon: ShoppingBag,   isPublic: false },
   { href: '/produits-admin', label: 'Produits affiliés',icon: Package,       isPublic: false },
   { href: '/races-admin',    label: 'Fiches races',     icon: ClipboardList, isPublic: false },
-  { href: '/guides-admin',   label: 'Guides PDF',       icon: FileText,      isPublic: false },
+  { href: '/guides-admin',     label: 'Guides PDF',       icon: FileText,      isPublic: false },
+  { href: '/partenaires-admin', label: 'Partenaires',     icon: Star,          isPublic: false },
 ];
 
 interface SidebarProps {
