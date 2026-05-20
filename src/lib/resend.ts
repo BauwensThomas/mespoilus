@@ -1,16 +1,19 @@
-const FROM_EMAIL = 'Mes Poilus <newsletter@mespoilus.com>';
-const REPLY_TO   = 'contact@mespoilus.com';
+const FROM_NOTIFICATION = 'Mes Poilus <info@mespoilus.com>';
+const FROM_NEWSLETTER   = 'Mes Poilus <newsletter@mespoilus.com>';
+const REPLY_TO          = 'contact@mespoilus.com';
 
 export async function sendEmail({
   to,
   subject,
   html,
   replyTo,
+  from,
 }: {
   to: string;
   subject: string;
   html: string;
   replyTo?: string;
+  from?: string;
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error('RESEND_API_KEY manquant');
@@ -22,7 +25,7 @@ export async function sendEmail({
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      from: FROM_EMAIL,
+      from: from ?? FROM_NOTIFICATION,
       to: [to],
       subject,
       html,
@@ -57,7 +60,7 @@ export async function sendBulkNewsletter({
       const token = Buffer.from(email).toString('base64url');
       const unsubscribeUrl = `${appUrl}/api/newsletter/unsubscribe?t=${token}`;
       const personalizedHtml = html.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl);
-      await sendEmail({ to: email, subject, html: personalizedHtml });
+      await sendEmail({ to: email, subject, html: personalizedHtml, from: FROM_NEWSLETTER });
       sent++;
       await new Promise((r) => setTimeout(r, 120)); // ~8 req/s, sous la limite Resend
     } catch (err) {
