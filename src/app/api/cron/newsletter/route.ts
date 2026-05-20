@@ -52,7 +52,7 @@ export async function GET(req: Request) {
   // Récupérer les 3 derniers articles publiés
   const { data: articles } = await supabase
     .from('articles')
-    .select('title, slug, excerpt')
+    .select('title, slug, excerpt, image_url')
     .eq('status', 'published')
     .order('published_at', { ascending: false })
     .limit(3);
@@ -62,9 +62,10 @@ export async function GET(req: Request) {
   }
 
   const articlesStr = articles
-    .map((a: { title: string; slug: string; excerpt: string | null }) =>
-      `- ${a.title}\n  Lien : https://www.mespoilus.com/blog/${a.slug}\n  Résumé : ${a.excerpt ?? ''}`
-    )
+    .map((a: { title: string; slug: string; excerpt: string | null; image_url: string | null }) => {
+      const imgLine = a.image_url ? `\n  Image : ${a.image_url}` : '';
+      return `- ${a.title}\n  Lien : https://www.mespoilus.com/blog/${a.slug}\n  Résumé : ${a.excerpt ?? ''}${imgLine}`;
+    })
     .join('\n\n');
 
   try {

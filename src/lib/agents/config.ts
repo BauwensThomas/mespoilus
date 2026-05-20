@@ -328,7 +328,8 @@ Structure du HTML à produire :
    puis un titre/sous-titre chaleureux en blanc
 2. Introduction : 2-3 phrases personnelles et engageantes
 3. Section "Cette semaine sur Mes Poilus" : 3 articles, chacun avec :
-   - Photo de l'article si une URL image est fournie : <img src="[image_url]" alt="[titre]" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:10px;">
+   - Photo UNIQUEMENT si une URL "Image :" est explicitement fournie dans les données de l'article (ne jamais inventer une URL, ne jamais réutiliser l'URL du logo) : <img src="[image_url_de_l_article]" alt="[titre]" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:10px;">
+   - Si aucune URL "Image :" n'est fournie pour un article → pas d'image, seulement texte
    - Titre en gras, résumé (2 phrases), bouton lien orange
 4. Section "Le conseil de Sofia" : un conseil pratique et concret sur les animaux
 5. Footer sombre (#111827) : copyright "© [année] Mes Poilus - Tous droits réservés", lien de désabonnement ({{UNSUBSCRIBE_URL}}), boutons Facebook et Instagram
