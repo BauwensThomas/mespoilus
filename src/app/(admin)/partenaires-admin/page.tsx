@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Plus, Trash2, Upload, X, ExternalLink, RefreshCw, Check, Image, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, Upload, X, ExternalLink, RefreshCw, Check, Image, ChevronUp, Search } from 'lucide-react';
 import clsx from 'clsx';
 import { getFlagUrl } from '@/lib/partenaires';
 
@@ -152,6 +152,7 @@ export default function PartenairesAdminPage() {
   const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [imageInputMode, setImageInputMode] = useState<'file' | 'url' | 'emoji'>('file');
   const [linkMode, setLinkMode] = useState<'single' | 'by_country'>('single');
+  const [search, setSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -783,13 +784,28 @@ export default function PartenairesAdminPage() {
         </div>
       )}
 
-      {/* Stats */}
+      {/* Recherche + stats */}
       {!loading && (
-        <div className="flex items-center gap-4 text-sm text-gray-500">
-          <span>{partenaires.length} partenaire{partenaires.length !== 1 ? 's' : ''}</span>
-          <span className="text-emerald-600 font-medium">{partenaires.filter(p => p.actif).length} actifs</span>
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" strokeWidth={1.5} />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Rechercher un partenaire..."
+              className="pl-8 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 w-64"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <X size={13} />
+              </button>
+            )}
+          </div>
+          <span className="text-sm text-gray-500">{partenaires.length} partenaire{partenaires.length !== 1 ? 's' : ''}</span>
+          <span className="text-emerald-600 text-sm font-medium">{partenaires.filter(p => p.actif).length} actifs</span>
           {partenaires.filter(p => !p.actif).length > 0 && (
-            <span className="text-red-500 font-medium">{partenaires.filter(p => !p.actif).length} inactifs</span>
+            <span className="text-red-500 text-sm font-medium">{partenaires.filter(p => !p.actif).length} inactifs</span>
           )}
         </div>
       )}
@@ -801,7 +817,7 @@ export default function PartenairesAdminPage() {
         <p className="text-sm text-gray-500 py-8 text-center">Aucun partenaire. Cliquez sur "+ Ajouter" pour commencer.</p>
       ) : (
         <div className="space-y-2">
-          {partenaires.map(p => (
+          {partenaires.filter(p => !search || [p.nom, p.tag, p.pour, p.description].some(v => v?.toLowerCase().includes(search.toLowerCase()))).map(p => (
             <div key={p.id} className={clsx('bg-white border rounded-xl overflow-hidden', p.actif ? 'border-gray-200' : 'border-gray-100 opacity-60')}>
               <div className="flex items-center gap-4 p-3">
 
