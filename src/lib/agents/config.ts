@@ -337,8 +337,9 @@ Structure du HTML à produire :
    - Instagram : <a href="https://www.instagram.com/mespoilusofficiel/" style="display:inline-block;margin:0 4px;background:#e1306c;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Instagram</a>
 
 Style HTML :
-- Conteneur extérieur : width:100%, background:#f9fafb
-- Conteneur intérieur : max-width:860px, width:100%, margin:0 auto, fond blanc, border-radius:12px
+- Ajouter au tout début du HTML : <style>@media only screen and (max-width:600px){.nl-out{padding:0 1mm!important}.nl-in{border-radius:0!important}}</style>
+- Conteneur extérieur : class="nl-out", width:100%, background:#f9fafb, padding:16px 0
+- Conteneur intérieur : class="nl-in", max-width:860px, width:100%, margin:0 auto, fond blanc, border-radius:12px
 - Couleurs : orange #ea580c, texte #1f2937, liens #ea580c
 - Police : Arial/sans-serif, 16px
 - Boutons CTA : fond #ea580c, texte blanc, border-radius 8px, padding 12px 24px
