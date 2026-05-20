@@ -344,3 +344,9 @@
     width: 100% !important;
   }
 }
+
+/* Simulation mobile dans le preview admin */
+.article-content-mobile figure img {
+  width: 100% !important;
+  max-width: 100% !important;
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Save, Eye, PawPrint } from 'lucide-react';
+import { Save, Eye, PawPrint, Monitor, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 import { marked } from 'marked';
 import ImageUploader from './ImageUploader';
@@ -30,6 +30,7 @@ export default function EditArticleClient({ article, updateAction }: Props) {
   const [content, setContent] = useState(article.content ?? '');
   const [imageUrl, setImageUrl] = useState(article.image_url ?? '');
   const [status, setStatus] = useState(article.status ?? 'published');
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
 
   const htmlContent = useMemo(() => {
     try {
@@ -120,50 +121,85 @@ export default function EditArticleClient({ article, updateAction }: Props) {
       {/* ── Colonne droite : prévisualisation live ── */}
       <div className="w-1/2 min-w-0">
         <div className="sticky top-6">
+          {/* Header prévisualisation + toggle */}
           <div className="flex items-center gap-2 mb-3">
             <Eye size={14} strokeWidth={1.5} className="text-orange-600" />
-            <span className="text-xs font-semibold text-orange-600 uppercase tracking-wide">Prévisualisation</span>
+            <span className="text-xs font-semibold text-orange-600 uppercase tracking-wide flex-1">Prévisualisation</span>
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+              <button
+                type="button"
+                onClick={() => setPreviewMode('desktop')}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${previewMode === 'desktop' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                <Monitor size={13} strokeWidth={1.5} />
+                Ordi
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewMode('mobile')}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${previewMode === 'mobile' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                <Smartphone size={13} strokeWidth={1.5} />
+                Mobile
+              </button>
+            </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm max-h-[calc(100vh-120px)] overflow-y-auto">
-            {/* Image hero */}
-            {imageUrl && (
-              <div className="relative w-full h-48 overflow-hidden bg-gray-100">
-                <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              </div>
-            )}
-
-            <div className="p-6">
-              {/* Catégorie */}
-              <div className="flex items-center gap-1.5 mb-3">
-                <PawPrint size={12} strokeWidth={1.5} className="text-orange-500" />
-                <span className="text-[11px] font-semibold text-orange-600 uppercase tracking-wide">
-                  {article.category}
-                </span>
-              </div>
-
-              {/* Titre */}
-              <h1 className="text-xl font-bold text-gray-900 leading-tight mb-3">{title || 'Titre…'}</h1>
-
-              {/* Excerpt */}
-              {excerpt && (
-                <p className="text-sm text-gray-500 italic mb-5 pb-4 border-b border-gray-100">{excerpt}</p>
+          {/* Conteneur prévisualisation */}
+          <div className="max-h-[calc(100vh-120px)] overflow-y-auto rounded-2xl">
+            <div className={previewMode === 'mobile' ? 'flex justify-center bg-gray-100 rounded-2xl p-4' : ''}>
+            <div
+              className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm w-full"
+              style={previewMode === 'mobile' ? { maxWidth: '390px', width: '100%' } : {}}
+            >
+              {/* Image hero */}
+              {imageUrl && (
+                <div className={`relative w-full overflow-hidden bg-gray-100 ${previewMode === 'mobile' ? 'h-36' : 'h-48'}`}>
+                  <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                </div>
               )}
 
-              {/* Corps */}
-              <div
-                className="article-content prose prose-sm max-w-none
-                  prose-headings:font-semibold
-                  prose-h2:text-lg prose-h2:mt-8 prose-h2:mb-3
-                  prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2
-                  prose-p:leading-relaxed prose-p:my-3
-                  prose-a:text-orange-600 prose-a:underline
-                  prose-ul:my-3 prose-li:my-1
-                  prose-blockquote:border-l-2 prose-blockquote:border-orange-400 prose-blockquote:bg-orange-50 prose-blockquote:px-4 prose-blockquote:py-2 prose-blockquote:rounded-r-lg"
-                style={{ color: '#1f2937' }}
-                dangerouslySetInnerHTML={{ __html: htmlContent }}
-              />
+              <div className={previewMode === 'mobile' ? 'p-4' : 'p-6'}>
+                {/* Catégorie */}
+                <div className="flex items-center gap-1.5 mb-3">
+                  <PawPrint size={12} strokeWidth={1.5} className="text-orange-500" />
+                  <span className="text-[11px] font-semibold text-orange-600 uppercase tracking-wide">
+                    {article.category}
+                  </span>
+                </div>
+
+                {/* Titre */}
+                <h1 className={`font-bold text-gray-900 leading-tight mb-3 ${previewMode === 'mobile' ? 'text-lg' : 'text-xl'}`}>
+                  {title || 'Titre…'}
+                </h1>
+
+                {/* Excerpt */}
+                {excerpt && (
+                  <p className="text-sm text-gray-500 italic mb-5 pb-4 border-b border-gray-100">{excerpt}</p>
+                )}
+
+                {/* Corps */}
+                <div
+                  className={`prose prose-base max-w-none
+                    prose-headings:font-semibold
+                    prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
+                    prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+                    prose-h4:text-base prose-h4:mt-6 prose-h4:mb-2
+                    prose-p:leading-[1.85] prose-p:my-5
+                    prose-a:text-orange-600 prose-a:underline prose-a:decoration-orange-400 prose-a:underline-offset-2 prose-a:font-medium hover:prose-a:text-orange-500
+                    prose-strong:font-semibold
+                    prose-ul:my-5 prose-ol:my-5
+                    prose-li:my-1.5 prose-li:leading-relaxed
+                    prose-hr:border-gray-200 prose-hr:my-8
+                    prose-blockquote:border-l-2 prose-blockquote:border-l-orange-400 prose-blockquote:bg-orange-50 prose-blockquote:rounded-r-xl prose-blockquote:py-3 prose-blockquote:px-6 prose-blockquote:my-8
+                    prose-code:text-orange-700 prose-code:bg-orange-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+                    article-content ${previewMode === 'mobile' ? 'article-content-mobile' : ''}`}
+                  style={{ color: '#1f2937' }}
+                  dangerouslySetInnerHTML={{ __html: htmlContent }}
+                />
+              </div>
+            </div>
             </div>
           </div>
         </div>

@@ -23,7 +23,7 @@ export default function ImageUploader() {
       if (!data.url) throw new Error(data.error ?? 'Erreur upload');
       const alt = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
       setSnippet(
-        `<figure style="margin:2rem 0">\n  <img src="${data.url}" alt="${alt}" style="width:60%;display:block;margin:0 auto;border-radius:12px" />\n</figure>`
+        `<figure style="margin:2rem 0;text-align:center">\n  <img src="${data.url}" alt="${alt}" style="width:100%;max-width:600px;display:block;margin:0 auto;border-radius:12px" />\n</figure>`
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur inconnue');
