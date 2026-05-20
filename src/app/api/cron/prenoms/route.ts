@@ -124,8 +124,8 @@ Retourne UNIQUEMENT ce JSON valide, sans markdown ni explication :
 
     await sendEmail({
       to: 'contact@mespoilus.com',
-      subject: `[Mes Poilus] Prenoms generes — ${totalNames} prenoms`,
-      html: cronEmailWrapper(`Prenoms animaux — ${date}`, 'Pipeline Prenoms Thomas', body),
+      subject: `[Mes Poilus] Prenoms generes - ${totalNames} prenoms`,
+      html: cronEmailWrapper(`Prenoms animaux - ${date}`, 'Pipeline Prenoms Thomas', body),
     });
     console.log('[Cron Prenoms] Email notification envoyee');
   } catch (emailErr) {

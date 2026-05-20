@@ -35,7 +35,7 @@ export async function GET(req: Request) {
     try {
       await sendEmail({
         to: post.email,
-        subject: `Votre annonce d'adoption a expiré — Mes Poilus`,
+        subject: `Votre annonce d'adoption a expiré - Mes Poilus`,
         html: `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111">
             <h2 style="color:#6b7280">Annonce expirée</h2>

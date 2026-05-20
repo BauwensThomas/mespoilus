@@ -351,7 +351,7 @@ RACE_SLUG : AUCUN`,
     const lucasPrompt = `${forcedPartnerBlock}Trouve le meilleur sujet d'article SEO pour les propriétaires de ${animal}${forcedType === 'trending' ? ` (${monthName})` : ''}.
 
 ${typeInstructions[forcedType]}
-${suggestionsContext ? `\n${suggestionsContext}\nCe sont les vraies recherches Google en ce moment sur les ${animal}. Utilise l'une d'elles comme sujet ou angle d'article.\n` : ''}${trendsContext && forcedType === 'trending' ? `\n${trendsContext}\nTendances générales du jour — si l'une peut être reliée aux ${animal}, c'est un excellent angle. Sinon, ignore-les.\n` : ''}${gscContext ? `\n${gscContext}\nUtilise ces données GSC pour orienter ton choix : privilégie les requêtes à fort potentiel (impressions élevées, mauvaise position ou CTR faible) en lien avec les ${animal}.\n` : ''}
+${suggestionsContext ? `\n${suggestionsContext}\nCe sont les vraies recherches Google en ce moment sur les ${animal}. Utilise l'une d'elles comme sujet ou angle d'article.\n` : ''}${trendsContext && forcedType === 'trending' ? `\n${trendsContext}\nTendances générales du jour - si l'une peut être reliée aux ${animal}, c'est un excellent angle. Sinon, ignore-les.\n` : ''}${gscContext ? `\n${gscContext}\nUtilise ces données GSC pour orienter ton choix : privilégie les requêtes à fort potentiel (impressions élevées, mauvaise position ou CTR faible) en lien avec les ${animal}.\n` : ''}
 Articles déjà publiés (à ne pas dupliquer) :
 ${recentContext}
 
@@ -577,7 +577,7 @@ CONSIGNES :
 
         if (!imageUrl) {
           if (imageProduit) {
-            // Image du produit Awin — télécharger dans Supabase Storage (URL CDN Awin rejetée par Instagram)
+            // Image du produit Awin - télécharger dans Supabase Storage (URL CDN Awin rejetée par Instagram)
             console.log(`[Cron1] Image: produit Awin "${nomProduit}"...`);
             const hdImageUrl = imageProduit.replace(/([?&])(w|h)=\d+/g, '$1$2=800');
             const stored = await Promise.race([
@@ -718,9 +718,9 @@ CONSIGNES :
     await sendEmail({
       to: 'contact@mespoilus.com',
       subject: articleSlug
-        ? `[Mes Poilus] Article publie — ${articleTitle}`
-        : `[Mes Poilus] Cron blog ECHEC — ${date}`,
-      html: cronEmailWrapper(articleSlug ? `Nouvel article — ${date}` : `Echec blog — ${date}`, 'Pipeline SEO + Blog', body),
+        ? `[Mes Poilus] Article publie - ${articleTitle}`
+        : `[Mes Poilus] Cron blog ECHEC - ${date}`,
+      html: cronEmailWrapper(articleSlug ? `Nouvel article - ${date}` : `Echec blog - ${date}`, 'Pipeline SEO + Blog', body),
     });
     console.log('[Cron1] Email notification envoyee');
   } catch (err) {

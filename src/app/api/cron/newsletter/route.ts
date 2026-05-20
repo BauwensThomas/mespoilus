@@ -154,8 +154,8 @@ Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": 
 
       await sendEmail({
         to: 'contact@mespoilus.com',
-        subject: `[Mes Poilus] Newsletter envoyee — ${sent}/${emails.length} abonnes`,
-        html: cronEmailWrapper(`Newsletter — ${date}`, 'Newsletter Sofia', body),
+        subject: `[Mes Poilus] Newsletter envoyee - ${sent}/${emails.length} abonnes`,
+        html: cronEmailWrapper(`Newsletter - ${date}`, 'Newsletter Sofia', body),
       });
       console.log('[Cron Newsletter] Email confirmation envoye');
     } catch (emailErr) {

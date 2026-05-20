@@ -21,11 +21,11 @@ export function cronEmailWrapper(title: string, subtitle: string, body: string):
       <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
         <div style="background-color:#ea580c;background:linear-gradient(135deg,#ea580c,#111827);padding:20px 24px">
           <p style="color:#fff;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px">${subtitle}</p>
-          <h1 style="color:#fff;font-size:20px;font-weight:700;margin:0">Mes Poilus — ${title}</h1>
+          <h1 style="color:#fff;font-size:20px;font-weight:700;margin:0">Mes Poilus - ${title}</h1>
         </div>
         <div style="padding:24px 28px">${body}</div>
         <div style="padding:14px 24px;border-top:1px solid #f3f4f6;text-align:center">
-          <p style="font-size:11px;color:#9ca3af;margin:0">Mes Poilus — notification automatique</p>
+          <p style="font-size:11px;color:#9ca3af;margin:0">Mes Poilus - notification automatique</p>
         </div>
       </div>
     </div>`;

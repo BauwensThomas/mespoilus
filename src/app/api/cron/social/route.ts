@@ -126,9 +126,9 @@ https://www.mespoilus.com/blog/${slug}${partnerBlock}`;
     await sendEmail({
       to: 'contact@mespoilus.com',
       subject: errors.length === 0
-        ? `[Mes Poilus] Post Facebook publie — ${title}`
-        : `[Mes Poilus] Post Facebook ECHEC — ${date}`,
-      html: cronEmailWrapper(`Post reseaux — ${date}`, 'Pipeline Social Emma', body),
+        ? `[Mes Poilus] Post Facebook publie - ${title}`
+        : `[Mes Poilus] Post Facebook ECHEC - ${date}`,
+      html: cronEmailWrapper(`Post reseaux - ${date}`, 'Pipeline Social Emma', body),
     });
     console.log('[Cron2] Email notification envoyee');
   } catch (err) {

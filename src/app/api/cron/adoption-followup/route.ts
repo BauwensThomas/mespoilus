@@ -53,7 +53,7 @@ export async function GET(req: Request) {
                 ✓ Oui, supprimer mon annonce
               </a>
             </div>
-            <p style="font-size:13px;color:#6b7280">Si votre animal n'a pas encore trouvé de famille, ne faites rien — votre annonce reste visible.</p>
+            <p style="font-size:13px;color:#6b7280">Si votre animal n'a pas encore trouvé de famille, ne faites rien - votre annonce reste visible.</p>
             <p>-L'équipe Mes Poilus 🐾</p>
           </div>
         `,
