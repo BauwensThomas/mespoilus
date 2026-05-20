@@ -30,7 +30,7 @@ function buildAuditEmail(
   const nathalieSection = nathalieContent
     ? `<div style="margin-bottom:32px">
         <div style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px 16px;margin-bottom:16px;border-radius:0 8px 8px 0">
-          <p style="font-size:14px;font-weight:700;color:#dc2626;margin:0">Nathalie — Audit Securite</p>
+          <p style="font-size:14px;font-weight:700;color:#dc2626;margin:0">Nathalie - Audit Securite</p>
         </div>
         <div style="font-size:13px;line-height:1.7;color:#374151">${mdToHtml(nathalieContent)}</div>
       </div>`
@@ -41,7 +41,7 @@ function buildAuditEmail(
   const maximeSection = maximeContent
     ? `<div style="margin-bottom:32px">
         <div style="background:#ecfdf5;border-left:4px solid #059669;padding:12px 16px;margin-bottom:16px;border-radius:0 8px 8px 0">
-          <p style="font-size:14px;font-weight:700;color:#059669;margin:0">Maxime — Audit Technique</p>
+          <p style="font-size:14px;font-weight:700;color:#059669;margin:0">Maxime - Audit Technique</p>
         </div>
         <div style="font-size:13px;line-height:1.7;color:#374151">${mdToHtml(maximeContent)}</div>
       </div>`
@@ -54,14 +54,14 @@ function buildAuditEmail(
       <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
         <div style="background-color:#ea580c;background:linear-gradient(135deg,#ea580c,#111827);padding:20px 24px">
           <p style="color:#fff;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px">Audit mensuel automatique</p>
-          <h1 style="color:#fff;font-size:20px;font-weight:700;margin:0">Securite &amp; Maintenance — ${date}</h1>
+          <h1 style="color:#fff;font-size:20px;font-weight:700;margin:0">Securite &amp; Maintenance - ${date}</h1>
         </div>
         <div style="padding:24px 28px">
           ${nathalieSection}
           ${maximeSection}
         </div>
         <div style="padding:14px 24px;border-top:1px solid #f3f4f6;text-align:center">
-          <p style="font-size:11px;color:#9ca3af;margin:0">Mes Poilus — audit automatique du 1er de chaque mois</p>
+          <p style="font-size:11px;color:#9ca3af;margin:0">Mes Poilus - audit automatique du 1er de chaque mois</p>
         </div>
       </div>
     </div>`;
@@ -117,7 +117,7 @@ export async function GET(req: Request) {
   try {
     await sendEmail({
       to: 'contact@mespoilus.com',
-      subject: `[Mes Poilus] Audit Securite & Maintenance — ${date}${errors.length ? ` (${errors.length} erreur${errors.length > 1 ? 's' : ''})` : ''}`,
+      subject: `[Mes Poilus] Audit Securite & Maintenance - ${date}${errors.length ? ` (${errors.length} erreur${errors.length > 1 ? 's' : ''})` : ''}`,
       html: buildAuditEmail(date, nathalieContent, maximeContent, errors),
     });
     console.log('[Cron Security] Email audit envoye');

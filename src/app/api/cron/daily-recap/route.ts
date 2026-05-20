@@ -32,7 +32,7 @@ const STATUS_LABEL: Record<string, string> = {
   pending: '...',
 };
 
-// Crons attendus selon le jour — pattern de detection dans action log
+// Crons attendus selon le jour - pattern de detection dans action log
 const DAILY_CRONS = [
   { label: 'Awin sync chiens',   pattern: '[Awin sync:chiens]',   hour: '02h' },
   { label: 'Awin sync chats',    pattern: '[Awin sync:chats]',    hour: '02h' },

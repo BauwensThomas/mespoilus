@@ -61,8 +61,8 @@ export async function GET(req: Request) {
       const body = sectionBlock('Rapport Antoine', mdToHtml(result.content), '#0d9488', '#f0fdfa');
       await sendEmail({
         to: 'contact@mespoilus.com',
-        subject: `[Mes Poilus] Rapport financier — ${month}`,
-        html: cronEmailWrapper(`Rapport financier — ${month}`, 'Finance Antoine', body),
+        subject: `[Mes Poilus] Rapport financier - ${month}`,
+        html: cronEmailWrapper(`Rapport financier - ${month}`, 'Finance Antoine', body),
       });
       console.log('[Cron Finance] Email rapport envoye');
     } catch (emailErr) {
@@ -78,8 +78,8 @@ export async function GET(req: Request) {
       const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
       await sendEmail({
         to: 'contact@mespoilus.com',
-        subject: `[Mes Poilus] Rapport financier ECHEC — ${month}`,
-        html: cronEmailWrapper(`Echec finance — ${date}`, 'Finance Antoine',
+        subject: `[Mes Poilus] Rapport financier ECHEC - ${month}`,
+        html: cronEmailWrapper(`Echec finance - ${date}`, 'Finance Antoine',
           `<div style="padding:16px;background:#fef2f2;border-radius:8px;color:#dc2626;font-size:13px">Antoine n'a pas pu generer le rapport : ${msg}</div>`),
       });
     } catch { /* non-bloquant */ }

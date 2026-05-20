@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     .order('created_at', { ascending: false })
     .limit(3);
 
-  // Abandon si aucune annonce — pas de post vide
+  // Abandon si aucune annonce - pas de post vide
   if (!posts || posts.length === 0) {
     console.log('[Cron adoption-social] Aucune annonce approuvée, abandon.');
     return NextResponse.json({ success: false, reason: 'no_approved_posts' });
@@ -41,7 +41,7 @@ export async function GET(req: Request) {
   const fiches = posts.map((p, i) => {
     const label = ANIMAL_LABEL[p.animal_type] ?? p.animal_type;
     const lines = [
-      `${i + 1}. ${label}${p.breed ? ` — ${p.breed}` : ''}`,
+      `${i + 1}. ${label}${p.breed ? ` - ${p.breed}` : ''}`,
       p.age ? `   Âge : ${p.age}` : null,
       p.gender && p.gender !== 'inconnu' ? `   Sexe : ${p.gender}` : null,
       p.region ? `   Ville : ${p.region}` : null,
@@ -138,7 +138,7 @@ Consignes :
     const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
     const annoncesHtml = posts.map((p, i) => {
       const label = ANIMAL_LABEL[p.animal_type] ?? p.animal_type;
-      return `<p style="margin:4px 0;font-size:13px">• ${label}${p.breed ? ` — ${p.breed}` : ''}${p.region ? `, ${p.region}` : ''} <a href="https://www.mespoilus.com/adoption/${p.id}" style="color:#ea580c;font-size:12px">voir</a></p>`;
+      return `<p style="margin:4px 0;font-size:13px">• ${label}${p.breed ? ` - ${p.breed}` : ''}${p.region ? `, ${p.region}` : ''} <a href="https://www.mespoilus.com/adoption/${p.id}" style="color:#ea580c;font-size:12px">voir</a></p>`;
     }).join('');
     const postPreview = emmaContent.slice(0, 300) + (emmaContent.length > 300 ? '…' : '');
     const body = sectionBlock(`${posts.length} annonce${posts.length > 1 ? 's' : ''} mise${posts.length > 1 ? 's' : ''} en avant`, annoncesHtml, '#f43f5e', '#fff1f2') +
@@ -146,8 +146,8 @@ Consignes :
 
     await sendEmail({
       to: 'contact@mespoilus.com',
-      subject: `[Mes Poilus] Post adoption publie — ${posts.length} annonce${posts.length > 1 ? 's' : ''}`,
-      html: cronEmailWrapper(`Adoption reseaux — ${date}`, 'Pipeline Adoption Emma', body),
+      subject: `[Mes Poilus] Post adoption publie - ${posts.length} annonce${posts.length > 1 ? 's' : ''}`,
+      html: cronEmailWrapper(`Adoption reseaux - ${date}`, 'Pipeline Adoption Emma', body),
     });
     console.log('[Cron adoption-social] Email notification envoyee');
   } catch (emailErr) {
