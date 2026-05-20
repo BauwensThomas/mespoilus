@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Plus, X, Mail, Eye, Code, RefreshCw, Upload, Image, Link, History } from 'lucide-react';
+import { Send, Plus, X, Mail, RefreshCw, Upload, Image, Link, History } from 'lucide-react';
 import clsx from 'clsx';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -154,7 +154,6 @@ export default function OutreachAdminPage() {
   const [html, setHtml] = useState(DEFAULT_HTML);
   const [emailInput, setEmailInput] = useState('');
   const [emails, setEmails] = useState<string[]>([]);
-  const [tab, setTab] = useState<'edit' | 'preview'>('edit');
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{ sent: number; failed: number; errors: string[] } | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -192,7 +191,6 @@ export default function OutreachAdminPage() {
     cursorPos.current = { start: start + tag.length, end: start + tag.length };
     setImgUrlInput('');
     setShowImgPanel(false);
-    setTab('edit');
   }
 
   function removeImg(src: string) {
@@ -348,21 +346,11 @@ export default function OutreachAdminPage() {
                     </div>
                   )}
                 </div>
-                {/* Toggle edit/preview */}
-                <div className="inline-flex bg-gray-100 rounded-lg p-0.5 gap-0.5">
-                  <button type="button" onClick={() => setTab('edit')}
-                    className={clsx('flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md transition-colors', tab === 'edit' ? 'bg-white text-gray-900 shadow' : 'text-gray-500 hover:text-gray-700')}>
-                    <Code size={11} /> HTML
-                  </button>
-                  <button type="button" onClick={() => setTab('preview')}
-                    className={clsx('flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md transition-colors', tab === 'preview' ? 'bg-white text-gray-900 shadow' : 'text-gray-500 hover:text-gray-700')}>
-                    <Eye size={11} /> Apercu
-                  </button>
-                </div>
               </div>
             </div>
 
-            {tab === 'edit' ? (
+            {/* Split : éditeur gauche + apercu droite */}
+            <div className="flex gap-3" style={{ height: '520px' }}>
               <textarea
                 ref={textareaRef}
                 value={html}
@@ -370,21 +358,17 @@ export default function OutreachAdminPage() {
                 onSelect={saveCursor}
                 onBlur={saveCursor}
                 onKeyUp={saveCursor}
-                rows={18}
-                placeholder={'<div style="font-family:sans-serif;max-width:600px;margin:0 auto">\n  <img src="https://..." alt="Logo" style="height:48px" />\n  <h2>Bonjour,</h2>\n  <p>...</p>\n</div>'}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-orange-400 resize-none"
+                placeholder={'<div style="...">\n  ...\n</div>'}
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-orange-400 resize-none"
               />
-            ) : (
-              <div className="border border-gray-200 rounded-lg overflow-hidden bg-white" style={{ height: '420px' }}>
+              <div className="flex-1 border border-gray-200 rounded-lg overflow-hidden bg-white">
                 {html ? (
                   <iframe srcDoc={html} className="w-full h-full" sandbox="allow-same-origin" title="Apercu email" />
                 ) : (
-                  <div className="h-full flex items-center justify-center text-gray-300 text-sm">
-                    Ecris du HTML pour voir l'apercu
-                  </div>
+                  <div className="h-full flex items-center justify-center text-gray-300 text-sm">Apercu</div>
                 )}
               </div>
-            )}
+            </div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden"
               onChange={e => { if (e.target.files?.[0]) uploadImage(e.target.files[0]); e.target.value = ''; }} />
           </div>
@@ -466,25 +450,6 @@ export default function OutreachAdminPage() {
           )}
         </div>
 
-        {/* Apercu sticky droite */}
-        <div className="sticky top-6 w-80 flex-shrink-0 hidden xl:block">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Apercu live</p>
-          <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm" style={{ height: '500px' }}>
-            {html ? (
-              <iframe srcDoc={html} className="w-full h-full" sandbox="allow-same-origin" title="Apercu sticky" />
-            ) : (
-              <div className="h-full flex items-center justify-center text-gray-300 text-sm text-center px-6">
-                L'apercu apparait ici pendant que tu edites
-              </div>
-            )}
-          </div>
-          {subject && (
-            <div className="mt-2 px-2">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Objet</p>
-              <p className="text-xs text-gray-700 font-medium mt-0.5 truncate">{subject}</p>
-            </div>
-          )}
-        </div>
 
       </div>
 
