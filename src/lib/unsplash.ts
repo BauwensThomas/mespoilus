@@ -73,6 +73,7 @@ const AGENT_QUERIES: Record<string, string> = {
   lea: 'customer service support smile',
   antoine: 'finance accounting business report',
   nathalie: 'cybersecurity security shield technology',
+  sofia: 'email newsletter marketing writing pen',
 };
 
 // ─── Placeholders locaux ───────────────────────────────────────────────────────
@@ -95,6 +96,7 @@ export const AGENT_PLACEHOLDER: Record<string, string> = {
   lea: '/images/agents/lea.svg',
   antoine: '/images/agents/antoine.svg',
   nathalie: '/images/agents/nathalie.svg',
+  sofia: '/images/agents/sofia.svg',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
