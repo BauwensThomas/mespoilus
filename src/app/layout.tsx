@@ -47,7 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const pendingCount = await getPendingCount();
 
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <head>
         <meta name="p:domain_verify" content="20cb928a2f8bfbb6bd7651b7cafde7de" />
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
