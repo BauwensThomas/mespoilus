@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/resend';
 import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
+import { emailWrapper } from '@/lib/cron-email';
 
 const BASE_URL = 'https://mespoilus.com';
 
@@ -32,22 +33,16 @@ export async function POST(req: NextRequest) {
     await sendEmail({
       to: post.email,
       subject: 'Votre code de suppression — Mes Poilus',
-      html: `
-        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111">
-          <h2 style="color:#f97316">Votre code de suppression</h2>
-          <p>Bonjour <strong>${post.poster_name}</strong>,</p>
-          <p>Voici votre code pour supprimer votre annonce (<strong>${post.animal_type}</strong>, ${post.region}) :</p>
-          <p style="font-family:monospace;font-size:26px;font-weight:bold;letter-spacing:6px;color:#111;background:#f3f4f6;padding:14px 20px;border-radius:8px;text-align:center">${post.delete_token}</p>
-          <p style="font-size:13px;color:#6b7280;margin-top:16px">Ou supprimez directement en cliquant ici :</p>
-          <div style="text-align:center;margin:16px 0">
-            <a href="${deleteUrl}" style="display:inline-block;background:#ef4444;color:#fff;font-weight:600;font-size:14px;padding:11px 24px;border-radius:10px;text-decoration:none">
-              Supprimer mon annonce
-            </a>
-          </div>
-          <p style="font-size:12px;color:#9ca3af">Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
-          <p>-L'équipe Mes Poilus</p>
+      html: emailWrapper('Votre code de suppression', `
+        <p>Bonjour <strong>${post.poster_name}</strong>,</p>
+        <p>Voici votre code pour supprimer votre annonce (<strong>${post.animal_type}</strong>, ${post.region})</p>
+        <p style="font-family:monospace;font-size:26px;font-weight:bold;letter-spacing:6px;color:#111;background:#f3f4f6;padding:14px 20px;border-radius:8px;text-align:center">${post.delete_token}</p>
+        <p style="font-size:13px;color:#6b7280;margin-top:16px">Ou supprimez directement en cliquant ici :</p>
+        <div style="text-align:center;margin:16px 0">
+          <a href="${deleteUrl}" style="display:inline-block;background:#ef4444;color:#fff;font-weight:600;font-size:14px;padding:11px 24px;border-radius:10px;text-decoration:none">Supprimer mon annonce</a>
         </div>
-      `,
+        <p style="font-size:12px;color:#9ca3af">Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
+      `),
     });
 
     return NextResponse.json({ success: true });

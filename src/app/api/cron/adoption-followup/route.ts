@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/resend';
+import { emailWrapper } from '@/lib/cron-email';
 
 export const maxDuration = 60;
 
@@ -42,21 +43,15 @@ export async function GET(req: Request) {
       await sendEmail({
         to: post.email,
         subject: `Votre ${post.animal_type} a-t-il trouvé un foyer ? 🐾`,
-        html: `
-          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111">
-            <h2 style="color:#f97316">Bonne nouvelle ?</h2>
-            <p>Bonjour <strong>${post.poster_name}</strong>,</p>
-            <p>Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) est en ligne depuis plus d'une semaine.</p>
-            <p>Votre animal a-t-il trouvé un foyer ? Si c'est le cas, pensez à supprimer votre annonce !</p>
-            <div style="text-align:center;margin:28px 0">
-              <a href="${deleteUrl}" style="display:inline-block;background:#ef4444;color:#fff;font-weight:600;font-size:15px;padding:12px 28px;border-radius:10px;text-decoration:none">
-                ✓ Oui, supprimer mon annonce
-              </a>
-            </div>
-            <p style="font-size:13px;color:#6b7280">Si votre animal n'a pas encore trouvé de famille, ne faites rien - votre annonce reste visible.</p>
-            <p>-L'équipe Mes Poilus 🐾</p>
+        html: emailWrapper('Votre animal a-t-il trouve un foyer ?', `
+          <p>Bonjour <strong>${post.poster_name}</strong>,</p>
+          <p>Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) est en ligne depuis plus d'une semaine.</p>
+          <p>Votre animal a-t-il trouve un foyer ? Si c'est le cas, pensez a supprimer votre annonce !</p>
+          <div style="text-align:center;margin:28px 0">
+            <a href="${deleteUrl}" style="display:inline-block;background:#ef4444;color:#fff;font-weight:600;font-size:15px;padding:12px 28px;border-radius:10px;text-decoration:none">Oui, supprimer mon annonce</a>
           </div>
-        `,
+          <p style="font-size:13px;color:#6b7280">Si votre animal n'a pas encore trouve de famille, ne faites rien - votre annonce reste visible.</p>
+        `),
       });
 
       await supabase

@@ -2,6 +2,7 @@ import { revalidatePath } from 'next/cache';
 import { randomBytes } from 'crypto';
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/resend';
+import { emailWrapper } from '@/lib/cron-email';
 import type { AdoptionPost } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -49,21 +50,15 @@ async function approvePost(id: string) {
         await sendEmail({
           to: alert.email,
           subject: `Nouvelle annonce d'adoption : un ${animalLabel} cherche un foyer`,
-          html: `
-            <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111827">
-              <h2 style="color:#f97316;margin-bottom:8px">Nouvelle annonce d'adoption</h2>
-              <p>Un <strong>${animalLabel}</strong> cherche un foyer${post.region ? ` en <strong>${post.region}</strong>` : ''} !</p>
-              <p style="text-align:center;margin:24px 0">
-                <a href="${appUrl}/adoption" style="background:#f97316;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block">
-                  Voir les annonces
-                </a>
-              </p>
-              <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0">
-              <p style="font-size:11px;color:#9ca3af;text-align:center">
-                <a href="${unsubUrl}" style="color:#9ca3af">Se désinscrire de ces alertes</a>
-              </p>
-            </div>
-          `,
+          html: emailWrapper('Nouvelle annonce d\'adoption', `
+            <p>Un <strong>${animalLabel}</strong> cherche un foyer${post.region ? ` en <strong>${post.region}</strong>` : ''} !</p>
+            <p style="text-align:center;margin:24px 0">
+              <a href="${appUrl}/adoption" style="background:#ea580c;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block">Voir les annonces</a>
+            </p>
+            <p style="font-size:11px;color:#9ca3af;text-align:center">
+              <a href="${unsubUrl}" style="color:#9ca3af">Se desinscrire de ces alertes</a>
+            </p>
+          `),
         }).catch(() => {});
       }
     } catch (alertErr) {
@@ -74,19 +69,14 @@ async function approvePost(id: string) {
       await sendEmail({
         to: post.email,
         subject: 'Votre annonce est en ligne sur Mes Poilus !',
-        html: `
-          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111">
-            <h2 style="color:#f97316">Annonce publiée !</h2>
-            <p>Bonjour <strong>${post.poster_name}</strong>,</p>
-            <p>Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) est désormais visible sur Mes Poilus.</p>
-            <p><a href="https://mespoilus.com/adoption" style="color:#f97316">→ Voir les annonces</a></p>
-            <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0">
-            <p style="font-size:13px;color:#6b7280">Pour supprimer votre annonce à tout moment, utilisez ce code sur la page de votre annonce :</p>
-            <p style="font-family:monospace;font-size:26px;font-weight:bold;letter-spacing:6px;color:#111;background:#f3f4f6;padding:14px 20px;border-radius:8px;text-align:center">${deleteToken}</p>
-            <p style="font-size:12px;color:#9ca3af">Conservez ce code précieusement, il ne peut pas être récupéré.</p>
-            <p>-L'équipe Mes Poilus</p>
-          </div>
-        `,
+        html: emailWrapper('Annonce publiee !', `
+          <p>Bonjour <strong>${post.poster_name}</strong>,</p>
+          <p>Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) est desormais visible sur Mes Poilus.</p>
+          <p><a href="https://mespoilus.com/adoption" style="color:#ea580c">Voir les annonces</a></p>
+          <p style="font-size:13px;color:#6b7280;margin-top:16px">Pour supprimer votre annonce a tout moment, utilisez ce code sur la page de votre annonce :</p>
+          <p style="font-family:monospace;font-size:26px;font-weight:bold;letter-spacing:6px;color:#111;background:#f3f4f6;padding:14px 20px;border-radius:8px;text-align:center">${deleteToken}</p>
+          <p style="font-size:12px;color:#9ca3af">Conservez ce code precieusement, il ne peut pas etre recupere.</p>
+        `),
       });
     } catch (mailErr) {
       console.error('[moderation] approve mail error:', mailErr);
@@ -116,17 +106,13 @@ async function rejectPost(id: string, formData: FormData) {
     try {
       await sendEmail({
         to: post.email,
-        subject: "Votre annonce d'adoption n'a pas été retenue",
-        html: `
-          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111">
-            <h2 style="color:#e11d48">Annonce refusée</h2>
-            <p>Bonjour <strong>${post.poster_name}</strong>,</p>
-            <p>Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) n'a pas pu être publiée.</p>
-            ${reason ? `<div style="background:#fef2f2;border-left:3px solid #e11d48;padding:10px 14px;border-radius:4px;margin:12px 0"><p style="margin:0;font-size:14px"><strong>Raison :</strong> ${reason}</p></div>` : ''}
-            <p style="color:#6b7280;font-size:13px">Si vous pensez qu'il s'agit d'une erreur, contactez-nous à <a href="mailto:contact@mespoilus.com" style="color:#f97316">contact@mespoilus.com</a>.</p>
-            <p>-L'équipe Mes Poilus</p>
-          </div>
-        `,
+        subject: "Votre annonce d'adoption n'a pas ete retenue",
+        html: emailWrapper('Annonce non publiee', `
+          <p>Bonjour <strong>${post.poster_name}</strong>,</p>
+          <p>Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) n'a pas pu etre publiee.</p>
+          ${reason ? `<div style="background:#fef2f2;border-left:3px solid #ef4444;padding:10px 14px;border-radius:4px;margin:12px 0"><p style="margin:0;font-size:14px"><strong>Raison :</strong> ${reason}</p></div>` : ''}
+          <p style="color:#6b7280;font-size:13px">Si vous pensez qu'il s'agit d'une erreur, contactez-nous a <a href="mailto:contact@mespoilus.com" style="color:#ea580c">contact@mespoilus.com</a>.</p>
+        `),
       });
     } catch (mailErr) {
       console.error('[moderation] reject mail error:', mailErr);

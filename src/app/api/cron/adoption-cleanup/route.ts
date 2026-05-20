@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/resend';
+import { emailWrapper } from '@/lib/cron-email';
 
 export const maxDuration = 60;
 
@@ -36,21 +37,15 @@ export async function GET(req: Request) {
       await sendEmail({
         to: post.email,
         subject: `Votre annonce d'adoption a expiré - Mes Poilus`,
-        html: `
-          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111">
-            <h2 style="color:#6b7280">Annonce expirée</h2>
-            <p>Bonjour <strong>${post.poster_name}</strong>,</p>
-            <p>Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) a été automatiquement supprimée après <strong>${EXPIRY_DAYS} jours</strong> en ligne.</p>
-            <p>Si votre animal n'a toujours pas trouvé de foyer, vous pouvez déposer une nouvelle annonce gratuitement :</p>
-            <div style="text-align:center;margin:24px 0">
-              <a href="${BASE_URL}/adoption/deposer" style="display:inline-block;background:#f97316;color:#fff;font-weight:600;font-size:14px;padding:11px 24px;border-radius:10px;text-decoration:none">
-                Déposer une nouvelle annonce
-              </a>
-            </div>
-            <p style="font-size:13px;color:#6b7280">Merci d'utiliser Mes Poilus pour aider vos animaux à trouver un foyer aimant. 🐾</p>
-            <p>-L'équipe Mes Poilus</p>
+        html: emailWrapper("Votre annonce d'adoption a expire", `
+          <p>Bonjour <strong>${post.poster_name}</strong>,</p>
+          <p>Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) a ete automatiquement supprimee apres <strong>${EXPIRY_DAYS} jours</strong> en ligne.</p>
+          <p>Si votre animal n'a toujours pas trouve de foyer, vous pouvez deposer une nouvelle annonce gratuitement :</p>
+          <div style="text-align:center;margin:24px 0">
+            <a href="${BASE_URL}/adoption/deposer" style="display:inline-block;background:#ea580c;color:#fff;font-weight:600;font-size:14px;padding:11px 24px;border-radius:10px;text-decoration:none">Deposer une nouvelle annonce</a>
           </div>
-        `,
+          <p style="font-size:13px;color:#6b7280">Merci d'utiliser Mes Poilus pour aider vos animaux a trouver un foyer aimant.</p>
+        `),
       });
     } catch (mailErr) {
       console.error(`[adoption-cleanup] mail error for ${post.id}:`, mailErr);

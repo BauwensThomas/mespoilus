@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { sendBulkNewsletter } from '@/lib/resend';
+import { emailWrapper } from '@/lib/cron-email';
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     const { sent, failed } = await sendBulkNewsletter({
       subject: campaign.subject,
-      html: campaign.content_html,
+      html: emailWrapper(campaign.subject, campaign.content_html),
       subscribers: emails,
     });
 
