@@ -158,7 +158,7 @@ export async function GET(req: Request) {
     } catch { /* migration non encore appliquée -pas de blocage */ }
 
     const { data: productRows } = await supabase
-      .from('products')
+      .from('catalog_best_offer')
       .select('name, affiliate_url, image_url')
       .eq('category', animal)
       .gt('price', 0)

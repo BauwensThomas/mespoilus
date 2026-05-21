@@ -163,6 +163,9 @@ export interface AwinProduct {
   categories: string[];
   product_type?: string | null;
   last_synced: string;
+  ean?: string | null;
+  isbn?: string | null;
+  brand?: string | null;
 }
 
 export interface BlockedIP {

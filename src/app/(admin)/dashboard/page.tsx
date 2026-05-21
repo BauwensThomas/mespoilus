@@ -20,7 +20,7 @@ async function getDashboardData() {
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const [statsRes, logsRes, articlesRes, securityRes, statsRpcRes, monthlySecurityRes, monthlyArticlesRes, productsRes, lastAwinSyncRes] = await Promise.all([
+    const [statsRes, logsRes, articlesRes, securityRes, statsRpcRes, monthlySecurityRes, monthlyArticlesRes, productsRes, lastCatalogSyncRes] = await Promise.all([
       supabase.from('agent_stats').select('*'),
       supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published'),
@@ -28,10 +28,10 @@ async function getDashboardData() {
       supabase.rpc('get_agent_stats_aggregated', { start_of_month: startOfMonth.toISOString() }),
       supabase.from('security_logs').select('id', { count: 'exact' }).in('threat_level', ['high', 'critical']).gte('created_at', startOfMonth.toISOString()),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published').gte('published_at', startOfMonth.toISOString()),
-      supabase.from('products').select('id', { count: 'exact' }),
+      supabase.from('products_catalog').select('id', { count: 'exact' }).eq('status', 'active'),
       supabase.from('activity_logs')
         .select('created_at')
-        .ilike('action', '[Awin sync]%')
+        .ilike('action', '[Catalog sync%')
         .order('created_at', { ascending: false })
         .limit(1),
     ]);
@@ -43,9 +43,9 @@ async function getDashboardData() {
     const monthlyArticles = monthlyArticlesRes.count ?? 0;
     const monthlySecurityAlerts = monthlySecurityRes.count ?? 0;
     const totalProducts = productsRes.count ?? 0;
-    let lastAwinSync: string | null = null;
-    if (lastAwinSyncRes.data && lastAwinSyncRes.data.length > 0) {
-      lastAwinSync = lastAwinSyncRes.data[0].created_at;
+    let lastCatalogSync: string | null = null;
+    if (lastCatalogSyncRes.data && lastCatalogSyncRes.data.length > 0) {
+      lastCatalogSync = lastCatalogSyncRes.data[0].created_at;
     }
 
     // Agrégation cote DB via RPC (evite la limite Supabase 1000 lignes)
@@ -64,7 +64,7 @@ async function getDashboardData() {
     const monthlyTasks = Number(rpc.global_monthly_tasks ?? 0);
     const monthlyTokens = Number(rpc.global_monthly_tokens ?? 0);
 
-    return { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, totalByAgent, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts, totalProducts, lastAwinSync };
+    return { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, totalByAgent, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts, totalProducts, lastCatalogSync };
   } catch {
     return {
       stats: [],
@@ -80,13 +80,13 @@ async function getDashboardData() {
       monthlyArticles: 0,
       monthlySecurityAlerts: 0,
       totalProducts: 0,
-      lastAwinSync: null
+      lastCatalogSync: null
     };
   }
 }
 
 export default async function DashboardPage() {
-  const { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, totalByAgent, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts, totalProducts, lastAwinSync } = await getDashboardData();
+  const { stats, logs, totalArticles, totalTasks, totalTokens, securityAlerts, totalByAgent, monthlyByAgent, monthlyTasks, monthlyTokens, monthlyArticles, monthlySecurityAlerts, totalProducts, lastCatalogSync } = await getDashboardData();
   const agents = getAllAgents();
 
   const statByAgent = Object.fromEntries(stats.map((s) => [s.agent_id, s]));
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
         monthlyTokens={monthlyTokens}
         monthlySecurityAlerts={monthlySecurityAlerts}
         totalProducts={totalProducts ?? 0}
-        lastAwinSync={lastAwinSync}
+        lastCatalogSync={lastCatalogSync}
       />
 
       {/* Feed d'activité horizontal */}

@@ -40,13 +40,13 @@ interface GlobalStatsProps {
   monthlyTokens: number;
   monthlySecurityAlerts: number;
   totalProducts: number;
-  lastAwinSync?: string | null;
+  lastCatalogSync?: string | null;
 }
 
 export default function GlobalStats({
   totalArticles, totalTasks, totalTokens, securityAlerts,
   monthlyArticles, monthlyTasks, monthlyTokens, monthlySecurityAlerts,
-  totalProducts, lastAwinSync,
+  totalProducts, lastCatalogSync,
 }: GlobalStatsProps) {
   const fmt = (n: number) => {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -73,9 +73,9 @@ export default function GlobalStats({
         sub={
           <>
             <span>produits en stock</span>
-            {lastAwinSync && (
+            {lastCatalogSync && (
               <div className="text-xs text-gray-400 mt-1 pt-1 border-t border-gray-200">
-                Dernier sync : {new Date(lastAwinSync).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                Dernier sync : {new Date(lastCatalogSync).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
               </div>
             )}
           </>

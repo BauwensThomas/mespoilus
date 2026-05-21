@@ -17,7 +17,7 @@ interface DbPartenaire {
   display_mode?: string;
 }
 
-const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/adoption-admin', '/produits-admin', '/guides-admin', '/races-admin', '/blog-admin', '/boutique-admin', '/partenaires-admin', '/outreach-admin'];
+const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/adoption-admin', '/produits-admin', '/guides-admin', '/races-admin', '/blog-admin', '/boutique-v2-admin', '/partenaires-admin', '/outreach-admin'];
 
 function PartenairesBandeau() {
   const [partenaires, setPartenaires] = useState<DbPartenaire[]>([]);
@@ -144,13 +144,15 @@ export default function LayoutShell({ children, pendingCount = 0 }: { children: 
     );
   }
 
+  const isBoutique = pathname.startsWith('/boutique');
+
   return (
     <>
       <PublicHeader />
       <PartenairesBandeau />
       <main>{children}</main>
-      <RefugeFinderPanel />
-      <VetFinderPanel />
+      {!isBoutique && <RefugeFinderPanel />}
+      {!isBoutique && <VetFinderPanel />}
       <AnimalDayPopup />
     </>
   );
