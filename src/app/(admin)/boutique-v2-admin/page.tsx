@@ -108,7 +108,7 @@ async function getCatalogList(params: {
   const { data: catalog, count, error } = await q;
   if (error || !catalog) return { items: [], total: 0 };
 
-  const ids = catalog.map(c => c.id);
+  const ids = catalog.map((c: { id: string }) => c.id);
 
   const { data: offers } = await supabase
     .from('product_offers')
