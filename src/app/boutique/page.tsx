@@ -151,7 +151,7 @@ async function getHiddenItems(): Promise<CatalogItem[]> {
 
     if (!catalog?.length) return [];
 
-    const ids = catalog.map(c => c.id);
+    const ids = catalog.map((c: { id: string }) => c.id);
     const { data: offers } = await supabase
       .from('product_offers')
       .select('catalog_id, merchant_name, country, price, currency, affiliate_url')
