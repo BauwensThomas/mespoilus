@@ -134,7 +134,7 @@ async function getCatalogList(params: {
   }
 
   return {
-    items: catalog.map(c => ({
+    items: (catalog as Array<{ id: string; name: string; brand: string | null; category: string; image_url: string | null; ean: string | null; status: string; created_at: string }>).map(c => ({
       ...c,
       offerSummary: offerMap.get(c.id) ?? null,
     })),
