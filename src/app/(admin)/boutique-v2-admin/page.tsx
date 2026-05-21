@@ -121,7 +121,7 @@ async function getCatalogList(params: {
   type OfferSummary = { count: number; minPrice: number; currency: string; merchants: MerchantPrice[] };
   const offerMap = new Map<string, OfferSummary>();
   for (const o of offers ?? []) {
-    const entry = offerMap.get(o.catalog_id) ?? { count: 0, minPrice: Infinity, currency: o.currency ?? 'EUR', merchants: [] };
+    const entry: OfferSummary = offerMap.get(o.catalog_id) ?? { count: 0, minPrice: Infinity, currency: o.currency ?? 'EUR', merchants: [] };
     entry.count++;
     if (o.price < entry.minPrice) { entry.minPrice = o.price; entry.currency = o.currency ?? 'EUR'; }
     const existing = entry.merchants.find(m => m.name === o.merchant_name);
