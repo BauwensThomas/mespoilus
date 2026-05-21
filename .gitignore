@@ -40,7 +40,7 @@ Thumbs.db
 .claude/
 *.jsonl
 CONTEXT.md
-AGENTS.md
+BOUTIQUE.md
 
 # Python
 __pycache__/

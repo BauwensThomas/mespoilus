@@ -237,6 +237,16 @@ async function parseCSVStreamingWithFlush(
     const currency = priceMatch?.[2] ?? (currencyFromField || 'EUR');
     const imageUrl = p['image_link'] ?? p['aw_image_url'] ?? p['merchant_image_url'] ?? '';
 
+    const ean   = (p['ean'] ?? p['gtin'] ?? '').trim() || null;
+    const isbn  = (p['isbn'] ?? '').trim() || null;
+    const brand = (p['brand'] ?? p['brand_name'] ?? p['manufacturer'] ?? '').trim() || null;
+
+    // Exclure les produits flamands/néerlandais : URL /nl/ ou nom en néerlandais
+    const isDutchName = /\bNieuw[-\s]Zeeland\b/i.test(name)
+      || /\bvoor\s+(honden|katten|konijnen|knaagdieren|vogels|vissen)\b/i.test(name)
+      || /\bpuppy['']s\b/i.test(name);
+    if (/\/nl\//i.test(deepLink) || isDutchName) continue;
+
     seenIds.add(pid);
     totalFromFeed++;
 
@@ -247,6 +257,7 @@ async function parseCSVStreamingWithFlush(
       category: primary, categories: cats,
       product_type: assignProductType(p),
       last_synced: new Date().toISOString(),
+      ean, isbn, brand,
     });
 
     if (batch.length >= batchSize) {

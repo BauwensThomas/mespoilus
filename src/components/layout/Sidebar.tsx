@@ -29,7 +29,7 @@ const navItems = [
   { href: '/orchestrate',    label: 'Orchestrer',       icon: Target,        isPublic: false },
   { href: '/adoption-admin', label: 'Adoption',         icon: Shield,        isPublic: false },
   { href: '/blog-admin',     label: 'Blog',             icon: BookOpen,      isPublic: false },
-  { href: '/boutique-admin', label: 'Boutique',         icon: ShoppingBag,   isPublic: false },
+  { href: '/boutique-v2-admin', label: 'Boutique',         icon: ShoppingBag,   isPublic: false },
   { href: '/produits-admin', label: 'Produits affiliés',icon: Package,       isPublic: false },
   { href: '/races-admin',    label: 'Fiches races',     icon: ClipboardList, isPublic: false },
   { href: '/guides-admin',     label: 'Guides PDF',       icon: FileText,      isPublic: false },

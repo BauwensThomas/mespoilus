@@ -7,16 +7,18 @@ const CRON_PATHS: Record<string, string> = {
   finance:              '/api/cron/finance',
   security:             '/api/cron/security',
   newsletter:           '/api/cron/newsletter',
-  'awin-sync':          '/api/cron/awin-sync',
   prenoms:              '/api/cron/prenoms',
-  'awin-sync-chiens':   '/api/cron/awin-sync/chiens',
-  'awin-sync-chats':    '/api/cron/awin-sync/chats',
-  'awin-sync-oiseaux':  '/api/cron/awin-sync/oiseaux',
-  'awin-sync-rongeurs': '/api/cron/awin-sync/rongeurs',
-  'awin-sync-reptiles': '/api/cron/awin-sync/reptiles',
-  'awin-sync-livres':   '/api/cron/awin-sync/livres',
-  'awin-sync-general':  '/api/cron/awin-sync/general',
-  'cj-sync-canada-pet-care': '/api/cron/cj-sync/canada-pet-care',
+  'catalog-sync-chiens':         '/api/cron/catalog-sync/chiens',
+  'catalog-sync-chats':          '/api/cron/catalog-sync/chats',
+  'catalog-sync-oiseaux':        '/api/cron/catalog-sync/oiseaux',
+  'catalog-sync-rongeurs':       '/api/cron/catalog-sync/rongeurs',
+  'catalog-sync-reptiles':       '/api/cron/catalog-sync/reptiles',
+  'catalog-sync-livres':         '/api/cron/catalog-sync/livres',
+  'catalog-sync-general':        '/api/cron/catalog-sync/general',
+  'catalog-sync-canada-pet-care':'/api/cron/catalog-sync/canada-pet-care',
+  'catalog-sync-translate':      '/api/cron/catalog-sync/translate',
+  'catalog-dedup-ean':           '/api/cron/catalog-sync/dedup-ean',
+  'catalog-dedup-title':         '/api/cron/catalog-sync/dedup-title',
   'adoption-social':         '/api/cron/adoption-social',
   'breeds':                  '/api/cron/breeds',
   'daily-recap':             '/api/cron/daily-recap',
@@ -43,13 +45,13 @@ export async function POST(req: NextRequest) {
     forcedImage?: string;
   };
 
-  // ─── Produits par partenaire (lecture directe Supabase par merchant_name) ──
+  // ─── Produits par partenaire (depuis catalog_best_offer) ──────────────────
   if (step === 'partner-products') {
     const keyword = partner ?? '';
     if (!keyword) return NextResponse.json({ products: [] });
     const adminSupabase = createAdminClient();
     const { data, error } = await adminSupabase
-      .from('products')
+      .from('catalog_best_offer')
       .select('name, affiliate_url, image_url, price, category, merchant_name')
       .ilike('merchant_name', `%${keyword}%`)
       .gt('price', 0)
@@ -57,17 +59,6 @@ export async function POST(req: NextRequest) {
       .limit(500);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ products: data ?? [] });
-  }
-
-  // ─── Lecture progression Awin (pas d'appel cron, lecture directe Supabase) ──
-  if (step === 'awin-progress') {
-    const adminSupabase = createAdminClient();
-    const { data, error } = await adminSupabase
-      .from('awin_sync_progress')
-      .select('category, status, synced, current_feed, error, started_at, updated_at, finished_at');
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    const progress = Object.fromEntries((data ?? []).map(r => [r.category, r]));
-    return NextResponse.json({ progress });
   }
 
   const cronPath = CRON_PATHS[step];

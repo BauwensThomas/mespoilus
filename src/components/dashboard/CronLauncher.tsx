@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard, Rocket, CheckCircle2, XCircle, Clock, BookOpen, Mail, Sparkles, Heart, ChevronDown, ChevronUp, Send, Tag, ImageIcon } from 'lucide-react';
 import clsx from 'clsx';
 import { PARTENAIRES } from '@/lib/partenaires';
@@ -25,28 +25,6 @@ const ARTICLE_TYPES = [
 
 type StepStatus = 'idle' | 'running' | 'done' | 'error';
 
-// ─── Catégories Awin ──────────────────────────────────────────────────────────
-
-const AWIN_CATEGORIES = [
-  { key: 'chiens',   label: 'Chiens',   icon: '🐶' },
-  { key: 'chats',    label: 'Chats',    icon: '🐱' },
-  { key: 'oiseaux',  label: 'Oiseaux',  icon: '🐦' },
-  { key: 'rongeurs', label: 'Rongeurs', icon: '🐹' },
-  { key: 'reptiles', label: 'Reptiles', icon: '🦎' },
-  { key: 'livres',   label: 'Livres',   icon: '📚' },
-  { key: 'general',  label: 'Général',  icon: '🐾' },
-] as const;
-
-type AwinCategory = typeof AWIN_CATEGORIES[number]['key'];
-
-interface AwinCategoryProgress {
-  status: 'idle' | 'running' | 'done' | 'error';
-  synced: number;
-  current_feed: string | null;
-  error: string | null;
-  started_at: string | null;
-  updated_at: string | null;
-}
 
 // ─── Config crons génériques ──────────────────────────────────────────────────
 
@@ -219,94 +197,6 @@ function useCronRunner() {
   return { getState, run: (cron: CronConfig, animal: string, type: string, partner: string, promo: string, productName: string, productUrl: string, image: string) => run(cron, animal, type, partner, promo, productName, productUrl, image), reset };
 }
 
-// ─── Hook Awin multi-catégories ───────────────────────────────────────────────
-
-function useAwinSync() {
-  const [progress, setProgress] = useState<Record<AwinCategory, AwinCategoryProgress>>(
-    () => Object.fromEntries(
-      AWIN_CATEGORIES.map(c => [c.key, { status: 'idle', synced: 0, current_feed: null, error: null, started_at: null, updated_at: null }])
-    ) as Record<AwinCategory, AwinCategoryProgress>
-  );
-  const [runningCats, setRunningCats] = useState<Set<AwinCategory>>(new Set());
-  const pollRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Poll la progression depuis Supabase via l'API admin
-  const pollProgress = async () => {
-    try {
-      const r = await fetch('/api/admin/run-cron', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ step: 'awin-progress' }),
-      });
-      if (!r.ok) return;
-      const data = await r.json();
-      if (data.progress && Object.keys(data.progress).length > 0) {
-        setProgress(prev => ({ ...prev, ...data.progress }));
-        // Arrêter le polling si plus aucune catégorie en cours
-        const anyRunning = Object.values(data.progress as Record<string, AwinCategoryProgress>)
-          .some(p => p.status === 'running');
-        if (!anyRunning) {
-          if (pollRef.current) clearInterval(pollRef.current);
-          pollRef.current = null;
-          setRunningCats(new Set());
-        }
-      }
-    } catch {}
-  };
-
-  const startPolling = () => {
-    if (pollRef.current) return;
-    pollRef.current = setInterval(pollProgress, 2000);
-  };
-
-  const launchCategory = async (category: AwinCategory) => {
-    if (runningCats.has(category)) return;
-    setRunningCats(prev => new Set([...prev, category]));
-    setProgress(prev => ({
-      ...prev,
-      [category]: { ...prev[category], status: 'running', synced: 0, current_feed: null, error: null, started_at: new Date().toISOString() },
-    }));
-    startPolling();
-
-    try {
-      const r = await fetch('/api/admin/run-cron', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ step: `awin-sync-${category}` }),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
-    } catch (err) {
-      setProgress(prev => ({
-        ...prev,
-        [category]: { ...prev[category], status: 'error', error: err instanceof Error ? err.message : 'Erreur' },
-      }));
-      setRunningCats(prev => { const s = new Set(prev); s.delete(category); return s; });
-    }
-  };
-
-  const launchAll = async () => {
-    for (const cat of AWIN_CATEGORIES) {
-      await launchCategory(cat.key);
-      await new Promise(r => setTimeout(r, 300));
-    }
-  };
-
-  const resetCategory = (category: AwinCategory) => {
-    setProgress(prev => ({
-      ...prev,
-      [category]: { status: 'idle', synced: 0, current_feed: null, error: null, started_at: null, updated_at: null },
-    }));
-  };
-
-  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
-
-  const totalSynced = Object.values(progress).reduce((s, p) => s + p.synced, 0);
-  const anyRunning = Object.values(progress).some(p => p.status === 'running');
-  const allDone = AWIN_CATEGORIES.every(c => progress[c.key].status === 'done');
-
-  return { progress, launchCategory, launchAll, resetCategory, totalSynced, anyRunning, allDone };
-}
 
 // ─── Composant ForcedPartnerPanel ────────────────────────────────────────────
 
@@ -695,214 +585,10 @@ function ContentCronPanel({ cron, state, run, onReset }: ContentCronPanelProps) 
   );
 }
 
-// ─── Composant AwinPanel ──────────────────────────────────────────────────────
 
-function AwinPanel() {
-  const { progress, launchCategory, launchAll, resetCategory, totalSynced, anyRunning, allDone } = useAwinSync();
-  const [expanded, setExpanded] = useState(false);
+// ─── Translate Catalog Panel ─────────────────────────────────────────────────
 
-  const doneCount = AWIN_CATEGORIES.filter(c => progress[c.key].status === 'done').length;
-  const errorCount = AWIN_CATEGORIES.filter(c => progress[c.key].status === 'error').length;
-
-  return (
-    <div className="px-4 py-3.5">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-2.5 flex-1 min-w-0">
-          <ShoppingBag size={18} strokeWidth={1.5} className="mt-0.5 flex-shrink-0 text-amber-600" />
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-amber-600">Sync Boutique Awin</p>
-            <p className="text-xs text-gray-500 leading-relaxed mt-0.5">
-              {anyRunning
-                ? `Synchronisation en cours… ${totalSynced} produits`
-                : allDone
-                ? `✓ ${totalSynced} produits synchronisés`
-                : `7 catégories indépendantes (chiens, chats, oiseaux…)`}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {/* Bouton tout lancer */}
-          <button
-            onClick={launchAll}
-            disabled={anyRunning}
-            className={clsx(
-              'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1',
-              allDone
-                ? 'bg-emerald-100 text-emerald-600 cursor-default'
-                : anyRunning
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-amber-100 text-amber-700 hover:bg-amber-200 cursor-pointer'
-            )}
-          >
-            {allDone ? (
-              <><CheckCircle2 size={14} strokeWidth={1.5} />OK</>
-            ) : anyRunning ? (
-              <><span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />En cours</>
-            ) : (
-              <>Tout lancer</>
-            )}
-          </button>
-
-          {/* Toggle détails */}
-          <button
-            onClick={() => setExpanded(v => !v)}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-        </div>
-      </div>
-
-      {/* Barre de progression globale */}
-      {(anyRunning || allDone || doneCount > 0) && (
-        <div className="mt-2 ml-7">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="flex-1 bg-gray-100 rounded-full h-1.5 overflow-hidden">
-              <div
-                className="h-full bg-amber-500 rounded-full transition-all duration-500"
-                style={{ width: `${(doneCount / AWIN_CATEGORIES.length) * 100}%` }}
-              />
-            </div>
-            <span className="text-xs text-gray-500 flex-shrink-0">{doneCount}/{AWIN_CATEGORIES.length}</span>
-          </div>
-          {errorCount > 0 && (
-            <p className="text-xs text-red-500">{errorCount} catégorie{errorCount > 1 ? 's' : ''} en erreur</p>
-          )}
-        </div>
-      )}
-
-      {/* Détails par catégorie */}
-      {expanded && (
-        <div className="mt-2 ml-7 space-y-1.5">
-          {AWIN_CATEGORIES.map(cat => {
-            const p = progress[cat.key];
-            const isRunning = p.status === 'running';
-            const isDone = p.status === 'done';
-            const isError = p.status === 'error';
-
-            return (
-              <div key={cat.key} className="flex items-center gap-2">
-                <span className="text-sm w-5">{cat.icon}</span>
-                <span className="text-xs text-gray-600 w-16 flex-shrink-0">{cat.label}</span>
-
-                {/* Barre de progression individuelle */}
-                <div className="flex-1 flex items-center gap-1.5 min-w-0">
-                  {isRunning && (
-                    <>
-                      <div className="flex-1 bg-gray-100 rounded-full h-1 overflow-hidden">
-                        <div className="h-full bg-amber-400 rounded-full animate-pulse w-1/2" />
-                      </div>
-                      <span className="text-xs text-amber-600 flex-shrink-0 min-w-0 truncate max-w-[90px]" title={p.current_feed ?? ''}>
-                        {p.synced > 0 ? `${p.synced} produits` : p.current_feed ? `${p.current_feed.slice(0, 12)}…` : '…'}
-                      </span>
-                    </>
-                  )}
-                  {isDone && (
-                    <span className="text-xs text-emerald-600 flex items-center gap-1">
-                      <CheckCircle2 size={12} strokeWidth={1.5} />
-                      {p.synced} produits
-                    </span>
-                  )}
-                  {isError && (
-                    <span className="text-xs text-red-500 flex items-center gap-1 truncate" title={p.error ?? ''}>
-                      <XCircle size={12} strokeWidth={1.5} />
-                      {p.error?.slice(0, 30) ?? 'Erreur'}
-                    </span>
-                  )}
-                  {p.status === 'idle' && (
-                    <span className="text-xs text-gray-300">En attente</span>
-                  )}
-                </div>
-
-                {/* Bouton lancer individuel */}
-                {(p.status === 'idle' || p.status === 'error') && (
-                  <button
-                    onClick={() => launchCategory(cat.key)}
-                    className="text-xs text-gray-400 hover:text-amber-600 px-1.5 py-0.5 rounded hover:bg-amber-50 transition-colors flex-shrink-0"
-                  >
-                    {isError ? 'Retry' : 'Lancer'}
-                  </button>
-                )}
-                {isDone && (
-                  <button
-                    onClick={() => resetCategory(cat.key)}
-                    className="text-xs text-gray-300 hover:text-gray-500 px-1.5 py-0.5 rounded hover:bg-gray-50 transition-colors flex-shrink-0"
-                  >
-                    Reset
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── CanadaPetCare Import Panel ──────────────────────────────────────────────
-
-function CanadaPetCareImportPanel() {
-  const [status, setStatus] = useState<StepStatus>('idle');
-  const [result, setResult] = useState<string>('');
-
-  const launch = async () => {
-    if (status === 'running') return;
-    setStatus('running');
-    setResult('');
-    try {
-      const r = await fetch('/api/admin/import-canada-pet-care', { method: 'POST' });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
-      setResult(`${data.imported}/${data.total} importés (${data.failed} échecs)`);
-      setStatus('done');
-    } catch (err) {
-      setResult(err instanceof Error ? err.message : 'Erreur');
-      setStatus('error');
-    }
-  };
-
-  return (
-    <div className="px-4 py-3.5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-2.5 flex-1 min-w-0">
-          <ShoppingBag size={18} strokeWidth={1.5} className="mt-0.5 flex-shrink-0 text-green-600" />
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-green-600">Import CanadaPetCare</p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {status === 'running' ? 'Scraping en cours (~60s)…'
-                : status === 'done' ? `✓ ${result}`
-                : status === 'error' ? result
-                : 'Importe ~80 produits depuis le sitemap (1 fois)'}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={status === 'done' ? () => { setStatus('idle'); setResult(''); } : launch}
-          disabled={status === 'running'}
-          className={clsx(
-            'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1',
-            status === 'done' ? 'bg-emerald-100 text-emerald-600 cursor-pointer'
-              : status === 'error' ? 'bg-red-100 text-red-500 hover:bg-red-200 cursor-pointer'
-              : status === 'running' ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-green-100 text-green-700 hover:bg-green-200 cursor-pointer'
-          )}
-        >
-          {status === 'done' && <><CheckCircle2 size={14} strokeWidth={1.5} />Reset</>}
-          {status === 'error' && <><XCircle size={14} strokeWidth={1.5} />Retry</>}
-          {status === 'running' && <><span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />En cours</>}
-          {status === 'idle' && 'Importer'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── CJ Sync Panel ───────────────────────────────────────────────────────────
-
-function CJSyncPanel() {
+function TranslatePanel() {
   const [status, setStatus] = useState<StepStatus>('idle');
   const [result, setResult] = useState<string>('');
 
@@ -914,11 +600,11 @@ function CJSyncPanel() {
       const r = await fetch('/api/admin/run-cron', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ step: 'cj-sync-canada-pet-care' }),
+        body: JSON.stringify({ step: 'catalog-sync-translate' }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
-      setResult(`${data.synced ?? 0} produits`);
+      setResult(`${(data.translatedNames ?? 0)} noms + ${data.translatedDescs ?? 0} desc traduits`);
       setStatus('done');
     } catch (err) {
       setResult(err instanceof Error ? err.message : 'Erreur');
@@ -930,14 +616,14 @@ function CJSyncPanel() {
     <div className="px-4 py-3.5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-2.5 flex-1 min-w-0">
-          <ShoppingBag size={18} strokeWidth={1.5} className="mt-0.5 flex-shrink-0 text-blue-600" />
+          <Sparkles size={18} strokeWidth={1.5} className="mt-0.5 flex-shrink-0 text-violet-600" />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-blue-600">Sync Boutique CJ</p>
+            <p className="text-sm font-semibold text-violet-600">Traduction EN→FR (Haiku)</p>
             <p className="text-xs text-gray-500 mt-0.5">
-              {status === 'running' ? 'Synchronisation en cours…'
+              {status === 'running' ? 'Traduction en cours (Claude Haiku)…'
                 : status === 'done' ? `✓ ${result}`
                 : status === 'error' ? result
-                : 'Sync produits affiliés via l\'API CJ'}
+                : 'Traduit les noms EN des produits Tuft & Paw / CanadaPetCare'}
             </p>
           </div>
         </div>
@@ -949,7 +635,144 @@ function CJSyncPanel() {
             status === 'done' ? 'bg-emerald-100 text-emerald-600 cursor-pointer'
               : status === 'error' ? 'bg-red-100 text-red-500 hover:bg-red-200 cursor-pointer'
               : status === 'running' ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-blue-100 text-blue-700 hover:bg-blue-200 cursor-pointer'
+              : 'bg-violet-100 text-violet-700 hover:bg-violet-200 cursor-pointer'
+          )}
+        >
+          {status === 'done' && <><CheckCircle2 size={14} strokeWidth={1.5} />Reset</>}
+          {status === 'error' && <><XCircle size={14} strokeWidth={1.5} />Retry</>}
+          {status === 'running' && <><span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />En cours</>}
+          {status === 'idle' && 'Lancer'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Dedup EAN Panel ─────────────────────────────────────────────────────────
+
+function DedupEanPanel() {
+  const [status, setStatus] = useState<StepStatus>('idle');
+  const [result, setResult] = useState<string>('');
+
+  const launch = async () => {
+    if (status === 'running') return;
+    setStatus('running');
+    setResult('');
+    try {
+      const r = await fetch('/api/admin/run-cron', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step: 'catalog-dedup-ean' }),
+      });
+      const data = await r.json();
+      if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
+      const merged = data.merged ?? 0;
+      const deleted = data.deleted ?? 0;
+      const groups = data.eanGroups ?? 0;
+      if (merged === 0) {
+        setResult('Aucun doublon EAN trouve');
+      } else {
+        setResult(`${groups} EAN dupliques — ${deleted} fiches supprimees`);
+      }
+      setStatus('done');
+    } catch (err) {
+      setResult(err instanceof Error ? err.message : 'Erreur');
+      setStatus('error');
+    }
+  };
+
+  return (
+    <div className="px-4 py-3.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2.5 flex-1 min-w-0">
+          <Tag size={18} strokeWidth={1.5} className="mt-0.5 flex-shrink-0 text-sky-600" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-sky-600">Dedup EAN (Phase 3)</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {status === 'running' ? 'Recherche et fusion des doublons EAN…'
+                : status === 'done' ? `✓ ${result}`
+                : status === 'error' ? result
+                : 'Fusionne les fiches catalog avec le meme EAN'}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={status === 'done' ? () => { setStatus('idle'); setResult(''); } : launch}
+          disabled={status === 'running'}
+          className={clsx(
+            'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1',
+            status === 'done' ? 'bg-emerald-100 text-emerald-600 cursor-pointer'
+              : status === 'error' ? 'bg-red-100 text-red-500 hover:bg-red-200 cursor-pointer'
+              : status === 'running' ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-sky-100 text-sky-700 hover:bg-sky-200 cursor-pointer'
+          )}
+        >
+          {status === 'done' && <><CheckCircle2 size={14} strokeWidth={1.5} />Reset</>}
+          {status === 'error' && <><XCircle size={14} strokeWidth={1.5} />Retry</>}
+          {status === 'running' && <><span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />En cours</>}
+          {status === 'idle' && 'Lancer'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Dedup Title Panel ───────────────────────────────────────────────────────
+
+function DedupTitlePanel() {
+  const [status, setStatus] = useState<StepStatus>('idle');
+  const [result, setResult] = useState<string>('');
+
+  const launch = async () => {
+    if (status === 'running') return;
+    setStatus('running');
+    setResult('');
+    try {
+      const r = await fetch('/api/admin/run-cron', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step: 'catalog-dedup-title' }),
+      });
+      const data = await r.json();
+      if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
+      const deleted = data.deleted ?? 0;
+      const groups = data.groups ?? 0;
+      if (deleted === 0) {
+        setResult('Aucun doublon titre+marque+poids trouve');
+      } else {
+        setResult(`${groups} groupes — ${deleted} fiches supprimees`);
+      }
+      setStatus('done');
+    } catch (err) {
+      setResult(err instanceof Error ? err.message : 'Erreur');
+      setStatus('error');
+    }
+  };
+
+  return (
+    <div className="px-4 py-3.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2.5 flex-1 min-w-0">
+          <Tag size={18} strokeWidth={1.5} className="mt-0.5 flex-shrink-0 text-indigo-600" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-indigo-600">Dedup Titre (Phase 3)</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {status === 'running' ? 'Recherche des doublons titre+marque+poids…'
+                : status === 'done' ? `✓ ${result}`
+                : status === 'error' ? result
+                : 'Fusionne les fiches avec titre + marque + poids identiques'}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={status === 'done' ? () => { setStatus('idle'); setResult(''); } : launch}
+          disabled={status === 'running'}
+          className={clsx(
+            'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1',
+            status === 'done' ? 'bg-emerald-100 text-emerald-600 cursor-pointer'
+              : status === 'error' ? 'bg-red-100 text-red-500 hover:bg-red-200 cursor-pointer'
+              : status === 'running' ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 cursor-pointer'
           )}
         >
           {status === 'done' && <><CheckCircle2 size={14} strokeWidth={1.5} />Reset</>}
@@ -1016,6 +839,160 @@ function CompressHeroImagesPanel() {
           {status === 'idle' && 'Lancer'}
         </button>
       </div>
+    </div>
+  );
+}
+
+// ─── Catalog Sync V2 Panel ───────────────────────────────────────────────────
+
+const CATALOG_CATEGORIES = [
+  { key: 'chiens',           label: 'Chiens',   icon: '🐶' },
+  { key: 'chats',            label: 'Chats',    icon: '🐱' },
+  { key: 'oiseaux',          label: 'Oiseaux',  icon: '🐦' },
+  { key: 'rongeurs',         label: 'Rongeurs', icon: '🐹' },
+  { key: 'reptiles',         label: 'Reptiles', icon: '🦎' },
+  { key: 'livres',           label: 'Livres',   icon: '📚' },
+  { key: 'general',          label: 'Général',  icon: '🐾' },
+  { key: 'canada-pet-care',  label: 'CPC',      icon: '🇨🇦' },
+] as const;
+
+type CatalogCategory = typeof CATALOG_CATEGORIES[number]['key'];
+
+interface CatalogCatState {
+  status: 'idle' | 'running' | 'done' | 'error';
+  inserted: number;
+  updated: number;
+  error: string | null;
+}
+
+function CatalogSyncPanel() {
+  const [states, setStates] = useState<Record<CatalogCategory, CatalogCatState>>(
+    () => Object.fromEntries(
+      CATALOG_CATEGORIES.map(c => [c.key, { status: 'idle', inserted: 0, updated: 0, error: null }])
+    ) as Record<CatalogCategory, CatalogCatState>
+  );
+  const [expanded, setExpanded] = useState(false);
+
+  const anyRunning = Object.values(states).some(s => s.status === 'running');
+  const doneCount  = CATALOG_CATEGORIES.filter(c => states[c.key].status === 'done').length;
+  const allDone    = doneCount === CATALOG_CATEGORIES.length;
+  const totalInserted = Object.values(states).reduce((s, v) => s + v.inserted, 0);
+  const totalUpdated  = Object.values(states).reduce((s, v) => s + v.updated, 0);
+
+  const launchCategory = async (key: CatalogCategory) => {
+    if (states[key].status === 'running') return;
+    setStates(prev => ({ ...prev, [key]: { ...prev[key], status: 'running', error: null } }));
+    try {
+      const r = await fetch('/api/admin/run-cron', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step: `catalog-sync-${key}` }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
+      setStates(prev => ({
+        ...prev,
+        [key]: { status: 'done', inserted: data.inserted ?? 0, updated: data.updated ?? 0, error: null },
+      }));
+    } catch (err) {
+      setStates(prev => ({
+        ...prev,
+        [key]: { ...prev[key], status: 'error', error: err instanceof Error ? err.message : 'Erreur' },
+      }));
+    }
+  };
+
+  const launchAll = async () => {
+    for (const cat of CATALOG_CATEGORIES) {
+      await launchCategory(cat.key);
+    }
+  };
+
+  return (
+    <div className="px-4 py-3.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2.5 flex-1 min-w-0">
+          <ShoppingBag size={18} strokeWidth={1.5} className="mt-0.5 flex-shrink-0 text-orange-600" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-orange-600">Catalog Sync V2</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {anyRunning
+                ? 'Sync en cours…'
+                : allDone
+                ? `✓ ${totalInserted} nouvelles fiches · ${totalUpdated} offres màj`
+                : 'Lit Awin/CPC directement → products_catalog + product_offers'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            onClick={launchAll}
+            disabled={anyRunning}
+            className={clsx(
+              'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1',
+              allDone
+                ? 'bg-emerald-100 text-emerald-600 cursor-default'
+                : anyRunning
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-orange-100 text-orange-700 hover:bg-orange-200 cursor-pointer'
+            )}
+          >
+            {allDone
+              ? <><CheckCircle2 size={14} strokeWidth={1.5} />OK</>
+              : anyRunning
+              ? <><span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />En cours</>
+              : 'Tout lancer'}
+          </button>
+          <button
+            onClick={() => setExpanded(v => !v)}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        </div>
+      </div>
+
+      {(anyRunning || doneCount > 0) && (
+        <div className="mt-2 ml-7">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 bg-gray-100 rounded-full h-1.5 overflow-hidden">
+              <div
+                className="h-full bg-orange-500 rounded-full transition-all duration-500"
+                style={{ width: `${(doneCount / CATALOG_CATEGORIES.length) * 100}%` }}
+              />
+            </div>
+            <span className="text-xs text-gray-500 flex-shrink-0">{doneCount}/{CATALOG_CATEGORIES.length}</span>
+          </div>
+        </div>
+      )}
+
+      {expanded && (
+        <div className="mt-2 ml-7 space-y-1.5">
+          {CATALOG_CATEGORIES.map(cat => {
+            const s = states[cat.key];
+            return (
+              <div key={cat.key} className="flex items-center gap-2">
+                <span className="text-sm w-5">{cat.icon}</span>
+                <span className="text-xs text-gray-600 w-16 flex-shrink-0">{cat.label}</span>
+                <div className="flex-1 text-xs">
+                  {s.status === 'running' && <span className="text-amber-600 flex items-center gap-1"><span className="w-2 h-2 border border-current border-t-transparent rounded-full animate-spin" />En cours</span>}
+                  {s.status === 'done' && <span className="text-emerald-600">+{s.inserted} fiches · {s.updated} màj</span>}
+                  {s.status === 'error' && <span className="text-red-500 truncate" title={s.error ?? ''}>{s.error?.slice(0, 30)}</span>}
+                  {s.status === 'idle' && <span className="text-gray-300">En attente</span>}
+                </div>
+                {(s.status === 'idle' || s.status === 'error') && (
+                  <button
+                    onClick={() => launchCategory(cat.key)}
+                    className="text-xs text-gray-400 hover:text-orange-600 px-1.5 py-0.5 rounded hover:bg-orange-50 transition-colors flex-shrink-0"
+                  >
+                    {s.status === 'error' ? 'Retry' : 'Lancer'}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1107,14 +1084,17 @@ export default function CronLauncher() {
               );
             })}
 
-            {/* Panel Awin avec avancement */}
-            <AwinPanel />
+            {/* Catalog Sync */}
+            <CatalogSyncPanel />
 
-            {/* CJ sync */}
-            <CJSyncPanel />
+            {/* Dedup EAN — fusion doublons catalog */}
+            <DedupEanPanel />
 
-            {/* Import CanadaPetCare depuis sitemap */}
-            <CanadaPetCareImportPanel />
+            {/* Dedup titre — fusion doublons titre+marque+poids */}
+            <DedupTitlePanel />
+
+            {/* Traduction EN→FR (Haiku) */}
+            <TranslatePanel />
 
             {/* Compression images hero (Sharp) */}
             <CompressHeroImagesPanel />
