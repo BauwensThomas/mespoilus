@@ -4,8 +4,8 @@ import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
   const ip = getClientIP(req);
-  const { allowed } = await checkRateLimit(`comment:${ip}`, 3_600_000, 5);
-  if (!allowed) return NextResponse.json({ error: 'Trop de commentaires, réessayez dans 1h.' }, { status: 429 });
+  const { allowed } = await checkRateLimit(`comment:${ip}`, 300_000, 5);
+  if (!allowed) return NextResponse.json({ error: 'Trop de commentaires, réessayez dans 5 minutes.' }, { status: 429 });
 
   const { article_slug, author_name, content, email } = await req.json();
 
