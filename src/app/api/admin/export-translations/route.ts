@@ -14,15 +14,22 @@ function escapeCsv(value: string | null | undefined): string {
 export async function GET() {
   const supabase = createAdminClient();
 
-  // 1. Produits traduits
-  const { data: products, error: prodError } = await supabase
-    .from('products_catalog')
-    .select('id, name, name_fr, description, description_fr, category')
-    .not('name_fr', 'is', null)
-    .order('category')
-    .limit(100000);
-
-  if (prodError) return Response.json({ error: prodError.message }, { status: 500 });
+  // 1. Produits traduits — pagination pour dépasser la limite max_rows Supabase (1000)
+  const PAGE = 1000;
+  const products: Array<{ id: string; name: string; name_fr: string | null; description: string | null; description_fr: string | null; category: string | null }> = [];
+  let from = 0;
+  while (true) {
+    const { data, error: prodError } = await supabase
+      .from('products_catalog')
+      .select('id, name, name_fr, description, description_fr, category')
+      .not('name_fr', 'is', null)
+      .order('category')
+      .range(from, from + PAGE - 1);
+    if (prodError) return Response.json({ error: prodError.message }, { status: 500 });
+    products.push(...(data ?? []));
+    if ((data?.length ?? 0) < PAGE) break;
+    from += PAGE;
+  }
 
   const ids = (products ?? []).map(p => p.id);
 

@@ -11,16 +11,21 @@ function esc(val: string | null | undefined): string {
 export async function GET() {
   const supabase = createAdminClient();
 
-  const { data, error } = await supabase
-    .from('breeds')
-    .select('slug, name, animal, status, photo_url, generated_at')
-    .order('animal')
-    .order('name')
-    .limit(100000);
-
-  if (error) return Response.json({ error: error.message }, { status: 500 });
-
-  const rows = data ?? [];
+  const PAGE = 1000;
+  const rows: Array<{ slug: string; name: string; animal: string; status: string | null; photo_url: string | null; generated_at: string | null }> = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from('breeds')
+      .select('slug, name, animal, status, photo_url, generated_at')
+      .order('animal')
+      .order('name')
+      .range(from, from + PAGE - 1);
+    if (error) return Response.json({ error: error.message }, { status: 500 });
+    rows.push(...(data ?? []));
+    if ((data?.length ?? 0) < PAGE) break;
+    from += PAGE;
+  }
   const csv = [
     '﻿slug;nom;animal;statut;photo;date',
     ...rows.map(r => [
