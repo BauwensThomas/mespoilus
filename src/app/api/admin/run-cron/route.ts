@@ -87,6 +87,7 @@ export async function POST(req: NextRequest) {
   try {
     const r = await fetch(`${appUrl}${cronPath}${queryParams}`, {
       headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+      cache: 'no-store',
     });
     const data = await r.json();
     return NextResponse.json(data);
