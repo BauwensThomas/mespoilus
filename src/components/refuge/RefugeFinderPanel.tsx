@@ -52,13 +52,15 @@ export default function RefugeFinderPanel() {
   const mapRef         = useRef<HTMLDivElement>(null);
   const mapInstance    = useRef<google.maps.Map | null>(null);
   const locationRef    = useRef<{ lat: number; lng: number } | null>(null);
-  const markersRef     = useRef<google.maps.Marker[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const markersRef     = useRef<any[]>([]);
   const circleRef      = useRef<google.maps.Circle | null>(null);
   const mapInitialized = useRef(false);
   const debounceRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputWrapRef   = useRef<HTMLDivElement>(null);
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const mapId  = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 
   useEffect(() => {
     if (!open || mapInitialized.current) return;
@@ -68,6 +70,7 @@ export default function RefugeFinderPanel() {
       mapInstance.current = new google.maps.Map(mapRef.current, {
         center: { lat: 50.5, lng: 4.4 },
         zoom: 7,
+        ...(mapId ? { mapId } : {}),
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
@@ -78,7 +81,7 @@ export default function RefugeFinderPanel() {
     if (tryInit()) return;
     const interval = setInterval(() => { if (tryInit()) clearInterval(interval); }, 300);
     return () => clearInterval(interval);
-  }, [open]);
+  }, [open, mapId]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -91,7 +94,8 @@ export default function RefugeFinderPanel() {
   }, []);
 
   const clearOverlays = useCallback(() => {
-    markersRef.current.forEach(m => m.setMap(null));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    markersRef.current.forEach((m: any) => { m.map = null; });
     markersRef.current = [];
     circleRef.current?.setMap(null);
     circleRef.current = null;
@@ -122,10 +126,10 @@ export default function RefugeFinderPanel() {
   }
 
   function handleGeolocate() {
-    if (!navigator.geolocation) { setError('Geolocalisation non supportee.'); return; }
+    if (!navigator.geolocation) { setError('Géolocalisation non supportée.'); return; }
     setGeoLoading(true);
     setError(null);
-    navigator.geolocation.getCurrentPosition(
+    setTimeout(() => navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGeoLoading(false);
         locationRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -138,15 +142,15 @@ export default function RefugeFinderPanel() {
       (err) => {
         setGeoLoading(false);
         if (err.code === err.PERMISSION_DENIED) {
-          setError('Acces refuse. Autorisez la localisation ou entrez votre adresse.');
+          setError('Localisation refusée. Vérifiez les autorisations du navigateur (icône 🔒 dans la barre d\'adresse) ou entrez votre adresse manuellement.');
         } else if (err.code === err.POSITION_UNAVAILABLE) {
           setError('Position GPS indisponible. Entrez votre adresse.');
         } else {
-          setError('Delai depasse. Reessayez.');
+          setError('Délai dépassé. Réessayez.');
         }
       },
       { timeout: 10000, maximumAge: 60000 },
-    );
+    ), 0);
   }
 
   async function handleSearch() {
@@ -165,7 +169,7 @@ export default function RefugeFinderPanel() {
       } catch { coords = null; }
       if (!coords) {
         setLoading(false);
-        setError('Adresse introuvable. Selectionnez une suggestion ou soyez plus precis.');
+        setError('Adresse introuvable. Sélectionnez une suggestion ou soyez plus précis.');
         return;
       }
     }
@@ -187,55 +191,61 @@ export default function RefugeFinderPanel() {
       fillOpacity: 0.05,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const service = new (google.maps.places as any).PlacesService(mapInstance.current);
-    service.nearbySearch(
-      { location: center, radius: radius * 1000, keyword: 'refuge animaux SPA' },
-      (places: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
-        setLoading(false);
-        if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-          setError(`Aucun refuge trouve dans ${radius} km.`);
-          return;
-        }
-        if (status !== google.maps.places.PlacesServiceStatus.OK || !places) {
-          setError(`Erreur (${status}). Verifiez que Places API est activee.`);
-          return;
-        }
-        const refuges: RefugeResult[] = places.map(p => ({
-          name:         p.name ?? 'Refuge',
-          address:      p.vicinity ?? '',
-          rating:       p.rating,
-          ratingsTotal: p.user_ratings_total,
-          placeId:      p.place_id ?? '',
-          lat:          p.geometry!.location!.lat(),
-          lng:          p.geometry!.location!.lng(),
-          isOpen:       p.opening_hours?.isOpen?.(),
-        }));
-        setResults(refuges);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const PlaceClass = (google.maps.places as any).Place;
+      const latDelta = (radius * 1000) / 111320;
+      const lngDelta = (radius * 1000) / (111320 * Math.cos(lat * Math.PI / 180));
+      const { places } = await PlaceClass.searchByText({
+        textQuery: 'refuge animalier SPA',
+        fields: ['displayName', 'location', 'rating', 'userRatingCount', 'id', 'regularOpeningHours', 'shortFormattedAddress'],
+        locationRestriction: { north: lat + latDelta, south: lat - latDelta, east: lng + lngDelta, west: lng - lngDelta },
+        maxResultCount: 20,
+      });
 
-        const bounds = new google.maps.LatLngBounds();
-        refuges.forEach((r, i) => {
-          const pos = { lat: r.lat, lng: r.lng };
-          bounds.extend(pos);
-          const marker = new google.maps.Marker({
-            map: mapInstance.current!,
-            position: pos,
-            title: r.name,
-            label: { text: String(i + 1), color: 'white', fontSize: '11px', fontWeight: 'bold' },
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 13,
-              fillColor: '#db2777',
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 2,
-            },
-          });
-          markersRef.current.push(marker);
+      if (!places || places.length === 0) {
+        setError(`Aucun refuge trouvé dans un rayon de ${radius} km.`);
+        return;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const refuges: RefugeResult[] = places.map((p: any) => ({
+        name:         p.displayName ?? 'Refuge',
+        address:      p.shortFormattedAddress ?? '',
+        rating:       p.rating ?? undefined,
+        ratingsTotal: p.userRatingCount ?? undefined,
+        placeId:      p.id ?? '',
+        lat:          p.location.lat(),
+        lng:          p.location.lng(),
+        isOpen:       p.regularOpeningHours?.isOpen?.(),
+      }));
+      setResults(refuges);
+
+      const bounds = new google.maps.LatLngBounds();
+      refuges.forEach((r, i) => {
+        const pos = { lat: r.lat, lng: r.lng };
+        bounds.extend(pos);
+
+        const pin = document.createElement('div');
+        pin.style.cssText = 'width:26px;height:26px;border-radius:50%;background:#db2777;color:white;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;';
+        pin.textContent = String(i + 1);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const marker = new (google.maps.marker as any).AdvancedMarkerElement({
+          map: mapInstance.current,
+          position: pos,
+          title: r.name,
+          content: pin,
         });
-        if (refuges.length > 1) mapInstance.current!.fitBounds(bounds);
-      },
-    );
+        markersRef.current.push(marker);
+      });
+      if (refuges.length > 1) mapInstance.current!.fitBounds(bounds);
+    } catch (e) {
+      setError('Erreur lors de la recherche. Vérifiez que Places API est activée.');
+      console.error('[RefugeFinder]', e);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const canSearch = mapReady && address.trim().length > 0;
@@ -244,7 +254,7 @@ export default function RefugeFinderPanel() {
     <>
       {apiKey && open && (
         <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly&loading=async`}
+          src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&v=weekly`}
           strategy="afterInteractive"
         />
       )}
@@ -286,7 +296,7 @@ export default function RefugeFinderPanel() {
         {!apiKey ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3 px-8 text-center">
             <AlertCircle size={36} strokeWidth={1} className="text-amber-400" />
-            <p className="text-sm font-semibold text-gray-700">Cle Google Maps manquante</p>
+            <p className="text-sm font-semibold text-gray-700">Clé Google Maps manquante</p>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto">
@@ -416,7 +426,7 @@ export default function RefugeFinderPanel() {
                               </div>
                             )}
                             {refuge.isOpen === true && <span className="text-[10px] text-green-600 font-medium">Ouvert</span>}
-                            {refuge.isOpen === false && <span className="text-[10px] text-red-500">Ferme</span>}
+                            {refuge.isOpen === false && <span className="text-[10px] text-red-500">Fermé</span>}
                           </div>
                         )}
                       </div>

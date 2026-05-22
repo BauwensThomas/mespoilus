@@ -54,13 +54,14 @@ export default function VetFinderPanel() {
   const mapRef         = useRef<HTMLDivElement>(null);
   const mapInstance    = useRef<google.maps.Map | null>(null);
   const locationRef    = useRef<{ lat: number; lng: number } | null>(null);
-  const markersRef     = useRef<google.maps.Marker[]>([]);
+  const markersRef     = useRef<any[]>([]);
   const circleRef      = useRef<google.maps.Circle | null>(null);
   const mapInitialized = useRef(false);
   const debounceRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputWrapRef   = useRef<HTMLDivElement>(null);
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const mapId  = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 
   useEffect(() => {
     if (!open || mapInitialized.current) return;
@@ -73,6 +74,7 @@ export default function VetFinderPanel() {
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
+        ...(mapId ? { mapId } : {}),
       });
       setMapReady(true);
       return true;
@@ -93,7 +95,7 @@ export default function VetFinderPanel() {
   }, []);
 
   const clearOverlays = useCallback(() => {
-    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current.forEach(m => { m.map = null; });
     markersRef.current = [];
     circleRef.current?.setMap(null);
     circleRef.current = null;
@@ -127,7 +129,7 @@ export default function VetFinderPanel() {
     if (!navigator.geolocation) { setError('Geolocalisation non supportee.'); return; }
     setGeoLoading(true);
     setError(null);
-    navigator.geolocation.getCurrentPosition(
+    setTimeout(() => navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGeoLoading(false);
         locationRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -140,7 +142,7 @@ export default function VetFinderPanel() {
       (err) => {
         setGeoLoading(false);
         if (err.code === err.PERMISSION_DENIED) {
-          setError('Acces refuse. Autorisez la localisation ou entrez votre adresse.');
+          setError('Localisation refusée. Vérifiez les autorisations du navigateur (icône 🔒 dans la barre d\'adresse) ou entrez votre adresse manuellement.');
         } else if (err.code === err.POSITION_UNAVAILABLE) {
           setError('Position GPS indisponible. Entrez votre adresse.');
         } else {
@@ -148,7 +150,7 @@ export default function VetFinderPanel() {
         }
       },
       { timeout: 10000, maximumAge: 60000 },
-    );
+    ), 0);
   }
 
   async function handleSearch() {
@@ -189,56 +191,53 @@ export default function VetFinderPanel() {
       fillOpacity: 0.05,
     });
 
-    const keyword = 'veterinaire';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const service = new (google.maps.places as any).PlacesService(mapInstance.current);
-    service.nearbySearch(
-      { location: center, radius: radius * 1000, type: 'veterinary_care', keyword },
-      (places: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
-        setLoading(false);
-        if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-          setError(`Aucun veterinaire trouve dans ${radius} km.`);
-          return;
-        }
-        if (status !== google.maps.places.PlacesServiceStatus.OK || !places) {
-          setError(`Erreur (${status}). Verifiez que Places API est activee.`);
-          return;
-        }
-        const vets: VetResult[] = places.map(p => ({
-          name:         p.name ?? 'Veterinaire',
-          address:      p.vicinity ?? '',
-          rating:       p.rating,
-          ratingsTotal: p.user_ratings_total,
-          placeId:      p.place_id ?? '',
-          lat:          p.geometry!.location!.lat(),
-          lng:          p.geometry!.location!.lng(),
-          isOpen:       p.opening_hours?.isOpen?.(),
-        }));
-        setResults(vets);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const PlaceClass = (google.maps.places as any).Place;
+      const { places } = await PlaceClass.searchNearby({
+        fields: ['displayName', 'location', 'rating', 'userRatingCount', 'id', 'regularOpeningHours', 'shortFormattedAddress'],
+        locationRestriction: { center: { lat, lng }, radius: radius * 1000 },
+        includedTypes: ['veterinary_care'],
+        maxResultCount: 20,
+      });
 
-        const bounds = new google.maps.LatLngBounds();
-        vets.forEach((vet, i) => {
-          const pos = { lat: vet.lat, lng: vet.lng };
-          bounds.extend(pos);
-          const marker = new google.maps.Marker({
-            map: mapInstance.current!,
-            position: pos,
-            title: vet.name,
-            label: { text: String(i + 1), color: 'white', fontSize: '11px', fontWeight: 'bold' },
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 13,
-              fillColor: '#2563eb',
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 2,
-            },
-          });
-          markersRef.current.push(marker);
+      if (!places || places.length === 0) {
+        setError(`Aucun veterinaire trouve dans ${radius} km.`);
+        return;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const vets: VetResult[] = places.map((p: any) => ({
+        name:         p.displayName ?? 'Veterinaire',
+        address:      p.shortFormattedAddress ?? '',
+        rating:       p.rating,
+        ratingsTotal: p.userRatingCount,
+        placeId:      p.id ?? '',
+        lat:          p.location.lat(),
+        lng:          p.location.lng(),
+        isOpen:       p.regularOpeningHours?.isOpen?.(),
+      }));
+      setResults(vets);
+
+      const bounds = new google.maps.LatLngBounds();
+      vets.forEach((vet, i) => {
+        const pos = { lat: vet.lat, lng: vet.lng };
+        bounds.extend(pos);
+        const pin = document.createElement('div');
+        pin.style.cssText = 'width:26px;height:26px;border-radius:50%;background:#2563eb;color:white;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;';
+        pin.textContent = String(i + 1);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const marker = new (google.maps.marker as any).AdvancedMarkerElement({
+          map: mapInstance.current!, position: pos, title: vet.name, content: pin,
         });
-        if (vets.length > 1) mapInstance.current!.fitBounds(bounds);
-      },
-    );
+        markersRef.current.push(marker);
+      });
+      if (vets.length > 1) mapInstance.current!.fitBounds(bounds);
+    } catch {
+      setError('Erreur lors de la recherche. Verifiez que Places API est activee.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   const canSearch = mapReady && address.trim().length > 0;
@@ -247,7 +246,7 @@ export default function VetFinderPanel() {
     <>
       {apiKey && open && (
         <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly&loading=async`}
+          src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&v=weekly`}
           strategy="afterInteractive"
         />
       )}
