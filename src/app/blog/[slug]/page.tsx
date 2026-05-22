@@ -14,7 +14,7 @@ import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle, Pencil } 
 export const dynamic = 'force-dynamic';
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 async function getArticle(slug: string): Promise<Article | null> {
@@ -33,7 +33,8 @@ async function getArticle(slug: string): Promise<Article | null> {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const article = await getArticle(params.slug);
+  const { slug } = await params;
+  const article = await getArticle(slug);
   if (!article) return { title: 'Article introuvable' };
 
   const canonicalUrl = `/blog/${article.slug}`;
@@ -89,7 +90,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export default async function ArticlePage({ params }: Props) {
-  const article = await getArticle(params.slug);
+  const { slug } = await params;
+  const article = await getArticle(slug);
   if (!article) notFound();
 
   const htmlContent = await marked(article.content, { gfm: true });
@@ -123,7 +125,7 @@ export default async function ArticlePage({ params }: Props) {
 
   const CategoryIcon = CATEGORY_ICONS[article.category] || PawPrint;
 
-  const supabaseUser = createClient();
+  const supabaseUser = await createClient();
   const { data: { user } } = await supabaseUser.auth.getUser();
   const isAdmin = !!user;
 
@@ -264,9 +266,9 @@ export default async function ArticlePage({ params }: Props) {
 
           {/* Commentaires */}
           <section id="commentaires" className="mt-10 space-y-6">
-            <CommentsSection slug={params.slug} />
+            <CommentsSection slug={slug} />
             <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
-              <CommentForm slug={params.slug} />
+              <CommentForm slug={slug} />
             </div>
           </section>
 

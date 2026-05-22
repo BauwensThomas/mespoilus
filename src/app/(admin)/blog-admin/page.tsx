@@ -98,12 +98,13 @@ function CommentCard({ c, showActions }: { c: Comment; showActions: boolean }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 interface PageProps {
-  searchParams: { tab?: string };
+  searchParams: Promise<{ tab?: string }>;
 }
 
 export default async function GestionBlogPage({ searchParams }: PageProps) {
   const { pending, approved, rejected, articles } = await getData();
-  const tab = searchParams.tab === 'commentaires' ? 'commentaires' : 'articles';
+  const { tab: tabParam } = await searchParams;
+  const tab = tabParam === 'commentaires' ? 'commentaires' : 'articles';
 
   return (
     <div className="px-8 py-8 space-y-6 animate-fade-in">

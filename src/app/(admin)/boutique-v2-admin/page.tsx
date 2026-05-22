@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/server';
+﻿import { createAdminClient } from '@/lib/supabase/server';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -154,7 +154,7 @@ function buildUrl(base: Record<string, string>, overrides: Record<string, string
 }
 
 interface Props {
-  searchParams: {
+  searchParams: Promise<{
     search?: string;
     category?: string;
     status?: string;
@@ -162,21 +162,22 @@ interface Props {
     merchant?: string;
     multi?: string;
     page?: string;
-  };
+  }>;
 }
 
 export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const search   = searchParams.search ?? '';
-  const category = searchParams.category ?? 'all';
-  const status   = searchParams.status ?? 'all';
-  const ean      = searchParams.ean ?? 'all';
-  const merchant = searchParams.merchant ?? '';
-  const multi    = searchParams.multi === '1';
-  const page     = Math.max(1, parseInt(searchParams.page ?? '1'));
+  const sp = await searchParams;
+  const search   = sp.search ?? '';
+  const category = sp.category ?? 'all';
+  const status   = sp.status ?? 'all';
+  const ean      = sp.ean ?? 'all';
+  const merchant = sp.merchant ?? '';
+  const multi    = sp.multi === '1';
+  const page     = Math.max(1, parseInt(sp.page ?? '1'));
 
   const [stats, allMerchants, { items, total }] = await Promise.all([
     getStats(),

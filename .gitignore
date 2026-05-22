@@ -17,8 +17,12 @@
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Personal files
 password.txt
 note.txt
+images/
+
 
 # Debug
 npm-debug.log*
@@ -54,3 +58,6 @@ __pycache__/
 # Backups (RGPD - ne jamais commiter)
 /backups/
 backup-supabase.ps1
+
+git add -A
+git commit -m "feat(next): upgrade Next.js 14→15, fix async params/cookies, fix footer focus ring"

@@ -416,9 +416,9 @@ export default async function LandingPage() {
                 Conseils vétérinaires, guides pratiques et boutique pour chiens, chats, oiseaux, rongeurs et reptiles.
               </p>
               <div className="flex gap-4 mt-4">
-                <a href="https://www.instagram.com/mespoilusofficiel" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-orange-400 transition-colors focus-ring" aria-label="Suivez-nous sur Instagram">Instagram</a>
-                <a href="https://www.facebook.com/profile.php?id=61589487954538" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-orange-400 transition-colors focus-ring" aria-label="Suivez-nous sur Facebook">Facebook</a>
-                <a href="https://www.pinterest.com/mespoilus_officiel/" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-orange-400 transition-colors focus-ring" aria-label="Suivez-nous sur Pinterest">Pinterest</a>
+                <a href="https://www.instagram.com/mespoilusofficiel" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-orange-400 transition-colors focus:outline-none focus-visible:underline" aria-label="Suivez-nous sur Instagram">Instagram</a>
+                <a href="https://www.facebook.com/profile.php?id=61589487954538" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-orange-400 transition-colors focus:outline-none focus-visible:underline" aria-label="Suivez-nous sur Facebook">Facebook</a>
+                <a href="https://www.pinterest.com/mespoilus_officiel/" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-orange-400 transition-colors focus:outline-none focus-visible:underline" aria-label="Suivez-nous sur Pinterest">Pinterest</a>
               </div>
             </div>
 
@@ -435,7 +435,7 @@ export default async function LandingPage() {
                   { href: '/blog?category=rongeurs', label: 'Rongeurs' },
                   { href: '/blog?category=reptiles', label: 'Reptiles' },
                 ].map(({ href, label }) => (
-                  <li key={href}><Link href={href} className="text-sm hover:text-orange-400 transition-colors focus-ring">{label}</Link></li>
+                  <li key={href}><Link href={href} className="text-sm hover:text-orange-400 transition-colors focus:outline-none focus-visible:underline">{label}</Link></li>
                 ))}
               </ul>
             </div>
@@ -451,7 +451,7 @@ export default async function LandingPage() {
                   { href: '/cookies',                   label: 'Cookies'                      },
                   { href: '/presse',                    label: 'Presse & partenaires'         },
                 ].map(({ href, label }) => (
-                  <li key={href}><Link href={href} className="text-sm hover:text-orange-400 transition-colors focus-ring">{label}</Link></li>
+                  <li key={href}><Link href={href} className="text-sm hover:text-orange-400 transition-colors focus:outline-none focus-visible:underline">{label}</Link></li>
                 ))}
               </ul>
             </div>

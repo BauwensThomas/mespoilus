@@ -26,8 +26,9 @@ async function getPost(id: string): Promise<AdoptionPost | null> {
   }
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const post = await getPost(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const post = await getPost(id);
   if (!post) return { title: 'Annonce introuvable | Mes Poilus' };
 
   const animalLabel = ANIMAL_LABEL[post.animal_type] ?? 'Animal';
@@ -60,8 +61,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   };
 }
 
-export default async function AdoptionDetailPage({ params }: { params: { id: string } }) {
-  const post = await getPost(params.id);
+export default async function AdoptionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const post = await getPost(id);
   if (!post) notFound();
 
   const animalLabel = ANIMAL_LABEL[post.animal_type] ?? 'Animal';
@@ -69,7 +71,7 @@ export default async function AdoptionDetailPage({ params }: { params: { id: str
   const title = `${subject} à adopter${post.region ? ` à ${post.region}` : ''}`;
   const description = post.description?.slice(0, 200) ?? '';
   const image = post.photo_urls?.[0];
-  const url = `${APP_URL}/adoption/${post.id}`;
+  const url = `${APP_URL}/adoption/${id}`;
 
   const jsonLd = {
     '@context': 'https://schema.org',

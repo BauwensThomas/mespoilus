@@ -1,8 +1,8 @@
-import { createClient, createAdminClient } from '@/lib/supabase/server';
+﻿import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 async function checkAuth() {
-  const authClient = createClient();
+  const authClient = await createClient();
   const { data: { user } } = await authClient.auth.getUser();
   return user;
 }

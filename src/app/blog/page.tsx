@@ -1,5 +1,4 @@
 import { createAdminClient } from '@/lib/supabase/server';
-import Head from 'next/head';
 import BlogPostsGrid from '@/components/blog/BlogPostsGrid';
 import { Article } from '@/types';
 import type { Metadata } from 'next';
@@ -65,27 +64,24 @@ const CATEGORIES = [
 ];
 
 interface Props {
-  searchParams: { category?: string; q?: string };
+  searchParams: Promise<{ category?: string; q?: string }>;
 }
 
 export default async function BlogPage({ searchParams }: Props) {
-  if (searchParams.category && CATEGORY_SLUGS.includes(searchParams.category)) {
-    permanentRedirect(`/blog/${searchParams.category}`);
+  const sp = await searchParams;
+  if (sp.category && CATEGORY_SLUGS.includes(sp.category)) {
+    permanentRedirect(`/blog/${sp.category}`);
   }
 
-  const activeCategory = searchParams.category && searchParams.category !== 'all'
-    ? searchParams.category
+  const activeCategory = sp.category && sp.category !== 'all'
+    ? sp.category
     : undefined;
-  const search = searchParams.q?.trim();
+  const search = sp.q?.trim();
   const activeCat = CATEGORIES.find((c) => c.id === (activeCategory ?? 'all'));
   const articles = await getArticles(activeCategory, search);
 
   return (
-    <>
-      <Head>
-        <link rel="canonical" href="https://www.mespoilus.com/blog" />
-      </Head>
-      <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5">
+    <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Blog</h1>
@@ -143,6 +139,5 @@ export default async function BlogPage({ searchParams }: Props) {
 
       <AdBanner slot="1266534148" variant="in-article" className="mt-6" />
     </div>
-    </>
   );
 }

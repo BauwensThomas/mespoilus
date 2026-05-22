@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
-interface Props { params: { id: string } }
+interface Props { params: Promise<{ id: string }> }
 
 async function updatePost(id: string, formData: FormData) {
   'use server';
@@ -30,12 +30,13 @@ const ANIMAL_TYPES = ['chien','chat','oiseau','rongeur','reptile','autre'];
 const inputCls = 'w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-200';
 
 export default async function EditPostPage({ params }: Props) {
+  const { id } = await params;
   const supabase = createAdminClient();
-  const { data: post } = await supabase.from('adoption_posts').select('*').eq('id', params.id).single();
+  const { data: post } = await supabase.from('adoption_posts').select('*').eq('id', id).single();
 
   if (!post) return <div className="p-8 text-gray-500">Annonce introuvable.</div>;
 
-  const action = updatePost.bind(null, params.id);
+  const action = updatePost.bind(null, id);
 
   return (
     <div className="px-8 py-8 max-w-2xl space-y-6 animate-fade-in">

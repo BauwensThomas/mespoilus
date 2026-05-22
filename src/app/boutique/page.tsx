@@ -199,7 +199,7 @@ function buildPageUrl(base: URLSearchParams, p: number): string {
 }
 
 interface Props {
-  searchParams: {
+  searchParams: Promise<{
     category?: string;
     search?: string;
     sort?: string;
@@ -210,26 +210,27 @@ interface Props {
     merchants?: string;
     per_page?: string;
     fav_ids?: string;
-  };
+  }>;
 }
 
 export default async function BoutiqueV2Page({ searchParams }: Props) {
-  const category        = searchParams.category;
-  const search          = searchParams.search?.trim();
-  const sort            = (VALID_SORTS.includes(searchParams.sort as CatalogSortValue)
-    ? searchParams.sort : 'price_asc') as CatalogSortValue;
-  const page            = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
-  const view            = searchParams.view === 'list' ? 'list' as const : 'grid' as const;
-  const minPrice        = searchParams.min_price ? parseFloat(searchParams.min_price) : undefined;
-  const maxPrice        = searchParams.max_price ? parseFloat(searchParams.max_price) : undefined;
-  const filterMerchants = searchParams.merchants ? searchParams.merchants.split(',').filter(Boolean) : [];
-  const filterFavIds    = searchParams.fav_ids ? searchParams.fav_ids.split(',').filter(Boolean) : [];
-  const perPageRaw      = parseInt(searchParams.per_page ?? '', 10) as PerPageValue;
+  const sp              = await searchParams;
+  const category        = sp.category;
+  const search          = sp.search?.trim();
+  const sort            = (VALID_SORTS.includes(sp.sort as CatalogSortValue)
+    ? sp.sort : 'price_asc') as CatalogSortValue;
+  const page            = Math.max(1, parseInt(sp.page ?? '1', 10) || 1);
+  const view            = sp.view === 'list' ? 'list' as const : 'grid' as const;
+  const minPrice        = sp.min_price ? parseFloat(sp.min_price) : undefined;
+  const maxPrice        = sp.max_price ? parseFloat(sp.max_price) : undefined;
+  const filterMerchants = sp.merchants ? sp.merchants.split(',').filter(Boolean) : [];
+  const filterFavIds    = sp.fav_ids ? sp.fav_ids.split(',').filter(Boolean) : [];
+  const perPageRaw      = parseInt(sp.per_page ?? '', 10) as PerPageValue;
   const perPage         = VALID_PER_PAGE.includes(perPageRaw) ? perPageRaw : DEFAULT_PER_PAGE;
 
   let isAdmin = false;
   try {
-    const authClient = createClient();
+    const authClient = await createClient();
     const { data: { user } } = await authClient.auth.getUser();
     isAdmin = !!user;
   } catch { /* non-bloquant */ }

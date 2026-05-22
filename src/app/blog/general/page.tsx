@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 3600;
 
-export default function GeneralPage({ searchParams }: { searchParams: { q?: string } }) {
-  return <CategoryPageContent category="general" search={searchParams.q?.trim()} />;
+export default async function GeneralPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q } = await searchParams;
+  return <CategoryPageContent category="general" search={q?.trim()} />;
 }

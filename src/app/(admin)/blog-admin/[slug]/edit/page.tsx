@@ -8,7 +8,7 @@ import EditArticleClient from './EditArticleClient';
 export const revalidate = 0;
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 async function getArticle(slug: string) {
@@ -40,10 +40,11 @@ async function updateArticle(slug: string, formData: FormData) {
 }
 
 export default async function EditArticlePage({ params }: Props) {
-  const article = await getArticle(params.slug);
+  const { slug } = await params;
+  const article = await getArticle(slug);
   if (!article) notFound();
 
-  const update = updateArticle.bind(null, params.slug);
+  const update = updateArticle.bind(null, slug);
 
   return (
     <div className="px-6 py-6 animate-fade-in">

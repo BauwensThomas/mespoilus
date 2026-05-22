@@ -3,9 +3,7 @@ import { withSentryConfig } from '@sentry/nextjs';
 const nextConfig = {
   poweredByHeader: false,
   staticPageGenerationTimeout: 120,
-  experimental: {
-    serverComponentsExternalPackages: ['@anthropic-ai/sdk'],
-  },
+  serverExternalPackages: ['@anthropic-ai/sdk'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
