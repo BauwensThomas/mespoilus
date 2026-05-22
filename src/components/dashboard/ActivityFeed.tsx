@@ -6,7 +6,7 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import clsx from 'clsx';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, X } from 'lucide-react';
 
 interface ActivityFeedProps {
@@ -28,8 +28,12 @@ function isSameDay(dateStr: string, filterDate: string) {
 export default function ActivityFeed({ logs }: ActivityFeedProps) {
   const [open, setOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState('');
+  const [todayCount, setTodayCount] = useState(0);
 
-  const todayCount = logs.filter(l => isToday(new Date(l.created_at))).length;
+  useEffect(() => {
+    setTodayCount(logs.filter(l => isToday(new Date(l.created_at))).length);
+  }, [logs]);
+
   const filtered = dateFilter ? logs.filter(l => isSameDay(l.created_at, dateFilter)) : logs;
 
   return (
