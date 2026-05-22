@@ -69,12 +69,13 @@ async function getCatalogEntry(id: string) {
   };
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
   const supabase = createAdminClient();
   const { data } = await supabase
     .from('products_catalog')
     .select('name, brand, category')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   if (!data) return { title: 'Produit - Mes Poilus' };
@@ -86,8 +87,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   };
 }
 
-export default async function ProductDetailPage({ params }: { params: { id: string } }) {
-  const result = await getCatalogEntry(params.id);
+export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const result = await getCatalogEntry(id);
   if (!result) notFound();
 
   const { catalog, offers } = result;

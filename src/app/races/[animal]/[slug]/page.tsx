@@ -8,7 +8,7 @@ import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_EMOJI, ANIMAL_GRADIENT, ANIMAL_URL
 
 export const revalidate = 3600;
 
-interface Props { params: { animal: string; slug: string } }
+interface Props { params: Promise<{ animal: string; slug: string }> }
 
 export async function generateStaticParams() {
   try {
@@ -26,14 +26,15 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const animalType = ANIMAL_URL_MAP[params.animal];
+  const { animal, slug } = await params;
+  const animalType = ANIMAL_URL_MAP[animal];
   if (!animalType) return {};
   const supabase = createAdminClient();
   const { data } = await supabase
     .from('breeds')
     .select('name, content')
     .eq('animal', animalType)
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('status', 'published')
     .single();
   if (!data) return {};
@@ -51,7 +52,8 @@ const ACTIVITE_COLORS: Record<string, string> = {
 };
 
 export default async function BreedPage({ params }: Props) {
-  const animalType = ANIMAL_URL_MAP[params.animal];
+  const { animal, slug } = await params;
+  const animalType = ANIMAL_URL_MAP[animal];
   if (!animalType) notFound();
 
   const supabase = createAdminClient();
@@ -59,7 +61,7 @@ export default async function BreedPage({ params }: Props) {
     .from('breeds')
     .select('*')
     .eq('animal', animalType)
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('status', 'published')
     .single() as unknown as Promise<{ data: Breed | null }>));
 
@@ -71,7 +73,7 @@ export default async function BreedPage({ params }: Props) {
   const gradient = ANIMAL_GRADIENT[animalType];
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com';
-  const breedUrl = `${appUrl}/races/${params.animal}/${params.slug}`;
+  const breedUrl = `${appUrl}/races/${animal}/${slug}`;
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -107,7 +109,7 @@ export default async function BreedPage({ params }: Props) {
         <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-1">
           <Link href="/races" className="hover:text-orange-600 transition-colors">Races</Link>
           <span>/</span>
-          <Link href={`/races/${params.animal}`} className="hover:text-orange-600 transition-colors">{ANIMAL_LABEL[animalType]}</Link>
+          <Link href={`/races/${animal}`} className="hover:text-orange-600 transition-colors">{ANIMAL_LABEL[animalType]}</Link>
         </div>
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{breed.name}</h1>
         {c.excerpt && <p className="text-gray-500 text-sm mt-1">{c.excerpt}</p>}
@@ -122,7 +124,7 @@ export default async function BreedPage({ params }: Props) {
         <p className="text-white/60 text-sm">{ANIMAL_LABEL[animalType]}</p>
       </div>
 
-      <Link href={`/races/${params.animal}`} className="inline-block text-sm text-orange-600 hover:underline">
+      <Link href={`/races/${animal}`} className="inline-block text-sm text-orange-600 hover:underline">
         &larr; {ANIMAL_LABEL[animalType]}
       </Link>
 

@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 3600;
 
-export default function RongeursPage({ searchParams }: { searchParams: { q?: string } }) {
-  return <CategoryPageContent category="rongeurs" search={searchParams.q?.trim()} />;
+export default async function RongeursPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q } = await searchParams;
+  return <CategoryPageContent category="rongeurs" search={q?.trim()} />;
 }

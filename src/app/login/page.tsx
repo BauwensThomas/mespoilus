@@ -8,11 +8,12 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: { error?: string; redirect?: string };
+  searchParams: Promise<{ error?: string; redirect?: string }>;
 }
 
-export default function LoginPage({ searchParams }: Props) {
-  const hasError = searchParams.error === '1';
+export default async function LoginPage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const hasError = sp.error === '1';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-orange-50 to-blue-50 flex items-center justify-center px-4">

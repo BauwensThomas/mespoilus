@@ -89,16 +89,17 @@ async function getAvailableFilters(animal?: string, pays?: string, gender?: stri
 }
 
 interface Props {
-  searchParams: { animal?: string; q?: string; pays?: string; gender?: string; race?: string; age_unit?: string; view?: string; alert_ok?: string; alert_off?: string; alert_error?: string };
+  searchParams: Promise<{ animal?: string; q?: string; pays?: string; gender?: string; race?: string; age_unit?: string; view?: string; alert_ok?: string; alert_off?: string; alert_error?: string }>;
 }
 
 export default async function AdoptionPage({ searchParams }: Props) {
-  const animal  = searchParams.animal;
-  const search  = searchParams.q?.trim();
-  const pays    = searchParams.pays?.trim();
-  const gender  = searchParams.gender?.trim();
-  const race    = searchParams.race?.trim();
-  const ageUnit = searchParams.age_unit?.trim();
+  const sp      = await searchParams;
+  const animal  = sp.animal;
+  const search  = sp.q?.trim();
+  const pays    = sp.pays?.trim();
+  const gender  = sp.gender?.trim();
+  const race    = sp.race?.trim();
+  const ageUnit = sp.age_unit?.trim();
 
   const [posts, availableFilters] = await Promise.all([
     getPosts(animal, search, pays, gender, race, ageUnit),
@@ -172,26 +173,26 @@ export default async function AdoptionPage({ searchParams }: Props) {
           <p className="text-gray-600 text-base mt-2">Soyez le premier à déposer une annonce !</p>
         </div>
       ) : (
-        <AdoptionPostsGrid posts={posts} view={searchParams.view === 'list' ? 'list' : 'grid'} />
+        <AdoptionPostsGrid posts={posts} view={sp.view === 'list' ? 'list' : 'grid'} />
       )}
 
       {/* Bouton flottant alertes + modal (fixed, toujours visible) */}
       <AdoptionAlertForm />
 
       {/* Banners confirmation / désinscription */}
-      {searchParams.alert_ok && (
+      {sp.alert_ok && (
         <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
           <p className="font-semibold text-green-800">Alerte activée !</p>
           <p className="text-green-700 text-sm mt-1">Vous recevrez un email à chaque nouvelle annonce correspondant à vos critères.</p>
         </div>
       )}
-      {searchParams.alert_off && (
+      {sp.alert_off && (
         <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-center">
           <p className="font-semibold text-gray-700">Alerte désactivée.</p>
           <p className="text-gray-500 text-sm mt-1">Vous ne recevrez plus de notifications pour cette alerte.</p>
         </div>
       )}
-      {searchParams.alert_error && (
+      {sp.alert_error && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
           <p className="font-semibold text-red-700">Lien invalide ou expiré.</p>
         </div>

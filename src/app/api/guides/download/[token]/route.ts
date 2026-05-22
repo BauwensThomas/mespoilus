@@ -35,9 +35,9 @@ function htmlPage(title: string, message: string, linkLabel?: string, linkHref?:
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
-  const { token } = params;
+  const { token } = await params;
 
   if (!token) {
     return new NextResponse(

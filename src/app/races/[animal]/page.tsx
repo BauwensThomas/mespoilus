@@ -10,12 +10,13 @@ import BreedsSearchBar from '@/components/races/BreedsSearchBar';
 export const revalidate = 3600;
 
 interface Props {
-  params: { animal: string };
-  searchParams: { q?: string; view?: string };
+  params: Promise<{ animal: string }>;
+  searchParams: Promise<{ q?: string; view?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const animalType = ANIMAL_URL_MAP[params.animal];
+  const { animal } = await params;
+  const animalType = ANIMAL_URL_MAP[animal];
   if (!animalType) return {};
   return {
     title: `Races de ${ANIMAL_LABEL[animalType].toLowerCase()} - Fiches complètes | Mes Poilus`,
@@ -24,10 +25,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AnimalRacesPage({ params, searchParams }: Props) {
-  const animalType = ANIMAL_URL_MAP[params.animal];
+  const { animal } = await params;
+  const { q: qParam, view } = await searchParams;
+  const animalType = ANIMAL_URL_MAP[animal];
   if (!animalType) notFound();
 
-  const q = searchParams.q?.trim() ?? '';
+  const q = qParam?.trim() ?? '';
   const supabase = createAdminClient();
 
   let query = supabase
@@ -68,10 +71,10 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
           Toutes
         </span>
         {[
-          { href: `/races/${params.animal}/appartement`, label: 'Appartement' },
-          { href: `/races/${params.animal}/enfants`,     label: 'Enfants' },
-          { href: `/races/${params.animal}/debutants`,   label: 'Débutants' },
-          { href: `/races/${params.animal}/seniors`,     label: 'Seniors' },
+          { href: `/races/${animal}/appartement`, label: 'Appartement' },
+          { href: `/races/${animal}/enfants`,     label: 'Enfants' },
+          { href: `/races/${animal}/debutants`,   label: 'Débutants' },
+          { href: `/races/${animal}/seniors`,     label: 'Seniors' },
         ].map(({ href, label }) => (
           <Link key={href} href={href}
             className="px-4 py-1.5 rounded-full text-sm font-medium border border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-600 transition-colors">
@@ -109,7 +112,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
           breeds={breeds ?? []}
           animalUrl={ANIMAL_URL[animalType]}
           search={q || undefined}
-          view={searchParams.view === 'list' ? 'list' : 'grid'}
+          view={view === 'list' ? 'list' : 'grid'}
         />
       )}
 

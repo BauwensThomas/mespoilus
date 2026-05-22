@@ -10,11 +10,12 @@ export const maxDuration = 60;
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { agent: string } }
+  { params }: { params: Promise<{ agent: string }> }
 ) {
   const ip = getClientIP(request);
   const userAgent = request.headers.get('user-agent') ?? '';
-  const agentId = params.agent as AgentId;
+  const { agent } = await params;
+  const agentId = agent as AgentId;
 
   // Vérifier que l'agent existe
   if (!AGENTS[agentId]) {
@@ -95,9 +96,10 @@ export async function POST(
 // GET pour récupérer les infos de l'agent
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { agent: string } }
+  { params }: { params: Promise<{ agent: string }> }
 ) {
-  const agentId = params.agent as AgentId;
+  const { agent: agentSlug } = await params;
+  const agentId = agentSlug as AgentId;
   const agent = AGENTS[agentId];
 
   if (!agent) {

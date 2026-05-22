@@ -6,7 +6,7 @@ import { Dog, Cat, Rat, Bird, Shell, FileText, ChevronRight, CheckCircle2 } from
 import GuideDownloadButton from '@/components/guides/GuideDownloadButton';
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 interface PdfGuide {
@@ -47,7 +47,8 @@ async function getGuide(slug: string): Promise<PdfGuide | null> {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const guide = await getGuide(params.slug);
+  const { slug } = await params;
+  const guide = await getGuide(slug);
   if (!guide) return { title: 'Guide introuvable' };
 
   return {
@@ -86,7 +87,8 @@ function extractBenefits(description: string): string[] {
 }
 
 export default async function GuidePage({ params }: Props) {
-  const guide = await getGuide(params.slug);
+  const { slug } = await params;
+  const guide = await getGuide(slug);
   if (!guide) notFound();
 
   const cfg = CATEGORY_CONFIG[guide.category] ?? CATEGORY_CONFIG['general'];

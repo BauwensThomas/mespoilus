@@ -9,11 +9,12 @@ import { getPhotoForAgent, AGENT_PLACEHOLDER, type UnsplashPhoto } from '@/lib/u
 export const dynamic = 'force-dynamic';
 
 interface Props {
-  params: { agent: string };
+  params: Promise<{ agent: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const agent = AGENTS[params.agent as AgentId];
+  const { agent: agentParam } = await params;
+  const agent = AGENTS[agentParam as AgentId];
   if (!agent) return { title: 'Agent introuvable' };
   return {
     title: `${agent.name} - ${agent.role}`,
@@ -61,7 +62,8 @@ async function getAgentData(agentId: AgentId) {
 }
 
 export default async function AgentPage({ params }: Props) {
-  const agentId = params.agent as AgentId;
+  const { agent: agentParam } = await params;
+  const agentId = agentParam as AgentId;
   if (!AGENTS[agentId]) notFound();
 
   const agent = getAgent(agentId);

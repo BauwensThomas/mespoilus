@@ -73,7 +73,7 @@ async function approvePost(id: string) {
           <p>Bonjour <strong>${post.poster_name}</strong>,</p>
           <p>Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) est desormais visible sur Mes Poilus.</p>
           <p><a href="https://mespoilus.com/adoption" style="color:#ea580c">Voir les annonces</a></p>
-          <p style="font-size:13px;color:#6b7280;margin-top:16px">Pour supprimer votre annonce a tout moment, utilisez ce code sur la page de votre annonce :</p>
+          <p style="font-size:13px;color:#6b7280;margin-top:16px">Pour supprimer votre annonce à tout moment, utilisez ce code sur la page de votre annonce :</p>
           <p style="font-family:monospace;font-size:26px;font-weight:bold;letter-spacing:6px;color:#111;background:#f3f4f6;padding:14px 20px;border-radius:8px;text-align:center">${deleteToken}</p>
           <p style="font-size:12px;color:#9ca3af">Conservez ce code precieusement, il ne peut pas etre recupere.</p>
         `),
@@ -109,7 +109,7 @@ async function rejectPost(id: string, formData: FormData) {
         subject: "Votre annonce d'adoption n'a pas ete retenue",
         html: emailWrapper('Annonce non publiee', `
           <p>Bonjour <strong>${post.poster_name}</strong>,</p>
-          <p>Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) n'a pas pu etre publiee.</p>
+          <p>Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) n'a pas pu être publiee.</p>
           ${reason ? `<div style="background:#fef2f2;border-left:3px solid #ef4444;padding:10px 14px;border-radius:4px;margin:12px 0"><p style="margin:0;font-size:14px"><strong>Raison :</strong> ${reason}</p></div>` : ''}
           <p style="color:#6b7280;font-size:13px">Si vous pensez qu'il s'agit d'une erreur, contactez-nous a <a href="mailto:contact@mespoilus.com" style="color:#ea580c">contact@mespoilus.com</a>.</p>
         `),
@@ -213,14 +213,15 @@ const TABS = [
 ];
 
 interface Props {
-  searchParams: { status?: string; animal?: string; reason?: string; q?: string };
+  searchParams: Promise<{ status?: string; animal?: string; reason?: string; q?: string }>;
 }
 
 export default async function ModerationPage({ searchParams }: Props) {
-  const activeStatus = searchParams.status ?? 'pending';
-  const activeAnimal = searchParams.animal ?? 'all';
-  const activeReason = searchParams.reason ?? 'all';
-  const activeSearch = searchParams.q ?? '';
+  const sp = await searchParams;
+  const activeStatus = sp.status ?? 'pending';
+  const activeAnimal = sp.animal ?? 'all';
+  const activeReason = sp.reason ?? 'all';
+  const activeSearch = sp.q ?? '';
   const { posts, animalCounts, statusCounts } = await getData(activeStatus, activeAnimal, activeReason, activeSearch);
 
   const qParam = activeSearch ? `&q=${encodeURIComponent(activeSearch)}` : '';

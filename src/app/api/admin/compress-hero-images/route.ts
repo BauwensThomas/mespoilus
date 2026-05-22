@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import sharp from 'sharp';
 import { sendEmail } from '@/lib/resend';
@@ -49,7 +49,7 @@ async function listFilesRecursive(
 }
 
 export async function GET() {
-  const authClient = createClient();
+  const authClient = await createClient();
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autorise' }, { status: 401 });
 
