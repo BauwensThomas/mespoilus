@@ -20,7 +20,7 @@ function innerImageKey(imageUrl: string): string {
 const DUTCH_PATTERNS = [
   /\bvoerbak\b/i, /\bdrinkbak\b/i, /\bkrabpaal\b/i, /\bkattenbak\b/i,
   /\bspeelgoed\b/i, /\bhalsband\b/i, /\bborstel\b/i, /\bvlooienkam\b/i,
-  /\bkooitje\b/i, /\bknaagsteen\b/i, /\bstarterset\b/i,
+  /\bkooitje\b/i, /\bknaagsteen\b/i, /\bstarterset\b/i, /\bstarter\s+set\b/i,
   /\bvoor\s+(honden|katten|konijnen|knaagdieren|vogels)\b/i,
   /\bvezel(respons|rijk|arm)?\b/i, /\bspijsvertering\b/i,
   /\bhuidgezondheid\b/i, /\bgewrichten\b/i, /\bsterilisatie\b/i,
@@ -64,7 +64,7 @@ export async function GET(req: Request) {
   let totalDeleted = 0;
   let totalMerged = 0;
   let lastError: string | null = null;
-  const pairs: Array<{ winner: string; duplicate: string }> = [];
+  const pairs: Array<{ winner: string; winnerName: string; duplicate: string; duplicateName: string }> = [];
 
   for (const [, group] of imageGroups) {
     if (group.length < 2) continue;
@@ -81,7 +81,7 @@ export async function GET(req: Request) {
     )[0];
 
     for (const dup of dutch) {
-      pairs.push({ winner: winner.id, duplicate: dup.id });
+      pairs.push({ winner: winner.id, winnerName: winner.name, duplicate: dup.id, duplicateName: dup.name });
     }
   }
 
@@ -132,6 +132,7 @@ export async function GET(req: Request) {
     success: !lastError,
     pairs: pairs.length,
     deleted: totalDeleted,
+    details: pairs.map(p => ({ winner: p.winnerName, removed: p.duplicateName })),
     ...(lastError ? { error: lastError } : {}),
   });
 }
