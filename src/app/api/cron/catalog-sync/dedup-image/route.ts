@@ -25,6 +25,8 @@ const DUTCH_PATTERNS = [
   /\bvezel(respons|rijk|arm)?\b/i, /\bspijsvertering\b/i,
   /\bhuidgezondheid\b/i, /\bgewrichten\b/i, /\bsterilisatie\b/i,
   /\bkortharige?\b/i, /\blangharige?\b/i, /\buitgebalanceerd\b/i,
+  /\bdroogvoer\b/i, /\bnatvoer\b/i, /\bgevogelte\b/i,
+  /\bgraanvrij\b/i, /\bkonijn\b/i,
 ];
 
 function isDutch(name: string): boolean {
