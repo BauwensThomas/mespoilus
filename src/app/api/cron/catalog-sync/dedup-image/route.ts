@@ -42,17 +42,24 @@ export async function GET(req: Request) {
 
   const supabase = createAdminClient();
 
-  // 1. Charger tous les produits actifs qui ont une image_url (EAN ou non)
-  const { data: products, error } = await supabase
-    .from('products_catalog')
-    .select('id, name, image_url, ean, category, created_at')
-    .not('image_url', 'is', null)
-    .eq('status', 'active')
-    .limit(20000);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  const productsLoaded = products?.length ?? 0;
+  // 1. Charger tous les produits actifs qui ont une image_url — pagination 1000/page
+  //    (Supabase max_rows = 1000 tronque silencieusement les .limit() plus grands)
+  const allProducts: { id: string; name: string; image_url: string | null; ean: string | null; category: string | null; created_at: string }[] = [];
+  const PAGE = 1000;
+  for (let start = 0; ; start += PAGE) {
+    const { data: page, error } = await supabase
+      .from('products_catalog')
+      .select('id, name, image_url, ean, category, created_at')
+      .not('image_url', 'is', null)
+      .eq('status', 'active')
+      .range(start, start + PAGE - 1);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!page || page.length === 0) break;
+    allProducts.push(...page);
+    if (page.length < PAGE) break;
+  }
+  const products = allProducts;
+  const productsLoaded = products.length;
 
   // 2. Grouper par clé image interne (ignore feedId Productserve)
   const imageGroups = new Map<string, typeof products>();
