@@ -1,5 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { sendEmail } from '@/lib/resend';
+import { cronEmailWrapper, statsRow } from '@/lib/cron-email';
 
 export const maxDuration = 300;
 
@@ -20,6 +22,14 @@ export async function GET(req: Request) {
   }
 
   if (!pairs?.length) {
+    try {
+      await sendEmail({
+        to: 'contact@mespoilus.com',
+        subject: '[Mes Poilus] Fusion doublons Titre — Aucun doublon trouvé',
+        html: cronEmailWrapper('Fusion doublons Titre terminée', 'Catalogue · Boutique',
+          '<p style="color:#6b7280;font-size:14px">Aucun doublon titre détecté dans le catalogue.</p>'),
+      });
+    } catch (e) { console.error('[dedup-title] email erreur:', e); }
     return NextResponse.json({ success: true, merged: 0, deleted: 0, message: 'Aucun doublon titre trouve' });
   }
 
@@ -52,6 +62,21 @@ export async function GET(req: Request) {
     details: lastError ? { error: lastError } : { pairs: pairs.length },
     status: lastError ? 'error' : 'success',
   });
+
+  try {
+    await sendEmail({
+      to: 'contact@mespoilus.com',
+      subject: `[Mes Poilus] Fusion doublons Titre — ${totalDeleted} fiche${totalDeleted > 1 ? 's' : ''} fusionnée${totalDeleted > 1 ? 's' : ''}`,
+      html: cronEmailWrapper(
+        'Fusion doublons Titre terminée',
+        'Catalogue · Boutique',
+        statsRow([
+          { label: 'Groupes détectés',  value: pairs.length, color: '#f97316' },
+          { label: 'Fiches supprimées', value: totalDeleted,  color: '#dc2626' },
+        ]) + (lastError ? `<p style="color:#dc2626;font-size:13px;margin-top:12px">⚠ Erreur : ${lastError}</p>` : ''),
+      ),
+    });
+  } catch (e) { console.error('[dedup-title] email erreur:', e); }
 
   return NextResponse.json({
     success: !lastError,
