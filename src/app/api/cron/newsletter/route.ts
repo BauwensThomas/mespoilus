@@ -40,6 +40,7 @@ export async function GET(req: Request) {
       .select('id')
       .eq('status', 'sent')
       .gte('sent_at', since)
+      .gt('recipients_count', 1)
       .limit(1)
       .maybeSingle();
 
