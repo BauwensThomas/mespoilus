@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const ACTIVITE_COLORS: Record<string, string> = {
   'faible':     'bg-green-100 text-green-700',
   'modéré':     'bg-yellow-100 text-yellow-700',
-  'élevé':      'bg-orange-100 text-orange-700',
+  'élevé':      'bg-orange-100 text-orange-600',
   'très élevé': 'bg-red-100 text-red-700',
 };
 
@@ -157,7 +157,7 @@ export default async function BreedPage({ params }: Props) {
             <div key={label} className="bg-white border border-gray-200 rounded-xl p-4 text-center">
               <Icon size={18} strokeWidth={1.5} className="text-orange-500 mx-auto mb-1.5" />
               <p className="text-xs text-gray-500 mb-0.5">{label}</p>
-              <p className="font-semibold text-gray-900 text-sm capitalize">{value}</p>
+              <p className="font-semibold text-gray-900 text-base capitalize">{value}</p>
             </div>
           ))}
         </div>
@@ -169,7 +169,7 @@ export default async function BreedPage({ params }: Props) {
               <h2 className="font-semibold text-gray-900 mb-3">Caractère</h2>
               <div className="flex flex-wrap gap-2">
                 {c.caractere.map((trait: string) => (
-                  <span key={trait} className="bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1 rounded-full text-sm font-medium capitalize">
+                  <span key={trait} className="bg-orange-50 text-orange-600 border border-orange-200 px-3 py-1 rounded-full text-sm font-medium capitalize">
                     {trait}
                   </span>
                 ))}

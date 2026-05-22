@@ -389,7 +389,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
                   <div className="flex items-center justify-center gap-2 mt-8 flex-wrap">
                     {/* Précédent */}
                     {page > 1 ? (
-                      <Link href={buildPageUrl(baseParams, page - 1)} scroll={false}
+                      <Link href={buildPageUrl(baseParams, page - 1)}
                         className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:border-orange-500 hover:text-orange-600 transition-colors text-sm font-medium">
                         <ChevronLeft size={15} />
                         <span className="hidden sm:inline">Precedent</span>
@@ -407,7 +407,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
                         p < 0 ? (
                           <span key={`e${i}`} className="px-1 text-gray-400 text-sm">...</span>
                         ) : (
-                          <Link key={p} href={buildPageUrl(baseParams, p)} scroll={false}
+                          <Link key={p} href={buildPageUrl(baseParams, p)}
                             className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
                               p === page ? 'bg-orange-600 text-white' : 'border border-gray-300 bg-white text-gray-700 hover:border-orange-500 hover:text-orange-600'
                             }`}>
@@ -424,7 +424,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
 
                     {/* Suivant */}
                     {page < totalPages ? (
-                      <Link href={buildPageUrl(baseParams, page + 1)} scroll={false}
+                      <Link href={buildPageUrl(baseParams, page + 1)}
                         className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:border-orange-500 hover:text-orange-600 transition-colors text-sm font-medium">
                         <span className="hidden sm:inline">Suivant</span>
                         <ChevronRight size={15} />

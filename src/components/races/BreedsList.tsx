@@ -38,7 +38,7 @@ function GridCard({ breed, animalUrl }: { breed: BreedItem; animalUrl: string })
         ) : (
           <div className="flex flex-col items-center justify-center gap-1 w-full h-full">
             <ImageOff size={18} strokeWidth={1.5} className="text-gray-300" />
-            <span className="text-[10px] text-gray-300 font-semibold tracking-wide">NO IMAGE</span>
+            <span className="text-xs text-gray-300 font-semibold tracking-wide">NO IMAGE</span>
           </div>
         )}
       </div>
@@ -49,10 +49,10 @@ function GridCard({ breed, animalUrl }: { breed: BreedItem; animalUrl: string })
         )}
         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
           {breed.content?.taille && (
-            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-[10px] capitalize">{breed.content.taille}</span>
+            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs capitalize">{breed.content.taille}</span>
           )}
           {breed.content?.niveau_activite && (
-            <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full text-[10px] capitalize">{breed.content.niveau_activite}</span>
+            <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full text-xs capitalize">{breed.content.niveau_activite}</span>
           )}
         </div>
       </div>
@@ -88,10 +88,10 @@ function ListRow({ breed, animalUrl }: { breed: BreedItem; animalUrl: string }) 
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         {breed.content?.taille && (
-          <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs capitalize hidden sm:inline">{breed.content.taille}</span>
+          <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs capitalize hidden sm:inline min-w-[5rem] text-center">{breed.content.taille}</span>
         )}
         {breed.content?.niveau_activite && (
-          <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full text-xs capitalize hidden sm:inline">{breed.content.niveau_activite}</span>
+          <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full text-xs capitalize hidden sm:inline min-w-[4.5rem] text-center">{breed.content.niveau_activite}</span>
         )}
         <span className="text-orange-600 text-xs font-semibold">Voir →</span>
       </div>

@@ -63,7 +63,7 @@ export default function CatalogGrid({
       {items.map(item => {
         const hidden = item.status === 'hidden';
         return (
-          <div key={item.catalog_id} className={`relative h-full ${hidden ? 'opacity-50 grayscale' : ''}`}>
+          <div key={item.catalog_id} className={`relative flex flex-col ${hidden ? 'opacity-50 grayscale' : ''}`}>
             {isAdmin && (
               <AdminHideButton catalogId={item.catalog_id} name={item.name} status={item.status} />
             )}

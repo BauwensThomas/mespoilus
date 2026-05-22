@@ -66,7 +66,7 @@ export default async function PressePage() {
               <h2 className="text-lg font-bold text-gray-900 mb-4">À propos du site</h2>
               <p className="text-gray-700 leading-relaxed mb-4">{description}</p>
               <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-                <p className="text-xs font-semibold text-orange-700 uppercase tracking-widest mb-2">Description courte (à copier-coller)</p>
+                <p className="text-xs font-semibold text-orange-600 uppercase tracking-widest mb-2">Description courte (à copier-coller)</p>
                 <p className="text-sm text-gray-800 leading-relaxed italic">
                   "Mes Poilus est le guide de référence francophone pour les propriétaires d'animaux de compagnie : conseils vétérinaires, fiches races, outils pratiques, petites annonces d'adoption et sélection de produits animaliers."
                 </p>
@@ -113,7 +113,7 @@ export default async function PressePage() {
               <h2 className="text-lg font-bold text-gray-900 mb-4">Thématiques couvertes</h2>
               <div className="flex flex-wrap gap-2">
                 {['Chiens', 'Chats', 'Oiseaux', 'Rongeurs', 'Reptiles', 'Santé animale', 'Alimentation', 'Éducation', 'Adoption', 'Bien-être animal', 'Races', 'Accessoires'].map(tag => (
-                  <span key={tag} className="px-3 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-full text-sm font-medium">
+                  <span key={tag} className="px-3 py-1.5 bg-orange-50 text-orange-600 border border-orange-200 rounded-full text-sm font-medium">
                     {tag}
                   </span>
                 ))}

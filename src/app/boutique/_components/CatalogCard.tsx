@@ -75,11 +75,6 @@ export default function CatalogCard({
       </div>
 
       <div className="pointer-events-none relative z-10 p-4 flex flex-col flex-1">
-        {(brand || weightG) && (
-          <p className="text-sm text-gray-400 uppercase tracking-widest font-medium line-clamp-1 mb-2">
-            {[brand, weightG ? formatWeight(weightG) : null].filter(Boolean).join(' · ')}
-          </p>
-        )}
 
         <h3 className="text-base font-semibold text-gray-900 leading-snug line-clamp-2 min-h-[3rem] group-hover:text-orange-600 transition-colors">
           {nameFr ?? name}
@@ -90,36 +85,34 @@ export default function CatalogCard({
 
         <div className="flex-1" />
 
-        <div className="pt-3 mt-3 border-t border-gray-100">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <Star size={14} className="text-orange-500 fill-orange-500" />
-                <span className="text-lg font-bold text-orange-600">
-                  {price.toFixed(2)}{' '}
-                  <span className="text-sm font-semibold text-gray-600">{currency}</span>
-                </span>
-                {eurPrice !== null && (
-                  <span className="text-base text-gray-700">(≈{eurPrice} €)</span>
-                )}
-              </div>
-              <p className="text-sm text-gray-500 mt-1 line-clamp-1">
-                {merchantName}
-                {extraOffers > 0 && (
-                  <span className="ml-1.5 text-orange-500 font-semibold">
-                    +{extraOffers} offre{extraOffers > 1 ? 's' : ''}
-                  </span>
-                )}
-              </p>
-            </div>
-            <Link
-              href={`/boutique/${catalogId}`}
-              className="pointer-events-auto relative z-10 shrink-0 text-sm font-semibold px-4 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-1"
-              aria-label={`Voir le produit : ${name}`}
-            >
-              Voir
-              <ExternalLink size={14} strokeWidth={1.5} />
-            </Link>
+        <div className="pt-3 mt-3 border-t border-gray-100 space-y-2">
+          {/* Prix */}
+          <div className="flex items-center gap-1.5">
+            <Star size={13} className="text-orange-500 fill-orange-500 shrink-0" />
+            <span className="text-base font-bold text-orange-600 whitespace-nowrap">
+              {price.toFixed(2)}{' '}
+              <span className="text-sm font-semibold text-gray-500">{currency}</span>
+            </span>
+            {eurPrice !== null && (
+              <span className="text-xs text-gray-400 whitespace-nowrap">(≈{eurPrice} €)</span>
+            )}
+          </div>
+          {/* Bouton pleine largeur */}
+          <Link
+            href={`/boutique/${catalogId}`}
+            className="pointer-events-auto relative z-10 w-full text-sm font-semibold py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-white transition-colors flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-1"
+            aria-label={`Voir le produit : ${name}`}
+          >
+            Voir <ExternalLink size={13} strokeWidth={1.5} />
+          </Link>
+          {/* Marchand + badge offres — hauteur fixe pour aligner toutes les cartes */}
+          <div className="flex items-center gap-2 min-h-[1.25rem]">
+            <p className="text-xs text-gray-500 truncate flex-1 min-w-0">{merchantName}</p>
+            {extraOffers > 0 && (
+              <span className="shrink-0 text-xs bg-orange-50 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded-full font-medium">
+                +{extraOffers} offre{extraOffers > 1 ? 's' : ''}
+              </span>
+            )}
           </div>
         </div>
       </div>
