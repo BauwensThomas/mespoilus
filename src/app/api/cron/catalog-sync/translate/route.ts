@@ -8,6 +8,28 @@ export const maxDuration = 300;
 const BATCH_SIZE_NAMES = 30;
 const BATCH_SIZE_DESC = 5;
 const MAX_RETRIES = 4;
+const NON_FR_THRESHOLD = 5;
+
+// Mots NL/EN clairement absents du français — seuil de détection langue
+const NON_FR_WORDS = new Set([
+  // Néerlandais
+  'het','een','voor','zijn','heeft','worden','ook','niet','geen',
+  'door','bij','dat','die','als','dan','maar','kan','wordt','werd',
+  'voeding','gezondheid','vacht','energie','volledig','evenwichtig',
+  // Anglais
+  'the','and','for','with','your','this','that','are','will',
+  'its','has','have','from','which','been','can','not','our',
+]);
+
+function hasNonFrenchWords(text: string): boolean {
+  const words = text.toLowerCase().match(/\b[a-z]{2,}\b/g) ?? [];
+  let count = 0;
+  for (const w of words) {
+    if (NON_FR_WORDS.has(w)) count++;
+    if (count > NON_FR_THRESHOLD) return true;
+  }
+  return false;
+}
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -145,6 +167,7 @@ export async function GET(req: Request) {
   const descRows = descRawRows ?? [];
   let translatedDescs = 0;
   let copiedDescs = 0;
+  let alreadyFrDesc = 0;
 
   // Récupérer les offres de tous ces produits en une seule requête
   const descIds = descRows.map(r => r.id);
@@ -165,40 +188,47 @@ export async function GET(req: Request) {
   const needsTranslation: typeof descRows = [];
 
   for (const r of descRows) {
+    // ── Chemin 1 : description déjà en français → marquer sans appeler Claude
+    if (!hasNonFrenchWords(r.description!)) {
+      await supabase.from('products_catalog').update({ description_fr: r.description }).eq('id', r.id);
+      alreadyFrDesc++;
+      continue;
+    }
+
+    // ── Chemin 2 : description non-FR → chercher un sibling avec description_fr
     const offer = offerByProduct.get(r.id);
-    if (!offer) { needsTranslation.push(r); continue; }
+    if (offer) {
+      const { data: siblingOffers } = await supabase
+        .from('product_offers')
+        .select('catalog_id')
+        .eq('merchant_name', offer.merchant_name)
+        .eq('price', offer.price)
+        .neq('catalog_id', r.id)
+        .limit(20);
 
-    // Trouver les products du même marchand au même prix
-    const { data: siblingOffers } = await supabase
-      .from('product_offers')
-      .select('catalog_id')
-      .eq('merchant_name', offer.merchant_name)
-      .eq('price', offer.price)
-      .neq('catalog_id', r.id)
-      .limit(20);
+      const siblingIds = (siblingOffers ?? []).map(o => o.catalog_id);
 
-    const siblingIds = (siblingOffers ?? []).map(o => o.catalog_id);
+      if (siblingIds.length > 0) {
+        let sibQuery = supabase
+          .from('products_catalog')
+          .select('description_fr')
+          .in('id', siblingIds)
+          .not('description_fr', 'is', null)
+          .eq('category', r.category);
+        if (r.weight_g) sibQuery = sibQuery.eq('weight_g', r.weight_g) as typeof sibQuery;
 
-    if (siblingIds.length > 0) {
-      // Filtrer par même catégorie + même poids (si disponible)
-      let sibQuery = supabase
-        .from('products_catalog')
-        .select('description_fr')
-        .in('id', siblingIds)
-        .not('description_fr', 'is', null)
-        .eq('category', r.category);
-      if (r.weight_g) sibQuery = sibQuery.eq('weight_g', r.weight_g) as typeof sibQuery;
+        const { data: sibling } = await sibQuery.limit(1);
+        const descFr = sibling?.[0]?.description_fr;
 
-      const { data: sibling } = await sibQuery.limit(1);
-      const descFr = sibling?.[0]?.description_fr;
-
-      if (descFr) {
-        await supabase.from('products_catalog').update({ description_fr: descFr }).eq('id', r.id);
-        copiedDescs++;
-        continue;
+        if (descFr) {
+          await supabase.from('products_catalog').update({ description_fr: descFr }).eq('id', r.id);
+          copiedDescs++;
+          continue;
+        }
       }
     }
 
+    // ── Chemin 3 : pas de sibling → traduire via Claude Haiku
     needsTranslation.push(r);
   }
 
@@ -222,7 +252,7 @@ export async function GET(req: Request) {
 
   await supabase.from('activity_logs').insert({
     agent_id: 'thomas', agent_name: 'Thomas',
-    action: `[Catalog translate] ${translatedNames} noms + ${translatedDescs} descriptions traduits + ${copiedDescs} descriptions copiées depuis sibling FR`,
+    action: `[Catalog translate] ${translatedNames} noms + ${translatedDescs} desc. traduites + ${copiedDescs} copiées sibling + ${alreadyFrDesc} déjà FR`,
     details: lastError ? { error: lastError } : {},
     status: lastError ? 'error' : 'success',
   });
@@ -235,10 +265,10 @@ export async function GET(req: Request) {
         'Traduction EN→FR terminée',
         'Catalogue · Boutique',
         statsRow([
-          { label: 'Noms traduits',       value: translatedNames,                           color: '#0d9488' },
-          { label: 'Desc. traduites',     value: translatedDescs,                           color: '#0d9488' },
-          { label: 'Desc. copiées (FR)',  value: copiedDescs,                               color: '#0284c7' },
-          { label: 'Produits traités',    value: (nameRows?.length ?? 0) + descRows.length, color: '#6b7280' },
+          { label: 'Noms traduits',      value: translatedNames,                           color: '#0d9488' },
+          { label: 'Desc. traduites',    value: translatedDescs,                           color: '#0d9488' },
+          { label: 'Sibling FR copié',   value: copiedDescs,                               color: '#0284c7' },
+          { label: 'Déjà FR (ignorées)', value: alreadyFrDesc,                             color: '#6b7280' },
         ]) + (lastError ? `<p style="color:#dc2626;font-size:13px;margin-top:12px">⚠ Erreur : ${lastError}</p>` : ''),
       ),
     });
