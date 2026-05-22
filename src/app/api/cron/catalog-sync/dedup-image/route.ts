@@ -26,8 +26,9 @@ const DUTCH_PATTERNS = [
   /\bvezel(respons|rijk|arm)?\b/i, /\bspijsvertering\b/i,
   /\bhuidgezondheid\b/i, /\bgewrichten\b/i, /\bsterilisatie\b/i,
   /\bkortharige?\b/i, /\blangharige?\b/i, /\buitgebalanceerd\b/i,
-  /\bdroogvoer\b/i, /\bnatvoer\b/i, /\bgevogelte\b/i,
-  /\bgraanvrij\b/i, /\bkonijn\b/i,
+  /\bdroogvoeding\b/i, /\bdroogvoer\b/i, /\bnatvoeding\b/i, /\bnatvoer\b/i,
+  /\bgevogelte\b/i, /\bgraanvrij\b/i, /\bkonijn\b/i,
+  /\bzalm\b/i, /\bhonden\b/i, /\bkatten\b/i,
 ];
 
 function isDutch(name: string): boolean {
@@ -110,7 +111,7 @@ export async function GET(req: Request) {
     }
   }
 
-  // 4. Fusionner
+  // 4. Fusionner les paires NL/FR (même image)
   for (const { winner, duplicate } of pairs) {
     try {
       await supabase
@@ -130,25 +131,56 @@ export async function GET(req: Request) {
     }
   }
 
+  // 5. Supprimer les fiches NL orphelines (pas d'équivalent FR avec même image)
+  //    → produits NL non traités à l'étape 4 ; on supprime aussi leurs offres
+  const mergedDuplicateIds = new Set(pairs.map(p => p.duplicate));
+  const orphanDutch = products.filter(p => isDutch(p.name) && !mergedDuplicateIds.has(p.id));
+  let totalOrphanDeleted = 0;
+
+  if (orphanDutch.length > 0) {
+    const orphanIds = orphanDutch.map(p => p.id);
+    // Récupérer ceux qui ont des offres actives (à ne pas supprimer à l'aveugle)
+    const { data: withOffers } = await supabase
+      .from('product_offers')
+      .select('catalog_id')
+      .in('catalog_id', orphanIds);
+    const withOffersSet = new Set((withOffers ?? []).map(o => o.catalog_id));
+
+    for (const p of orphanDutch) {
+      try {
+        // Supprimer les offres éventuelles d'abord
+        if (withOffersSet.has(p.id)) {
+          await supabase.from('product_offers').delete().eq('catalog_id', p.id);
+        }
+        await supabase.from('products_catalog').delete().eq('id', p.id);
+        totalOrphanDeleted++;
+        totalDeleted++;
+      } catch (e) {
+        lastError = e instanceof Error ? e.message : 'Erreur inconnue';
+      }
+    }
+  }
+
   await supabase.from('activity_logs').insert({
     agent_id: 'thomas', agent_name: 'Thomas',
-    action: `[Dedup image] ${totalDeleted} fiches NL fusionnées par image_url (${pairs.length} paires détectées)`,
-    details: lastError ? { error: lastError } : { pairs: pairs.length },
+    action: `[Dedup image] ${totalDeleted} fiches NL supprimées (${pairs.length} paires + ${totalOrphanDeleted} orphelines)`,
+    details: lastError ? { error: lastError } : { pairs: pairs.length, orphans: totalOrphanDeleted },
     status: lastError ? 'error' : 'success',
   });
 
   try {
     await sendEmail({
       to: 'contact@mespoilus.com',
-      subject: `[Mes Poilus] Fusion doublons Image — ${totalDeleted} fiche${totalDeleted > 1 ? 's' : ''} NL fusionnée${totalDeleted > 1 ? 's' : ''}`,
+      subject: `[Mes Poilus] Fusion doublons Image — ${totalDeleted} fiche${totalDeleted > 1 ? 's' : ''} NL supprimée${totalDeleted > 1 ? 's' : ''}`,
       html: cronEmailWrapper(
         'Fusion doublons Image (NL→FR) terminée',
         'Catalogue · Boutique',
         statsRow([
-          { label: 'Paires NL/FR détectées', value: pairs.length,  color: '#f97316' },
-          { label: 'Fiches NL supprimées',   value: totalDeleted,  color: '#dc2626' },
+          { label: 'Paires NL/FR fusionnées',  value: pairs.length,         color: '#f97316' },
+          { label: 'Orphelines NL supprimées', value: totalOrphanDeleted,   color: '#dc2626' },
+          { label: 'Total supprimées',         value: totalDeleted,         color: '#7c3aed' },
         ]) + (lastError ? `<p style="color:#dc2626;font-size:13px;margin-top:12px">⚠ Erreur : ${lastError}</p>` : '')
-          + (pairs.length === 0 ? '<p style="color:#6b7280;font-size:14px">Aucune paire NL/FR détectée par image URL.</p>' : ''),
+          + (totalDeleted === 0 ? '<p style="color:#6b7280;font-size:14px">Aucune fiche NL détectée.</p>' : ''),
       ),
     });
   } catch (e) { console.error('[dedup-image] email erreur:', e); }
@@ -156,6 +188,7 @@ export async function GET(req: Request) {
   return NextResponse.json({
     success: !lastError,
     pairs: pairs.length,
+    orphans: totalOrphanDeleted,
     deleted: totalDeleted,
     details: pairs.map(p => ({ winner: p.winnerName, removed: p.duplicateName })),
     debug: { productsLoaded, multiGroups, dutchDetected, sampleKeys },
