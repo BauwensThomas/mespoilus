@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import sharp from 'sharp';
+import { sendEmail } from '@/lib/resend';
+import { cronEmailWrapper, statsRow } from '@/lib/cron-email';
 
 export const maxDuration = 300;
 
@@ -96,12 +98,31 @@ export async function GET() {
   const totalAfter = compressed.reduce((s, r) => s + r.after, 0);
   const savedBytes = totalBefore - totalAfter;
 
+  const savedLabel = `${(savedBytes / 1024 / 1024).toFixed(2)} MB économisés`;
+
+  try {
+    await sendEmail({
+      to: 'contact@mespoilus.com',
+      subject: `[Mes Poilus] Compression images hero — ${compressed.length} image${compressed.length > 1 ? 's' : ''} compressée${compressed.length > 1 ? 's' : ''}`,
+      html: cronEmailWrapper(
+        'Compression images hero terminée',
+        'Maintenance',
+        statsRow([
+          { label: 'Compressées',   value: `${compressed.length}/${files.length}`, color: '#0d9488' },
+          { label: 'Espace gagné',  value: savedLabel,                             color: '#059669' },
+          { label: 'Ignorées',      value: results.filter(r => r.skipped).length,  color: '#6b7280' },
+          { label: 'Erreurs',       value: errors.length,                          color: errors.length ? '#dc2626' : '#6b7280' },
+        ]) + (errors.length ? `<p style="color:#dc2626;font-size:13px;margin-top:12px">⚠ ${errors.length} fichier${errors.length > 1 ? 's' : ''} en erreur</p>` : ''),
+      ),
+    });
+  } catch (e) { console.error('[compress] email erreur:', e); }
+
   return NextResponse.json({
     total: files.length,
     compressed: compressed.length,
     skipped: results.filter(r => r.skipped).length,
     errors: errors.length,
-    saved: `${(savedBytes / 1024 / 1024).toFixed(2)} MB economises`,
+    saved: savedLabel,
     before: `${(totalBefore / 1024 / 1024).toFixed(2)} MB`,
     after: `${(totalAfter / 1024 / 1024).toFixed(2)} MB`,
     details: results,

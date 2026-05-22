@@ -91,7 +91,19 @@ function isDutchName(name: string): boolean {
       || /\bsterilisatie\b/i.test(name)
       || /\bkortharige?\b/i.test(name)
       || /\blangharige?\b/i.test(name)
-      || /\buitgebalanceerd\b/i.test(name);
+      || /\buitgebalanceerd\b/i.test(name)
+      // Mots courants neerlandais dans les produits Maxi Zoo BE
+      || /\bvoerbak\b/i.test(name)       // bol alimentaire
+      || /\bdrinkbak\b/i.test(name)      // bol à eau
+      || /\bkrabpaal\b/i.test(name)      // griffoir
+      || /\bkattenbak\b/i.test(name)     // bac à litière
+      || /\bspeelgoed\b/i.test(name)     // jouets
+      || /\bhalsband\b/i.test(name)      // collier
+      || /\bborstel\b/i.test(name)       // brosse
+      || /\bvlooienkam\b/i.test(name)    // peigne antipuces
+      || /\bkooitje\b/i.test(name)       // petite cage
+      || /\bknaagsteen\b/i.test(name)    // pierre à ronger
+      || /\bstarterset\b/i.test(name);   // kit de démarrage (orthographe néerlandaise)
 }
 
 async function processBatch(
@@ -403,6 +415,7 @@ export async function runCatalogSyncForCategory(
       const headers = { Authorization: `Bearer ${process.env.CRON_SECRET}` };
       fetch(`${appUrl}/api/cron/catalog-sync/dedup-ean`, { headers })
         .then(() => fetch(`${appUrl}/api/cron/catalog-sync/dedup-title`, { headers }))
+        .then(() => fetch(`${appUrl}/api/cron/catalog-sync/dedup-image`, { headers }))
         .then(() => fetch(`${appUrl}/api/cron/catalog-sync/translate`, { headers }))
         .catch(() => {});
     }
