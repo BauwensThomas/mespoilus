@@ -70,7 +70,7 @@ export default function CommentForm({ slug }: { slug: string }) {
       />
       <input
         type="email"
-        placeholder="Votre email (optionnel — pour être notifié des réponses)"
+        placeholder="Votre email (optionnel - pour être notifié des réponses)"
         value={email}
         onChange={e => setEmail(e.target.value)}
         maxLength={254}
@@ -86,7 +86,7 @@ export default function CommentForm({ slug }: { slug: string }) {
         className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 resize-none"
       />
       <div className="flex items-center justify-between">
-        <p className="text-xs text-gray-400">Votre commentaire sera visible après modération.</p>
+        <p className="text-xs text-gray-600">Votre commentaire sera visible après modération.</p>
         <div className="flex items-center gap-3">
           {error && <p className="text-red-600 text-xs">{error}</p>}
           <button
