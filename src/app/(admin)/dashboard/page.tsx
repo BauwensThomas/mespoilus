@@ -7,7 +7,7 @@ import CronLauncher from '@/components/dashboard/CronLauncher';
 import AutoRefresh from '@/components/dashboard/AutoRefresh';
 import { AgentStat, ActivityLog } from '@/types';
 
-export const revalidate = 30;
+export const dynamic = 'force-dynamic';
 
 export type MonthlyAgentStat = { tasks: number; tokens: number };
 export type TotalAgentStat = { tasks: number; tokens: number; failed: number };
