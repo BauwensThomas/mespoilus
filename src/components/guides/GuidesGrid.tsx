@@ -49,7 +49,7 @@ export default function GuidesGrid({ guides }: GuidesGridProps) {
 
               {/* Footer */}
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                <div className="flex items-center gap-1.5 text-xs text-gray-700">
                   <FileText size={13} strokeWidth={1.5} />
                   <span>{guide.pages_count} page{guide.pages_count > 1 ? 's' : ''}</span>
                 </div>

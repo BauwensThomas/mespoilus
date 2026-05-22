@@ -200,7 +200,7 @@ export default function PartenairesSection() {
               {p.urls_by_country ? (
                 <button
                   onClick={() => setPickerPartenaire(p)}
-                  className="mt-auto inline-flex items-center justify-center gap-2 bg-orange-700 hover:bg-orange-600 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
+                  className="mt-auto inline-flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
                 >
                   Découvrir {p.nom}
                   <ExternalLink size={16} strokeWidth={1.5} />
@@ -210,7 +210,7 @@ export default function PartenairesSection() {
                   href={p.url ?? '#'}
                   target="_blank"
                   rel="noopener noreferrer sponsored"
-                  className="mt-auto inline-flex items-center justify-center gap-2 bg-orange-700 hover:bg-orange-600 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
+                  className="mt-auto inline-flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
                   aria-label={`Découvrir ${p.nom} (lien externe)`}
                 >
                   Découvrir {p.nom}

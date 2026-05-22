@@ -94,56 +94,55 @@ export default async function GuidePage({ params }: Props) {
   const benefits = extractBenefits(guide.description);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Breadcrumb */}
-      <div className="max-w-6xl mx-auto px-6 pt-6">
-        <nav aria-label="Fil d'Ariane" className="flex items-center gap-1 text-sm text-gray-500">
+    <div className="min-h-screen bg-white px-6 md:px-8 py-6">
+      <div className="max-w-6xl mx-auto">
+
+        {/* Breadcrumb */}
+        <nav aria-label="Fil d'Ariane" className="flex items-center gap-1 text-sm text-gray-500 mb-6">
           <Link href="/" className="hover:text-orange-600 transition-colors">Accueil</Link>
           <ChevronRight size={14} strokeWidth={2} className="text-gray-300" />
           <Link href="/guides" className="hover:text-orange-600 transition-colors">Guides</Link>
           <ChevronRight size={14} strokeWidth={2} className="text-gray-300" />
           <span className="text-gray-900 font-medium truncate max-w-[200px]">{guide.title}</span>
         </nav>
-      </div>
 
-      {/* Hero section */}
-      <div className={`bg-gradient-to-br ${cfg.gradient} mt-6 mx-4 md:mx-6 rounded-2xl overflow-hidden`}>
-        <div className="max-w-6xl mx-auto px-8 py-12 md:py-16">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="inline-flex items-center gap-1.5 bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30">
-              <Icon size={13} strokeWidth={2} />
-              {cfg.label}
-            </span>
-            <span className="bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30">
-              Guide PDF gratuit
-            </span>
-          </div>
+        {/* Hero section */}
+        <div className={`bg-gradient-to-br ${cfg.gradient} rounded-2xl overflow-hidden`}>
+          <div className="px-8 py-8 md:py-10">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="inline-flex items-center gap-1.5 bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30">
+                <Icon size={13} strokeWidth={2} />
+                {cfg.label}
+              </span>
+              <span className="bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30">
+                Guide PDF gratuit
+              </span>
+            </div>
 
-          <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight mb-4 max-w-2xl">
-            {guide.title}
-          </h1>
-          <p className="text-white/85 text-base md:text-lg leading-relaxed max-w-2xl mb-8">
-            {guide.description}
-          </p>
+            <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight mb-4 max-w-2xl">
+              {guide.title}
+            </h1>
+            <p className="text-white/85 text-base md:text-lg leading-relaxed max-w-2xl mb-8">
+              {guide.description}
+            </p>
 
-          <div className="flex items-center gap-4 flex-wrap">
-            <GuideDownloadButton
-              guide={{ id: guide.id, title: guide.title, slug: guide.slug }}
-              className="inline-flex items-center gap-2 bg-white text-orange-600 hover:bg-orange-50 font-semibold px-6 py-3 rounded-xl transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-600 shadow-lg"
-              label="Télécharger gratuitement"
-            />
-            <span className="text-white/70 text-sm">
-              {guide.pages_count} page{guide.pages_count > 1 ? 's' : ''} · PDF · Gratuit
-            </span>
+            <div className="flex items-center gap-4 flex-wrap">
+              <GuideDownloadButton
+                guide={{ id: guide.id, title: guide.title, slug: guide.slug }}
+                className="inline-flex items-center gap-2 bg-white text-orange-600 hover:bg-orange-50 font-semibold px-6 py-3 rounded-xl transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-600 shadow-lg"
+                label="Télécharger gratuitement"
+              />
+              <span className="bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30">
+                {guide.pages_count} page{guide.pages_count > 1 ? 's' : ''} · PDF · Gratuit
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="max-w-2xl">
+        {/* Content */}
+        <div className="py-10 space-y-10">
           {/* Benefits */}
-          <div className="mb-10">
+          <div className="max-w-2xl">
             <h2 className="text-xl font-bold text-gray-900 mb-5">Ce que vous trouverez dans ce guide</h2>
             <ul className="space-y-3">
               {benefits.map((benefit, i) => (
@@ -170,7 +169,7 @@ export default async function GuidePage({ params }: Props) {
           </div>
 
           {/* Back link */}
-          <div className="mt-10 pt-8 border-t border-gray-200">
+          <div className="pt-2 border-t border-gray-200">
             <Link
               href="/guides"
               className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-orange-600 transition-colors font-medium"
@@ -179,6 +178,7 @@ export default async function GuidePage({ params }: Props) {
             </Link>
           </div>
         </div>
+
       </div>
     </div>
   );

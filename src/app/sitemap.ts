@@ -8,6 +8,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let guideEntries: MetadataRoute.Sitemap = [];
   let breedEntries: MetadataRoute.Sitemap = [];
   let adoptionEntries: MetadataRoute.Sitemap = [];
+  let productEntries: MetadataRoute.Sitemap = [];
 
   try {
     const supabase = createAdminClient();
@@ -83,6 +84,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Supabase unavailable - sitemap without adoption posts
   }
 
+  try {
+    const supabase = createAdminClient();
+    const { data: products } = await supabase
+      .from('products_catalog')
+      .select('id, updated_at, image_url')
+      .eq('status', 'active')
+      .order('updated_at', { ascending: false });
+
+    productEntries = (products ?? []).map((p) => ({
+      url: `${APP_URL}/boutique/${p.id}`,
+      lastModified: new Date(p.updated_at ?? Date.now()),
+      changeFrequency: 'daily' as const,
+      priority: 0.6,
+      ...(p.image_url ? { images: [p.image_url] } : {}),
+    }));
+  } catch {
+    // Supabase unavailable - sitemap without products
+  }
+
   return [
     { url: `${APP_URL}/`,         lastModified: new Date(), changeFrequency: 'weekly', priority: 1.0 },
     { url: `${APP_URL}/blog`,          lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
@@ -122,5 +142,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...guideEntries,
     ...breedEntries,
     ...adoptionEntries,
+    ...productEntries,
   ];
 }

@@ -80,7 +80,7 @@ export default function PublicHeader() {
         <div className="flex items-center gap-3 shrink-0">
           <Link
             href="/boutique"
-            className="bg-orange-700 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 whitespace-nowrap"
+            className="bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 whitespace-nowrap"
             aria-label="Accéder à la boutique"
           >
             Boutique

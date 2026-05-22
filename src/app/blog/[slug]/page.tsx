@@ -212,10 +212,10 @@ export default async function ArticlePage({ params }: Props) {
                 </div>
               </div>
               {publishedDate && (
-                <div className="text-xs text-gray-500">Publié le {publishedDate}</div>
+                <div className="text-xs text-gray-700">Publié le {publishedDate}</div>
               )}
               {article.reading_time && (
-                <div className="text-xs text-gray-500">{article.reading_time} min de lecture</div>
+                <div className="text-xs text-gray-700">{article.reading_time} min de lecture</div>
               )}
             </div>
           </header>
@@ -224,7 +224,7 @@ export default async function ArticlePage({ params }: Props) {
           {article.seo_keywords.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-8">
               {article.seo_keywords.map((kw) => (
-                <span key={kw} className="text-[10px] bg-orange-50 text-orange-700 px-2.5 py-1 rounded-full border border-orange-200">
+                <span key={kw} className="text-xs bg-orange-50 text-orange-600 px-2.5 py-1 rounded-full border border-orange-200">
                   #{kw}
                 </span>
               ))}
@@ -245,7 +245,7 @@ export default async function ArticlePage({ params }: Props) {
               prose-li:my-1.5 prose-li:leading-relaxed
               prose-hr:border-gray-200 prose-hr:my-8
               prose-blockquote:border-l-2 prose-blockquote:border-l-orange-400 prose-blockquote:bg-orange-50 prose-blockquote:rounded-r-xl prose-blockquote:py-3 prose-blockquote:px-6 prose-blockquote:my-8
-              prose-code:text-orange-700 prose-code:bg-orange-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+              prose-code:text-orange-600 prose-code:bg-orange-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
               prose-pre:bg-gray-100 prose-pre:border prose-pre:border-gray-200 prose-pre:rounded-xl prose-pre:my-8"
             style={{ color: '#1f2937' }}
             dangerouslySetInnerHTML={{ __html: htmlContent }}
@@ -254,7 +254,7 @@ export default async function ArticlePage({ params }: Props) {
           <AdBanner slot="1266534148" variant="in-article" className="my-10" />
 
           <footer className="mt-10 pt-6 border-t border-gray-200 flex items-center justify-between flex-wrap gap-4">
-            <div className="text-xs" style={{ color: '#9ca3af' }}>
+            <div className="text-xs text-gray-600">
               Article rédigé par Marie
             </div>
             <Link href="/blog" className="text-sm text-orange-600 hover:text-orange-500 font-medium transition-colors">
@@ -298,7 +298,7 @@ async function CommentsSection({ slug }: { slug: string }) {
           <div key={c.id} className="bg-white border border-gray-200 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="font-semibold text-sm text-gray-900">{c.author_name}</span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-600">
                 {format(new Date(c.created_at), 'd MMM yyyy', { locale: fr })}
               </span>
             </div>
