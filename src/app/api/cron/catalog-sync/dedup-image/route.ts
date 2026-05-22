@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { sendEmail } from '@/lib/resend';
 import { cronEmailWrapper, statsRow } from '@/lib/cron-email';
 
+export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 // Productserve wrappe l'image réelle dans un param ?url=ssl%3A...&feedId=XXXXX
