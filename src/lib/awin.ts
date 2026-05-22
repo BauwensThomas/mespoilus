@@ -244,7 +244,15 @@ async function parseCSVStreamingWithFlush(
     // Exclure les produits flamands/néerlandais : URL /nl/ ou nom en néerlandais
     const isDutchName = /\bNieuw[-\s]Zeeland\b/i.test(name)
       || /\bvoor\s+(honden|katten|konijnen|knaagdieren|vogels|vissen)\b/i.test(name)
-      || /\bpuppy['']s\b/i.test(name);
+      || /\bpuppy['']s\b/i.test(name)
+      || /\bdroogvoer\b/i.test(name)
+      || /\bnatvoer\b/i.test(name)
+      || /\bgevogelte\b/i.test(name)
+      || /\bgraanvrij\b/i.test(name)
+      || /\bkonijn\b/i.test(name)
+      || /\bkattenbak\b/i.test(name)
+      || /\bvoerbak\b/i.test(name)
+      || /\bdrinkbak\b/i.test(name);
     if (/\/nl\//i.test(deepLink) || isDutchName) continue;
 
     seenIds.add(pid);
