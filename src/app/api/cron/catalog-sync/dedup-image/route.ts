@@ -50,6 +50,8 @@ export async function GET(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  const productsLoaded = products?.length ?? 0;
+
   // 2. Grouper par clé image interne (ignore feedId Productserve)
   const imageGroups = new Map<string, typeof products>();
   for (const p of products ?? []) {
@@ -59,6 +61,20 @@ export async function GET(req: Request) {
     group.push(p);
     imageGroups.set(key, group);
   }
+
+  const multiGroups = [...imageGroups.values()].filter(g => (g?.length ?? 0) >= 2).length;
+  const dutchDetected = (products ?? []).filter(p => isDutch(p.name)).length;
+
+  // Sample : quelques clés image pour vérifier le format (debug uniquement)
+  const sampleKeys = multiGroups > 0
+    ? [...imageGroups.entries()]
+        .filter(([, g]) => (g?.length ?? 0) >= 2)
+        .slice(0, 3)
+        .map(([key, g]) => ({ key: key.slice(0, 80), names: (g ?? []).map(p => p.name) }))
+    : (products ?? [])
+        .filter(p => isDutch(p.name))
+        .slice(0, 3)
+        .map(p => ({ key: innerImageKey(p.image_url ?? '').slice(0, 80), names: [p.name] }));
 
   // 3. Trouver les groupes avec au moins un produit NL et un produit non-NL
   let totalDeleted = 0;
@@ -133,6 +149,7 @@ export async function GET(req: Request) {
     pairs: pairs.length,
     deleted: totalDeleted,
     details: pairs.map(p => ({ winner: p.winnerName, removed: p.duplicateName })),
+    debug: { productsLoaded, multiGroups, dutchDetected, sampleKeys },
     ...(lastError ? { error: lastError } : {}),
   });
 }
