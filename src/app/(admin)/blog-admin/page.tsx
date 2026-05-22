@@ -5,6 +5,7 @@ import { fr } from 'date-fns/locale';
 import { CheckCircle2, XCircle, MessageCircle, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import ArticlesPanel from '@/components/blog/ArticlesPanel';
+import { notifyCommentSubscribers } from '@/lib/commentNotify';
 
 export const revalidate = 0;
 
@@ -14,6 +15,7 @@ async function approveComment(id: string) {
   'use server';
   const supabase = createAdminClient();
   await supabase.from('article_comments').update({ status: 'approved' }).eq('id', id);
+  await notifyCommentSubscribers(id);
   revalidatePath('/blog-admin');
 }
 

@@ -263,7 +263,7 @@ export default async function ArticlePage({ params }: Props) {
           </footer>
 
           {/* Commentaires */}
-          <section className="mt-10 space-y-6">
+          <section id="commentaires" className="mt-10 space-y-6">
             <CommentsSection slug={params.slug} />
             <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
               <CommentForm slug={params.slug} />
