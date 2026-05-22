@@ -41,11 +41,10 @@ export async function GET(req: Request) {
 
   const supabase = createAdminClient();
 
-  // 1. Charger tous les produits sans EAN qui ont une image_url
+  // 1. Charger tous les produits actifs qui ont une image_url (EAN ou non)
   const { data: products, error } = await supabase
     .from('products_catalog')
     .select('id, name, image_url, ean, category, created_at')
-    .is('ean', null)
     .not('image_url', 'is', null)
     .eq('status', 'active')
     .limit(20000);
