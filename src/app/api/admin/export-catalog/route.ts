@@ -11,14 +11,21 @@ function esc(val: string | null | undefined): string {
 export async function GET() {
   const supabase = createAdminClient();
 
-  // 1. Tous les produits
-  const { data: products, error } = await supabase
-    .from('products_catalog')
-    .select('id, name, name_fr, description, description_fr, category, brand, ean, created_at, updated_at')
-    .order('updated_at', { ascending: false })
-    .limit(100000);
-
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  // 1. Tous les produits — pagination pour dépasser la limite max_rows Supabase (1000)
+  const PAGE = 1000;
+  const products: Array<{ id: string; name: string; name_fr: string | null; description: string | null; description_fr: string | null; category: string | null; brand: string | null; ean: string | null; created_at: string | null; updated_at: string | null }> = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from('products_catalog')
+      .select('id, name, name_fr, description, description_fr, category, brand, ean, created_at, updated_at')
+      .order('updated_at', { ascending: false })
+      .range(from, from + PAGE - 1);
+    if (error) return Response.json({ error: error.message }, { status: 500 });
+    products.push(...(data ?? []));
+    if ((data?.length ?? 0) < PAGE) break;
+    from += PAGE;
+  }
 
   const ids = (products ?? []).map(p => p.id);
 

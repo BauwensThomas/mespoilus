@@ -23,16 +23,21 @@ export async function GET(req: Request) {
 
   const pattern = patterns[type] ?? '%dedup%';
 
-  const { data, error } = await supabase
-    .from('activity_logs')
-    .select('agent_name, action, status, created_at, details')
-    .ilike('action', pattern)
-    .order('created_at', { ascending: false })
-    .limit(10000);
-
-  if (error) return Response.json({ error: error.message }, { status: 500 });
-
-  const rows = data ?? [];
+  const PAGE = 1000;
+  const rows: Array<{ agent_name: string | null; action: string | null; status: string | null; created_at: string | null; details: unknown }> = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from('activity_logs')
+      .select('agent_name, action, status, created_at, details')
+      .ilike('action', pattern)
+      .order('created_at', { ascending: false })
+      .range(from, from + PAGE - 1);
+    if (error) return Response.json({ error: error.message }, { status: 500 });
+    rows.push(...(data ?? []));
+    if ((data?.length ?? 0) < PAGE) break;
+    from += PAGE;
+  }
   const csv = [
     '﻿agent;action;statut;date;details',
     ...rows.map(r => [

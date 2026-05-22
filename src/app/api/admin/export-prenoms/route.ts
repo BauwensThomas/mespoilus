@@ -11,18 +11,25 @@ function esc(val: string | null | undefined): string {
 export async function GET() {
   const supabase = createAdminClient();
 
-  const { data, error } = await supabase
-    .from('prenoms')
-    .select('animal, style, names, generated_at')
-    .order('animal')
-    .order('style')
-    .limit(100000);
-
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  const PAGE = 1000;
+  const allPrenoms: Array<{ animal: string | null; style: string | null; names: string[] | null; generated_at: string | null }> = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from('prenoms')
+      .select('animal, style, names, generated_at')
+      .order('animal')
+      .order('style')
+      .range(from, from + PAGE - 1);
+    if (error) return Response.json({ error: error.message }, { status: 500 });
+    allPrenoms.push(...(data ?? []));
+    if ((data?.length ?? 0) < PAGE) break;
+    from += PAGE;
+  }
 
   // Expand: une ligne par prénom
   const rows: { animal: string; style: string; prenom: string; date: string }[] = [];
-  for (const r of data ?? []) {
+  for (const r of allPrenoms) {
     const names: string[] = Array.isArray(r.names) ? r.names : [];
     const date = r.generated_at?.slice(0, 10) ?? '';
     for (const prenom of names) {
