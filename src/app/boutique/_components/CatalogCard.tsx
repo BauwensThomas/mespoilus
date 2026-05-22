@@ -97,14 +97,10 @@ export default function CatalogCard({
               <span className="text-xs text-gray-400 whitespace-nowrap">(≈{eurPrice} €)</span>
             )}
           </div>
-          {/* Bouton pleine largeur */}
-          <Link
-            href={`/boutique/${catalogId}`}
-            className="pointer-events-auto relative z-10 w-full text-sm font-semibold py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-white transition-colors flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-1"
-            aria-label={`Voir le produit : ${name}`}
-          >
+          {/* Bouton visuel — la navigation est assurée par le <Link> overlay */}
+          <div className="w-full text-sm font-semibold py-2 rounded-lg bg-orange-600 group-hover:bg-orange-500 text-white transition-colors flex items-center justify-center gap-1.5">
             Voir <ExternalLink size={13} strokeWidth={1.5} />
-          </Link>
+          </div>
           {/* Marchand + badge offres — hauteur fixe pour aligner toutes les cartes */}
           <div className="flex items-center gap-2 min-h-[1.25rem]">
             <p className="text-xs text-gray-500 truncate flex-1 min-w-0">{merchantName}</p>
