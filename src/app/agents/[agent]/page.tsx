@@ -6,14 +6,10 @@ import type { AgentId, AgentStat, ActivityLog } from '@/types';
 import type { Metadata } from 'next';
 import { getPhotoForAgent, AGENT_PLACEHOLDER, type UnsplashPhoto } from '@/lib/unsplash';
 
-export const revalidate = 30;
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: { agent: string };
-}
-
-export async function generateStaticParams() {
-  return Object.keys(AGENTS).map((id) => ({ agent: id }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
