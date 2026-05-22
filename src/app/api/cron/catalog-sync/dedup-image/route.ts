@@ -5,6 +5,17 @@ import { cronEmailWrapper, statsRow } from '@/lib/cron-email';
 
 export const maxDuration = 300;
 
+// Productserve wrappe l'image réelle dans un param ?url=ssl%3A...&feedId=XXXXX
+// Le feedId diffère entre NL (89885) et FR (89886) → même image, URL différente
+// On extrait le chemin interne pour matcher correctement
+function innerImageKey(imageUrl: string): string {
+  try {
+    const m = imageUrl.match(/[?&]url=([^&]+)/);
+    if (m) return decodeURIComponent(m[1]);
+  } catch { /* */ }
+  return imageUrl;
+}
+
 // Mots néerlandais dans les noms produits → version NL à éliminer
 const DUTCH_PATTERNS = [
   /\bvoerbak\b/i, /\bdrinkbak\b/i, /\bkrabpaal\b/i, /\bkattenbak\b/i,
@@ -39,13 +50,14 @@ export async function GET(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // 2. Grouper par image_url
+  // 2. Grouper par clé image interne (ignore feedId Productserve)
   const imageGroups = new Map<string, typeof products>();
   for (const p of products ?? []) {
     if (!p.image_url) continue;
-    const group = imageGroups.get(p.image_url) ?? [];
+    const key = innerImageKey(p.image_url);
+    const group = imageGroups.get(key) ?? [];
     group.push(p);
-    imageGroups.set(p.image_url, group);
+    imageGroups.set(key, group);
   }
 
   // 3. Trouver les groupes avec au moins un produit NL et un produit non-NL

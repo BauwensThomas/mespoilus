@@ -1152,6 +1152,7 @@ export default function CronLauncher() {
                   <UtilCard
                     icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600"
                     accentColor="border-orange-200"
+                    exportHref="/api/admin/export-operations?type=dedup-nl"
                     label="Fusion doublons NL/FR"
                     idleDesc="Supprime les versions néerlandaises (voerbak, drinkbak…) en dupliquant les offres sur la fiche française — matching par image URL."
                     onLaunch={async () => {
