@@ -10,21 +10,6 @@ export const revalidate = 3600;
 
 interface Props { params: { animal: string; slug: string } }
 
-export async function generateStaticParams() {
-  try {
-    const supabase = createAdminClient();
-    const { data } = await supabase
-      .from('breeds')
-      .select('animal, slug')
-      .eq('status', 'published')
-      .not('content', 'is', null);
-    return (data ?? []).map(r => ({
-      animal: ANIMAL_URL[r.animal as keyof typeof ANIMAL_URL] ?? r.animal,
-      slug: r.slug,
-    }));
-  } catch { return []; }
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const animalType = ANIMAL_URL_MAP[params.animal];
   if (!animalType) return {};
