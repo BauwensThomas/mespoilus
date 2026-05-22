@@ -2,6 +2,7 @@ import { withSentryConfig } from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
+  staticPageGenerationTimeout: 120,
   experimental: {
     serverComponentsExternalPackages: ['@anthropic-ai/sdk'],
   },
