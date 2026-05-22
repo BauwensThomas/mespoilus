@@ -1,27 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MessageCircle } from 'lucide-react';
+
+const LS_KEY = 'comment_email';
 
 export default function CommentForm({ slug }: { slug: string }) {
   const [name, setName]       = useState('');
+  const [email, setEmail]     = useState('');
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone]       = useState(false);
   const [error, setError]     = useState('');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved) setEmail(saved);
+    } catch { /* ignore */ }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
+      const cleanEmail = email.trim() || undefined;
       const res = await fetch('/api/comments/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ article_slug: slug, author_name: name, content }),
+        body: JSON.stringify({ article_slug: slug, author_name: name, content, email: cleanEmail }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? 'Erreur'); return; }
+      if (cleanEmail) {
+        try { localStorage.setItem(LS_KEY, cleanEmail); } catch { /* ignore */ }
+      }
       setDone(true);
     } catch {
       setError('Erreur réseau, réessayez.');
@@ -52,6 +66,14 @@ export default function CommentForm({ slug }: { slug: string }) {
         value={name}
         onChange={e => setName(e.target.value)}
         maxLength={50}
+        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
+      />
+      <input
+        type="email"
+        placeholder="Votre email (optionnel — pour être notifié des réponses)"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        maxLength={254}
         className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
       />
       <textarea
