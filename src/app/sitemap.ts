@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 86400;
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com';
 
@@ -90,16 +90,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = createAdminClient();
     const { data: products } = await supabase
       .from('products_catalog')
-      .select('id, updated_at, image_url')
+      .select('id, updated_at')
       .eq('status', 'active')
-      .order('updated_at', { ascending: false });
+      .order('updated_at', { ascending: false })
+      .limit(500);
 
     productEntries = (products ?? []).map((p) => ({
       url: `${APP_URL}/boutique/${p.id}`,
       lastModified: new Date(p.updated_at ?? Date.now()),
       changeFrequency: 'daily' as const,
       priority: 0.6,
-      ...(p.image_url ? { images: [p.image_url] } : {}),
     }));
   } catch {
     // Supabase unavailable - sitemap without products
