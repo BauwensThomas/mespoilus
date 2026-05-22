@@ -15,7 +15,9 @@ export async function GET(req: Request) {
   const supabase = createAdminClient();
 
   const patterns: Record<string, string> = {
-    dedup:       '%dedup%',
+    dedup:       '%[Dedup EAN]%',
+    'dedup-title': '%[Dedup titre]%',
+    'dedup-nl':  '%[Dedup image]%',
     compression: '%compress%',
   };
 
@@ -43,7 +45,10 @@ export async function GET(req: Request) {
   ].join('\r\n');
 
   const date = new Date().toISOString().slice(0, 10);
-  const label = type === 'compression' ? 'compression-images' : 'fusion-doublons';
+  const label = type === 'compression' ? 'compression-images'
+    : type === 'dedup-nl' ? 'fusion-doublons-nl'
+    : type === 'dedup-title' ? 'fusion-doublons-titre'
+    : 'fusion-doublons-ean';
   return new Response(csv, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',

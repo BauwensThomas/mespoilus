@@ -128,11 +128,14 @@ export async function GET(req: Request) {
   }
 
   // ─── Pass 2 : descriptions ────────────────────────────────────────────────
-  // Tous les produits sans description_fr
+  // Stratégie :
+  // 1. Chercher un "sibling" FR (même marchand + prix + catégorie + poids)
+  //    qui a déjà une description_fr → copier directement sans appel Haiku
+  // 2. Sinon : envoyer à Claude pour traduction/détection langue
 
   const { data: descRawRows, error: descError } = await supabase
     .from('products_catalog')
-    .select('id, description, description_fr')
+    .select('id, description, description_fr, category, weight_g')
     .not('description', 'is', null)
     .is('description_fr', null)
     .limit(80);
@@ -141,9 +144,67 @@ export async function GET(req: Request) {
 
   const descRows = descRawRows ?? [];
   let translatedDescs = 0;
+  let copiedDescs = 0;
 
-  for (let i = 0; i < descRows.length; i += BATCH_SIZE_DESC) {
-    const batch = descRows.slice(i, i + BATCH_SIZE_DESC);
+  // Récupérer les offres de tous ces produits en une seule requête
+  const descIds = descRows.map(r => r.id);
+  const offerByProduct = new Map<string, { merchant_name: string; price: number }>();
+
+  if (descIds.length > 0) {
+    const { data: offers } = await supabase
+      .from('product_offers')
+      .select('catalog_id, merchant_name, price')
+      .in('catalog_id', descIds);
+    for (const o of offers ?? []) {
+      if (!offerByProduct.has(o.catalog_id)) {
+        offerByProduct.set(o.catalog_id, { merchant_name: o.merchant_name, price: o.price });
+      }
+    }
+  }
+
+  const needsTranslation: typeof descRows = [];
+
+  for (const r of descRows) {
+    const offer = offerByProduct.get(r.id);
+    if (!offer) { needsTranslation.push(r); continue; }
+
+    // Trouver les products du même marchand au même prix
+    const { data: siblingOffers } = await supabase
+      .from('product_offers')
+      .select('catalog_id')
+      .eq('merchant_name', offer.merchant_name)
+      .eq('price', offer.price)
+      .neq('catalog_id', r.id)
+      .limit(20);
+
+    const siblingIds = (siblingOffers ?? []).map(o => o.catalog_id);
+
+    if (siblingIds.length > 0) {
+      // Filtrer par même catégorie + même poids (si disponible)
+      let sibQuery = supabase
+        .from('products_catalog')
+        .select('description_fr')
+        .in('id', siblingIds)
+        .not('description_fr', 'is', null)
+        .eq('category', r.category);
+      if (r.weight_g) sibQuery = sibQuery.eq('weight_g', r.weight_g) as typeof sibQuery;
+
+      const { data: sibling } = await sibQuery.limit(1);
+      const descFr = sibling?.[0]?.description_fr;
+
+      if (descFr) {
+        await supabase.from('products_catalog').update({ description_fr: descFr }).eq('id', r.id);
+        copiedDescs++;
+        continue;
+      }
+    }
+
+    needsTranslation.push(r);
+  }
+
+  // Traduire les descriptions sans sibling via Claude Haiku
+  for (let i = 0; i < needsTranslation.length; i += BATCH_SIZE_DESC) {
+    const batch = needsTranslation.slice(i, i + BATCH_SIZE_DESC);
     try {
       const translations = await translateDescBatch(batch.map(r => r.description!));
       for (let j = 0; j < batch.length; j++) {
@@ -161,7 +222,7 @@ export async function GET(req: Request) {
 
   await supabase.from('activity_logs').insert({
     agent_id: 'thomas', agent_name: 'Thomas',
-    action: `[Catalog translate] ${translatedNames} noms + ${translatedDescs} descriptions traduits EN/NL→FR (${(nameRows?.length ?? 0)} noms traités)`,
+    action: `[Catalog translate] ${translatedNames} noms + ${translatedDescs} descriptions traduits + ${copiedDescs} descriptions copiées depuis sibling FR`,
     details: lastError ? { error: lastError } : {},
     status: lastError ? 'error' : 'success',
   });
@@ -174,9 +235,10 @@ export async function GET(req: Request) {
         'Traduction EN→FR terminée',
         'Catalogue · Boutique',
         statsRow([
-          { label: 'Noms traduits',    value: translatedNames,                                  color: '#0d9488' },
-          { label: 'Descriptions',     value: translatedDescs,                                  color: '#0d9488' },
-          { label: 'Produits traités', value: (nameRows?.length ?? 0) + descRows.length,        color: '#6b7280' },
+          { label: 'Noms traduits',       value: translatedNames,                           color: '#0d9488' },
+          { label: 'Desc. traduites',     value: translatedDescs,                           color: '#0d9488' },
+          { label: 'Desc. copiées (FR)',  value: copiedDescs,                               color: '#0284c7' },
+          { label: 'Produits traités',    value: (nameRows?.length ?? 0) + descRows.length, color: '#6b7280' },
         ]) + (lastError ? `<p style="color:#dc2626;font-size:13px;margin-top:12px">⚠ Erreur : ${lastError}</p>` : ''),
       ),
     });
