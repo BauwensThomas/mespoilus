@@ -46,7 +46,7 @@ export default function ActivityFeed({ logs }: ActivityFeedProps) {
           )}
         </div>
         {todayCount > 0 && (
-          <span className="text-xs font-semibold text-red-500">aujourd'hui ({todayCount})</span>
+          <span className="text-xs font-semibold text-red-500" suppressHydrationWarning>aujourd'hui ({todayCount})</span>
         )}
         <span className="text-xs text-gray-400 uppercase tracking-wide">Live</span>
       </button>
@@ -93,7 +93,7 @@ export default function ActivityFeed({ logs }: ActivityFeedProps) {
                     </Link>
                     <StatusBadge status={log.status} />
                     <p className="text-sm text-gray-700 flex-1 truncate">{log.action}</p>
-                    <span className="text-xs text-gray-400 flex-shrink-0">
+                    <span className="text-xs text-gray-400 flex-shrink-0" suppressHydrationWarning>
                       {formatDate(log.created_at)}
                     </span>
                   </div>

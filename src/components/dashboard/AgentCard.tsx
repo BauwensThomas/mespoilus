@@ -116,7 +116,7 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
 
         {/* Footer */}
         <div className="flex items-center justify-between relative mt-auto pt-3 border-t border-gray-100">
-          <span className="text-xs text-gray-500">Actif {lastActive}</span>
+          <span className="text-xs text-gray-500" suppressHydrationWarning>Actif {lastActive}</span>
           <span className={clsx('text-xs font-medium', agent.color, 'group-hover:underline')}>
             Voir le tableau →
           </span>
