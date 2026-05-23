@@ -1,4 +1,4 @@
--- Ajoute product_type sur products_catalog + met à jour la vue catalog_best_offer
+﻿-- Ajoute product_type sur products_catalog + met à jour la vue catalog_best_offer
 
 -- 1. Colonne + index
 ALTER TABLE products_catalog ADD COLUMN IF NOT EXISTS product_type TEXT;
@@ -28,7 +28,7 @@ SET product_type = CASE
 END
 WHERE product_type IS NULL;
 
--- 3. Vue catalog_best_offer — ajoute product_type et categories
+-- 3. Vue catalog_best_offer - ajoute product_type et categories
 -- CREATE OR REPLACE ne peut pas ajouter des colonnes → DROP + recreate
 DROP VIEW IF EXISTS catalog_best_offer;
 CREATE VIEW catalog_best_offer WITH (security_invoker = on) AS

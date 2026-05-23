@@ -120,9 +120,9 @@ async function getCatalogList(params: {
     if (filterIds.length === 0) return { items: [], total: 0 };
   }
 
-  // Translation pre-filter — PostgREST ne supporte pas la comparaison colonne-à-colonne.
+  // Translation pre-filter - PostgREST ne supporte pas la comparaison colonne-à-colonne.
   // On pré-charge les IDs en JS via pagination curseur (.gt + .limit) qui utilise des params URL
-  // simples — plus fiable que .range() qui passe par des headers HTTP Range.
+  // simples - plus fiable que .range() qui passe par des headers HTTP Range.
   if (params.translation === 'translated' || params.translation === 'marked_fr') {
     const allMatchingIds: string[] = [];
     let cursor: string | null = null;
@@ -423,7 +423,7 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
             </Link>
           </div>
 
-          {/* Nouveaux produits — plage de dates */}
+          {/* Nouveaux produits - plage de dates */}
           <DateRangeFilter
             currentFrom={dateFrom || undefined}
             currentTo={dateTo || undefined}

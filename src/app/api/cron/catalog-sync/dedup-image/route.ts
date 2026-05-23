@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/server';
+﻿import { createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -93,11 +93,11 @@ export async function GET(req: Request) {
 
   // 3. Pour chaque groupe avec 2+ produits, deux règles de fusion :
   //
-  //    Règle 1 — même image + même nom (insensible à la casse) :
+  //    Règle 1 - même image + même nom (insensible à la casse) :
   //      → vrais doublons (ex: Maxi Zoo BE + Maxi Zoo FR avec même nom FR)
   //      → on garde le plus ancien, offres déplacées
   //
-  //    Règle 2 — même image + un nom néerlandais + un nom non-NL :
+  //    Règle 2 - même image + un nom néerlandais + un nom non-NL :
   //      → version NL d'un produit FR → fusion NL dans non-NL
   //
   //    PAS de fusion si : noms différents ET aucun n'est NL

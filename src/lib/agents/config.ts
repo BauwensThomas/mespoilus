@@ -1,4 +1,4 @@
-import { Agent, AgentId } from '@/types';
+﻿import { Agent, AgentId } from '@/types';
 
 // Inlinés ici pour éviter d'importer anthropic.ts dans les Client Components
 const MODELS = {
@@ -62,7 +62,7 @@ Style de réponse :
 Marchés couverts : Belgique (prioritaire), France, Suisse, Luxembourg, Canada francophone, Afrique francophone.
 
 Tes articles doivent systématiquement :
-- 800-900 mots — informatif et complet, avec exemples concrets et conseils actionnables
+- 800-900 mots - informatif et complet, avec exemples concrets et conseils actionnables
 - Français clair et naturel, compréhensible partout dans la francophonie
 - 3 à 4 sections H2 (H3 si utile)
 - Mots-clés naturellement intégrés

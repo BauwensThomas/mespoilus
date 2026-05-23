@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export default function AProposPage() {
       <div className="max-w-6xl mx-auto px-6 py-12">
 
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">À propos de Mes Poilus</h1>
-        <p className="text-gray-600 text-sm mb-12">Média animalier francophone — Belgique, depuis 2026</p>
+        <p className="text-gray-600 text-sm mb-12">Média animalier francophone - Belgique, depuis 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 
@@ -51,7 +51,7 @@ export default function AProposPage() {
                 ].map(({ emoji, animal, desc }) => (
                   <li key={animal} className="flex items-start gap-3 bg-white rounded-xl border border-gray-100 px-4 py-3">
                     <span className="text-lg flex-shrink-0">{emoji}</span>
-                    <span><span className="font-semibold text-gray-900">{animal}</span> — {desc}</span>
+                    <span><span className="font-semibold text-gray-900">{animal}</span> - {desc}</span>
                   </li>
                 ))}
               </ul>
@@ -85,8 +85,8 @@ export default function AProposPage() {
               <ul className="space-y-1 ml-2">
                 {[
                   'Amazon FR (programme Amazon Associates, tag mespoilus-21)',
-                  'Awin — Maxi Zoo, Zooplus, et d\'autres marchands européens',
-                  'CJ.com — CanadaPetCare',
+                  'Awin - Maxi Zoo, Zooplus, et d\'autres marchands européens',
+                  'CJ.com - CanadaPetCare',
                 ].map((p) => (
                   <li key={p} className="flex items-start gap-2 text-gray-600">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />

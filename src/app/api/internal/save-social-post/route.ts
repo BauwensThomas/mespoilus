@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 
@@ -36,7 +36,7 @@ async function getImageUrl(): Promise<string | null> {
   const rows = res.data as { category: string }[] | null;
   const category = rows?.[0]?.category ?? 'general';
 
-  // Toujours utiliser une photo carrée Pexels (800×800) — Instagram exige une URL publique
+  // Toujours utiliser une photo carrée Pexels (800×800) - Instagram exige une URL publique
   // et refuse les images paysage hors ratio. Le carré est universel (FB + IG).
   try {
     const photo = await getPhotoForCategory(category, undefined, 'square');
