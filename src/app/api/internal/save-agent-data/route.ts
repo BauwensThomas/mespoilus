@@ -138,12 +138,15 @@ async function saveMarie(content: string, overrideImageUrl?: string) {
   const articleContent = normalized.replace(/^---[\s\S]*?---\n/, '').trim();
   if (!title || !slug) return null;
 
+  const socialFooter = `\n\n---\n\n**Rejoins la communauté Mes Poilus !** Suis-nous sur [Instagram](https://www.instagram.com/mespoilusofficiel) et [Facebook](https://www.facebook.com/profile.php?id=61589487954538) pour ne rien manquer des conseils et actualités animalières. 🐾`;
+  const contentWithFooter = articleContent + socialFooter;
+
   // Anti-doublon : si un article avec ce slug ou ce titre existe déjà, on met à jour
   const existing = await dbFetch('articles', 'GET', undefined, `slug=eq.${slug}&select=id`);
   const existingRows = existing.data as { id: string }[] | null;
   if (existingRows && existingRows.length > 0) {
     await dbFetch('articles', 'PATCH', {
-      content: articleContent, excerpt, seo_keywords: seoKeywords,
+      content: contentWithFooter, excerpt, seo_keywords: seoKeywords,
       meta_description: metaDescription, updated_at: new Date().toISOString(),
       ...(overrideImageUrl ? { image_url: overrideImageUrl, image_alt: null, image_credit: null, image_credit_url: null } : {}),
     }, `slug=eq.${slug}`);
@@ -193,7 +196,7 @@ async function saveMarie(content: string, overrideImageUrl?: string) {
   }
 
   const res = await dbFetch('articles', 'POST', {
-    title, slug, content: articleContent, excerpt, category, categories,
+    title, slug, content: contentWithFooter, excerpt, category, categories,
     seo_keywords: seoKeywords, meta_description: metaDescription,
     reading_time: readingTime, status: 'published',
     published_at: new Date().toISOString(),
@@ -202,7 +205,7 @@ async function saveMarie(content: string, overrideImageUrl?: string) {
   });
   // Si conflict slug → upsert via PATCH
   if (!res.ok) {
-    await dbFetch('articles', 'PATCH', { content: articleContent, excerpt, seo_keywords: seoKeywords, meta_description: metaDescription, updated_at: new Date().toISOString() }, `slug=eq.${slug}`);
+    await dbFetch('articles', 'PATCH', { content: contentWithFooter, excerpt, seo_keywords: seoKeywords, meta_description: metaDescription, updated_at: new Date().toISOString() }, `slug=eq.${slug}`);
   }
   console.log('[save-agent] Marie article:', slug);
   return slug;
