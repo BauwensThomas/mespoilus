@@ -974,14 +974,17 @@ export default function CronLauncher({ floating = false }: { floating?: boolean 
         </button>
 
         {open && (
-          <>
-            <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setOpen(false)} />
-            <div
-              className="fixed right-0 top-0 z-50 h-full bg-white shadow-2xl border-l border-gray-100 flex flex-col"
-              style={{ width: 'min(calc(100vw - 48px), 780px)' }}
-              role="dialog"
-              aria-modal="true"
-            >
+          <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setOpen(false)} />
+        )}
+        <div
+          className={clsx(
+            'fixed right-0 top-0 z-50 h-full bg-white shadow-2xl border-l border-gray-100 flex flex-col transition-transform duration-300',
+            open ? 'translate-x-0' : 'translate-x-full',
+          )}
+          style={{ width: 'min(calc(100vw - 48px), 780px)' }}
+          role="dialog"
+          aria-modal="true"
+        >
               {/* Header drawer */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
                 <div className="flex items-center gap-3">
@@ -1138,9 +1141,7 @@ export default function CronLauncher({ floating = false }: { floating?: boolean 
                 <Rocket size={13} strokeWidth={1.5} className="text-gray-400 flex-shrink-0" />
                 <p className="text-xs text-gray-500">Les pipelines s'exécutent immédiatement - surveille les logs pour suivre la progression.</p>
               </div>
-            </div>
-          </>
-        )}
+        </div>
       </>
     );
   }
