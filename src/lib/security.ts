@@ -1,4 +1,12 @@
 import { createAdminClient } from './supabase/server';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+const REDIS_BLOCK_PREFIX = 'blocked_ip:';
 
 // Patterns de menaces connus
 const THREAT_PATTERNS = [
@@ -85,14 +93,22 @@ export async function blockIP(ip: string, reason: string, permanent = false) {
     const supabase = createAdminClient();
     const expiresAt = permanent ? null : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-    await supabase.from('blocked_ips').upsert({
-      ip_address: ip,
-      reason,
-      blocked_by: 'nathalie',
-      blocked_at: new Date().toISOString(),
-      expires_at: expiresAt,
-      is_permanent: permanent,
-    });
+    await Promise.all([
+      supabase.from('blocked_ips').upsert({
+        ip_address: ip,
+        reason,
+        blocked_by: 'nathalie',
+        blocked_at: new Date().toISOString(),
+        expires_at: expiresAt,
+        is_permanent: permanent,
+      }),
+      // Sync Redis pour le middleware Edge (persistant cross-instances)
+      redis.set(
+        `${REDIS_BLOCK_PREFIX}${ip}`,
+        '1',
+        { ex: permanent ? 30 * 24 * 60 * 60 : 24 * 60 * 60 }
+      ),
+    ]);
   } catch {
     // Silently fail
   }
