@@ -32,7 +32,7 @@ async function getStats() {
     supabase.from('catalog_best_offer').select('catalog_id', { count: 'exact', head: true }),
     supabase.from('products_catalog').select('id', { count: 'exact', head: true }).eq('status', 'hidden'),
     supabase.from('product_offers').select('id', { count: 'exact', head: true }),
-    supabase.from('products_catalog').select('id', { count: 'exact', head: true }).is('ean', null),
+    supabase.from('products_catalog').select('id', { count: 'exact', head: true }).in('status', ['active', 'hidden']).or('ean.is.null,ean.eq.'),
     supabase.rpc('get_multi_merchant_count'),
     supabase.from('products_catalog').select('id', { count: 'exact', head: true }).gte('created_at', since24h),
   ]);
@@ -192,8 +192,8 @@ async function getCatalogList(params: {
   else q = q.in('status', ['active', 'hidden']);
   if (params.category && params.category !== 'all') q = q.eq('category', params.category);
   if (params.search) q = q.ilike('name_search', `%${normalizeSearch(params.search)}%`);
-  if (params.ean === 'with')    q = q.not('ean', 'is', null);
-  if (params.ean === 'without') q = q.is('ean', null);
+  if (params.ean === 'with')    q = q.not('ean', 'is', null).neq('ean', '');
+  if (params.ean === 'without') q = q.or('ean.is.null,ean.eq.');
   if (filterIds !== null) q = q.in('id', filterIds);
   if (params.newDays) {
     const since = new Date(Date.now() - params.newDays * 24 * 60 * 60 * 1000).toISOString();
