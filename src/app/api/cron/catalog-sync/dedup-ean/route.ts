@@ -1,7 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { sendEmail } from '@/lib/resend';
-import { cronEmailWrapper, statsRow } from '@/lib/cron-email';
 
 export const maxDuration = 300;
 
@@ -34,14 +32,6 @@ export async function GET(req: Request) {
   }
 
   if (!dupEans?.length) {
-    try {
-      await sendEmail({
-        to: 'contact@mespoilus.com',
-        subject: '[Mes Poilus] Fusion doublons EAN — Aucun doublon trouvé',
-        html: cronEmailWrapper('Fusion doublons EAN terminée', 'Catalogue · Boutique',
-          '<p style="color:#6b7280;font-size:14px">Aucun doublon EAN détecté dans le catalogue.</p>'),
-      });
-    } catch (e) { console.error('[dedup-ean] email erreur:', e); }
     return NextResponse.json({ success: true, merged: 0, deleted: 0, message: 'Aucun doublon EAN trouve' });
   }
 
@@ -119,21 +109,6 @@ export async function GET(req: Request) {
     details: lastError ? { error: lastError } : { eans_dedupes: eans.length },
     status: lastError ? 'error' : 'success',
   });
-
-  try {
-    await sendEmail({
-      to: 'contact@mespoilus.com',
-      subject: `[Mes Poilus] Fusion doublons EAN — ${totalDeleted} fiche${totalDeleted > 1 ? 's' : ''} fusionnée${totalDeleted > 1 ? 's' : ''}`,
-      html: cronEmailWrapper(
-        'Fusion doublons EAN terminée',
-        'Catalogue · Boutique',
-        statsRow([
-          { label: 'Groupes EAN',       value: eans.length,  color: '#f97316' },
-          { label: 'Fiches supprimées', value: totalDeleted, color: '#dc2626' },
-        ]) + (lastError ? `<p style="color:#dc2626;font-size:13px;margin-top:12px">⚠ Erreur : ${lastError}</p>` : ''),
-      ),
-    });
-  } catch (e) { console.error('[dedup-ean] email erreur:', e); }
 
   return NextResponse.json({
     success: !lastError,
