@@ -30,29 +30,19 @@ async function supabaseFetch(path: string, method: string, body?: unknown, param
 }
 
 async function getImageUrl(): Promise<string | null> {
-  // 1. Image de l'article le plus récent stockée dans Supabase Storage
+  // Récupère la catégorie du dernier article pour choisir la bonne photo Pexels
   const res = await supabaseFetch('articles', 'GET', undefined,
-    'status=eq.published&image_url=not.is.null&order=published_at.desc&limit=1&select=image_url,category');
-  const rows = res.data as { image_url: string; category: string }[] | null;
-
-  const candidateUrl = rows?.[0]?.image_url ?? null;
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-  // N'utiliser que les URLs Supabase Storage - les URLs CDN externes (Awin, etc.) sont rejetées par Instagram
-  if (candidateUrl && supabaseUrl && candidateUrl.startsWith(supabaseUrl)) {
-    console.log('[save-post] image article récent (Supabase):', candidateUrl.slice(0, 60));
-    return candidateUrl;
-  }
-  if (candidateUrl) {
-    console.log('[save-post] image article récent ignorée (CDN externe), fallback Pexels...');
-  }
-
-  // 2. Fallback via Pexels + stockage Supabase
+    'status=eq.published&order=published_at.desc&limit=1&select=category');
+  const rows = res.data as { category: string }[] | null;
   const category = rows?.[0]?.category ?? 'general';
+
+  // Toujours utiliser une photo carrée Pexels (800×800) — Instagram exige une URL publique
+  // et refuse les images paysage hors ratio. Le carré est universel (FB + IG).
   try {
-    const photo = await getPhotoForCategory(category);
-    if (!photo) { console.log('[save-post] Pexels aucun résultat -post sans image'); return null; }
-    const stored = await downloadAndStorePhoto(photo.url, `social-fallback-${category}.jpg`);
-    console.log('[save-post] image fallback Pexels:', stored ? 'stockée' : 'URL directe');
+    const photo = await getPhotoForCategory(category, undefined, 'square');
+    if (!photo) { console.log('[save-post] Pexels aucun résultat - post sans image'); return null; }
+    const stored = await downloadAndStorePhoto(photo.url, `social-square-${category}.jpg`);
+    console.log('[save-post] image carrée Pexels:', stored ? 'stockée' : 'URL directe');
     return stored ?? photo.url;
   } catch {
     return null;

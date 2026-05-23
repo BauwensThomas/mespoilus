@@ -14,7 +14,7 @@ interface PexelsPhoto {
   alt: string;
   photographer: string;
   photographer_url: string;
-  src: { large2x: string; large: string };
+  src: { large2x: string; large: string; square: string };
 }
 
 interface PexelsResponse {
@@ -28,7 +28,7 @@ export interface CategoryPhoto {
   creditUrl: string;
 }
 
-export async function getPhotoForCategory(category: string, title?: string): Promise<CategoryPhoto | null> {
+export async function getPhotoForCategory(category: string, title?: string, orientation: 'landscape' | 'square' = 'landscape'): Promise<CategoryPhoto | null> {
   const key = process.env.PEXELS_API_KEY;
   if (!key) {
     console.log('[pexels] PEXELS_API_KEY absent');
@@ -44,7 +44,7 @@ export async function getPhotoForCategory(category: string, title?: string): Pro
 
   try {
     const res = await fetch(
-      `${BASE_URL}/search?query=${encodeURIComponent(query)}&per_page=15&page=${page}&orientation=landscape`,
+      `${BASE_URL}/search?query=${encodeURIComponent(query)}&per_page=15&page=${page}&orientation=${orientation}`,
       { headers: { Authorization: key }, cache: 'no-store' }
     );
     if (!res.ok) {
@@ -58,7 +58,7 @@ export async function getPhotoForCategory(category: string, title?: string): Pro
     }
     const photo = data.photos[Math.floor(Math.random() * data.photos.length)];
     return {
-      url: photo.src.large2x || photo.src.large,
+      url: orientation === 'square' ? (photo.src.square || photo.src.large) : (photo.src.large2x || photo.src.large),
       alt: photo.alt || `Photo ${category}`,
       credit: photo.photographer,
       creditUrl: photo.photographer_url,
