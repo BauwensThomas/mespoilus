@@ -1,10 +1,21 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { Redis } from '@upstash/redis';
 
-// ─── Rate limiting + IP blocking (Edge-safe, in-memory par instance) ─────────
+// ─── Rate limiting + IP blocking (Edge-safe) ─────────────────────────────────
 
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+// Cache mémoire par instance (évite un appel Redis sur chaque requête)
+// blocked: ip -> expiry ts | clean: ip -> expiry ts (vérifié non-bloqué)
 const BLOCKED_IPS_CACHE = new Map<string, number>();
+const CLEAN_IPS_CACHE   = new Map<string, number>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 min
+
 const RATE_LIMIT_MAP = new Map<string, { count: number; resetAt: number }>();
 
 function getIP(request: NextRequest): string {
@@ -62,10 +73,25 @@ export async function middleware(request: NextRequest) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=()');
 
-  // 2. IP bloquée
+  // 2. IP bloquée — cache mémoire (rapide) + Redis (persistant cross-instances)
+  const now = Date.now();
   const blockedUntil = BLOCKED_IPS_CACHE.get(ip);
-  if (blockedUntil && Date.now() < blockedUntil) {
+  if (blockedUntil && now < blockedUntil) {
     return new NextResponse('Acces refuse', { status: 403 });
+  }
+  const cleanUntil = CLEAN_IPS_CACHE.get(ip);
+  if (!cleanUntil || now > cleanUntil) {
+    try {
+      const redisBlocked = await Promise.race([
+        redis.get(`blocked_ip:${ip}`),
+        new Promise<null>(resolve => setTimeout(() => resolve(null), 300)),
+      ]);
+      if (redisBlocked) {
+        BLOCKED_IPS_CACHE.set(ip, now + CACHE_TTL_MS);
+        return new NextResponse('Acces refuse', { status: 403 });
+      }
+      CLEAN_IPS_CACHE.set(ip, now + CACHE_TTL_MS);
+    } catch { /* Redis indisponible, fail open */ }
   }
 
   // 3. Détection de menaces + rate limiting sur les routes API
