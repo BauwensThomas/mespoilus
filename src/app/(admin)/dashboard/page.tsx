@@ -3,7 +3,6 @@ import { getAllAgents } from '@/lib/agents/config';
 import AgentCard from '@/components/dashboard/AgentCard';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
 import GlobalStats from '@/components/dashboard/GlobalStats';
-import CronLauncher from '@/components/dashboard/CronLauncher';
 import AutoRefresh from '@/components/dashboard/AutoRefresh';
 import { AgentStat, ActivityLog } from '@/types';
 
@@ -95,14 +94,11 @@ export default async function DashboardPage() {
     <div className="px-8 py-8 space-y-8 animate-fade-in">
       <AutoRefresh intervalMs={30000} />
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Tableau de bord</h1>
-          <p className="text-gray-600 text-base mt-1">
-            Système multi-agents Mes Poilus
-          </p>
-        </div>
-        <CronLauncher />
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Tableau de bord</h1>
+        <p className="text-gray-600 text-base mt-1">
+          Système multi-agents Mes Poilus
+        </p>
       </div>
 
       {/* Stats globales */}

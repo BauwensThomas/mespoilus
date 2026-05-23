@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/server';
 import { Mail, ExternalLink, PawPrint } from 'lucide-react';
 
@@ -190,6 +191,16 @@ export default async function PressePage() {
             </div>
 
           </div>
+        </div>
+
+        <div className="mt-12 pt-8 border-t border-gray-200 flex flex-wrap gap-4 text-xs text-gray-600">
+          <Link href="/mentions-legales" className="hover:text-amber-600 transition-colors">Mentions légales</Link>
+          <Link href="/politique-confidentialite" className="hover:text-amber-600 transition-colors">Politique de confidentialité</Link>
+          <Link href="/cgu" className="hover:text-amber-600 transition-colors">Conditions d'utilisation</Link>
+          <Link href="/cookies" className="hover:text-amber-600 transition-colors">Cookies</Link>
+          <Link href="/presse" className="hover:text-amber-600 transition-colors">Presse & partenaires</Link>
+          <Link href="/a-propos" className="hover:text-amber-600 transition-colors">À propos</Link>
+          <Link href="/" className="hover:text-amber-600 transition-colors ml-auto">Retour à l'accueil</Link>
         </div>
       </div>
     </div>

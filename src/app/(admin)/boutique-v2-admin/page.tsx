@@ -23,12 +23,14 @@ const CATEGORIES = [
 
 async function getStats() {
   const supabase = createAdminClient();
-  const [activeRes, hiddenRes, offersRes, noEanRes, multiRes] = await Promise.all([
+  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const [activeRes, hiddenRes, offersRes, noEanRes, multiRes, newRes] = await Promise.all([
     supabase.from('products_catalog').select('id', { count: 'exact', head: true }).eq('status', 'active'),
     supabase.from('products_catalog').select('id', { count: 'exact', head: true }).eq('status', 'hidden'),
     supabase.from('product_offers').select('id', { count: 'exact', head: true }),
     supabase.from('products_catalog').select('id', { count: 'exact', head: true }).is('ean', null),
     supabase.rpc('get_multi_merchant_count'),
+    supabase.from('products_catalog').select('id', { count: 'exact', head: true }).gte('created_at', since24h),
   ]);
   return {
     active:   activeRes.count  ?? 0,
@@ -36,6 +38,7 @@ async function getStats() {
     offers:   offersRes.count  ?? 0,
     noEan:    noEanRes.count   ?? 0,
     multiMerchant: Number(multiRes.data ?? 0),
+    new24h:   newRes.count     ?? 0,
   };
 }
 
@@ -57,6 +60,7 @@ async function getCatalogList(params: {
   ean?: string;
   merchant?: string;
   multi?: boolean;
+  newDays?: number;
   page: number;
 }) {
   const supabase = createAdminClient();
@@ -102,6 +106,10 @@ async function getCatalogList(params: {
   if (params.ean === 'with')    q = q.not('ean', 'is', null);
   if (params.ean === 'without') q = q.is('ean', null);
   if (filterIds !== null) q = q.in('id', filterIds);
+  if (params.newDays) {
+    const since = new Date(Date.now() - params.newDays * 24 * 60 * 60 * 1000).toISOString();
+    q = q.gte('created_at', since);
+  }
 
   q = q.order('created_at', { ascending: false }).range(offset, offset + PAGE_SIZE - 1);
 
@@ -161,6 +169,7 @@ interface Props {
     ean?: string;
     merchant?: string;
     multi?: string;
+    newDays?: string;
     page?: string;
   }>;
 }
@@ -177,12 +186,13 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
   const ean      = sp.ean ?? 'all';
   const merchant = sp.merchant ?? '';
   const multi    = sp.multi === '1';
+  const newDays  = sp.newDays ? parseInt(sp.newDays) : undefined;
   const page     = Math.max(1, parseInt(sp.page ?? '1'));
 
   const [stats, allMerchants, { items, total }] = await Promise.all([
     getStats(),
     getMerchantsAdmin(),
-    getCatalogList({ search, category, status, ean, merchant: merchant || undefined, multi, page }),
+    getCatalogList({ search, category, status, ean, merchant: merchant || undefined, multi, newDays, page }),
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -193,6 +203,7 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
   if (ean      !== 'all') baseParams.ean      = ean;
   if (merchant) baseParams.merchant = merchant;
   if (multi)    baseParams.multi    = '1';
+  if (newDays)  baseParams.newDays  = String(newDays);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -222,13 +233,14 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
           {[
             { label: 'Produits actifs',     value: stats.active,        color: 'text-green-600',  bg: 'bg-green-50',  border: 'border-green-200' },
             { label: 'Produits masques',    value: stats.hidden,        color: 'text-red-500',    bg: 'bg-red-50',    border: 'border-red-200' },
             { label: 'Total offres',        value: stats.offers,        color: 'text-blue-600',   bg: 'bg-blue-50',   border: 'border-blue-200' },
             { label: 'Multi-marchands',     value: stats.multiMerchant, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
             { label: 'Sans EAN',            value: stats.noEan,         color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' },
+            { label: 'Nouveaux (24h)',       value: stats.new24h,        color: 'text-teal-600',   bg: 'bg-teal-50',   border: 'border-teal-200' },
           ].map(s => (
             <div key={s.label} className={`${s.bg} border ${s.border} rounded-xl p-4`}>
               <p className="text-xs text-gray-500 font-medium">{s.label}</p>
@@ -330,6 +342,36 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
               <GitMerge size={11} />
               Fusionnes uniquement
             </Link>
+          </div>
+
+          {/* Nouveaux produits */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Nouveaux</label>
+            <div className="flex gap-1">
+              <Link
+                href={buildUrl(baseParams, { newDays: null })}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                  !newDays
+                    ? 'bg-teal-600 text-white border-teal-600'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-teal-400'
+                }`}
+              >
+                Tous
+              </Link>
+              {[['1', '24h'], ['3', '3j'], ['7', '7j']].map(([v, l]) => (
+                <Link
+                  key={v}
+                  href={buildUrl(baseParams, { newDays: newDays === parseInt(v) ? null : v })}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                    newDays === parseInt(v)
+                      ? 'bg-teal-600 text-white border-teal-600'
+                      : 'bg-white text-gray-600 border-gray-300 hover:border-teal-400'
+                  }`}
+                >
+                  {l}
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Marchands */}

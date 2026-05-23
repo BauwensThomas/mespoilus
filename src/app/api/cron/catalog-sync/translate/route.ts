@@ -6,28 +6,6 @@ export const maxDuration = 300;
 const BATCH_SIZE_NAMES = 30;
 const BATCH_SIZE_DESC = 5;
 const MAX_RETRIES = 4;
-const NON_FR_THRESHOLD = 5;
-
-// Mots NL/EN clairement absents du français - seuil de détection langue
-const NON_FR_WORDS = new Set([
-  // Néerlandais
-  'het','een','voor','zijn','heeft','worden','ook','niet','geen',
-  'door','bij','dat','die','als','dan','maar','kan','wordt','werd',
-  'voeding','gezondheid','vacht','energie','volledig','evenwichtig',
-  // Anglais
-  'the','and','for','with','your','this','that','are','will',
-  'its','has','have','from','which','been','can','not','our',
-]);
-
-function hasNonFrenchWords(text: string): boolean {
-  const words = text.toLowerCase().match(/\b[a-z]{2,}\b/g) ?? [];
-  let count = 0;
-  for (const w of words) {
-    if (NON_FR_WORDS.has(w)) count++;
-    if (count > NON_FR_THRESHOLD) return true;
-  }
-  return false;
-}
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -119,7 +97,7 @@ export async function GET(req: Request) {
     .select('id, name')
     .is('name_fr', null)
     .not('name', 'is', null)
-    .limit(150);
+    .limit(500);
 
   if (nameError) return NextResponse.json({ error: nameError.message }, { status: 500 });
 
@@ -158,7 +136,7 @@ export async function GET(req: Request) {
     .select('id, description, description_fr, category, weight_g')
     .not('description', 'is', null)
     .is('description_fr', null)
-    .limit(80);
+    .limit(200);
 
   if (descError) lastError = descError.message;
 
@@ -186,14 +164,7 @@ export async function GET(req: Request) {
   const needsTranslation: typeof descRows = [];
 
   for (const r of descRows) {
-    // ── Chemin 1 : description déjà en français → marquer sans appeler Claude
-    if (!hasNonFrenchWords(r.description!)) {
-      await supabase.from('products_catalog').update({ description_fr: r.description }).eq('id', r.id);
-      alreadyFrDesc++;
-      continue;
-    }
-
-    // ── Chemin 2 : description non-FR → chercher un sibling avec description_fr
+    // ── Chemin 1 : sibling avec description_fr déjà traduite → copie directe sans appel Claude
     const offer = offerByProduct.get(r.id);
     if (offer) {
       const { data: siblingOffers } = await supabase
@@ -226,11 +197,11 @@ export async function GET(req: Request) {
       }
     }
 
-    // ── Chemin 3 : pas de sibling → traduire via Claude Haiku
+    // ── Chemin 2 : Claude détecte la langue et traduit si besoin (EN/NL → FR)
     needsTranslation.push(r);
   }
 
-  // Traduire les descriptions sans sibling via Claude Haiku
+  // Traduire (ou confirmer déjà FR) via Claude Haiku — Claude décide pour chaque description
   for (let i = 0; i < needsTranslation.length; i += BATCH_SIZE_DESC) {
     const batch = needsTranslation.slice(i, i + BATCH_SIZE_DESC);
     try {
@@ -239,12 +210,20 @@ export async function GET(req: Request) {
         const descFr = translations[j] !== batch[j].description ? translations[j] : batch[j].description;
         await supabase.from('products_catalog').update({ description_fr: descFr }).eq('id', batch[j].id);
         if (descFr !== batch[j].description) translatedDescs++;
+        else alreadyFrDesc++;
       }
     } catch (e) {
       lastError = e instanceof Error ? e.message : 'Erreur inconnue';
       console.error('[translate] desc batch erreur:', lastError);
     }
   }
+
+  // ─── Compter les restants ─────────────────────────────────────────────────
+
+  const [{ count: remainingNames }, { count: remainingDescs }] = await Promise.all([
+    supabase.from('products_catalog').select('id', { count: 'exact', head: true }).is('name_fr', null).eq('status', 'active'),
+    supabase.from('products_catalog').select('id', { count: 'exact', head: true }).is('description_fr', null).not('description', 'is', null).eq('status', 'active'),
+  ]);
 
   // ─── Log ──────────────────────────────────────────────────────────────────
 
@@ -259,6 +238,8 @@ export async function GET(req: Request) {
     success: !lastError,
     translatedNames,
     translatedDescs,
+    remainingNames: remainingNames ?? 0,
+    remainingDescs: remainingDescs ?? 0,
     total: (nameRows?.length ?? 0) + descRows.length,
     ...(lastError ? { error: lastError } : {}),
   });
