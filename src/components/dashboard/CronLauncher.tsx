@@ -1075,7 +1075,7 @@ export default function CronLauncher({ floating = false }: { floating?: boolean 
                       icon={Sparkles} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
                       exportHref="/api/admin/export-translations"
                       label="Traduction EN/NL->FR (Haiku)"
-                      idleDesc="Noms + descriptions sans traduction FR. Claude détecte la langue. Max 500 noms / 80 desc. par run."
+                      idleDesc="Noms + descriptions sans traduction FR. Claude détecte la langue. Max 500 noms / 200 desc. par run."
                       onLaunch={async () => {
                         const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-sync-translate' }) });
                         const data = await r.json();
@@ -1284,7 +1284,7 @@ export default function CronLauncher({ floating = false }: { floating?: boolean 
                     accentColor="border-orange-200"
                     exportHref="/api/admin/export-translations"
                     label="Traduction EN→FR (Haiku)"
-                    idleDesc="Noms + descriptions sans traduction FR. Claude détecte la langue. Max 500 noms / 80 desc. par run."
+                    idleDesc="Noms + descriptions sans traduction FR. Claude détecte la langue. Max 500 noms / 200 desc. par run."
                     onLaunch={async () => {
                       const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-sync-translate' }) });
                       const data = await r.json();
