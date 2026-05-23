@@ -1,4 +1,5 @@
 ﻿import type { Metadata } from 'next';
+import { normalizeSearch } from '@/lib/search';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -36,8 +37,10 @@ const MOBILE_CATEGORIES = [
   { id: 'general',  label: 'General',  icon: Layers },
 ];
 
+
 async function getCatalogItems(params: {
   category?: string;
+  productType?: string;
   search?: string;
   sort: CatalogSortValue;
   minPrice?: number;
@@ -52,32 +55,27 @@ async function getCatalogItems(params: {
     const PAGE_SIZE = params.perPage;
     const offset = (params.page - 1) * PAGE_SIZE;
 
-    let q = supabase
-      .from('catalog_best_offer')
-      .select(
-        'catalog_id, name, brand, category, image_url, weight_g, price, currency, merchant_name, country, affiliate_url',
-        { count: 'exact' }
-      );
+    // Quand un filtre marchand est actif, on passe par un RPC qui fait le JOIN
+    // en SQL côté serveur (évite la limite URL du .in() avec des milliers d'IDs)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q: any = params.merchants && params.merchants.length > 0
+      ? supabase.rpc('catalog_for_merchants', { p_merchant_names: params.merchants }, { count: 'exact' })
+      : supabase
+          .from('catalog_best_offer')
+          .select(
+            'catalog_id, name, brand, category, image_url, weight_g, price, currency, merchant_name, country, affiliate_url',
+            { count: 'exact' }
+          );
 
     if (params.category && params.category !== 'all') {
       q = q.or(`category.eq.${params.category},categories.cs.{${params.category}}`);
     }
-    if (params.search) {
-      const { data: frMatches } = await supabase
-        .from('products_catalog')
-        .select('id')
-        .ilike('name_fr', `%${params.search}%`)
-        .limit(500);
-      const frIds = (frMatches ?? []).map(r => r.id);
-      if (frIds.length > 0) {
-        q = q.or(`name.ilike.%${params.search}%,catalog_id.in.(${frIds.join(',')})`);
-      } else {
-        q = q.ilike('name', `%${params.search}%`);
-      }
+    if (params.productType) {
+      q = q.eq('product_type', params.productType);
     }
+    if (params.search) q = q.ilike('name_search', `%${normalizeSearch(params.search)}%`);
     if (params.minPrice) q = q.gte('price', params.minPrice);
     if (params.maxPrice) q = q.lte('price', params.maxPrice);
-    if (params.merchants && params.merchants.length > 0) q = q.in('merchant_name', params.merchants);
     if (params.favIds && params.favIds.length > 0) q = q.in('catalog_id', params.favIds);
 
     if (params.sort === 'price_desc') q = q.order('price', { ascending: false });
@@ -201,6 +199,7 @@ function buildPageUrl(base: URLSearchParams, p: number): string {
 interface Props {
   searchParams: Promise<{
     category?: string;
+    product_type?: string;
     search?: string;
     sort?: string;
     page?: string;
@@ -216,6 +215,7 @@ interface Props {
 export default async function BoutiqueV2Page({ searchParams }: Props) {
   const sp              = await searchParams;
   const category        = sp.category;
+  const productType     = sp.product_type;
   const search          = sp.search?.trim();
   const sort            = (VALID_SORTS.includes(sp.sort as CatalogSortValue)
     ? sp.sort : 'price_asc') as CatalogSortValue;
@@ -236,7 +236,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
   } catch { /* non-bloquant */ }
 
   const [{ items, total }, allMerchants, hiddenItems] = await Promise.all([
-    getCatalogItems({ category, search, sort, minPrice, maxPrice, merchants: filterMerchants, favIds: filterFavIds, page, perPage }),
+    getCatalogItems({ category, productType, search, sort, minPrice, maxPrice, merchants: filterMerchants, favIds: filterFavIds, page, perPage }),
     getMerchants(),
     isAdmin ? getHiddenItems() : Promise.resolve([] as CatalogItem[]),
   ]);
@@ -245,6 +245,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
 
   const baseParams = new URLSearchParams();
   if (category) baseParams.set('category', category);
+  if (productType) baseParams.set('product_type', productType);
   if (search) baseParams.set('search', search);
   if (sort !== 'price_asc') baseParams.set('sort', sort);
   if (view === 'list') baseParams.set('view', 'list');
@@ -308,6 +309,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
                   currentMinPrice={minPrice ?? null}
                   currentMaxPrice={maxPrice ?? null}
                   currentFavActive={filterFavIds.length > 0}
+                  currentProductType={productType ?? null}
                 />
               </Suspense>
             </div>
@@ -365,6 +367,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
             <CatalogSidebar
               merchants={allMerchants}
               currentCategory={category ?? 'all'}
+              currentProductType={productType ?? null}
               currentMerchants={filterMerchants}
               currentMinPrice={minPrice ?? null}
               currentMaxPrice={maxPrice ?? null}

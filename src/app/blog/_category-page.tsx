@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import { normalizeSearch } from '@/lib/search';
 import BlogPostsGrid from '@/components/blog/BlogPostsGrid';
 import { Article } from '@/types';
 import Link from 'next/link';
@@ -68,7 +69,7 @@ async function getArticles(category: string, search?: string): Promise<Article[]
       .eq('category', category)
       .order('published_at', { ascending: false })
       .limit(24);
-    if (search) query = query.or(`title.ilike.%${search}%,excerpt.ilike.%${search}%`);
+    if (search) query = query.ilike('title_search', `%${normalizeSearch(search)}%`);
     const { data } = await query;
     return (data as Article[]) ?? [];
   } catch {

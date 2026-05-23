@@ -17,6 +17,7 @@ interface ProductRow {
   merchant_name: string;
   category: string;
   categories: string[] | null;
+  product_type?: string | null;
   ean: string | null;
   isbn: string | null;
   brand: string | null;
@@ -158,16 +159,17 @@ async function processBatch(
       .from('products_catalog')
       .insert(
         newProducts.map(p => ({
-          ean:         p.ean ?? null,
-          isbn:        p.isbn ?? null,
-          name:        p.name,
-          brand:       p.brand ?? null,
-          category:    p.category,
-          categories:  p.categories ?? [],
-          image_url:   p.image_url || null,
-          description: p.description?.slice(0, 500) || null,
-          weight_g:    extractWeightG(p.name),
-          status:      'active',
+          ean:          p.ean ?? null,
+          isbn:         p.isbn ?? null,
+          name:         p.name,
+          brand:        p.brand ?? null,
+          category:     p.category,
+          categories:   p.categories ?? [],
+          product_type: p.product_type ?? null,
+          image_url:    p.image_url || null,
+          description:  p.description?.slice(0, 500) || null,
+          weight_g:     extractWeightG(p.name),
+          status:       'active',
         }))
       )
       .select('id');
@@ -198,9 +200,88 @@ async function processBatch(
     await supabase
       .from('product_offers')
       .upsert(offers, { onConflict: 'affiliate_url' });
+
+    // Réactiver les fiches qui étaient cachées (produit revenu dans le feed)
+    const uniqueCatalogIds = [...new Set(offerPairs.map(p => p.catalog_id))];
+    for (let i = 0; i < uniqueCatalogIds.length; i += 200) {
+      await supabase
+        .from('products_catalog')
+        .update({ status: 'active' })
+        .in('id', uniqueCatalogIds.slice(i, i + 200))
+        .eq('status', 'hidden');
+    }
   }
 
   return { inserted, updated };
+}
+
+// ─── Nettoyage offres périmées ────────────────────────────────────────────────
+
+async function cleanupStaleOffersForCategory(
+  supabase: ReturnType<typeof createAdminClient>,
+  category: string,
+  source: 'awin' | 'cj',
+  syncTime: string,
+  merchantName?: string
+): Promise<{ deletedOffers: number; hiddenProducts: number }> {
+  // Récupère tous les catalog_id de cette catégorie (actifs)
+  const allCategoryIds: string[] = [];
+  let page = 0;
+  while (true) {
+    const { data } = await supabase
+      .from('products_catalog')
+      .select('id')
+      .eq('category', category)
+      .eq('status', 'active')
+      .range(page * 500, page * 500 + 499);
+    if (!data?.length) break;
+    allCategoryIds.push(...data.map((r: { id: string }) => r.id));
+    if (data.length < 500) break;
+    page++;
+  }
+
+  if (allCategoryIds.length === 0) return { deletedOffers: 0, hiddenProducts: 0 };
+
+  // Supprime les offres périmées (non vues dans ce sync)
+  let deletedOffers = 0;
+  for (let i = 0; i < allCategoryIds.length; i += 200) {
+    const batch = allCategoryIds.slice(i, i + 200);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q: any = supabase
+      .from('product_offers')
+      .delete({ count: 'exact' })
+      .eq('source', source)
+      .lt('last_synced_at', syncTime)
+      .in('catalog_id', batch);
+    if (merchantName) q = q.eq('merchant_name', merchantName);
+    const { count } = await q;
+    deletedOffers += count ?? 0;
+  }
+
+  if (deletedOffers === 0) return { deletedOffers: 0, hiddenProducts: 0 };
+
+  // Identifie les produits sans aucune offre restante → masquer
+  const withOfferIds = new Set<string>();
+  for (let i = 0; i < allCategoryIds.length; i += 500) {
+    const batch = allCategoryIds.slice(i, i + 500);
+    const { data } = await supabase
+      .from('product_offers')
+      .select('catalog_id')
+      .in('catalog_id', batch);
+    for (const row of data ?? []) withOfferIds.add(row.catalog_id);
+  }
+
+  const noOfferIds = allCategoryIds.filter(id => !withOfferIds.has(id));
+  let hiddenProducts = 0;
+  for (let i = 0; i < noOfferIds.length; i += 200) {
+    await supabase
+      .from('products_catalog')
+      .update({ status: 'hidden' })
+      .in('id', noOfferIds.slice(i, i + 200));
+    hiddenProducts += noOfferIds.slice(i, i + 200).length;
+  }
+
+  return { deletedOffers, hiddenProducts };
 }
 
 // ─── CPC Scraper ──────────────────────────────────────────────────────────────
@@ -321,6 +402,7 @@ async function runCPCCatalogSync(
         merchant_name: 'CanadaPetCare',
         category: categories[0],
         categories,
+        product_type: 'sante',
         ean: null,
         isbn: null,
         brand: null,
@@ -359,8 +441,19 @@ export async function runCatalogSyncForCategory(
   let totalUpdated = 0;
   let lastError: string | null = null;
 
+  let cleanupStats = { deletedOffers: 0, hiddenProducts: 0 };
+
   if (category === 'canada-pet-care') {
     ({ totalInserted, totalUpdated, lastError } = await runCPCCatalogSync(supabase, syncTime));
+    // Nettoyage offres CPC disparues du sitemap (garde : au moins 10 produits scrappés)
+    if (totalInserted + totalUpdated >= 10) {
+      try {
+        cleanupStats = await cleanupStaleOffersForCategory(supabase, 'chiens', 'cj', syncTime, 'CanadaPetCare');
+        const chatsCleanup = await cleanupStaleOffersForCategory(supabase, 'chats', 'cj', syncTime, 'CanadaPetCare');
+        cleanupStats.deletedOffers += chatsCleanup.deletedOffers;
+        cleanupStats.hiddenProducts += chatsCleanup.hiddenProducts;
+      } catch { /* non bloquant */ }
+    }
   } else {
     const publisherId = process.env.AWIN_PUBLISHER_ID;
     const feedToken   = process.env.AWIN_FEED_TOKEN ?? process.env.AWIN_API_TOKEN;
@@ -398,11 +491,24 @@ export async function runCatalogSyncForCategory(
         console.error(`[catalog-sync:${category}] feed ${merchantName}:`, errMsg);
       }
     );
+
+    // Nettoyage offres Awin disparues du feed
+    // Garde de sécurité : ne nettoyer que si le feed a retourné au moins 100 produits
+    // (évite de tout masquer si le feed Awin est temporairement vide/partiel/en erreur)
+    if (totalInserted + totalUpdated >= 100) {
+      try {
+        cleanupStats = await cleanupStaleOffersForCategory(supabase, category, 'awin', syncTime);
+      } catch { /* non bloquant */ }
+    }
   }
+
+  const cleanupMsg = cleanupStats.deletedOffers > 0
+    ? `, ${cleanupStats.deletedOffers} offres périmées supprimées, ${cleanupStats.hiddenProducts} fiches masquées`
+    : '';
 
   await supabase.from('activity_logs').insert({
     agent_id: 'thomas', agent_name: 'Thomas',
-    action: `[Catalog sync:${category}] ${totalInserted} nouvelles fiches, ${totalUpdated} offres mises à jour`,
+    action: `[Catalog sync:${category}] ${totalInserted} nouvelles fiches, ${totalUpdated} offres mises à jour${cleanupMsg}`,
     details: lastError ? { error: lastError } : {},
     status: lastError ? 'error' : 'success',
   });
@@ -427,6 +533,8 @@ export async function runCatalogSyncForCategory(
     inserted: totalInserted,
     updated: totalUpdated,
     total: totalInserted + totalUpdated,
+    deletedOffers: cleanupStats.deletedOffers,
+    hiddenProducts: cleanupStats.hiddenProducts,
     ...(lastError ? { error: lastError } : {}),
   });
 }

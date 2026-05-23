@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { normalizeSearch } from '@/lib/search';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
@@ -41,7 +42,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
     .not('content', 'is', null)
     .order('name', { ascending: true });
 
-  if (q) query = query.ilike('name', `%${q}%`);
+  if (q) query = query.ilike('name_search', `%${normalizeSearch(q)}%`);
 
   const [{ data: breeds }, { count: total }] = await Promise.all([
     query,

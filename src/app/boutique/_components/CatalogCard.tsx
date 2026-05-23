@@ -79,9 +79,7 @@ export default function CatalogCard({
         <h3 className="text-base font-semibold text-gray-900 leading-snug line-clamp-2 min-h-[3rem] group-hover:text-orange-600 transition-colors">
           {nameFr ?? name}
         </h3>
-        {nameFr && (
-          <p className="text-sm text-gray-400 line-clamp-1 mt-0.5">{name}</p>
-        )}
+
 
         <div className="flex-1" />
 
