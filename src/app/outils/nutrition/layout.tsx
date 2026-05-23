@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Guide nutritionnel pour animaux — Alimentation & Conseils | Mes Poilus",
+  title: "Guide nutritionnel pour animaux - Alimentation & Conseils | Mes Poilus",
   description: "Calculez les besoins alimentaires de votre animal. Conseils nutrition personnalisés pour chiens, chats et petits animaux.",
   openGraph: {
     title: "Guide nutritionnel pour animaux | Mes Poilus",

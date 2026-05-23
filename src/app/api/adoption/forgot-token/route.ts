@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     await sendEmail({
       to: post.email,
-      subject: 'Votre code de suppression — Mes Poilus',
+      subject: 'Votre code de suppression - Mes Poilus',
       html: emailWrapper('Votre code de suppression', `
         <p>Bonjour <strong>${post.poster_name}</strong>,</p>
         <p>Voici votre code pour supprimer votre annonce (<strong>${post.animal_type}</strong>, ${post.region})</p>

@@ -1,4 +1,4 @@
--- BOUTIQUE V2 — Phase 2
+-- BOUTIQUE V2 - Phase 2
 -- Ajout colonnes ean, isbn, brand à la table products existante
 -- Colonnes nullable → aucun impact sur la boutique actuelle
 

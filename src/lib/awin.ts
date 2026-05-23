@@ -78,7 +78,7 @@ function keywordsMatchProduct(p: Record<string, string>, keywords: string[]): bo
 // (ingrédient ≠ espèce cible : friandise au lapin pour chien ≠ produit pour rongeur)
 const CATEGORY_EXCLUSIONS: Record<string, string[]> = {
   rongeurs: [
-    // chiens/dogs — singulier + pluriel + diminutif
+    // chiens/dogs - singulier + pluriel + diminutif
     'chien', 'chiens', 'chiot', 'chiots', 'dog', 'dogs', 'puppy', 'puppies',
     'hond', 'honden', 'hund', 'hunde',
     'pour chien', 'pour votre chien', 'for dog', 'your dog', 'votre chien', 'pour les chiens',
@@ -418,7 +418,7 @@ function assignCategories(p: Record<string, string>): { primary: AwinProduct['ca
 }
 
 /**
- * Sync d'UNE seule catégorie — appelée par chaque cron dédié.
+ * Sync d'UNE seule catégorie - appelée par chaque cron dédié.
  * Streaming pur, jamais plus de 100 produits en RAM à la fois.
  * onBatch est appelé pour chaque batch → upsert immédiat en BDD.
  * onProgress est appelé régulièrement avec le nb de produits trouvés.
@@ -433,7 +433,7 @@ export async function fetchAwinProductsByCategory(
 ): Promise<number> {
   const feeds = await getJoinedFeeds(publisherId, feedToken);
   if (!feeds.length) {
-    console.error(`[awin:${targetCategory}] Aucun feed actif trouvé — vérifie AWIN_PUBLISHER_ID / AWIN_FEED_TOKEN`);
+    console.error(`[awin:${targetCategory}] Aucun feed actif trouvé - vérifie AWIN_PUBLISHER_ID / AWIN_FEED_TOKEN`);
     return 0;
   }
 
@@ -450,7 +450,7 @@ export async function fetchAwinProductsByCategory(
     try {
       console.log(`[awin:${targetCategory}] Téléchargement feed ${merchantName}...`);
       const csvText = await fetchAndDecompress(feedUrl);
-      console.log(`[awin:${targetCategory}] Feed ${merchantName} téléchargé — ${csvText.split('\n').length} lignes`);
+      console.log(`[awin:${targetCategory}] Feed ${merchantName} téléchargé - ${csvText.split('\n').length} lignes`);
 
       const count = await parseCSVStreamingWithFlush(
         csvText,
@@ -473,7 +473,7 @@ export async function fetchAwinProductsByCategory(
     }
   }
 
-  console.log(`[awin:${targetCategory}] sync terminée — total: ${grandTotal}`);
+  console.log(`[awin:${targetCategory}] sync terminée - total: ${grandTotal}`);
   return grandTotal;
 }
 

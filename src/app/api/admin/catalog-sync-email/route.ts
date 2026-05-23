@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   try {
     await sendEmail({
       to: 'contact@mespoilus.com',
-      subject: `[Mes Poilus] Catalog Sync — ${totalInserted} nouvelles fiches · ${totalUpdated} offres màj`,
+      subject: `[Mes Poilus] Catalog Sync - ${totalInserted} nouvelles fiches · ${totalUpdated} offres màj`,
       html,
     });
     return NextResponse.json({ ok: true });

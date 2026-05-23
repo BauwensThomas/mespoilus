@@ -77,7 +77,7 @@ async function queryCJ<T>(token: string, query: string, variables: Record<string
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`CJ API HTTP error: ${res.status} — ${body.slice(0, 500)}`);
+    throw new Error(`CJ API HTTP error: ${res.status} - ${body.slice(0, 500)}`);
   }
 
   const json = await res.json();

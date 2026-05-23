@@ -5,7 +5,7 @@ import { ShieldCheck, Clock, Mail } from 'lucide-react';
 const EXPIRY_DAYS = 60;
 
 export const metadata: Metadata = {
-  title: 'Déposer une annonce — Adoption Mes Poilus',
+  title: 'Déposer une annonce - Adoption Mes Poilus',
   description: "Déposez gratuitement une annonce pour donner votre animal à adopter. Votre annonce sera vérifiée avant publication.",
   robots: { index: false, follow: false },
 };

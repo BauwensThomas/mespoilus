@@ -113,7 +113,7 @@ export default function CatalogSidebar({
               }}
               className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-200 transition-all"
             />
-            <span className="text-gray-400 shrink-0 text-sm">—</span>
+            <span className="text-gray-400 shrink-0 text-sm">-</span>
             <input
               type="number"
               min={0}

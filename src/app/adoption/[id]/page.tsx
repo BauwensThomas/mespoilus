@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   const animalLabel = ANIMAL_LABEL[post.animal_type] ?? 'Animal';
   const subject = post.breed ?? animalLabel;
-  const title = `${subject} à adopter${post.region ? ` — ${post.region}` : ''} | Mes Poilus`;
+  const title = `${subject} à adopter${post.region ? ` - ${post.region}` : ''} | Mes Poilus`;
   const description = post.description
     ? post.description.slice(0, 155) + (post.description.length > 155 ? '…' : '')
     : `Adoptez ce ${animalLabel.toLowerCase()}${post.region ? ` à ${post.region}` : ''} sur Mes Poilus.`;

@@ -75,7 +75,7 @@ Format de sortie STRICT (commence directement par ---) :
 title: [Titre accrocheur]
 slug: [slug-url-friendly]
 excerpt: [Résumé 1 phrase]
-category: [chiens|chats|oiseaux|rongeurs|reptiles|general] — utilise "general" si l'article parle de plusieurs animaux, de la boutique, d'un sujet transversal ou ne cible pas un seul type d'animal
+category: [chiens|chats|oiseaux|rongeurs|reptiles|general] - utilise "general" si l'article parle de plusieurs animaux, de la boutique, d'un sujet transversal ou ne cible pas un seul type d'animal
 categories: [catégories pertinentes séparées par virgule]
 seo_keywords: [mot1, mot2, mot3, mot4]
 meta_description: [155 chars max]
@@ -154,7 +154,7 @@ RÈGLES STRICTES :
   2. une invitation à s'abonner (ex: "Abonne-toi pour ne rien rater ! 🔔", "Suis-nous pour plus de conseils ! 🔔")
 - Lien : si un lien d'article complet est fourni dans la demande (ex: https://mespoilus.com/blog/...), utilise CE lien exact. Sinon utilise "🔗 mespoilus.com". Jamais deux liens différents.
 - Hashtags : exactement 6-8 hashtags pertinents sur la dernière ligne séparée par une ligne vide, sans duplication
-- INTERDIT dans les hashtags : tirets (-), apostrophes, espaces — mots collés uniquement (ex: #bienetre pas #bien-être, #conseilschien pas #conseils-chien)
+- INTERDIT dans les hashtags : tirets (-), apostrophes, espaces - mots collés uniquement (ex: #bienetre pas #bien-être, #conseilschien pas #conseils-chien)
 - INTERDIT : **, *, ##, markdown, hashtags dans le corps du texte
 
 Format de sortie : UNIQUEMENT les phrases (une ligne vide entre chaque), puis une ligne vide, puis les deux lignes commentaire+abonnement, puis une ligne vide, puis le lien, puis une ligne vide, puis les hashtags. STOP. Rien après les hashtags.`,
@@ -324,7 +324,7 @@ Quand on te demande de rédiger une newsletter, tu dois répondre UNIQUEMENT ave
 }
 
 Structure du HTML à produire :
-1. Header : fond orange (#ea580c) — INTERDIT : emoji 🐾 ou tout autre emoji dans le header, titre et sous-titre
+1. Header : fond orange (#ea580c) - INTERDIT : emoji 🐾 ou tout autre emoji dans le header, titre et sous-titre
    Logo obligatoire (image réelle, pas emoji) :
    <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 10px"><tr><td style="vertical-align:middle;padding-right:10px"><img src="https://ccpkrprfvbgsvobudlam.supabase.co/storage/v1/object/public/partner-logos/logo.jpg" width="40" height="40" alt="Mes Poilus" style="display:block;border:0;border-radius:50%"></td><td style="vertical-align:middle"><span style="color:#fff;font-size:20px;font-weight:700">Mes Poilus</span></td></tr></table>
    puis un titre/sous-titre chaleureux en blanc, sans emoji

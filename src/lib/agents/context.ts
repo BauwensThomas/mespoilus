@@ -53,26 +53,26 @@ export async function buildEnrichedPrompt(
 
 Données réelles du système :
 
--Total depuis le début —
+-Total depuis le début -
 - Articles publiés : ${articleCount}
 - Posts réseaux sociaux : ${postCount}
 - Tâches agents total : ${totalTasks}
 - Tokens IA total : ${totalTokens.toLocaleString('fr-FR')}
 - Coût API total estimé : ~${totalCostEur} €
 
--${monthName} (mois en cours) —
+-${monthName} (mois en cours) -
 - Articles publiés ce mois : ${monthlyArticles}
 - Tâches complétées ce mois : ${monthlyTasks}
 - Tokens consommés ce mois : ${monthlyTokens.toLocaleString('fr-FR')}
 - Coût API ce mois : ~${monthlyCost} €
 
--${lastMonthName} (mois précédent) —
+-${lastMonthName} (mois précédent) -
 - Tâches complétées : ${lastMonthTasks}
 - Tokens consommés : ${lastMonthTokens.toLocaleString('fr-FR')}
 - Coût API : ~${lastMonthCost} €
 ${tokenTrend !== null ? `- Évolution tokens vs mois précédent : ${Number(tokenTrend) >= 0 ? '+' : ''}${tokenTrend}%` : ''}
 
--Dépenses fixes mensuelles —
+-Dépenses fixes mensuelles -
 - Supabase : ~25 €/mois
 - Vercel : ~20 €/mois
 - API Anthropic : variable (~${monthlyCost} € ce mois)

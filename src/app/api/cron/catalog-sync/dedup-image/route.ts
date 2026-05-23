@@ -41,7 +41,7 @@ export async function GET(req: Request) {
 
   const supabase = createAdminClient();
 
-  // 1. Charger tous les produits actifs qui ont une image_url — pagination 1000/page
+  // 1. Charger tous les produits actifs qui ont une image_url - pagination 1000/page
   //    (Supabase max_rows = 1000 tronque silencieusement les .limit() plus grands)
   const allProducts: { id: string; name: string; image_url: string | null; ean: string | null; category: string | null; created_at: string }[] = [];
   const PAGE = 1000;

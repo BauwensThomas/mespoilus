@@ -103,7 +103,7 @@ export async function GET() {
   try {
     await sendEmail({
       to: 'contact@mespoilus.com',
-      subject: `[Mes Poilus] Compression images hero — ${compressed.length} image${compressed.length > 1 ? 's' : ''} compressée${compressed.length > 1 ? 's' : ''}`,
+      subject: `[Mes Poilus] Compression images hero - ${compressed.length} image${compressed.length > 1 ? 's' : ''} compressée${compressed.length > 1 ? 's' : ''}`,
       html: cronEmailWrapper(
         'Compression images hero terminée',
         'Maintenance',

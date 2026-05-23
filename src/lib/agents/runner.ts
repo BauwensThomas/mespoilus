@@ -31,7 +31,7 @@ export async function executeAgentTask(
     capturedTokens = inputTokens + outputTokens;
 
     if (stopReason === 'max_tokens') {
-      console.error(`[${agentId}] TRUNCATED — stop_reason=max_tokens (${outputTokens} tokens générés)`);
+      console.error(`[${agentId}] TRUNCATED - stop_reason=max_tokens (${outputTokens} tokens générés)`);
       const duration = Date.now() - startTime;
       const message = `Article tronqué : limite de tokens atteinte (${outputTokens} tokens). Augmenter maxTokens.`;
       await logActivity(agentId, agent.name, task.slice(0, 200), 'error', duration, { error: message }, capturedTokens);

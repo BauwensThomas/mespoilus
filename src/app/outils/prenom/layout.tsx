@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Générateur de prénoms pour animaux — Chien, Chat, Lapin | Mes Poilus",
+  title: "Générateur de prénoms pour animaux - Chien, Chat, Lapin | Mes Poilus",
   description: "Trouvez le prénom parfait pour votre animal. Des centaines d'idées de noms pour chiens, chats, lapins, oiseaux et rongeurs.",
   openGraph: {
     title: "Générateur de prénoms pour animaux | Mes Poilus",

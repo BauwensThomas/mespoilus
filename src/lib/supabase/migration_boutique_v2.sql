@@ -1,5 +1,5 @@
 -- ============================================================
--- BOUTIQUE V2 — Migration Phase 1
+-- BOUTIQUE V2 - Migration Phase 1
 -- Tables : products_catalog, product_offers, user_favorites,
 --          affiliate_clicks, product_price_history
 -- A exécuter dans Supabase Dashboard (SQL Editor)
@@ -7,7 +7,7 @@
 --
 -- RLS : toutes les tables bloquées en accès direct (USING(false))
 -- Accès uniquement via service_role (createAdminClient) côté serveur
--- Service_role bypass RLS — pas d'impact sur le code.
+-- Service_role bypass RLS - pas d'impact sur le code.
 -- ============================================================
 
 
@@ -24,7 +24,7 @@ $$ LANGUAGE plpgsql
 
 
 -- ============================================================
--- 1. products_catalog — fiche produit centrale
+-- 1. products_catalog - fiche produit centrale
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS products_catalog (
@@ -80,14 +80,14 @@ CREATE TRIGGER trg_catalog_search_vector
   BEFORE INSERT OR UPDATE OF name, brand, description ON products_catalog
   FOR EACH ROW EXECUTE FUNCTION products_catalog_search_vector();
 
--- RLS — accès bloqué en direct, tout passe par service_role
+-- RLS - accès bloqué en direct, tout passe par service_role
 ALTER TABLE products_catalog ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "catalog deny anon" ON products_catalog;
 CREATE POLICY "catalog deny anon" ON products_catalog USING (false) WITH CHECK (false);
 
 
 -- ============================================================
--- 2. product_offers — offre par marchand/source
+-- 2. product_offers - offre par marchand/source
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS product_offers (
@@ -112,14 +112,14 @@ CREATE INDEX IF NOT EXISTS idx_offers_price      ON product_offers(price);
 CREATE INDEX IF NOT EXISTS idx_offers_in_stock   ON product_offers(in_stock);
 CREATE INDEX IF NOT EXISTS idx_offers_synced     ON product_offers(last_synced_at);
 
--- RLS — accès bloqué en direct, tout passe par service_role
+-- RLS - accès bloqué en direct, tout passe par service_role
 ALTER TABLE product_offers ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "offers deny anon" ON product_offers;
 CREATE POLICY "offers deny anon" ON product_offers USING (false) WITH CHECK (false);
 
 
 -- ============================================================
--- 3. user_favorites — favoris visiteur (sans auth)
+-- 3. user_favorites - favoris visiteur (sans auth)
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS user_favorites (
@@ -133,14 +133,14 @@ CREATE TABLE IF NOT EXISTS user_favorites (
 CREATE INDEX IF NOT EXISTS idx_favorites_visitor  ON user_favorites(visitor_id);
 CREATE INDEX IF NOT EXISTS idx_favorites_catalog  ON user_favorites(catalog_id);
 
--- RLS — accès bloqué en direct, toggle via API route (service_role)
+-- RLS - accès bloqué en direct, toggle via API route (service_role)
 ALTER TABLE user_favorites ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "favorites deny anon" ON user_favorites;
 CREATE POLICY "favorites deny anon" ON user_favorites USING (false) WITH CHECK (false);
 
 
 -- ============================================================
--- 4. affiliate_clicks — tracking clics affiliés
+-- 4. affiliate_clicks - tracking clics affiliés
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS affiliate_clicks (
@@ -158,14 +158,14 @@ CREATE INDEX IF NOT EXISTS idx_clicks_catalog   ON affiliate_clicks(catalog_id);
 CREATE INDEX IF NOT EXISTS idx_clicks_merchant  ON affiliate_clicks(merchant);
 CREATE INDEX IF NOT EXISTS idx_clicks_date      ON affiliate_clicks(clicked_at);
 
--- RLS — log clic via API route (service_role), pas d'accès direct
+-- RLS - log clic via API route (service_role), pas d'accès direct
 ALTER TABLE affiliate_clicks ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "clicks deny anon" ON affiliate_clicks;
 CREATE POLICY "clicks deny anon" ON affiliate_clicks USING (false) WITH CHECK (false);
 
 
 -- ============================================================
--- 5. product_price_history — historique des prix
+-- 5. product_price_history - historique des prix
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS product_price_history (
@@ -181,14 +181,14 @@ CREATE INDEX IF NOT EXISTS idx_price_history_offer    ON product_price_history(o
 CREATE INDEX IF NOT EXISTS idx_price_history_catalog  ON product_price_history(catalog_id, recorded_at DESC);
 CREATE INDEX IF NOT EXISTS idx_price_history_date     ON product_price_history(recorded_at DESC);
 
--- RLS — accès bloqué en direct, lecture via API route (service_role)
+-- RLS - accès bloqué en direct, lecture via API route (service_role)
 ALTER TABLE product_price_history ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "price_history deny anon" ON product_price_history;
 CREATE POLICY "price_history deny anon" ON product_price_history USING (false) WITH CHECK (false);
 
 
 -- ============================================================
--- 6. Vue utilitaire — meilleure offre par produit catalog
+-- 6. Vue utilitaire - meilleure offre par produit catalog
 -- ============================================================
 
 CREATE OR REPLACE VIEW catalog_best_offer WITH (security_invoker = on) AS
@@ -217,7 +217,7 @@ ORDER BY po.catalog_id, po.price ASC;
 
 
 -- ============================================================
--- 7. Fonction RPC — nb offres par catalog_id (pour affichage "+2 offres")
+-- 7. Fonction RPC - nb offres par catalog_id (pour affichage "+2 offres")
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION get_offer_counts(catalog_ids UUID[])

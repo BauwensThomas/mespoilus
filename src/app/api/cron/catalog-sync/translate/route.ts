@@ -8,7 +8,7 @@ const BATCH_SIZE_DESC = 5;
 const MAX_RETRIES = 4;
 const NON_FR_THRESHOLD = 5;
 
-// Mots NL/EN clairement absents du français — seuil de détection langue
+// Mots NL/EN clairement absents du français - seuil de détection langue
 const NON_FR_WORDS = new Set([
   // Néerlandais
   'het','een','voor','zijn','heeft','worden','ook','niet','geen',
@@ -46,10 +46,10 @@ async function callAnthropic(body: object): Promise<Response> {
     });
     if (res.status !== 529 && res.status !== 429) return res;
     const delay = Math.min(2000 * Math.pow(2, attempt), 30000);
-    console.warn(`[translate] Anthropic 529 — retry ${attempt + 1}/${MAX_RETRIES} dans ${delay}ms`);
+    console.warn(`[translate] Anthropic 529 - retry ${attempt + 1}/${MAX_RETRIES} dans ${delay}ms`);
     await sleep(delay);
   }
-  throw new Error('Anthropic API 529 — trop de tentatives');
+  throw new Error('Anthropic API 529 - trop de tentatives');
 }
 
 async function translateBatch(names: string[]): Promise<string[]> {

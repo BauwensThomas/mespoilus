@@ -52,12 +52,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!guide) return { title: 'Guide introuvable' };
 
   return {
-    title: `${guide.title} — Guide PDF gratuit — Mes Poilus`,
+    title: `${guide.title} - Guide PDF gratuit - Mes Poilus`,
     description: guide.description,
     robots: { index: true, follow: true },
     alternates: { canonical: `/guides/${guide.slug}` },
     openGraph: {
-      title: `${guide.title} — Guide PDF gratuit`,
+      title: `${guide.title} - Guide PDF gratuit`,
       description: guide.description,
       type: 'website',
       url: `/guides/${guide.slug}`,

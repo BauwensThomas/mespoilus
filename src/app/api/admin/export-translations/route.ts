@@ -14,7 +14,7 @@ function escapeCsv(value: string | null | undefined): string {
 export async function GET() {
   const supabase = createAdminClient();
 
-  // 1. Produits traduits — pagination pour dépasser la limite max_rows Supabase (1000)
+  // 1. Produits traduits - pagination pour dépasser la limite max_rows Supabase (1000)
   const PAGE = 1000;
   const products: Array<{ id: string; name: string; name_fr: string | null; description: string | null; description_fr: string | null; category: string | null }> = [];
   let from = 0;
