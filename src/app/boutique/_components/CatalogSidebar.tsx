@@ -1,10 +1,8 @@
 ﻿'use client';
 
-'use client';
-
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRef, useTransition, useEffect, useState } from 'react';
-import { Dog, Cat, Bird, Mouse, Zap, PawPrint, BookOpen, Layers } from 'lucide-react';
+import { Dog, Cat, Bird, Mouse, Zap, PawPrint, BookOpen, Layers, Utensils, Gamepad2, Sparkles, HeartPulse, Home, ShoppingBag } from 'lucide-react';
 
 const CATEGORIES = [
   { id: 'all',      label: 'Tous',     icon: PawPrint },
@@ -17,9 +15,19 @@ const CATEGORIES = [
   { id: 'general',  label: 'General',  icon: Layers },
 ];
 
+const PRODUCT_TYPES = [
+  { id: 'nourriture',  label: 'Alimentation',  icon: Utensils },
+  { id: 'jouets',      label: 'Jouets',         icon: Gamepad2 },
+  { id: 'hygiene',     label: 'Soin & Hygiène', icon: Sparkles },
+  { id: 'sante',       label: 'Santé',          icon: HeartPulse },
+  { id: 'habitat',     label: 'Habitat',        icon: Home },
+  { id: 'accessoires', label: 'Accessoires',    icon: ShoppingBag },
+];
+
 interface CatalogSidebarProps {
   merchants: string[];
   currentCategory: string;
+  currentProductType: string | null;
   currentMerchants: string[];
   currentMinPrice: number | null;
   currentMaxPrice: number | null;
@@ -27,7 +35,7 @@ interface CatalogSidebarProps {
 }
 
 export default function CatalogSidebar({
-  merchants, currentCategory, currentMerchants, currentMinPrice, currentMaxPrice, currentFavActive,
+  merchants, currentCategory, currentProductType, currentMerchants, currentMinPrice, currentMaxPrice, currentFavActive,
 }: CatalogSidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -87,6 +95,44 @@ export default function CatalogSidebar({
                 >
                   <Icon size={14} strokeWidth={1.5} />
                   {cat.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <hr className="-mx-4 border-orange-300" />
+
+        {/* Type de produit */}
+        <div>
+          <h3 className="text-xs font-bold text-orange-600 uppercase tracking-widest mb-2">Type</h3>
+          <div className="space-y-0.5">
+            <button
+              onClick={() => navigate({ product_type: null })}
+              className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-base transition-colors text-left ${
+                !currentProductType
+                  ? 'bg-orange-50 text-orange-700 font-semibold'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
+              <Layers size={14} strokeWidth={1.5} />
+              Tous
+            </button>
+            {PRODUCT_TYPES.map(pt => {
+              const Icon = pt.icon;
+              const isActive = currentProductType === pt.id;
+              return (
+                <button
+                  key={pt.id}
+                  onClick={() => navigate({ product_type: pt.id })}
+                  className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-base transition-colors text-left ${
+                    isActive
+                      ? 'bg-orange-50 text-orange-700 font-semibold'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <Icon size={14} strokeWidth={1.5} />
+                  {pt.label}
                 </button>
               );
             })}

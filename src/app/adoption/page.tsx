@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
+import { normalizeSearch } from '@/lib/search';
 import type { AdoptionPost } from '@/types';
 import Link from 'next/link';
 import AdBanner from '@/components/ui/AdBanner';
@@ -40,7 +41,7 @@ async function getPosts(animal?: string, search?: string, pays?: string, gender?
       .order('created_at', { ascending: false })
       .limit(50);
     if (animal && animal !== 'all') q = q.eq('animal_type', animal);
-    if (search)   q = q.or(`breed.ilike.%${search}%,description.ilike.%${search}%,region.ilike.%${search}%`);
+    if (search)   q = q.ilike('search_text', `%${normalizeSearch(search)}%`);
     if (pays)     q = q.ilike('region', `%${pays}`);
     if (gender)   q = q.eq('gender', gender);
     if (race)     q = q.ilike('breed', `%${race}%`);

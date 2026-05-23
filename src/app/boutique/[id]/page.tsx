@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ExternalLink, Package, Star, Tag, Weight, Heart } from 'lucide-react';
@@ -41,7 +41,6 @@ async function getCatalogEntry(id: string) {
       .from('products_catalog')
       .select('id, name, name_fr, brand, category, categories, image_url, description, description_fr, weight_g, ean, status')
       .eq('id', id)
-      .eq('status', 'active')
       .single(),
     supabase
       .from('product_offers')
@@ -52,6 +51,7 @@ async function getCatalogEntry(id: string) {
   ]);
 
   if (catalogRes.error || !catalogRes.data) return null;
+  if (catalogRes.data.status !== 'active') return 'hidden';
 
   // Garder 1 offre par marchand (la moins chère)
   const merchantMap = new Map<string, NonNullable<typeof offersRes.data>[0]>();
@@ -91,6 +91,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const { id } = await params;
   const result = await getCatalogEntry(id);
   if (!result) notFound();
+  if (result === 'hidden') redirect('/boutique');
 
   const { catalog, offers } = result;
   const bestOffer = offers[0] ?? null;
@@ -180,7 +181,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               {catalog.description && (
                 <div className="text-sm text-gray-600 leading-relaxed">
                   <p>{catalog.description}</p>
-                  {(catalog as { description_fr?: string | null }).description_fr && (
+                  {(catalog as { description_fr?: string | null }).description_fr &&
+                    (catalog as { description_fr?: string | null }).description_fr !== catalog.description && (
                     <>
                       <hr className="my-2 border-orange-300" />
                       <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-1">Traduction</p>

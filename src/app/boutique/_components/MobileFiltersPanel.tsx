@@ -2,7 +2,16 @@
 
 import { useRef, useTransition, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X, Utensils, Gamepad2, Sparkles, HeartPulse, Home, ShoppingBag, BookOpen, Layers } from 'lucide-react';
+
+const PRODUCT_TYPES = [
+  { id: 'nourriture',  label: 'Alimentation',  icon: Utensils },
+  { id: 'jouets',      label: 'Jouets',         icon: Gamepad2 },
+  { id: 'hygiene',     label: 'Soin & Hygiène', icon: Sparkles },
+  { id: 'sante',       label: 'Santé',          icon: HeartPulse },
+  { id: 'habitat',     label: 'Habitat',        icon: Home },
+  { id: 'accessoires', label: 'Accessoires',    icon: ShoppingBag },
+];
 
 interface MobileFiltersPanelProps {
   merchants: string[];
@@ -10,10 +19,11 @@ interface MobileFiltersPanelProps {
   currentMinPrice: number | null;
   currentMaxPrice: number | null;
   currentFavActive: boolean;
+  currentProductType: string | null;
 }
 
 export default function MobileFiltersPanel({
-  merchants, currentMerchants, currentMinPrice, currentMaxPrice, currentFavActive,
+  merchants, currentMerchants, currentMinPrice, currentMaxPrice, currentFavActive, currentProductType,
 }: MobileFiltersPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,6 +45,7 @@ export default function MobileFiltersPanel({
   }, []);
 
   const activeCount =
+    (currentProductType ? 1 : 0) +
     (currentMerchants.length > 0 ? 1 : 0) +
     (currentMinPrice ? 1 : 0) +
     (currentMaxPrice ? 1 : 0) +
@@ -88,6 +99,42 @@ export default function MobileFiltersPanel({
             </div>
 
             <div className="px-4 py-5 space-y-6">
+
+              {/* Type de produit */}
+              <div>
+                <h3 className="text-xs font-bold text-orange-600 uppercase tracking-widest mb-3">Type de produit</h3>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => navigate({ product_type: null })}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                      !currentProductType
+                        ? 'bg-orange-600 text-white border-orange-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
+                    }`}
+                  >
+                    <Layers size={13} strokeWidth={1.5} />
+                    Tous
+                  </button>
+                  {PRODUCT_TYPES.map(pt => {
+                    const Icon = pt.icon;
+                    const isActive = currentProductType === pt.id;
+                    return (
+                      <button
+                        key={pt.id}
+                        onClick={() => { navigate({ product_type: pt.id }); setOpen(false); }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                          isActive
+                            ? 'bg-orange-600 text-white border-orange-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
+                        }`}
+                      >
+                        <Icon size={13} strokeWidth={1.5} />
+                        {pt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Prix entre */}
               <div>

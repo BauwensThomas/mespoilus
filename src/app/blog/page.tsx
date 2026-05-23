@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import { normalizeSearch } from '@/lib/search';
 import BlogPostsGrid from '@/components/blog/BlogPostsGrid';
 import { Article } from '@/types';
 import type { Metadata } from 'next';
@@ -44,7 +45,7 @@ async function getArticles(category?: string, search?: string) {
       .order('published_at', { ascending: false });
 
     if (category) query = query.or(`category.eq.${category},categories.cs.{${category}}`);
-    if (search) query = query.or(`title.ilike.%${search}%,excerpt.ilike.%${search}%`);
+    if (search) query = query.ilike('title_search', `%${normalizeSearch(search)}%`);
 
     const { data } = await query.limit(24);
     return (data as Article[]) ?? [];

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard,
   Rocket, CheckCircle2, XCircle, BookOpen, Mail, Sparkles, Heart,
@@ -622,6 +623,7 @@ interface CatalogCatState {
 }
 
 function CatalogSyncCard() {
+  const router = useRouter();
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [states, setStates] = useState<Record<CatalogCategory, CatalogCatState>>(
     () => Object.fromEntries(
@@ -669,6 +671,7 @@ function CatalogSyncCard() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ categories: results, totalInserted, totalUpdated }),
     }).catch(() => {});
+    router.refresh();
   };
 
   const resetAll = () => {
@@ -681,7 +684,7 @@ function CatalogSyncCard() {
 
   return (
     <div className={clsx(
-      'bg-white border-2 rounded-2xl p-5 flex flex-col gap-4 transition-all duration-200',
+      'bg-white border-2 rounded-2xl p-5 flex flex-col gap-4 transition-all duration-200 h-full',
       allDone ? 'border-emerald-200 bg-emerald-50/30' : anyRunning ? 'border-amber-200 bg-amber-50/20' : 'border-orange-200 hover:shadow-md',
     )}>
       <div className="flex items-start gap-3">
@@ -819,13 +822,15 @@ interface UtilCardProps {
   label: string;
   idleDesc: string;
   exportHref?: string;
+  refreshOnDone?: boolean;
   onLaunch: () => Promise<{ result: string; stats?: StatRow[] }>;
 }
 
-function UtilCard({ icon: Icon, iconBg, iconColor, accentColor, label, idleDesc, exportHref, onLaunch }: UtilCardProps) {
+function UtilCard({ icon: Icon, iconBg, iconColor, accentColor, label, idleDesc, exportHref, refreshOnDone, onLaunch }: UtilCardProps) {
   const [status, setStatus] = useState<StepStatus>('idle');
   const [result, setResult] = useState('');
   const [stats, setStats] = useState<StatRow[]>([]);
+  const router = useRouter();
 
   const launch = async () => {
     if (status === 'running') return;
@@ -837,6 +842,7 @@ function UtilCard({ icon: Icon, iconBg, iconColor, accentColor, label, idleDesc,
       setResult(res);
       setStats(s ?? []);
       setStatus('done');
+      if (refreshOnDone) router.refresh();
     } catch (err) {
       setResult(err instanceof Error ? err.message : 'Erreur');
       setStatus('error');
@@ -847,7 +853,7 @@ function UtilCard({ icon: Icon, iconBg, iconColor, accentColor, label, idleDesc,
 
   return (
     <div className={clsx(
-      'bg-white border-2 rounded-2xl p-5 flex flex-col gap-4 transition-all duration-200',
+      'bg-white border-2 rounded-2xl p-5 flex flex-col gap-4 transition-all duration-200 h-full',
       status === 'done' ? 'border-emerald-200 bg-emerald-50/30'
         : status === 'error' ? 'border-red-200 bg-red-50/20'
         : status === 'running' ? 'border-amber-200 bg-amber-50/20'
@@ -930,6 +936,35 @@ function UtilCard({ icon: Icon, iconBg, iconColor, accentColor, label, idleDesc,
         </button>
       )}
     </div>
+  );
+}
+
+const STEP_COLORS: Record<number, string> = {
+  1: 'bg-orange-500',
+  2: 'bg-blue-500',
+  3: 'bg-violet-500',
+  4: 'bg-teal-500',
+  5: 'bg-rose-500',
+};
+
+function StepBadge({ n }: { n: number }) {
+  return (
+    <span className={`absolute top-10 right-2.5 z-10 w-5 h-5 rounded-full ${STEP_COLORS[n]} text-white text-[10px] font-bold flex items-center justify-center shadow-sm pointer-events-none`}>
+      {n}
+    </span>
+  );
+}
+
+function StepFlow() {
+  return (
+    <span className="flex items-center gap-1">
+      {([1, 2, 3, 4, 5] as const).map((n, i) => (
+        <span key={n} className="flex items-center gap-1">
+          <span className={`w-4 h-4 rounded-full ${STEP_COLORS[n]} text-white text-[9px] font-bold flex items-center justify-center`}>{n}</span>
+          {i < 4 && <span className="text-gray-300 text-[10px]">→</span>}
+        </span>
+      ))}
+    </span>
   );
 }
 
@@ -1071,68 +1106,87 @@ export default function CronLauncher({ floating = false }: { floating?: boolean 
                   );
                 })}
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-widest mb-3 text-orange-700">Boutique & Outils</h3>
+                  <div className="flex items-center gap-2 mb-3">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-orange-700">Boutique & Outils</h3>
+                    <StepFlow />
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <CatalogSyncCard />
-                    <UtilCard
-                      icon={Sparkles} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
-                      exportHref="/api/admin/export-translations"
-                      label="Traduction EN/NL->FR (Haiku)"
-                      idleDesc="Noms + descriptions sans traduction FR. Claude détecte la langue. Max 500 noms / 200 desc. par run."
-                      onLaunch={async () => {
-                        const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-sync-translate' }) });
-                        const data = await r.json();
-                        if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
-                        const done = (data.translatedNames ?? 0) + (data.translatedDescs ?? 0);
-                        const remN = data.remainingNames ?? 0;
-                        const remD = data.remainingDescs ?? 0;
-                        return {
-                          result: done === 0 ? (remN === 0 && remD === 0 ? 'Tout est traduit ✓' : 'Rien de nouveau') : `${done} traductions`,
-                          stats: [
-                            { label: 'Noms traduits', value: data.translatedNames ?? 0 },
-                            { label: 'Desc. traduites', value: data.translatedDescs ?? 0 },
-                            { label: 'Noms restants', value: remN, danger: true },
-                            { label: 'Desc. restantes', value: remD, danger: true },
-                          ],
-                        };
-                      }}
-                    />
-                    <UtilCard
-                      icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
-                      exportHref="/api/admin/export-operations?type=dedup"
-                      label="Fusion doublons EAN"
-                      idleDesc="Fusionne les fiches catalog avec le même EAN"
-                      onLaunch={async () => {
-                        const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-ean' }) });
-                        const data = await r.json();
-                        if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
-                        return { result: data.merged === 0 ? 'Aucun doublon EAN' : `${data.deleted} fiches fusionnées`, stats: [{ label: 'Groupes EAN', value: data.eanGroups ?? 0 }, { label: 'Fiches supprimées', value: data.deleted ?? 0 }] };
-                      }}
-                    />
-                    <UtilCard
-                      icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
-                      exportHref="/api/admin/export-operations?type=dedup"
-                      label="Fusion doublons titre"
-                      idleDesc="Fusionne les fiches avec titre + marque + poids identiques"
-                      onLaunch={async () => {
-                        const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-title' }) });
-                        const data = await r.json();
-                        if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
-                        return { result: data.deleted === 0 ? 'Aucun doublon titre' : `${data.deleted} fiches fusionnées`, stats: [{ label: 'Groupes', value: data.groups ?? 0 }, { label: 'Fiches supprimées', value: data.deleted ?? 0 }] };
-                      }}
-                    />
-                    <UtilCard
-                      icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
-                      exportHref="/api/admin/export-operations?type=dedup-nl"
-                      label="Fusion doublons image"
-                      idleDesc="Fusionne toutes les fiches avec la même image : Maxi Zoo BE/FR, versions NL/FR, même marchand x2. Offres déplacées vers la fiche la plus ancienne."
-                      onLaunch={async () => {
-                        const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-image' }) });
-                        const data = await r.json();
-                        if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
-                        return { result: data.deleted === 0 ? 'Aucun doublon image' : `${data.deleted} fiches fusionnées`, stats: [{ label: 'Paires', value: data.pairs ?? 0 }, { label: 'Orphelins NL', value: data.orphans ?? 0 }, { label: 'Offres dedoublonnees', value: data.offersDeduped ?? 0 }] };
-                      }}
-                    />
+                    <div className="relative h-full"><StepBadge n={1} /><CatalogSyncCard /></div>
+                    <div className="relative h-full">
+                      <StepBadge n={2} />
+                      <UtilCard
+                        icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
+                        exportHref="/api/admin/export-operations?type=dedup"
+                        label="Fusion doublons EAN"
+                        refreshOnDone
+                        idleDesc="Fusionne les fiches catalog avec le même EAN"
+                        onLaunch={async () => {
+                          const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-ean' }) });
+                          const data = await r.json();
+                          if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
+                          return { result: data.merged === 0 ? 'Aucun doublon EAN' : `${data.deleted} fiches fusionnées`, stats: [{ label: 'Groupes EAN', value: data.eanGroups ?? 0 }, { label: 'Fiches supprimées', value: data.deleted ?? 0 }] };
+                        }}
+                      />
+                    </div>
+                    <div className="relative h-full">
+                      <StepBadge n={3} />
+                      <UtilCard
+                        icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
+                        exportHref="/api/admin/export-operations?type=dedup-nl"
+                        label="Fusion doublons image"
+                        refreshOnDone
+                        idleDesc="Fusionne toutes les fiches avec la même image : Maxi Zoo BE/FR, versions NL/FR, même marchand x2. Offres déplacées vers la fiche la plus ancienne."
+                        onLaunch={async () => {
+                          const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-image' }) });
+                          const data = await r.json();
+                          if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
+                          return { result: data.deleted === 0 ? 'Aucun doublon image' : `${data.deleted} fiches fusionnées`, stats: [{ label: 'Paires', value: data.pairs ?? 0 }, { label: 'Orphelins NL', value: data.orphans ?? 0 }, { label: 'Offres dedoublonnees', value: data.offersDeduped ?? 0 }] };
+                        }}
+                      />
+                    </div>
+                    <div className="relative h-full">
+                      <StepBadge n={4} />
+                      <UtilCard
+                        icon={Sparkles} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
+                        exportHref="/api/admin/export-translations"
+                        label="Traduction EN/NL→FR (Haiku)"
+                        refreshOnDone
+                        idleDesc="Noms + descriptions sans traduction FR. Claude détecte la langue. Max 500 noms / 200 desc. par run."
+                        onLaunch={async () => {
+                          const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-sync-translate' }) });
+                          const data = await r.json();
+                          if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
+                          const done = (data.translatedNames ?? 0) + (data.translatedDescs ?? 0);
+                          const remN = data.remainingNames ?? 0;
+                          const remD = data.remainingDescs ?? 0;
+                          return {
+                            result: done === 0 ? (remN === 0 && remD === 0 ? 'Tout est traduit ✓' : 'Rien de nouveau') : `${done} traductions`,
+                            stats: [
+                              { label: 'Noms traduits', value: data.translatedNames ?? 0 },
+                              { label: 'Desc. traduites', value: data.translatedDescs ?? 0 },
+                              { label: 'Noms restants', value: remN, danger: true },
+                              { label: 'Desc. restantes', value: remD, danger: true },
+                            ],
+                          };
+                        }}
+                      />
+                    </div>
+                    <div className="relative h-full">
+                      <StepBadge n={5} />
+                      <UtilCard
+                        icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
+                        exportHref="/api/admin/export-operations?type=dedup"
+                        label="Fusion doublons titre"
+                        refreshOnDone
+                        idleDesc="Fusionne les fiches avec titre + marque + poids identiques"
+                        onLaunch={async () => {
+                          const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-title' }) });
+                          const data = await r.json();
+                          if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
+                          return { result: data.deleted === 0 ? 'Aucun doublon titre' : `${data.deleted} fiches fusionnées`, stats: [{ label: 'Groupes', value: data.groups ?? 0 }, { label: 'Fiches supprimées', value: data.deleted ?? 0 }] };
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1274,97 +1328,111 @@ export default function CronLauncher({ floating = false }: { floating?: boolean 
 
               {/* Boutique & Outils */}
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-widest mb-3 text-orange-700">
-                  Boutique & Outils
-                </h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-orange-700">Boutique & Outils</h3>
+                  <StepFlow />
+                </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                  <CatalogSyncCard />
+                  <div className="relative h-full"><StepBadge n={1} /><CatalogSyncCard /></div>
 
-                  <UtilCard
-                    icon={Sparkles} iconBg="bg-orange-100" iconColor="text-orange-600"
-                    accentColor="border-orange-200"
-                    exportHref="/api/admin/export-translations"
-                    label="Traduction EN→FR (Haiku)"
-                    idleDesc="Noms + descriptions sans traduction FR. Claude détecte la langue. Max 500 noms / 200 desc. par run."
-                    onLaunch={async () => {
-                      const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-sync-translate' }) });
-                      const data = await r.json();
-                      if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
-                      const done = (data.translatedNames ?? 0) + (data.translatedDescs ?? 0);
-                      const remN = data.remainingNames ?? 0;
-                      const remD = data.remainingDescs ?? 0;
-                      return {
-                        result: done === 0 ? (remN === 0 && remD === 0 ? 'Tout est traduit ✓' : 'Rien de nouveau') : `${done} traductions`,
-                        stats: [
-                          { label: 'Noms traduits',  value: data.translatedNames ?? 0 },
-                          { label: 'Desc. traduites', value: data.translatedDescs ?? 0 },
-                          { label: 'Noms restants',  value: remN },
-                          { label: 'Desc. restantes', value: remD },
-                        ],
-                      };
-                    }}
-                  />
+                  <div className="relative">
+                    <StepBadge n={2} />
+                    <UtilCard
+                      icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600"
+                      accentColor="border-orange-200"
+                      exportHref="/api/admin/export-operations?type=dedup"
+                      label="Fusion doublons EAN"
+                      idleDesc="Fusionne les fiches catalog avec le même EAN"
+                      onLaunch={async () => {
+                        const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-ean' }) });
+                        const data = await r.json();
+                        if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
+                        return {
+                          result: data.merged === 0 ? 'Aucun doublon EAN' : `${data.deleted} fiches fusionnées`,
+                          stats: [
+                            { label: 'Groupes EAN',       value: data.eanGroups ?? 0 },
+                            { label: 'Fiches supprimées', value: data.deleted    ?? 0 },
+                          ],
+                        };
+                      }}
+                    />
+                  </div>
 
-                  <UtilCard
-                    icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600"
-                    accentColor="border-orange-200"
-                    exportHref="/api/admin/export-operations?type=dedup"
-                    label="Fusion doublons EAN"
-                    idleDesc="Fusionne les fiches catalog avec le même EAN"
-                    onLaunch={async () => {
-                      const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-ean' }) });
-                      const data = await r.json();
-                      if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
-                      return {
-                        result: data.merged === 0 ? 'Aucun doublon EAN' : `${data.deleted} fiches fusionnées`,
-                        stats: [
-                          { label: 'Groupes EAN',       value: data.eanGroups ?? 0 },
-                          { label: 'Fiches supprimées', value: data.deleted    ?? 0 },
-                        ],
-                      };
-                    }}
-                  />
+                  <div className="relative">
+                    <StepBadge n={3} />
+                    <UtilCard
+                      icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600"
+                      accentColor="border-orange-200"
+                      exportHref="/api/admin/export-operations?type=dedup-nl"
+                      label="Fusion doublons image"
+                      idleDesc="Fusionne toutes les fiches avec la même image : Maxi Zoo BE/FR, NL/FR, même marchand x2. Offres déplacées vers la fiche la plus ancienne."
+                      onLaunch={async () => {
+                        const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-image' }) });
+                        const data = await r.json();
+                        if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
+                        return {
+                          result: data.deleted === 0 ? 'Aucun doublon image' : `${data.deleted} fiches fusionnées`,
+                          stats: [
+                            { label: 'Paires',              value: data.pairs        ?? 0 },
+                            { label: 'Orphelins NL',        value: data.orphans      ?? 0 },
+                            { label: 'Offres dedoublonnees', value: data.offersDeduped ?? 0 },
+                          ],
+                        };
+                      }}
+                    />
+                  </div>
 
-                  <UtilCard
-                    icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600"
-                    accentColor="border-orange-200"
-                    exportHref="/api/admin/export-operations?type=dedup"
-                    label="Fusion doublons Titre"
-                    idleDesc="Fusionne les fiches avec titre + marque + poids identiques"
-                    onLaunch={async () => {
-                      const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-title' }) });
-                      const data = await r.json();
-                      if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
-                      return {
-                        result: data.deleted === 0 ? 'Aucun doublon titre' : `${data.deleted} fiches fusionnées`,
-                        stats: [
-                          { label: 'Groupes détectés', value: data.groups  ?? 0 },
-                          { label: 'Fiches supprimées', value: data.deleted ?? 0 },
-                        ],
-                      };
-                    }}
-                  />
+                  <div className="relative">
+                    <StepBadge n={4} />
+                    <UtilCard
+                      icon={Sparkles} iconBg="bg-orange-100" iconColor="text-orange-600"
+                      accentColor="border-orange-200"
+                      exportHref="/api/admin/export-translations"
+                      label="Traduction EN/NL→FR (Haiku)"
+                      idleDesc="Noms + descriptions sans traduction FR. Claude détecte la langue. Max 500 noms / 200 desc. par run."
+                      onLaunch={async () => {
+                        const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-sync-translate' }) });
+                        const data = await r.json();
+                        if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
+                        const done = (data.translatedNames ?? 0) + (data.translatedDescs ?? 0);
+                        const remN = data.remainingNames ?? 0;
+                        const remD = data.remainingDescs ?? 0;
+                        return {
+                          result: done === 0 ? (remN === 0 && remD === 0 ? 'Tout est traduit ✓' : 'Rien de nouveau') : `${done} traductions`,
+                          stats: [
+                            { label: 'Noms traduits',  value: data.translatedNames ?? 0 },
+                            { label: 'Desc. traduites', value: data.translatedDescs ?? 0 },
+                            { label: 'Noms restants',  value: remN, danger: true },
+                            { label: 'Desc. restantes', value: remD, danger: true },
+                          ],
+                        };
+                      }}
+                    />
+                  </div>
 
-                  <UtilCard
-                    icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600"
-                    accentColor="border-orange-200"
-                    exportHref="/api/admin/export-operations?type=dedup-nl"
-                    label="Fusion doublons image"
-                    idleDesc="Fusionne toutes les fiches avec la même image : Maxi Zoo BE/FR, NL/FR, même marchand x2. Offres déplacées vers la fiche la plus ancienne."
-                    onLaunch={async () => {
-                      const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-image' }) });
-                      const data = await r.json();
-                      if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
-                      return {
-                        result: data.deleted === 0 ? 'Aucun doublon image' : `${data.deleted} fiches fusionnées`,
-                        stats: [
-                          { label: 'Paires',              value: data.pairs        ?? 0 },
-                          { label: 'Orphelins NL',        value: data.orphans      ?? 0 },
-                          { label: 'Offres dedoublonnees', value: data.offersDeduped ?? 0 },
-                        ],
-                      };
-                    }}
-                  />
+                  <div className="relative">
+                    <StepBadge n={5} />
+                    <UtilCard
+                      icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600"
+                      accentColor="border-orange-200"
+                      exportHref="/api/admin/export-operations?type=dedup"
+                      label="Fusion doublons Titre"
+                      refreshOnDone
+                      idleDesc="Fusionne les fiches avec titre + marque + poids identiques"
+                      onLaunch={async () => {
+                        const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-title' }) });
+                        const data = await r.json();
+                        if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
+                        return {
+                          result: data.deleted === 0 ? 'Aucun doublon titre' : `${data.deleted} fiches fusionnées`,
+                          stats: [
+                            { label: 'Groupes détectés', value: data.groups  ?? 0 },
+                            { label: 'Fiches supprimées', value: data.deleted ?? 0 },
+                          ],
+                        };
+                      }}
+                    />
+                  </div>
 
                 </div>
               </div>
