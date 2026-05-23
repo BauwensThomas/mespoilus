@@ -1,7 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { sendEmail } from '@/lib/resend';
-import { cronEmailWrapper, statsRow } from '@/lib/cron-email';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -167,23 +165,6 @@ export async function GET(req: Request) {
     details: lastError ? { error: lastError } : { pairs: pairs.length, orphans: totalOrphanDeleted },
     status: lastError ? 'error' : 'success',
   });
-
-  try {
-    await sendEmail({
-      to: 'contact@mespoilus.com',
-      subject: `[Mes Poilus] Fusion doublons Image — ${totalDeleted} fiche${totalDeleted > 1 ? 's' : ''} NL supprimée${totalDeleted > 1 ? 's' : ''}`,
-      html: cronEmailWrapper(
-        'Fusion doublons Image (NL→FR) terminée',
-        'Catalogue · Boutique',
-        statsRow([
-          { label: 'Paires NL/FR fusionnées',  value: pairs.length,         color: '#f97316' },
-          { label: 'Orphelines NL supprimées', value: totalOrphanDeleted,   color: '#dc2626' },
-          { label: 'Total supprimées',         value: totalDeleted,         color: '#7c3aed' },
-        ]) + (lastError ? `<p style="color:#dc2626;font-size:13px;margin-top:12px">⚠ Erreur : ${lastError}</p>` : '')
-          + (totalDeleted === 0 ? '<p style="color:#6b7280;font-size:14px">Aucune fiche NL détectée.</p>' : ''),
-      ),
-    });
-  } catch (e) { console.error('[dedup-image] email erreur:', e); }
 
   return NextResponse.json({
     success: !lastError,

@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createAdminClient } from '@/lib/supabase/server';
-import { sendEmail } from '@/lib/resend';
-import { cronEmailWrapper, statsRow, errorBlock } from '@/lib/cron-email';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -107,30 +105,6 @@ Retourne UNIQUEMENT ce JSON valide, sans markdown ni explication :
   const status = errors.length === 0 ? 'success' : 'error';
 
   await logActivity(status, duration, { results, errors }, totalTokens);
-
-  try {
-    const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-    const totalNames = Object.values(results).reduce((s, n) => s + n, 0);
-    const resultsHtml = Object.entries(results)
-      .map(([animal, count]) => `<p style="margin:3px 0;font-size:13px">• <strong>${animal}</strong> : ${count} prenoms</p>`)
-      .join('');
-    const body = statsRow([
-      { label: 'Prenoms total', value: totalNames, color: '#8b5cf6' },
-      { label: 'Animaux', value: Object.keys(results).length },
-      { label: 'Tokens', value: totalTokens.toLocaleString('fr-FR'), color: '#6b7280' },
-    ]) +
-    `<div style="margin-bottom:16px">${resultsHtml}</div>` +
-    errorBlock(errors);
-
-    await sendEmail({
-      to: 'contact@mespoilus.com',
-      subject: `[Mes Poilus] Prenoms generes - ${totalNames} prenoms`,
-      html: cronEmailWrapper(`Prenoms animaux - ${date}`, 'Pipeline Prenoms Thomas', body),
-    });
-    console.log('[Cron Prenoms] Email notification envoyee');
-  } catch (emailErr) {
-    console.error('[Cron Prenoms] Email erreur:', emailErr instanceof Error ? emailErr.message : emailErr);
-  }
 
   return NextResponse.json({ success: status === 'success', duration_ms: duration, results, errors, tokens_used: totalTokens });
 }

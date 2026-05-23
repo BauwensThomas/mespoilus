@@ -1,7 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { sendEmail } from '@/lib/resend';
-import { cronEmailWrapper, statsRow } from '@/lib/cron-email';
 
 export const maxDuration = 300;
 
@@ -256,25 +254,6 @@ export async function GET(req: Request) {
     details: lastError ? { error: lastError } : {},
     status: lastError ? 'error' : 'success',
   });
-
-  try {
-    await sendEmail({
-      to: 'contact@mespoilus.com',
-      subject: `[Mes Poilus] Traduction EN→FR — ${translatedNames + translatedDescs} traduction${translatedNames + translatedDescs > 1 ? 's' : ''}`,
-      html: cronEmailWrapper(
-        'Traduction EN→FR terminée',
-        'Catalogue · Boutique',
-        statsRow([
-          { label: 'Noms traduits',      value: translatedNames,                           color: '#0d9488' },
-          { label: 'Desc. traduites',    value: translatedDescs,                           color: '#0d9488' },
-          { label: 'Sibling FR copié',   value: copiedDescs,                               color: '#0284c7' },
-          { label: 'Déjà FR (ignorées)', value: alreadyFrDesc,                             color: '#6b7280' },
-        ]) + (lastError ? `<p style="color:#dc2626;font-size:13px;margin-top:12px">⚠ Erreur : ${lastError}</p>` : ''),
-      ),
-    });
-  } catch (e) {
-    console.error('[translate] email erreur:', e);
-  }
 
   return NextResponse.json({
     success: !lastError,
