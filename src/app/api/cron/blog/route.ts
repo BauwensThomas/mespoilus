@@ -8,7 +8,7 @@ import { getGscInsights, formatGscForLucas } from '@/lib/gsc';
 import { getDailyTrends, formatTrendsForLucas, getAnimalSuggestions, formatSuggestionsForLucas, type TrendingItem } from '@/lib/trends';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const ANIMAL_CATEGORIES = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'];
 

@@ -809,7 +809,7 @@ function CatalogSyncCard() {
 
 // ─── UtilCard (panels génériques) ────────────────────────────────────────────
 
-interface StatRow { label: string; value: string | number }
+interface StatRow { label: string; value: string | number; danger?: boolean }
 
 interface UtilCardProps {
   icon: typeof Sparkles;
@@ -899,12 +899,15 @@ function UtilCard({ icon: Icon, iconBg, iconColor, accentColor, label, idleDesc,
           </div>
           {stats.length > 0 && (
             <div className="grid grid-cols-2 gap-1 mt-1">
-              {stats.map((s, i) => (
-                <div key={i} className="bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5 flex items-center justify-between gap-2">
-                  <span className="text-xs text-gray-500 truncate">{s.label}</span>
-                  <span className="text-xs font-semibold text-emerald-700 flex-shrink-0">{s.value}</span>
-                </div>
-              ))}
+              {stats.map((s, i) => {
+                const isRed = s.danger && Number(s.value) > 0;
+                return (
+                  <div key={i} className={clsx('border rounded-lg px-2.5 py-1.5 flex items-center justify-between gap-2', isRed ? 'bg-red-50 border-red-100' : 'bg-emerald-50 border-emerald-100')}>
+                    <span className="text-xs text-gray-500 truncate">{s.label}</span>
+                    <span className={clsx('text-xs font-semibold flex-shrink-0', isRed ? 'text-red-600' : 'text-emerald-700')}>{s.value}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -932,14 +935,14 @@ function UtilCard({ icon: Icon, iconBg, iconColor, accentColor, label, idleDesc,
 
 // ─── CronLauncher principal ───────────────────────────────────────────────────
 
-export default function CronLauncher() {
+export default function CronLauncher({ floating = false }: { floating?: boolean }) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const [dropStyle, setDropStyle] = useState<{ top: number; right: number }>({ top: 0, right: 16 });
   const { getState, run, reset } = useCronRunner();
 
   const handleOpen = () => {
-    if (triggerRef.current) {
+    if (!floating && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       setDropStyle({
         top: rect.bottom + 8,
@@ -954,6 +957,193 @@ export default function CronLauncher() {
     { id: 'Données',     label: 'Données',          color: 'text-teal-700'   },
     { id: 'Maintenance', label: 'Opérations & Maintenance', color: 'text-gray-700'   },
   ];
+
+  if (floating) {
+    return (
+      <>
+        {/* Tab vertical collé à droite */}
+        <button
+          onClick={() => setOpen(v => !v)}
+          className="fixed right-0 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-1.5 px-2 py-4 bg-orange-600 hover:bg-orange-500 text-white shadow-lg transition-colors rounded-l-xl"
+          title="Lancer un cron"
+        >
+          <Rocket size={16} strokeWidth={1.5} />
+          <span className="text-[10px] font-bold tracking-widest uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>
+            Crons
+          </span>
+        </button>
+
+        {open && (
+          <>
+            <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setOpen(false)} />
+            <div
+              className="fixed right-0 top-0 z-50 h-full bg-white shadow-2xl border-l border-gray-100 flex flex-col"
+              style={{ width: 'min(calc(100vw - 48px), 780px)' }}
+              role="dialog"
+              aria-modal="true"
+            >
+              {/* Header drawer */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center">
+                    <Rocket size={18} strokeWidth={1.5} className="text-orange-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-gray-900">Pipelines manuels</h2>
+                    <p className="text-xs text-gray-500">Déclenche un pipeline immédiatement</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <X size={16} strokeWidth={2} />
+                </button>
+              </div>
+              {/* Body scrollable */}
+              <div className="px-6 py-5 space-y-6 overflow-y-auto flex-1">
+                {groups.map(group => {
+                  const cronItems = CRONS.filter(c => c.group === group.id);
+                  return (
+                    <div key={group.id}>
+                      <h3 className={clsx('text-xs font-bold uppercase tracking-widest mb-3', group.color)}>
+                        {group.label}
+                      </h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        {cronItems.map(cron => (
+                          <CronCard
+                            key={cron.id}
+                            cron={cron}
+                            state={getState(cron.id)}
+                            run={run}
+                            onReset={() => reset(cron.id)}
+                            exportHref={
+                              cron.id === 'prenoms' ? '/api/admin/export-prenoms' :
+                              cron.id === 'breeds'  ? '/api/admin/export-breeds'  :
+                              undefined
+                            }
+                          />
+                        ))}
+                        {group.id === 'Contenu' && (
+                          <div className="bg-white border-2 border-purple-200 rounded-2xl p-5 flex flex-col gap-3">
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                <MessageSquare size={20} strokeWidth={1.5} className="text-purple-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-gray-900 text-sm">Support client</p>
+                                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                                  Léa répond à la demande depuis sa page agent - pas de cron dédié.
+                                </p>
+                              </div>
+                            </div>
+                            <div className="mt-auto px-3 py-2 bg-purple-50 rounded-xl border border-purple-100 text-xs text-purple-700 font-medium text-center">
+                              Géré en temps réel · Page agent Léa
+                            </div>
+                          </div>
+                        )}
+                        {group.id === 'Maintenance' && (
+                          <UtilCard
+                            icon={ImageIcon} iconBg="bg-slate-100" iconColor="text-slate-600"
+                            accentColor="border-slate-200"
+                            label="Compression images hero"
+                            idleDesc="Sharp · max 1200px · JPEG 80% · Relancer après ajout de photos"
+                            exportHref="/api/admin/export-operations?type=compression"
+                            onLaunch={async () => {
+                              const r = await fetch('/api/admin/compress-hero-images');
+                              const data = await r.json();
+                              if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
+                              return {
+                                result: `${data.compressed} image${data.compressed !== 1 ? 's' : ''} compressée${data.compressed !== 1 ? 's' : ''}`,
+                                stats: [
+                                  { label: 'Compressées', value: `${data.compressed}/${data.total}` },
+                                  { label: 'Espace gagné', value: data.saved ?? '-' },
+                                ],
+                              };
+                            }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest mb-3 text-orange-700">Boutique & Outils</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <CatalogSyncCard />
+                    <UtilCard
+                      icon={Sparkles} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
+                      exportHref="/api/admin/export-translations"
+                      label="Traduction EN/NL->FR (Haiku)"
+                      idleDesc="Noms + descriptions sans traduction FR. Claude détecte la langue. Max 500 noms / 80 desc. par run."
+                      onLaunch={async () => {
+                        const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-sync-translate' }) });
+                        const data = await r.json();
+                        if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
+                        const done = (data.translatedNames ?? 0) + (data.translatedDescs ?? 0);
+                        const remN = data.remainingNames ?? 0;
+                        const remD = data.remainingDescs ?? 0;
+                        return {
+                          result: done === 0 ? (remN === 0 && remD === 0 ? 'Tout est traduit ✓' : 'Rien de nouveau') : `${done} traductions`,
+                          stats: [
+                            { label: 'Noms traduits', value: data.translatedNames ?? 0 },
+                            { label: 'Desc. traduites', value: data.translatedDescs ?? 0 },
+                            { label: 'Noms restants', value: remN, danger: true },
+                            { label: 'Desc. restantes', value: remD, danger: true },
+                          ],
+                        };
+                      }}
+                    />
+                    <UtilCard
+                      icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
+                      exportHref="/api/admin/export-operations?type=dedup"
+                      label="Fusion doublons EAN"
+                      idleDesc="Fusionne les fiches catalog avec le même EAN"
+                      onLaunch={async () => {
+                        const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-ean' }) });
+                        const data = await r.json();
+                        if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
+                        return { result: data.merged === 0 ? 'Aucun doublon EAN' : `${data.deleted} fiches fusionnées`, stats: [{ label: 'Groupes EAN', value: data.eanGroups ?? 0 }, { label: 'Fiches supprimées', value: data.deleted ?? 0 }] };
+                      }}
+                    />
+                    <UtilCard
+                      icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
+                      exportHref="/api/admin/export-operations?type=dedup"
+                      label="Fusion doublons titre"
+                      idleDesc="Fusionne les fiches avec titre + marque + poids identiques"
+                      onLaunch={async () => {
+                        const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-title' }) });
+                        const data = await r.json();
+                        if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
+                        return { result: data.deleted === 0 ? 'Aucun doublon titre' : `${data.deleted} fiches fusionnées`, stats: [{ label: 'Groupes', value: data.groups ?? 0 }, { label: 'Fiches supprimées', value: data.deleted ?? 0 }] };
+                      }}
+                    />
+                    <UtilCard
+                      icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600" accentColor="border-orange-200"
+                      exportHref="/api/admin/export-operations?type=dedup-nl"
+                      label="Fusion doublons image"
+                      idleDesc="Fusionne toutes les fiches avec la même image : Maxi Zoo BE/FR, versions NL/FR, même marchand x2. Offres déplacées vers la fiche la plus ancienne."
+                      onLaunch={async () => {
+                        const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-image' }) });
+                        const data = await r.json();
+                        if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
+                        return { result: data.deleted === 0 ? 'Aucun doublon image' : `${data.deleted} fiches fusionnées`, stats: [{ label: 'Paires', value: data.pairs ?? 0 }, { label: 'Orphelins NL', value: data.orphans ?? 0 }, { label: 'Offres dedoublonnees', value: data.offersDeduped ?? 0 }] };
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              {/* Footer */}
+              <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex items-center gap-2 flex-shrink-0">
+                <Rocket size={13} strokeWidth={1.5} className="text-gray-400 flex-shrink-0" />
+                <p className="text-xs text-gray-500">Les pipelines s'exécutent immédiatement - surveille les logs pour suivre la progression.</p>
+              </div>
+            </div>
+          </>
+        )}
+      </>
+    );
+  }
 
   return (
     <>
@@ -1094,16 +1284,21 @@ export default function CronLauncher() {
                     accentColor="border-orange-200"
                     exportHref="/api/admin/export-translations"
                     label="Traduction EN→FR (Haiku)"
-                    idleDesc="Tous les produits sans name_fr - Claude détecte la langue et traduit uniquement si le nom est EN ou NL (les marques anglaises dans un nom FR sont ignorées). Max 500/run."
+                    idleDesc="Noms + descriptions sans traduction FR. Claude détecte la langue. Max 500 noms / 80 desc. par run."
                     onLaunch={async () => {
                       const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-sync-translate' }) });
                       const data = await r.json();
                       if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
+                      const done = (data.translatedNames ?? 0) + (data.translatedDescs ?? 0);
+                      const remN = data.remainingNames ?? 0;
+                      const remD = data.remainingDescs ?? 0;
                       return {
-                        result: `${(data.translatedNames ?? 0) + (data.translatedDescs ?? 0)} traductions`,
+                        result: done === 0 ? (remN === 0 && remD === 0 ? 'Tout est traduit ✓' : 'Rien de nouveau') : `${done} traductions`,
                         stats: [
                           { label: 'Noms traduits',  value: data.translatedNames ?? 0 },
-                          { label: 'Descriptions',   value: data.translatedDescs  ?? 0 },
+                          { label: 'Desc. traduites', value: data.translatedDescs ?? 0 },
+                          { label: 'Noms restants',  value: remN },
+                          { label: 'Desc. restantes', value: remD },
                         ],
                       };
                     }}
@@ -1153,17 +1348,18 @@ export default function CronLauncher() {
                     icon={Tag} iconBg="bg-orange-100" iconColor="text-orange-600"
                     accentColor="border-orange-200"
                     exportHref="/api/admin/export-operations?type=dedup-nl"
-                    label="Fusion doublons NL/FR"
-                    idleDesc="Supprime les versions néerlandaises (voerbak, drinkbak…) en dupliquant les offres sur la fiche française - matching par image URL."
+                    label="Fusion doublons image"
+                    idleDesc="Fusionne toutes les fiches avec la même image : Maxi Zoo BE/FR, NL/FR, même marchand x2. Offres déplacées vers la fiche la plus ancienne."
                     onLaunch={async () => {
                       const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-image' }) });
                       const data = await r.json();
                       if (!r.ok || data.error) throw new Error(data.error ?? `Erreur ${r.status}`);
                       return {
-                        result: data.deleted === 0 ? 'Aucun doublon NL/FR' : `${data.deleted} fiches NL fusionnées`,
+                        result: data.deleted === 0 ? 'Aucun doublon image' : `${data.deleted} fiches fusionnées`,
                         stats: [
-                          { label: 'Paires détectées',  value: data.pairs   ?? 0 },
-                          { label: 'Fiches supprimées', value: data.deleted ?? 0 },
+                          { label: 'Paires',              value: data.pairs        ?? 0 },
+                          { label: 'Orphelins NL',        value: data.orphans      ?? 0 },
+                          { label: 'Offres dedoublonnees', value: data.offersDeduped ?? 0 },
                         ],
                       };
                     }}

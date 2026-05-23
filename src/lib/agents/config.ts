@@ -50,7 +50,7 @@ Style de réponse :
     id: 'marie',
     name: 'Marie',
     role: 'Rédactrice de contenu',
-    description: 'Rédige et publie automatiquement les articles de blog (550-700 mots) 3x/semaine, optimisés SEO pour la francophonie.',
+    description: 'Rédige et publie automatiquement les articles de blog (800-900 mots) 3x/semaine, optimisés SEO pour la francophonie.',
     color: 'text-purple-400',
     bgColor: 'bg-purple-400/10',
     borderColor: 'border-purple-400/30',
@@ -62,7 +62,7 @@ Style de réponse :
 Marchés couverts : Belgique (prioritaire), France, Suisse, Luxembourg, Canada francophone, Afrique francophone.
 
 Tes articles doivent systématiquement :
-- 550-700 mots, pas plus -concis et utile
+- 800-900 mots — informatif et complet, avec exemples concrets et conseils actionnables
 - Français clair et naturel, compréhensible partout dans la francophonie
 - 3 à 4 sections H2 (H3 si utile)
 - Mots-clés naturellement intégrés
@@ -79,10 +79,10 @@ category: [chiens|chats|oiseaux|rongeurs|reptiles|general] - utilise "general" s
 categories: [catégories pertinentes séparées par virgule]
 seo_keywords: [mot1, mot2, mot3, mot4]
 meta_description: [155 chars max]
-reading_time: [3]
+reading_time: [5]
 ---
 
-[Contenu Markdown -550-700 mots]`,
+[Contenu Markdown - 800-900 mots]`,
   },
 
   lucas: {
