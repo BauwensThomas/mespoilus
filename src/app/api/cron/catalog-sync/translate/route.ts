@@ -36,9 +36,12 @@ async function translateBatch(names: string[]): Promise<string[]> {
     max_tokens: 2048,
     messages: [{
       role: 'user',
-      content: `Tu es un expert en produits pour animaux de compagnie. Pour chaque nom de produit ci-dessous, applique ces règles :
-- Si le nom est DÉJÀ en français (même s'il contient des mots anglais qui sont des noms de marque, de gamme ou du vocabulaire technique international comme "Adult", "Senior", "Indoor", "Outdoor", "Premium"), retourne-le IDENTIQUE, sans le modifier.
-- Si le nom est principalement en anglais ou en néerlandais (la majorité des mots descriptifs sont EN ou NL), traduis-le en français naturel. Garde les noms de marques et les chiffres tels quels.
+      content: `Tu es un expert en traduction de produits pour animaux de compagnie EN/NL → FR.
+
+Règles STRICTES :
+- Traduis TOUS les mots descriptifs anglais ou néerlandais en français, y compris : Adult→Adulte, Indoor→Intérieur, Outdoor→Extérieur, Senior→Senior, Kitten→Chaton, Puppy→Chiot, Chicken→Poulet, Salmon→Saumon, Beef→Bœuf, Turkey→Dinde, Lamb→Agneau, Fish→Poisson, Dry→Sec, Wet→Humide, Fresh→Frais, Light→Light, Sterilised→Stérilisé, Grain Free→Sans céréales, etc.
+- Garde UNIQUEMENT les noms de marques propres SANS les traduire (Royal Canin, Purina, Whiskas, Hills, Orijen, Acana, Zooplus, Maxi Zoo, etc.) et les chiffres/quantités tels quels.
+- Ne retourne le nom IDENTIQUE que si les mots descriptifs sont DÉJÀ en français.
 Réponds UNIQUEMENT avec les résultats, un par ligne, dans le même ordre. Pas d'explication, pas de numéro, pas de guillemets.\n\n${names.join('\n')}`,
     }],
   });
