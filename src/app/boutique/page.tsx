@@ -88,7 +88,7 @@ async function getCatalogItems(params: {
     const { data, count, error } = await q;
     if (error || !data) return { items: [], total: 0 };
 
-    const ids = data.map(r => r.catalog_id as string);
+    const ids = (data as { catalog_id: string }[]).map(r => r.catalog_id);
 
     const [countsRes, nameFrRes] = await Promise.all([
       supabase.rpc('get_offer_counts', { catalog_ids: ids }),
@@ -102,7 +102,7 @@ async function getCatalogItems(params: {
     );
 
     return {
-      items: data.map(r => ({
+      items: (data as { catalog_id: string; name: string; image_url: string | null; brand: string | null; category: string; weight_g: number | null; price: number; currency: string | null; merchant_name: string; country: string | null; affiliate_url: string }[]).map(r => ({
         catalog_id:   r.catalog_id as string,
         name:         r.name as string,
         name_fr:      nameFrMap.get(r.catalog_id as string) ?? null,
