@@ -8,7 +8,7 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Fiches races animaux - Caractère, Santé, Entretien | Mes Poilus',
-  description: 'Découvrez nos fiches races détaillées : chiens, chats, oiseaux, rongeurs et reptiles. Caractère, santé, entretien — tout ce qu\'il faut savoir avant d\'adopter.',
+  description: 'Découvrez nos fiches races détaillées : chiens, chats, oiseaux, rongeurs et reptiles. Caractère, santé, entretien - tout ce qu\'il faut savoir avant d\'adopter.',
 };
 
 const ANIMALS: AnimalType[] = ['chien', 'chat', 'oiseau', 'rongeur', 'reptile'];

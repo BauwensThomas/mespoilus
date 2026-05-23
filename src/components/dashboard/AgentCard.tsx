@@ -109,7 +109,7 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
           />
           <Stat
             label="Score"
-            value={score !== null ? `${score.toFixed(0)}%` : '—'}
+            value={score !== null ? `${score.toFixed(0)}%` : '-'}
             highlight={score !== null && score >= 80}
           />
         </div>

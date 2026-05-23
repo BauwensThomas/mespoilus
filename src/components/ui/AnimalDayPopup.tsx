@@ -72,7 +72,7 @@ export default function AnimalDayPopup() {
           onClick={close}
           className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm px-6 py-3 rounded-xl transition-colors"
         >
-          <span>Faites un cadeau a votre animal</span>
+          <span>Faites un cadeau à votre animal</span>
         </Link>
 
         <button

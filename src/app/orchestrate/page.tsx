@@ -102,7 +102,7 @@ export default function OrchestratePage() {
         <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
           <Rocket size={16} strokeWidth={1.5} className="text-emerald-600" />
           <p className="text-emerald-700 text-xs">
-            Pipeline réel — les articles sont publiés sur le blog, les posts envoyés sur Facebook.
+            Pipeline réel - les articles sont publiés sur le blog, les posts envoyés sur Facebook.
           </p>
         </div>
       </div>
@@ -120,7 +120,7 @@ export default function OrchestratePage() {
         {/* Zone image optionnelle */}
         <div>
           <p className="text-xs font-medium text-gray-600 mb-2">
-            Image (optionnel) — utilisée par Emma pour le post social
+            Image (optionnel) - utilisée par Emma pour le post social
           </p>
           {overrideImageUrl ? (
             <div className="relative inline-block">

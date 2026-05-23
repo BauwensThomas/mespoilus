@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Quiz — Quel animal vous correspond ? | Mes Poilus",
+  title: "Quiz - Quel animal vous correspond ? | Mes Poilus",
   description: "Répondez à notre quiz pour découvrir quel animal de compagnie correspond le mieux à votre mode de vie : chien, chat, lapin, oiseau ou rongeur.",
   openGraph: {
     title: "Quiz : quel animal vous correspond ? | Mes Poilus",

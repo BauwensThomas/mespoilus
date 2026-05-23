@@ -36,7 +36,7 @@ export async function getDailyTrends(): Promise<TrendingItem[]> {
   } catch { return []; }
 }
 
-// ── Google Autocomplete — suggestions en temps réel par animal ───────────────
+// ── Google Autocomplete - suggestions en temps réel par animal ───────────────
 
 const ANIMAL_SEEDS: Record<string, string[]> = {
   chiens:   ['chien ', 'mon chien ', 'pourquoi mon chien '],

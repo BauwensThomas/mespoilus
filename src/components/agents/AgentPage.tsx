@@ -287,7 +287,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
             <div className="flex-1">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className={clsx('text-2xl font-bold', agent.color)}>{agent.name}</h1>
-                <span className="text-gray-400">—</span>
+                <span className="text-gray-400">-</span>
                 <span className="text-gray-700 text-base">{agent.role}</span>
                 <div className="flex items-center gap-1.5 ml-auto">
                   <div className="status-dot-online" />

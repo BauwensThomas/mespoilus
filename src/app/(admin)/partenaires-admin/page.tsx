@@ -231,7 +231,7 @@ export default function PartenairesAdminPage() {
       setForm(f => ({ ...f, logo_url: data.url }));
       setLocalPreview(null);
     } else {
-      setUploadError(data.error ?? 'Erreur upload — vérifie que le bucket "partner-logos" existe dans Supabase Storage (public)');
+      setUploadError(data.error ?? 'Erreur upload - vérifie que le bucket "partner-logos" existe dans Supabase Storage (public)');
     }
   }
 
@@ -252,7 +252,7 @@ export default function PartenairesAdminPage() {
         return { ...f, logo_urls: urls };
       });
     } else {
-      setUploadError(data.error ?? 'Erreur upload — vérifie que le bucket "partner-logos" existe dans Supabase Storage (public)');
+      setUploadError(data.error ?? 'Erreur upload - vérifie que le bucket "partner-logos" existe dans Supabase Storage (public)');
     }
   }
 
@@ -450,7 +450,7 @@ export default function PartenairesAdminPage() {
           {/* Images (mode image) ou Logo/Emoji (carte standard) */}
           {isImageMode ? (
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-2 block">Images (cycle auto toutes les 15s — max 5)</label>
+              <label className="text-xs font-medium text-gray-700 mb-2 block">Images (cycle auto toutes les 15s - max 5)</label>
               <div className="space-y-2">
                 {form.logo_urls.map((url, i) => (
                   <div key={i} className="flex items-center gap-2">
@@ -570,7 +570,7 @@ export default function PartenairesAdminPage() {
             </div>
           )}
 
-          {/* Description + Pour — carte standard */}
+          {/* Description + Pour - carte standard */}
           {!isImageMode && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
@@ -636,7 +636,7 @@ export default function PartenairesAdminPage() {
 
             {form.in_bandeau && (
               <div className="space-y-3">
-                {/* Champs bandeau — uniquement en mode image (en mode carte ils sont déjà remplis au-dessus) */}
+                {/* Champs bandeau - uniquement en mode image (en mode carte ils sont déjà remplis au-dessus) */}
                 {isImageMode && (
                   <div className="space-y-3 bg-gray-50 rounded-lg p-3">
                     <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Contenu du bandeau</p>
@@ -712,7 +712,7 @@ export default function PartenairesAdminPage() {
           </div>
         </div>
 
-        {/* Colonne aperçu — sticky à droite */}
+        {/* Colonne aperçu - sticky à droite */}
         <div className="sticky top-6 w-72 flex-shrink-0">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Aperçu carte</p>
           {isImageMode ? (

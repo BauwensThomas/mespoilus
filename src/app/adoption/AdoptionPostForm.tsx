@@ -27,7 +27,7 @@ const COUNTRIES = [
   'Autre',
 ];
 
-// Flag emoji + dial code — sorted with BE first, then alphabetically
+// Flag emoji + dial code - sorted with BE first, then alphabetically
 const PHONE_CODES = [
   { flag: '🇧🇪', code: '+32',  name: 'Belgique'                  },
   { flag: '🇫🇷', code: '+33',  name: 'France'                    },
@@ -459,7 +459,7 @@ export default function AdoptionPostForm() {
         </div>
       </div>
 
-      {/* Animal — 3 colonnes */}
+      {/* Animal - 3 colonnes */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-xs text-gray-800 mb-1.5 font-medium">Type d'animal *</label>
@@ -496,7 +496,7 @@ export default function AdoptionPostForm() {
         </div>
       </div>
 
-      {/* Localisation + sexe — 3 colonnes */}
+      {/* Localisation + sexe - 3 colonnes */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-xs text-gray-800 mb-1.5 font-medium">Sexe</label>

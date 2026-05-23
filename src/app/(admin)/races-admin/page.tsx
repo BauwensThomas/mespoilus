@@ -620,7 +620,7 @@ export default function AdminRacesPage() {
                               ] as [keyof BreedContent, string][]).map(([field, label]) => (
                                 <div key={field} className="bg-white border border-gray-200 rounded-lg p-3">
                                   <p className="text-[10px] font-bold text-gray-800 uppercase tracking-wider mb-1">{label}</p>
-                                  <p className="text-[11px] text-gray-600 leading-relaxed">{(contentDraft[field] as string) || '—'}</p>
+                                  <p className="text-[11px] text-gray-600 leading-relaxed">{(contentDraft[field] as string) || '-'}</p>
                                 </div>
                               ))}
                             </div>
@@ -673,7 +673,7 @@ export default function AdminRacesPage() {
                           <>
                             <Upload size={20} strokeWidth={1.5} className="text-gray-400 mx-auto mb-1" />
                             <p className="text-xs text-gray-500">Cliquez pour choisir une image</p>
-                            <p className="text-[10px] text-gray-400 mt-0.5">JPG, PNG, WEBP — stocké dans Supabase</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5">JPG, PNG, WEBP - stocké dans Supabase</p>
                           </>
                         )}
                         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />

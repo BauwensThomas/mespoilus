@@ -62,7 +62,7 @@ export default function CookiesPage() {
               <div className="bg-gray-100 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
-                  <h3 className="font-medium text-gray-900">Cookies publicitaires — Google AdSense</h3>
+                  <h3 className="font-medium text-gray-900">Cookies publicitaires - Google AdSense</h3>
                   <span className="ml-auto text-xs bg-orange-400/10 text-orange-500 border border-orange-400/20 px-2 py-0.5 rounded-full">Avec consentement</span>
                 </div>
                 <p className="text-gray-600 mb-3">Permettent l'affichage de publicités personnalisées via Google AdSense. Ces cookies ne sont déposés qu'avec votre accord.</p>
@@ -78,7 +78,7 @@ export default function CookiesPage() {
               <div className="bg-gray-100 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
-                  <h3 className="font-medium text-gray-900">Cookies marketing — Pinterest</h3>
+                  <h3 className="font-medium text-gray-900">Cookies marketing - Pinterest</h3>
                   <span className="ml-auto text-xs bg-red-400/10 text-red-500 border border-red-400/20 px-2 py-0.5 rounded-full">Avec consentement</span>
                 </div>
                 <p className="text-gray-600 mb-3">Permettent le suivi des visites provenant de Pinterest et la mesure des performances de nos contenus sur ce réseau. Ces cookies ne sont déposés qu'avec votre accord.</p>

@@ -37,7 +37,7 @@ async function getImageUrl(): Promise<string | null> {
 
   const candidateUrl = rows?.[0]?.image_url ?? null;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-  // N'utiliser que les URLs Supabase Storage — les URLs CDN externes (Awin, etc.) sont rejetées par Instagram
+  // N'utiliser que les URLs Supabase Storage - les URLs CDN externes (Awin, etc.) sont rejetées par Instagram
   if (candidateUrl && supabaseUrl && candidateUrl.startsWith(supabaseUrl)) {
     console.log('[save-post] image article récent (Supabase):', candidateUrl.slice(0, 60));
     return candidateUrl;

@@ -97,11 +97,11 @@ export default function CatalogCard({
               <span className="text-xs text-gray-400 whitespace-nowrap">(≈{eurPrice} €)</span>
             )}
           </div>
-          {/* Bouton visuel — la navigation est assurée par le <Link> overlay */}
+          {/* Bouton visuel - la navigation est assurée par le <Link> overlay */}
           <div className="w-full text-sm font-semibold py-2 rounded-lg bg-orange-600 group-hover:bg-orange-500 text-white transition-colors flex items-center justify-center gap-1.5">
             Voir <ExternalLink size={13} strokeWidth={1.5} />
           </div>
-          {/* Marchand + badge offres — hauteur fixe pour aligner toutes les cartes */}
+          {/* Marchand + badge offres - hauteur fixe pour aligner toutes les cartes */}
           <div className="flex items-center gap-2 min-h-[1.25rem]">
             <p className="text-xs text-gray-500 truncate flex-1 min-w-0">{merchantName}</p>
             {extraOffers > 0 && (

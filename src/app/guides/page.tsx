@@ -6,13 +6,13 @@ import type { PdfGuide } from '@/lib/guides';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Guides & Checklists gratuits — Mes Poilus',
+  title: 'Guides & Checklists gratuits - Mes Poilus',
   description:
     'Téléchargez nos guides PDF gratuits sur les animaux de compagnie : chiens, chats, rongeurs, oiseaux, reptiles. Entrez simplement votre email.',
   robots: { index: true, follow: true },
   alternates: { canonical: '/guides' },
   openGraph: {
-    title: 'Guides & Checklists PDF gratuits — Mes Poilus',
+    title: 'Guides & Checklists PDF gratuits - Mes Poilus',
     description:
       'Guides pratiques en PDF pour bien s\'occuper de votre animal : adoption, alimentation, soins, sécurité.',
     type: 'website',
@@ -51,7 +51,7 @@ export default async function GuidesPage() {
             Guides &amp; Checklists gratuits
           </h1>
           <p className="text-gray-500 text-base max-w-xl mx-auto">
-            Téléchargez nos guides PDF gratuits — entrez simplement votre email
+            Téléchargez nos guides PDF gratuits - entrez simplement votre email
           </p>
         </div>
 

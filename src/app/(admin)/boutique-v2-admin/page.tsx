@@ -208,7 +208,7 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
             </div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
               <ShoppingBag size={22} className="text-orange-500" />
-              Boutique V2 — Catalogue
+              Boutique V2 - Catalogue
             </h1>
           </div>
           <Link

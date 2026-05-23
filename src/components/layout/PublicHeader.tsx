@@ -40,7 +40,7 @@ export default function PublicHeader() {
           <span className="font-bold text-gray-900 text-base tracking-tight">Mes Poilus</span>
         </Link>
 
-        {/* Nav desktop — visible à partir de lg */}
+        {/* Nav desktop - visible à partir de lg */}
         <div className="hidden md:flex items-center gap-5 flex-1 mx-4">
           {NAV_LINKS.map(({ href, label }) => (
             <Link
@@ -86,7 +86,7 @@ export default function PublicHeader() {
             Boutique
           </Link>
 
-          {/* Hamburger — visible en dessous de lg */}
+          {/* Hamburger - visible en dessous de lg */}
           <button
             onClick={() => setMobileOpen(v => !v)}
             className="md:hidden p-2 rounded-lg text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors"

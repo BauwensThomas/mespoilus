@@ -283,7 +283,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                               </span>
                             </div>
                           ) : (
-                            <span className="text-gray-400 text-xs">—</span>
+                            <span className="text-gray-400 text-xs">-</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">

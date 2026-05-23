@@ -259,7 +259,7 @@ export default function RefugeFinderPanel() {
         />
       )}
 
-      {/* Tab lateral — juste au-dessus du tab veterinaire */}
+      {/* Tab lateral - juste au-dessus du tab veterinaire */}
       <button
         onClick={() => setOpen(true)}
         aria-label="Trouver un refuge"

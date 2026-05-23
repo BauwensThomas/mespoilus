@@ -107,7 +107,7 @@ export default function MobileFiltersPanel({
                     }}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
                   />
-                  <span className="text-gray-400 shrink-0">—</span>
+                  <span className="text-gray-400 shrink-0">-</span>
                   <input
                     type="number"
                     min={0}

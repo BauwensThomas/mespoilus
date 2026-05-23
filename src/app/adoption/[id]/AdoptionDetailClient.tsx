@@ -133,7 +133,7 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
                 <div className="relative rounded-2xl overflow-hidden bg-gray-100 aspect-[4/3]">
                   <Image
                     src={photos[photoIndex]}
-                    alt={`${typeInfo?.label ?? post.animal_type} à adopter${post.breed ? ` — ${post.breed}` : ''}${post.region ? ` à ${post.region}` : ''}`}
+                    alt={`${typeInfo?.label ?? post.animal_type} à adopter${post.breed ? ` - ${post.breed}` : ''}${post.region ? ` à ${post.region}` : ''}`}
                     fill
                     unoptimized
                     className="object-cover"

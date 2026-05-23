@@ -82,7 +82,7 @@ const CRONS: CronConfig[] = [
   },
   {
     id: 'adoption-social',
-    label: 'Adoption — Réseaux',
+    label: 'Adoption - Réseaux',
     description: 'Emma publie un post sur les dernières annonces d\'adoption (Facebook + Instagram).',
     icon: Heart,
     iconBg: 'bg-purple-100',
@@ -321,7 +321,7 @@ function ForcedPartnerPanel({ partner, productName, productUrl, promo, forcedIma
         <span className={clsx('text-xs font-medium flex items-center gap-1.5 min-w-0 flex-1', active ? 'text-purple-700' : 'text-gray-500')}>
           <Tag size={12} strokeWidth={1.5} className="flex-shrink-0" />
           {active && selectedPartenaire
-            ? <span className="truncate">{selectedPartenaire.emoji} {selectedPartenaire.nom}{productName ? ` — ${productName}` : ''}{promo ? ' + promo' : ''}</span>
+            ? <span className="truncate">{selectedPartenaire.emoji} {selectedPartenaire.nom}{productName ? ` - ${productName}` : ''}{promo ? ' + promo' : ''}</span>
             : 'Forcer un partenaire (optionnel)'}
         </span>
         {expanded
@@ -755,7 +755,7 @@ function CatalogSyncCard() {
                 <span className="ml-auto flex items-center gap-1.5 flex-shrink-0">
                   {s.inserted > 0 && <span className="text-xs font-semibold text-emerald-600">+{s.inserted}</span>}
                   {s.updated > 0 && <span className="text-xs font-semibold text-sky-600">↻{s.updated}</span>}
-                  {s.inserted === 0 && s.updated === 0 && <span className="text-xs text-gray-400">—</span>}
+                  {s.inserted === 0 && s.updated === 0 && <span className="text-xs text-gray-400">-</span>}
                   <CheckCircle2 size={12} strokeWidth={2} className="text-emerald-500" />
                 </span>
               )}
@@ -1046,7 +1046,7 @@ export default function CronLauncher() {
                             <div className="flex-1 min-w-0">
                               <p className="font-semibold text-gray-900 text-sm">Support client</p>
                               <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                                Léa répond à la demande depuis sa page agent — pas de cron dédié.
+                                Léa répond à la demande depuis sa page agent - pas de cron dédié.
                               </p>
                             </div>
                           </div>
@@ -1070,7 +1070,7 @@ export default function CronLauncher() {
                               result: `${data.compressed} image${data.compressed !== 1 ? 's' : ''} compressée${data.compressed !== 1 ? 's' : ''}`,
                               stats: [
                                 { label: 'Compressées', value: `${data.compressed}/${data.total}` },
-                                { label: 'Espace gagné', value: data.saved ?? '—' },
+                                { label: 'Espace gagné', value: data.saved ?? '-' },
                               ],
                             };
                           }}
@@ -1154,7 +1154,7 @@ export default function CronLauncher() {
                     accentColor="border-orange-200"
                     exportHref="/api/admin/export-operations?type=dedup-nl"
                     label="Fusion doublons NL/FR"
-                    idleDesc="Supprime les versions néerlandaises (voerbak, drinkbak…) en dupliquant les offres sur la fiche française — matching par image URL."
+                    idleDesc="Supprime les versions néerlandaises (voerbak, drinkbak…) en dupliquant les offres sur la fiche française - matching par image URL."
                     onLaunch={async () => {
                       const r = await fetch('/api/admin/run-cron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ step: 'catalog-dedup-image' }) });
                       const data = await r.json();

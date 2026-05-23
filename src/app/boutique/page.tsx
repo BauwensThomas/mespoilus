@@ -402,7 +402,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
                       </span>
                     )}
 
-                    {/* Numéros — cachés sur mobile, visibles desktop */}
+                    {/* Numéros - cachés sur mobile, visibles desktop */}
                     <div className="hidden sm:flex items-center gap-1">
                       {buildPageNumbers(page, totalPages).map((p, i) =>
                         p < 0 ? (
@@ -443,12 +443,12 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
           </div>
         </div>
 
-        {/* Section produits masqués — admin uniquement */}
+        {/* Section produits masqués - admin uniquement */}
         {isAdmin && hiddenItems.length > 0 && (
           <div id="produits-masques" className="mt-10 border-t border-dashed border-gray-300 pt-6">
             <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
               <span className="inline-block w-2 h-2 rounded-full bg-red-400" />
-              Produits masques ({hiddenItems.length}) — visibles uniquement en mode admin
+              Produits masques ({hiddenItems.length}) - visibles uniquement en mode admin
             </h2>
             <CatalogGrid items={hiddenItems} view={view} isAdmin={true} />
           </div>
