@@ -34,15 +34,15 @@ const STATUS_LABEL: Record<string, string> = {
 
 // Crons attendus selon le jour - pattern de detection dans action log
 const DAILY_CRONS = [
-  { label: 'Awin sync chiens',   pattern: '[Awin sync:chiens]',   hour: '02h' },
-  { label: 'Awin sync chats',    pattern: '[Awin sync:chats]',    hour: '02h' },
-  { label: 'Awin sync oiseaux',  pattern: '[Awin sync:oiseaux]',  hour: '02h' },
-  { label: 'Awin sync rongeurs', pattern: '[Awin sync:rongeurs]', hour: '03h' },
-  { label: 'Awin sync reptiles', pattern: '[Awin sync:reptiles]', hour: '03h' },
-  { label: 'Awin sync livres',   pattern: '[Awin sync:livres]',   hour: '03h' },
-  { label: 'Awin sync general',  pattern: '[Awin sync:general]',  hour: '04h' },
-  { label: 'Adoption cleanup',   pattern: '[Adoption cleanup]',   hour: '03h' },
-  { label: 'CJ sync',            pattern: '[CJ sync:',            hour: '05h' },
+  { label: 'Catalog sync chiens',          pattern: '[Catalog sync:chiens]',          hour: '02h' },
+  { label: 'Catalog sync chats',           pattern: '[Catalog sync:chats]',           hour: '02h' },
+  { label: 'Catalog sync oiseaux',         pattern: '[Catalog sync:oiseaux]',         hour: '02h' },
+  { label: 'Catalog sync rongeurs',        pattern: '[Catalog sync:rongeurs]',        hour: '03h' },
+  { label: 'Catalog sync reptiles',        pattern: '[Catalog sync:reptiles]',        hour: '03h' },
+  { label: 'Catalog sync livres',          pattern: '[Catalog sync:livres]',          hour: '03h' },
+  { label: 'Catalog sync general',         pattern: '[Catalog sync:general]',         hour: '04h' },
+  { label: 'Catalog sync canada-pet-care', pattern: '[Catalog sync:canada-pet-care]', hour: '05h' },
+  { label: 'Adoption cleanup',             pattern: '[Adoption cleanup]',             hour: '03h' },
 ];
 
 const WEEKDAY_CRONS: Record<number, Array<{ label: string; pattern: string; hour: string }>> = {
