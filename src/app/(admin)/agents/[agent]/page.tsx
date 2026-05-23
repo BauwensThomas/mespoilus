@@ -68,7 +68,6 @@ export default async function AgentPage({ params }: Props) {
 
   const agent = getAgent(agentId);
 
-  // Fetch agent photo + DB data en parallèle
   const [{ stat, recentLogs, monthly }, agentPhoto] = await Promise.all([
     getAgentData(agentId),
     getPhotoForAgent(agentId).catch(() => null) as Promise<UnsplashPhoto | null>,
