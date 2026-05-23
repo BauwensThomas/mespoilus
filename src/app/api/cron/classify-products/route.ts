@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -51,7 +51,7 @@ Règles :
 - livres : livres, guides, encyclopédies
 
 Format d'entrée : id|nom du produit (marque)|catégorie_animal
-Format de sortie : id|type — une seule ligne par produit, rien d'autre.
+Format de sortie : id|type - une seule ligne par produit, rien d'autre.
 
 Produits à classifier :
 ${productList}`,

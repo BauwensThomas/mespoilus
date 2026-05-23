@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -49,7 +49,7 @@ export default function ProductTypeCell({ catalogId, productType }: ProductTypeC
   }
 
   const colorClass = current ? (TYPE_COLORS[current] ?? 'bg-gray-100 text-gray-600 border-gray-200') : 'bg-red-50 text-red-400 border-red-100';
-  const label = current ? (TYPES.find(t => t.value === current)?.label ?? current) : '— aucun';
+  const label = current ? (TYPES.find(t => t.value === current)?.label ?? current) : 'Aucun';
 
   return (
     <div className="relative group">
@@ -62,7 +62,7 @@ export default function ProductTypeCell({ catalogId, productType }: ProductTypeC
         disabled={saving}
         onChange={e => handleChange(e.target.value || null)}
       >
-        <option value="">— aucun</option>
+        <option value="">Aucun</option>
         {TYPES.map(t => (
           <option key={t.value} value={t.value}>{t.label}</option>
         ))}

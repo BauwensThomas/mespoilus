@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/server';
+﻿import { createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 export const maxDuration = 300;
@@ -130,7 +130,7 @@ export async function GET(req: Request) {
   let alreadyFrDesc = 0;
 
   // ─── Pass 0 : marchands anglophones forcés (CanadaPetCare, Puft) ─────────
-  // Traduction obligatoire — jamais marqués "déjà FR"
+  // Traduction obligatoire - jamais marqués "déjà FR"
 
   const { data: forceOffers } = await supabase
     .from('product_offers')
