@@ -25,6 +25,12 @@ export async function GET(request: Request) {
     .limit(BATCH_SIZE);
 
   if (error || !products?.length) {
+    await supabase.from('activity_logs').insert({
+      agent_id: 'thomas', agent_name: 'Thomas',
+      action: '[Classify products] 0 produit à classifier (backlog vide)',
+      details: {},
+      status: 'success',
+    });
     return NextResponse.json({ classified: 0, message: 'Aucun produit à classifier' });
   }
 
@@ -81,6 +87,13 @@ ${productList}`,
       .is('product_type', null);
     if (!updateError) classified++;
   }
+
+  await supabase.from('activity_logs').insert({
+    agent_id: 'thomas', agent_name: 'Thomas',
+    action: `[Classify products] ${classified}/${products.length} produits classifiés`,
+    details: { classified, total: products.length, skipped: products.length - updates.length },
+    status: 'success',
+  });
 
   return NextResponse.json({
     classified,
