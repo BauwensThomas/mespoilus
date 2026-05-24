@@ -119,7 +119,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${APP_URL}/mentions-legales`,          lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
     { url: `${APP_URL}/politique-confidentialite`, lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
     { url: `${APP_URL}/cgu`,     lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${APP_URL}/cgv`,     lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
     { url: `${APP_URL}/cookies`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
     ...articleEntries,
     ...guideEntries,
