@@ -429,11 +429,11 @@ export default async function LandingPage() {
                 {[
                   { href: '/blog',                   label: 'Blog'     },
                   { href: '/adoption',               label: 'Adoption' },
-                  { href: '/blog?category=chiens',   label: 'Chiens'   },
-                  { href: '/blog?category=chats',    label: 'Chats'    },
-                  { href: '/blog?category=oiseaux',  label: 'Oiseaux'  },
-                  { href: '/blog?category=rongeurs', label: 'Rongeurs' },
-                  { href: '/blog?category=reptiles', label: 'Reptiles' },
+                  { href: '/blog/chiens',   label: 'Chiens'   },
+                  { href: '/blog/chats',    label: 'Chats'    },
+                  { href: '/blog/oiseaux',  label: 'Oiseaux'  },
+                  { href: '/blog/rongeurs', label: 'Rongeurs' },
+                  { href: '/blog/reptiles', label: 'Reptiles' },
                 ].map(({ href, label }) => (
                   <li key={href}><Link href={href} className="text-sm hover:text-orange-400 transition-colors focus:outline-none focus-visible:underline">{label}</Link></li>
                 ))}
