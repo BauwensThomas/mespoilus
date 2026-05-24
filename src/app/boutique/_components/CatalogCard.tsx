@@ -43,7 +43,7 @@ export default function CatalogCard({
   return (
     <div className="relative h-full bg-white border border-gray-300 rounded-2xl overflow-hidden flex flex-col hover:shadow-xl hover:border-orange-300 transition-all duration-300 shadow-sm group">
       {/* Lien couvrant toute la carte */}
-      <Link href={`/boutique/${catalogId}`} className="absolute inset-0 z-0" aria-label={`Voir le produit : ${nameFr ?? name}`} />
+      <Link href={`/boutique/${catalogId}`} className="absolute inset-0 z-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-inset rounded-2xl" aria-label={`Voir le produit : ${nameFr ?? name}`} />
 
       <div className="pointer-events-none relative h-56 bg-gradient-to-br from-orange-50 to-gray-50 overflow-hidden">
         {imageUrl ? (
@@ -68,6 +68,8 @@ export default function CatalogCard({
             <img
               src={`https://flagcdn.com/16x12/${flag}.png`}
               alt={country!}
+              width={20}
+              height={16}
               className="w-5 h-4 rounded-sm shadow-sm"
             />
           </span>
