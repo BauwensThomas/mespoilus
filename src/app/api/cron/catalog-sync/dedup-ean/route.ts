@@ -32,6 +32,12 @@ export async function GET(req: Request) {
   }
 
   if (!dupEans?.length) {
+    await supabase.from('activity_logs').insert({
+      agent_id: 'thomas', agent_name: 'Thomas',
+      action: '[Dedup EAN] 0 doublon EAN trouve',
+      details: {},
+      status: 'success',
+    });
     return NextResponse.json({ success: true, merged: 0, deleted: 0, message: 'Aucun doublon EAN trouve' });
   }
 

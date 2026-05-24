@@ -19,6 +19,12 @@ export async function GET(req: Request) {
   }
 
   if (!pairs?.length) {
+    await supabase.from('activity_logs').insert({
+      agent_id: 'thomas', agent_name: 'Thomas',
+      action: '[Dedup titre] 0 doublon titre trouve',
+      details: {},
+      status: 'success',
+    });
     return NextResponse.json({ success: true, merged: 0, deleted: 0, message: 'Aucun doublon titre trouve' });
   }
 
