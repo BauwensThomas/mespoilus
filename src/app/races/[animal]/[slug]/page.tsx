@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { CheckCircle2, XCircle, Activity, MapPin, Scale, Heart } from 'lucide-react';
 import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_EMOJI, ANIMAL_GRADIENT, ANIMAL_URL, type Breed } from '@/lib/breeds-list';
+import type { Article } from '@/types';
 
 export const revalidate = 3600;
 
@@ -68,6 +69,44 @@ export default async function BreedPage({ params }: Props) {
   const photo = breed?.photo_url ?? null;
 
   if (!breed || !breed.content) notFound();
+
+  const category = ANIMAL_URL[animalType];
+
+  type AdoptionPreview = { id: string; breed: string | null; age: string | null; gender: string; region: string; photo_urls: string[] };
+  type ProductPreview  = { catalog_id: string; name: string; image_url: string | null; price: number; currency: string; merchant_name: string; affiliate_url: string };
+  type ArticlePreview  = Pick<Article, 'id' | 'title' | 'slug' | 'excerpt' | 'image_url' | 'reading_time'>;
+
+  let adoptionPosts: AdoptionPreview[] = [];
+  let products: ProductPreview[] = [];
+  let articles: ArticlePreview[] = [];
+
+  try {
+    const [{ data: a }, { data: p }, { data: ar }] = await Promise.all([
+      supabase
+        .from('adoption_posts')
+        .select('id, breed, age, gender, region, photo_urls')
+        .eq('status', 'approved')
+        .eq('animal_type', animalType)
+        .order('created_at', { ascending: false })
+        .limit(3),
+      supabase
+        .from('catalog_best_offer')
+        .select('catalog_id, name, image_url, price, currency, merchant_name, affiliate_url')
+        .or(`category.eq.${category},categories.cs.{${category}}`)
+        .order('price', { ascending: true })
+        .limit(4),
+      supabase
+        .from('articles')
+        .select('id, title, slug, excerpt, image_url, reading_time')
+        .eq('status', 'published')
+        .eq('category', category)
+        .order('published_at', { ascending: false })
+        .limit(3),
+    ]);
+    adoptionPosts = (a ?? []) as AdoptionPreview[];
+    products      = (p ?? []) as ProductPreview[];
+    articles      = (ar ?? []) as ArticlePreview[];
+  } catch { /* fail silently - le contenu principal reste visible */ }
 
   const c = breed.content;
   const gradient = ANIMAL_GRADIENT[animalType];
@@ -232,25 +271,144 @@ export default async function BreedPage({ params }: Props) {
           ))}
         </div>
 
-        {/* CTA */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Link
-            href={`/adoption?animal=${animalType}`}
-            className="flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
-          >
-            Voir les annonces d&apos;adoption
-          </Link>
-          <Link
-            href={`/boutique?category=${ANIMAL_URL[animalType]}`}
-            className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-6 rounded-xl border border-gray-200 transition-colors"
-          >
-            Produits pour {ANIMAL_LABEL[animalType].toLowerCase()}
-          </Link>
-        </div>
-
-        <p className="text-xs text-gray-500 text-center pb-4">
+        <p className="text-xs text-gray-500 text-center">
           Les informations sont des moyennes indicatives. Chaque animal est unique.
         </p>
+
+        {/* Annonces d'adoption */}
+        {adoptionPosts.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">{ANIMAL_LABEL[animalType]} à adopter</h2>
+              <Link href={`/adoption?animal=${animalType}`} className="text-sm text-orange-600 hover:underline">
+                Voir tout &rarr;
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {adoptionPosts.map(post => (
+                <Link
+                  key={post.id}
+                  href={`/adoption?animal=${animalType}`}
+                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-sm transition-shadow"
+                >
+                  <div className="relative h-32">
+                    {post.photo_urls?.[0] ? (
+                      <Image
+                        src={post.photo_urls[0]}
+                        alt={post.breed ?? ANIMAL_LABEL[animalType]}
+                        fill unoptimized
+                        className="object-cover"
+                        sizes="300px"
+                      />
+                    ) : (
+                      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                        <span className="text-4xl">{ANIMAL_EMOJI[animalType]}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="font-semibold text-gray-900 text-sm">{post.breed ?? ANIMAL_LABEL[animalType]}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {[
+                        post.age,
+                        post.gender === 'male' ? 'Mâle' : post.gender === 'female' ? 'Femelle' : null,
+                        post.region,
+                      ].filter(Boolean).join(' · ')}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Produits recommandés */}
+        {products.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">Produits pour {ANIMAL_LABEL[animalType].toLowerCase()}</h2>
+              <Link href={`/boutique?category=${category}`} className="text-sm text-orange-600 hover:underline">
+                Voir tout &rarr;
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {products.map(p => (
+                <a
+                  key={p.catalog_id}
+                  href={p.affiliate_url}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-sm transition-shadow flex flex-col"
+                >
+                  <div className="relative h-28 bg-gray-50">
+                    {p.image_url ? (
+                      <Image
+                        src={p.image_url}
+                        alt={p.name}
+                        fill unoptimized
+                        className="object-contain p-2"
+                        sizes="200px"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-3xl">{ANIMAL_EMOJI[animalType]}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-2.5 flex flex-col flex-1">
+                    <p className="text-xs text-gray-700 font-medium line-clamp-2 flex-1">{p.name}</p>
+                    <p className="text-sm font-bold text-gray-900 mt-1">{p.price.toFixed(2)} {p.currency || '€'}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5 truncate">{p.merchant_name}</p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Articles & conseils */}
+        {articles.length > 0 && (
+          <div className="space-y-3 pb-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">Articles & conseils</h2>
+              <Link href={`/blog/${category}`} className="text-sm text-orange-600 hover:underline">
+                Voir tout &rarr;
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {articles.map(a => (
+                <Link
+                  key={a.id}
+                  href={`/blog/${a.slug}`}
+                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-sm transition-shadow flex flex-col"
+                >
+                  <div className="relative h-32">
+                    {a.image_url ? (
+                      <Image
+                        src={a.image_url}
+                        alt={a.title}
+                        fill unoptimized
+                        className="object-cover"
+                        sizes="300px"
+                      />
+                    ) : (
+                      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                        <span className="text-4xl">{ANIMAL_EMOJI[animalType]}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3 flex flex-col flex-1">
+                    <p className="text-sm font-semibold text-gray-900 line-clamp-2 flex-1">{a.title}</p>
+                    {a.excerpt && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{a.excerpt}</p>}
+                    {a.reading_time && (
+                      <p className="text-[10px] text-orange-500 mt-1.5">{a.reading_time} min de lecture</p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
