@@ -105,15 +105,14 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
             <span className="badge bg-orange-500 text-white border border-orange-400 text-xs font-semibold px-3 py-1.5">À la une</span>
           </div>
           {article.image_credit && (
-            <span
-              role="link"
-              tabIndex={0}
+            <button
+              type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(article.image_credit_url ?? '#', '_blank', 'noopener,noreferrer'); }}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); window.open(article.image_credit_url ?? '#', '_blank', 'noopener,noreferrer'); } }}
-              className="absolute bottom-2 right-2 text-[10px] text-white/70 hover:text-white transition-colors cursor-pointer"
+              aria-label={`Photo par ${article.image_credit} (ouvre dans un nouvel onglet)`}
+              className="absolute bottom-2 right-2 text-[10px] text-white/70 hover:text-white transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-white rounded"
             >
               © {article.image_credit}
-            </span>
+            </button>
           )}
         </div>
       ) : (
@@ -138,15 +137,14 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
             <span className={clsx('badge border text-xs font-semibold px-3 py-1.5', categoryStyle)}>{article.category}</span>
           </div>
           {article.image_credit && (
-            <span
-              role="link"
-              tabIndex={0}
+            <button
+              type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(article.image_credit_url ?? '#', '_blank', 'noopener,noreferrer'); }}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); window.open(article.image_credit_url ?? '#', '_blank', 'noopener,noreferrer'); } }}
-              className="absolute bottom-2 right-2 text-[10px] text-white/70 hover:text-white transition-colors cursor-pointer"
+              aria-label={`Photo par ${article.image_credit} (ouvre dans un nouvel onglet)`}
+              className="absolute bottom-2 right-2 text-[10px] text-white/70 hover:text-white transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-white rounded"
             >
               © {article.image_credit}
-            </span>
+            </button>
           )}
         </div>
       )}

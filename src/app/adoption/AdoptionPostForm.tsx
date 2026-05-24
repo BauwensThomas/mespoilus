@@ -374,8 +374,8 @@ export default function AdoptionPostForm() {
               <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.preview} alt="" className="w-full h-full object-cover" />
-                <button type="button" onClick={() => removePhoto(i)}
-                  className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 hover:bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+                <button type="button" onClick={() => removePhoto(i)} aria-label="Supprimer cette photo"
+                  className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 hover:bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span aria-hidden="true">×</span></button>
               </div>
             ))}
             {photos.length < 5 && (

@@ -144,15 +144,17 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
                     <>
                       <button
                         onClick={() => setPhotoIndex(i => (i - 1 + photos.length) % photos.length)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors"
+                        aria-label="Photo précédente"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-white"
                       >
-                        <ChevronLeft size={18} />
+                        <ChevronLeft size={18} aria-hidden="true" />
                       </button>
                       <button
                         onClick={() => setPhotoIndex(i => (i + 1) % photos.length)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors"
+                        aria-label="Photo suivante"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-white"
                       >
-                        <ChevronRight size={18} />
+                        <ChevronRight size={18} aria-hidden="true" />
                       </button>
                       <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
                         {photoIndex + 1} / {photos.length}
@@ -236,17 +238,25 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
                 </div>
               ) : contactOpen ? (
                 <form onSubmit={handleContact} className="space-y-2.5">
+                  <label htmlFor="contact-name" className="sr-only">Votre prénom</label>
                   <input
+                    id="contact-name" name="name"
                     type="text" required value={contactName} onChange={e => setContactName(e.target.value)}
-                    placeholder="Votre prénom *"
+                    placeholder="Votre prénom…"
+                    autoComplete="given-name"
                     className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-300"
                   />
+                  <label htmlFor="contact-email" className="sr-only">Votre email</label>
                   <input
+                    id="contact-email" name="email"
                     type="email" required value={contactEmail} onChange={e => setContactEmail(e.target.value)}
-                    placeholder="Votre email *"
+                    placeholder="Votre email…"
+                    autoComplete="email" spellCheck={false}
                     className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-300"
                   />
+                  <label htmlFor="contact-message" className="sr-only">Votre message</label>
                   <textarea
+                    id="contact-message" name="message"
                     required rows={3} value={contactMsg} onChange={e => setContactMsg(e.target.value)}
                     placeholder="Votre message… (présentez-vous, posez vos questions)"
                     className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-300 resize-none"
