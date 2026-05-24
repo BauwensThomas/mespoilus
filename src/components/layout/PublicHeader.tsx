@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { PawPrint, ChevronDown, Calculator, HelpCircle, Sparkles, BookOpen, Menu, X, UtensilsCrossed } from 'lucide-react';
 
@@ -24,9 +24,22 @@ const TOOLS = [
 export default function PublicHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [desktopToolsOpen, setDesktopToolsOpen] = useState(false);
   const pathname = usePathname();
+  const desktopToolsRef = useRef<HTMLDivElement>(null);
 
-  function close() { setMobileOpen(false); setToolsOpen(false); }
+  useEffect(() => {
+    if (!desktopToolsOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (desktopToolsRef.current && !desktopToolsRef.current.contains(e.target as Node)) {
+        setDesktopToolsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [desktopToolsOpen]);
+
+  function close() { setMobileOpen(false); setToolsOpen(false); setDesktopToolsOpen(false); }
 
   return (
     <header className="sticky top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-orange-100 shadow-sm h-20">
@@ -53,29 +66,33 @@ export default function PublicHeader() {
           ))}
 
           {/* Dropdown Outils */}
-          <div className="relative group">
+          <div className="relative" ref={desktopToolsRef}>
             <button
+              onClick={() => setDesktopToolsOpen(v => !v)}
               className="flex items-center gap-1 text-gray-600 hover:text-orange-600 font-medium text-sm transition-colors duration-200 px-2 py-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
               aria-haspopup="true"
+              aria-expanded={desktopToolsOpen}
             >
               Outils
-              <ChevronDown size={14} strokeWidth={2} className="transition-transform duration-200 group-hover:rotate-180" aria-hidden="true" />
+              <ChevronDown size={14} strokeWidth={2} className={`transition-transform duration-200 ${desktopToolsOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
             </button>
-            <div className="absolute left-0 top-full pt-3 hidden group-hover:block z-50 min-w-[260px]">
-              <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-2 space-y-1">
-                {TOOLS.map(({ href, label, desc, icon: Icon }) => (
-                  <Link key={href} href={href} className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-orange-50 transition-colors group/item">
-                    <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover/item:bg-orange-200 transition-colors">
-                      <Icon size={16} strokeWidth={1.5} className="text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900 group-hover/item:text-orange-700 transition-colors">{label}</p>
-                      <p className="text-xs text-gray-500">{desc}</p>
-                    </div>
-                  </Link>
-                ))}
+            {desktopToolsOpen && (
+              <div className="absolute left-0 top-full pt-3 z-50 min-w-[260px]">
+                <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-2 space-y-1">
+                  {TOOLS.map(({ href, label, desc, icon: Icon }) => (
+                    <Link key={href} href={href} onClick={() => setDesktopToolsOpen(false)} className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-orange-50 transition-colors group/item">
+                      <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover/item:bg-orange-200 transition-colors">
+                        <Icon size={16} strokeWidth={1.5} className="text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900 group-hover/item:text-orange-700 transition-colors">{label}</p>
+                        <p className="text-xs text-gray-500">{desc}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
