@@ -69,7 +69,7 @@ function PartenairesBandeau() {
       )}
       {(partenaire.pays ?? []).map(code => (
         // eslint-disable-next-line @next/next/no-img-element
-        <img key={code} src={getFlagUrl(code)} alt={code} style={{ width: '18px', height: '13px', objectFit: 'cover' }} className="rounded-[2px] border border-gray-200 shrink-0" />
+        <img key={code} src={getFlagUrl(code)} alt={code} width={18} height={13} style={{ objectFit: 'cover' }} className="rounded-[2px] border border-gray-200 shrink-0" />
       ))}
       {partenaire.tag && (
         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0" style={{ backgroundColor: partenaire.tag_bg ?? '#f3f4f6', color: partenaire.tag_text ?? '#374151' }}>
@@ -111,7 +111,7 @@ function PartenairesBandeau() {
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-orange-600 transition-colors"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={getFlagUrl(code)} alt={code} style={{ width: '20px', height: '15px', objectFit: 'cover' }} className="rounded-[2px] border border-gray-200 shrink-0" />
+                <img src={getFlagUrl(code)} alt={code} width={20} height={15} style={{ objectFit: 'cover' }} className="rounded-[2px] border border-gray-200 shrink-0" />
                 {code === 'FR' ? 'France' : code === 'BE' ? 'Belgique' : code}
               </a>
             ))}

@@ -54,9 +54,12 @@ export default function PublicHeader() {
 
           {/* Dropdown Outils */}
           <div className="relative group">
-            <button className="flex items-center gap-1 text-gray-600 hover:text-orange-600 font-medium text-sm transition-colors duration-200 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2">
+            <button
+              className="flex items-center gap-1 text-gray-600 hover:text-orange-600 font-medium text-sm transition-colors duration-200 px-2 py-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+              aria-haspopup="true"
+            >
               Outils
-              <ChevronDown size={14} strokeWidth={2} className="transition-transform duration-200 group-hover:rotate-180" />
+              <ChevronDown size={14} strokeWidth={2} className="transition-transform duration-200 group-hover:rotate-180" aria-hidden="true" />
             </button>
             <div className="absolute left-0 top-full pt-3 hidden group-hover:block z-50 min-w-[260px]">
               <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-2 space-y-1">
@@ -89,8 +92,9 @@ export default function PublicHeader() {
           {/* Hamburger - visible en dessous de lg */}
           <button
             onClick={() => setMobileOpen(v => !v)}
-            className="md:hidden p-2 rounded-lg text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors"
+            className="md:hidden p-2 rounded-lg text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
             aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X size={22} strokeWidth={2} /> : <Menu size={22} strokeWidth={2} />}
           </button>

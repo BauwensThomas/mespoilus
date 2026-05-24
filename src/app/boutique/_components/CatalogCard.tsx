@@ -60,7 +60,7 @@ export default function CatalogCard({
             <Package size={48} className="text-gray-200" strokeWidth={1} />
           </div>
         )}
-        <span className="absolute top-2 left-2">
+        <span className="absolute top-2 left-2 relative z-10 pointer-events-auto">
           <FavoriteButton catalogId={catalogId} />
         </span>
         {flag && (
