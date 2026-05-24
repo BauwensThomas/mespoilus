@@ -22,7 +22,7 @@ export default function CatalogViewToggle({ currentView }: { currentView: 'grid'
         onClick={() => toggle('grid')}
         aria-label="Vue grille"
         aria-pressed={currentView === 'grid'}
-        className={`p-1.5 rounded-md transition-colors ${
+        className={`p-1.5 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-1 ${
           currentView === 'grid' ? 'bg-orange-600 text-white' : 'text-gray-400 hover:text-gray-600'
         }`}
       >
@@ -32,7 +32,7 @@ export default function CatalogViewToggle({ currentView }: { currentView: 'grid'
         onClick={() => toggle('list')}
         aria-label="Vue liste"
         aria-pressed={currentView === 'list'}
-        className={`p-1.5 rounded-md transition-colors ${
+        className={`p-1.5 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-1 ${
           currentView === 'list' ? 'bg-orange-600 text-white' : 'text-gray-400 hover:text-gray-600'
         }`}
       >
