@@ -23,14 +23,14 @@ export default function ViewToggle() {
     <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 shrink-0">
       <button
         onClick={() => toggle('grid')}
-        className={`p-1.5 rounded-md transition-colors ${view === 'grid' ? 'bg-white shadow text-orange-600' : 'text-gray-400 hover:text-gray-700'}`}
+        className={`p-1.5 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-1 ${view === 'grid' ? 'bg-white shadow text-orange-600' : 'text-gray-400 hover:text-gray-700'}`}
         aria-label="Vue grille"
       >
         <LayoutGrid size={18} strokeWidth={1.5} />
       </button>
       <button
         onClick={() => toggle('list')}
-        className={`p-1.5 rounded-md transition-colors ${view === 'list' ? 'bg-white shadow text-orange-600' : 'text-gray-400 hover:text-gray-700'}`}
+        className={`p-1.5 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-1 ${view === 'list' ? 'bg-white shadow text-orange-600' : 'text-gray-400 hover:text-gray-700'}`}
         aria-label="Vue liste"
       >
         <List size={18} strokeWidth={1.5} />

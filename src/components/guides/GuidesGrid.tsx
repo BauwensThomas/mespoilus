@@ -55,7 +55,7 @@ export default function GuidesGrid({ guides }: GuidesGridProps) {
                 </div>
                 <button
                   onClick={() => setActiveGuide(guide)}
-                  className="inline-flex items-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
+                  className="inline-flex items-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                   aria-label={`Télécharger le guide : ${guide.title}`}
                 >
                   <Download size={13} strokeWidth={2} />

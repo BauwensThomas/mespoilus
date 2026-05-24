@@ -33,7 +33,7 @@ export default function ProductCard({ product }: { product: AwinProduct }) {
             const suffix = product.merchant_name.match(/\s+(FR|BE|DE|NL|ES|IT|UK)$/)?.[1]?.toLowerCase() ?? null;
             const countryCode = MERCHANT_COUNTRY[nameKey] ?? suffix ?? (product.currency === 'USD' ? 'us' : product.currency === 'CAD' ? 'ca' : product.currency === 'GBP' ? 'gb' : null);
             if (!countryCode) return null;
-            return <img src={`https://flagcdn.com/16x12/${countryCode}.png`} alt={countryCode.toUpperCase()} className="w-4 h-3" />;
+            return <img src={`https://flagcdn.com/16x12/${countryCode}.png`} alt={countryCode.toUpperCase()} width={16} height={12} className="w-4 h-3" />;
           })()}
           {product.merchant_name}
         </p>
@@ -54,7 +54,7 @@ export default function ProductCard({ product }: { product: AwinProduct }) {
             href={product.affiliate_url}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            className="text-xs font-semibold px-4 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white transition-colors duration-200 flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
+            className="text-xs font-semibold px-4 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white transition-colors duration-200 flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
             aria-label={`Voir le produit : ${product.name}`}
           >
             Voir
