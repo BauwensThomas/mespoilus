@@ -37,12 +37,18 @@ const DAILY_CRONS = [
   { label: 'Catalog sync chiens',          pattern: '[Catalog sync:chiens]',          hour: '02h', agent: 'Thomas' },
   { label: 'Catalog sync chats',           pattern: '[Catalog sync:chats]',           hour: '02h', agent: 'Thomas' },
   { label: 'Catalog sync oiseaux',         pattern: '[Catalog sync:oiseaux]',         hour: '02h', agent: 'Thomas' },
+  { label: 'Adoption cleanup',             pattern: '[Adoption cleanup]',             hour: '03h', agent: 'Thomas' },
   { label: 'Catalog sync rongeurs',        pattern: '[Catalog sync:rongeurs]',        hour: '03h', agent: 'Thomas' },
   { label: 'Catalog sync reptiles',        pattern: '[Catalog sync:reptiles]',        hour: '03h', agent: 'Thomas' },
   { label: 'Catalog sync livres',          pattern: '[Catalog sync:livres]',          hour: '03h', agent: 'Thomas' },
   { label: 'Catalog sync general',         pattern: '[Catalog sync:general]',         hour: '04h', agent: 'Thomas' },
-  { label: 'Catalog sync canada-pet-care', pattern: '[Catalog sync:canada-pet-care]', hour: '05h', agent: 'Thomas' },
-  { label: 'Adoption cleanup',             pattern: '[Adoption cleanup]',             hour: '03h', agent: 'Thomas' },
+  { label: 'Catalog sync canada-pet-care', pattern: '[Catalog sync:canada-pet-care]', hour: '04h', agent: 'Thomas' },
+  { label: 'Dedup EAN',                    pattern: '[Dedup EAN]',                    hour: '05h', agent: 'Thomas' },
+  { label: 'Dedup image',                  pattern: '[Dedup image]',                  hour: '05h', agent: 'Thomas' },
+  { label: 'Traduction pass 1',            pattern: '[Catalog translate]',            hour: '05h', agent: 'Thomas' },
+  { label: 'Traduction pass 2',            pattern: '[Catalog translate]',            hour: '06h', agent: 'Thomas' },
+  { label: 'Dedup titre',                  pattern: '[Dedup titre]',                  hour: '06h', agent: 'Thomas' },
+  { label: 'Classify products',            pattern: '[Classify products]',            hour: '07h', agent: 'Thomas' },
 ];
 
 const WEEKDAY_CRONS: Record<number, Array<{ label: string; pattern: string; hour: string; agent: string }>> = {
