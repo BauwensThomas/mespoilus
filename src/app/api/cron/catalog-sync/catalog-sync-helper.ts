@@ -459,6 +459,12 @@ export async function runCatalogSyncForCategory(
     const feedToken   = process.env.AWIN_FEED_TOKEN ?? process.env.AWIN_API_TOKEN;
 
     if (!publisherId || !feedToken) {
+      await supabase.from('activity_logs').insert({
+        agent_id: 'thomas', agent_name: 'Thomas',
+        action: `[Catalog sync:${category}] ECHEC - clés Awin manquantes (AWIN_PUBLISHER_ID ou AWIN_FEED_TOKEN)`,
+        details: {},
+        status: 'error',
+      });
       return NextResponse.json({ error: 'Clés Awin manquantes' }, { status: 503 });
     }
 
