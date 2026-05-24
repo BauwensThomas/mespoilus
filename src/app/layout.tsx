@@ -51,6 +51,31 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <meta name="p:domain_verify" content="20cb928a2f8bfbb6bd7651b7cafde7de" />
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'Organization',
+                '@id': 'https://www.mespoilus.com/#organization',
+                name: 'Mes Poilus',
+                url: 'https://www.mespoilus.com',
+                logo: { '@type': 'ImageObject', url: 'https://www.mespoilus.com/favicon.ico' },
+                sameAs: ['https://www.instagram.com/mespoilusofficiel', 'https://www.facebook.com/mespoilusofficiel'],
+              },
+              {
+                '@type': 'WebSite',
+                '@id': 'https://www.mespoilus.com/#website',
+                url: 'https://www.mespoilus.com',
+                name: 'Mes Poilus',
+                description: 'Conseils vétérinaires, guides pratiques, adoption animaux et boutique pour chiens, chats, oiseaux, rongeurs et reptiles.',
+                publisher: { '@id': 'https://www.mespoilus.com/#organization' },
+                inLanguage: 'fr',
+              },
+            ],
+          })}}
+        />
       </head>
       <body className="min-h-screen">
         <LayoutShell pendingCount={pendingCount}>{children}</LayoutShell>

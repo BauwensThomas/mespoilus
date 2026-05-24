@@ -105,6 +105,17 @@ export default async function ArticlePage({ params }: Props) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com';
   const articleUrl = `${appUrl}/blog/${article.slug}`;
 
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: appUrl },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${appUrl}/blog` },
+      { '@type': 'ListItem', position: 3, name: CATEGORY_LABELS[article.category] ?? article.category, item: `${appUrl}/blog/${article.category}` },
+      { '@type': 'ListItem', position: 4, name: article.title, item: articleUrl },
+    ],
+  };
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -145,10 +156,8 @@ export default async function ArticlePage({ params }: Props) {
           </Link>
         </div>
       )}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       {/* Hero image */}
       <div className="relative w-full h-64 md:h-80 overflow-hidden bg-gray-200">

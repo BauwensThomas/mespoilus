@@ -113,6 +113,18 @@ export default async function BreedPage({ params }: Props) {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com';
   const breedUrl = `${appUrl}/races/${animal}/${slug}`;
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: appUrl },
+      { '@type': 'ListItem', position: 2, name: 'Races', item: `${appUrl}/races` },
+      { '@type': 'ListItem', position: 3, name: ANIMAL_LABEL[animalType], item: `${appUrl}/races/${animal}` },
+      { '@type': 'ListItem', position: 4, name: breed.name, item: breedUrl },
+    ],
+  };
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -138,10 +150,8 @@ export default async function BreedPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50 px-6 md:px-8 py-6 space-y-5">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       {/* Fil d'ariane + titre */}
       <div>
