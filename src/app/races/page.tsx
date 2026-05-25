@@ -3,6 +3,7 @@ import Image from 'next/image';
 import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_LABEL, ANIMAL_URL, ANIMAL_EMOJI, ANIMAL_GRADIENT, type AnimalType } from '@/lib/breeds-list';
+import DirectionalTransition from '@/components/ui/DirectionalTransition';
 
 export const revalidate = 3600;
 
@@ -72,6 +73,7 @@ export default async function RacesPage() {
   const [photos, counts] = await Promise.all([getPhotos(), getCounts()]);
 
   return (
+    <DirectionalTransition>
     <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5">
 
       <div>
@@ -128,5 +130,6 @@ export default async function RacesPage() {
         Nouvelles fiches ajoutées régulièrement. Les informations sont des moyennes indicatives.
       </p>
     </div>
+    </DirectionalTransition>
   );
 }

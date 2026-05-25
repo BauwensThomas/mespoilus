@@ -949,7 +949,7 @@ const STEP_COLORS: Record<number, string> = {
 
 function StepBadge({ n }: { n: number }) {
   return (
-    <span className={`absolute top-10 right-2.5 z-10 w-5 h-5 rounded-full ${STEP_COLORS[n]} text-white text-[10px] font-bold flex items-center justify-center shadow-sm pointer-events-none`}>
+    <span className={`absolute -top-2 right-2.5 z-10 w-5 h-5 rounded-full ${STEP_COLORS[n]} text-white text-[10px] font-bold flex items-center justify-center shadow-sm pointer-events-none`}>
       {n}
     </span>
   );

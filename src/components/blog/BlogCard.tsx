@@ -82,7 +82,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
       {/* Image de l'article */}
       {featured ? (
         /* Vedette : conteneur carré = image carrée → 0 bord gris */
-        <div className={clsx('relative w-full h-64 md:w-96 md:h-96 flex-shrink-0 bg-gradient-to-br', gradient)} style={{ overflow: 'hidden', borderRadius: '1rem', border: '2px solid rgba(251,146,60,0.6)' }}>
+        <div className={clsx('relative w-full h-64 md:w-96 md:h-96 flex-shrink-0 bg-gradient-to-br', gradient)} style={{ overflow: 'hidden', borderRadius: '1rem', border: '2px solid rgba(251,146,60,0.6)', viewTransitionName: `article-${article.slug}` }}>
           {imageSrc ? (
             <>
               <Image
@@ -117,7 +117,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
         </div>
       ) : (
         /* Carte normale : hauteur fixe, object-cover */
-        <div className={clsx('relative w-full h-48 flex-shrink-0 bg-gradient-to-br', gradient)} style={{ overflow: 'hidden', borderRadius: '0 0 1rem 1rem', borderBottom: '2px solid rgba(251,146,60,0.6)' }}>
+        <div className={clsx('relative w-full h-48 flex-shrink-0 bg-gradient-to-br', gradient)} style={{ overflow: 'hidden', borderRadius: '0 0 1rem 1rem', borderBottom: '2px solid rgba(251,146,60,0.6)', viewTransitionName: `article-${article.slug}` }}>
           {imageSrc ? (
             <Image
               src={imageSrc}

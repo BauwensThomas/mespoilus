@@ -7,6 +7,7 @@ import { marked } from 'marked';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import DirectionalTransition from '@/components/ui/DirectionalTransition';
 import AdBanner from '@/components/ui/AdBanner';
 import CommentForm from '@/components/blog/CommentForm';
 import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle, Pencil } from 'lucide-react';
@@ -128,7 +129,7 @@ export default async function ArticlePage({ params }: Props) {
     datePublished: article.published_at ?? undefined,
     dateModified: article.updated_at ?? article.published_at ?? undefined,
     author: { '@type': 'Person', name: 'Marie', url: `${appUrl}/agents/marie` },
-    publisher: { '@type': 'Organization', name: 'Mes Poilus', url: appUrl, logo: { '@type': 'ImageObject', url: `${appUrl}/favicon.ico` } },
+    publisher: { '@type': 'Organization', name: 'Mes Poilus', url: appUrl, logo: { '@type': 'ImageObject', url: `${appUrl}/icon.svg` } },
     mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl },
     inLanguage: 'fr',
     url: articleUrl,
@@ -141,6 +142,7 @@ export default async function ArticlePage({ params }: Props) {
   const isAdmin = !!user;
 
   return (
+    <DirectionalTransition>
     <div className="min-h-screen bg-white animate-fade-in">
       {isAdmin && (
         <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2 bg-gray-900/95 backdrop-blur text-white text-xs">
@@ -160,7 +162,7 @@ export default async function ArticlePage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       {/* Hero image */}
-      <div className="relative w-full h-64 md:h-80 overflow-hidden bg-gray-200">
+      <div className="relative w-full h-64 md:h-80 overflow-hidden bg-gray-200" style={{ viewTransitionName: `article-${slug}` }}>
         {heroImage && (
           <Image
             src={heroImage}
@@ -284,6 +286,7 @@ export default async function ArticlePage({ params }: Props) {
         </div>
       </div>
     </div>
+    </DirectionalTransition>
   );
 }
 

@@ -42,7 +42,7 @@ export default function PublicHeader() {
   function close() { setMobileOpen(false); setToolsOpen(false); setDesktopToolsOpen(false); }
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-orange-100 shadow-sm h-20">
+    <header className="sticky top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-orange-100 shadow-sm h-20" style={{ viewTransitionName: 'site-header' }}>
       <nav className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between gap-4">
 
         {/* Logo */}
