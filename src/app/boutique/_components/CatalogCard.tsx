@@ -45,7 +45,7 @@ export default function CatalogCard({
       {/* Lien couvrant toute la carte */}
       <Link href={`/boutique/${catalogId}`} className="absolute inset-0 z-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-inset rounded-2xl" aria-label={`Voir le produit : ${nameFr ?? name}`} />
 
-      <div className="pointer-events-none relative h-56 bg-gradient-to-br from-orange-50 to-gray-50 overflow-hidden">
+      <div className="pointer-events-none relative h-56 bg-gradient-to-br from-orange-50 to-gray-50 overflow-hidden" style={{ viewTransitionName: `product-${catalogId}` }}>
         {imageUrl ? (
           <Image
             src={imageUrl}

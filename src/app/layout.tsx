@@ -61,7 +61,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 '@id': 'https://www.mespoilus.com/#organization',
                 name: 'Mes Poilus',
                 url: 'https://www.mespoilus.com',
-                logo: { '@type': 'ImageObject', url: 'https://www.mespoilus.com/favicon.ico' },
+                logo: { '@type': 'ImageObject', url: 'https://www.mespoilus.com/icon.svg' },
                 sameAs: ['https://www.instagram.com/mespoilusofficiel', 'https://www.facebook.com/mespoilusofficiel'],
               },
               {

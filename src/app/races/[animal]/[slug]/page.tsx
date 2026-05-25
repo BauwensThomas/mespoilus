@@ -134,7 +134,7 @@ export default async function BreedPage({ params }: Props) {
     datePublished: breed.generated_at ?? undefined,
     dateModified: breed.generated_at ?? undefined,
     author: { '@type': 'Organization', name: 'Mes Poilus', url: appUrl },
-    publisher: { '@type': 'Organization', name: 'Mes Poilus', url: appUrl, logo: { '@type': 'ImageObject', url: `${appUrl}/favicon.ico` } },
+    publisher: { '@type': 'Organization', name: 'Mes Poilus', url: appUrl, logo: { '@type': 'ImageObject', url: `${appUrl}/icon.svg` } },
     mainEntityOfPage: { '@type': 'WebPage', '@id': breedUrl },
     inLanguage: 'fr',
     url: breedUrl,

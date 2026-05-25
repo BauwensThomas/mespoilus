@@ -10,6 +10,7 @@ import AdoptionPostsGrid from '@/components/adoption/AdoptionPostsGrid';
 import AdoptionAlertForm from '@/components/adoption/AdoptionAlertForm';
 import { Suspense } from 'react';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart } from 'lucide-react';
+import DirectionalTransition from '@/components/ui/DirectionalTransition';
 
 export const metadata: Metadata = {
   title: 'Adoption animaux',
@@ -109,6 +110,7 @@ export default async function AdoptionPage({ searchParams }: Props) {
   const activeType = ANIMAL_TYPES.find(t => t.id === (animal ?? 'all')) ?? ANIMAL_TYPES[0];
 
   return (
+    <DirectionalTransition>
     <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5">
 
       {/* Header */}
@@ -202,6 +204,7 @@ export default async function AdoptionPage({ searchParams }: Props) {
       <AdBanner slot="1148710530" className="mt-12" />
 
     </div>
+    </DirectionalTransition>
   );
 }
 

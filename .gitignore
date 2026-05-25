@@ -45,6 +45,8 @@ Thumbs.db
 *.jsonl
 CONTEXT.md
 BOUTIQUE.md
+.agents/
+skills-lock.json
 
 # Python
 __pycache__/
@@ -59,5 +61,5 @@ __pycache__/
 /backups/
 backup-supabase.ps1
 
-git add -A
-git commit -m "feat(next): upgrade Next.js 14→15, fix async params/cookies, fix footer focus ring"
+# Tamagochi
+/tamagochi/

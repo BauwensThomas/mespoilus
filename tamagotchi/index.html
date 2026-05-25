@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mon Chien Tamagotchi</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- INTRO SCREEN -->
+  <div id="screen-intro" class="screen">
+    <h1 class="title">MON CHIEN</h1>
+    <p class="subtitle">Un mystérieux oeuf t'attend...</p>
+
+    <div class="intro-egg">🥚</div>
+    <p class="intro-hint">Un animal t'a choisi.<br />Réponds à ses questions chaque jour.</p>
+
+    <button id="btn-start" class="btn-primary">COMMENCER</button>
+  </div>
+
+  <!-- NAME SCREEN -->
+  <div id="screen-name" class="screen hidden">
+    <div class="name-screen-content">
+      <div id="name-sprite" class="pet-sprite stage-egg-1">
+        <span class="stage-emoji">🥚</span>
+        <div class="crack-lines"></div>
+      </div>
+
+      <p class="name-prompt">L'oeuf vibre...<br />Comment tu t'appelles ?</p>
+
+      <input type="text" id="name-input" class="name-input" placeholder="Ton prénom..." maxlength="12" autocomplete="off" />
+      <button id="btn-name-ok" class="btn-primary">C'EST MOI !</button>
+    </div>
+  </div>
+
+  <!-- MAIN GAME SCREEN -->
+  <div id="screen-game" class="screen hidden">
+    <div class="header">
+      <div class="jour-badge">JOUR <span id="jour-num">1</span></div>
+      <div id="header-name" class="header-name"></div>
+      <div class="q-counter"><span id="q-left">3</span>/3</div>
+    </div>
+
+    <div class="pet-row">
+      <div class="pet-area">
+        <div id="pet-sprite" class="pet-sprite stage-egg-1">
+          <span class="stage-emoji">🥚</span>
+          <div class="crack-lines"></div>
+        </div>
+        <div id="stage-label" class="stage-label">Oeuf mystérieux</div>
+      </div>
+
+      <div class="stats-panel" id="stats-panel">
+        <div class="stat-row">
+          <span class="stat-icon">❤</span>
+          <div class="bar-bg"><div id="bar-bonheur" class="bar-fill green" style="width: 50%"></div></div>
+          <span id="val-bonheur" class="stat-num">50</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">⚡</span>
+          <div class="bar-bg"><div id="bar-energie" class="bar-fill yellow" style="width: 50%"></div></div>
+          <span id="val-energie" class="stat-num">50</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">🍖</span>
+          <div class="bar-bg"><div id="bar-poids" class="bar-fill blue" style="width: 50%"></div></div>
+          <span id="val-poids" class="stat-num">50</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="message-zone" class="message-zone hidden">
+      <p id="message-text" class="message-text"></p>
+    </div>
+
+    <div class="question-card">
+      <p id="question-text" class="question-text"></p>
+    </div>
+
+    <div id="answers-container" class="answers-container"></div>
+  </div>
+
+  <!-- DEAD SCREEN -->
+  <div id="screen-dead" class="screen hidden">
+    <div id="dead-sprite" class="pet-sprite stage-normal dead-grey">
+      <span class="stage-emoji">🐶</span>
+      <div class="crack-lines"></div>
+    </div>
+
+    <h2 class="dead-title">IL EST PARTI...</h2>
+    <p id="dead-msg" class="dead-msg"></p>
+
+    <button id="btn-dead-restart" class="btn-primary">RECOMMENCER</button>
+  </div>
+
+  <!-- DONE SCREEN -->
+  <div id="screen-done" class="screen hidden">
+    <div id="done-sprite" class="pet-sprite stage-egg-1 done-float">
+      <span class="stage-emoji">🥚</span>
+      <div class="crack-lines"></div>
+    </div>
+
+    <h2 class="done-title">À DEMAIN !</h2>
+    <p id="done-msg" class="done-msg"></p>
+
+    <div class="countdown-box">
+      <p class="countdown-label">TON CHIEN REVIENT DANS</p>
+      <p id="countdown" class="countdown">00:00:00</p>
+    </div>
+
+    <p class="done-hint">Il rêve de toi...</p>
+
+    <div class="test-buttons">
+      <button id="btn-test-next" class="btn-test">JOUR SUIVANT</button>
+      <button id="btn-test-reset" class="btn-test btn-test-danger">RESET</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ExternalLink, Package, Star, Tag, Weight, Heart } from 'lucide-react';
 import BackBreadcrumb from './_components/BackBreadcrumb';
 import FavoriteButton from '../_components/FavoriteButton';
+import DirectionalTransition from '@/components/ui/DirectionalTransition';
 
 export const revalidate = 3600;
 
@@ -99,6 +100,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const categoryLabel = CATEGORY_LABELS[catalog.category] ?? catalog.category;
 
   return (
+    <DirectionalTransition>
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8 py-6">
 
@@ -123,7 +125,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <div className="flex flex-col md:flex-row">
 
             {/* Image */}
-            <div className="relative w-full md:w-96 shrink-0 h-80 md:h-auto bg-gradient-to-br from-orange-50 to-gray-50">
+            <div className="relative w-full md:w-96 shrink-0 h-80 md:h-auto bg-gradient-to-br from-orange-50 to-gray-50" style={{ viewTransitionName: `product-${id}` }}>
               {catalog.image_url ? (
                 <Image
                   src={catalog.image_url}
@@ -349,5 +351,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         </p>
       </div>
     </div>
+    </DirectionalTransition>
   );
 }

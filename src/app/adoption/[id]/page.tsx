@@ -85,7 +85,7 @@ export default async function AdoptionDetailPage({ params }: { params: Promise<{
       '@type': 'Organization',
       name: 'Mes Poilus',
       url: APP_URL,
-      logo: { '@type': 'ImageObject', url: `${APP_URL}/favicon.ico` },
+      logo: { '@type': 'ImageObject', url: `${APP_URL}/icon.svg` },
     },
     breadcrumb: {
       '@type': 'BreadcrumbList',

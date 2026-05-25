@@ -4,6 +4,7 @@ const nextConfig = {
   poweredByHeader: false,
   staticPageGenerationTimeout: 120,
   serverExternalPackages: ['@anthropic-ai/sdk'],
+  experimental: { viewTransition: true },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },

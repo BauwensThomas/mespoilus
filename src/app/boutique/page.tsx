@@ -3,6 +3,7 @@ import { normalizeSearch } from '@/lib/search';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Suspense } from 'react';
+import DirectionalTransition from '@/components/ui/DirectionalTransition';
 import { ChevronLeft, ChevronRight, Dog, Cat, Bird, Mouse, Zap, PawPrint, BookOpen, Layers, Pencil, EyeOff, Heart } from 'lucide-react';
 import CatalogGrid, { type CatalogItem } from './_components/CatalogGrid';
 import CatalogSidebar from './_components/CatalogSidebar';
@@ -258,6 +259,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
   const currentCategoryLabel = MOBILE_CATEGORIES.find(c => c.id === (category ?? 'all'))?.label ?? 'Tous';
 
   return (
+    <DirectionalTransition>
     <div className="min-h-screen bg-gray-50 pb-20">
 
       {/* Barre admin sticky */}
@@ -465,6 +467,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
         </p>
       </div>
     </div>
+    </DirectionalTransition>
   );
 }
 
