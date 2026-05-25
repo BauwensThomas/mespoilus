@@ -63,7 +63,14 @@ const ADMIN_API_PREFIXES = [
 
 export async function middleware(request: NextRequest) {
   const ip = getIP(request);
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
+
+  // 0. Redirection 301 pour les query params du blog vers les routes de catégorie
+  if (pathname === '/blog' && searchParams.has('category')) {
+    const category = searchParams.get('category');
+    const newUrl = new URL(`/blog/${category}${searchParams.has('q') ? `?q=${searchParams.get('q')}` : ''}`, request.url);
+    return NextResponse.redirect(newUrl, { status: 301 });
+  }
 
   // 1. Headers de sécurité sur toutes les réponses
   const response = NextResponse.next({ request });
