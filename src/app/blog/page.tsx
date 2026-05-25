@@ -5,7 +5,6 @@ import { Article } from '@/types';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import AdBanner from '@/components/ui/AdBanner';
-import { permanentRedirect } from 'next/navigation';
 import BlogSearchBar from '@/components/blog/BlogSearchBar';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Globe } from 'lucide-react';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
@@ -71,11 +70,7 @@ interface Props {
 
 export default async function BlogPage({ searchParams }: Props) {
   const sp = await searchParams;
-  if (sp.category && CATEGORY_SLUGS.includes(sp.category)) {
-    permanentRedirect(`/blog/${sp.category}`);
-  }
-
-  const activeCategory = sp.category && sp.category !== 'all'
+  const activeCategory = sp.category && sp.category !== 'all' && CATEGORY_SLUGS.includes(sp.category)
     ? sp.category
     : undefined;
   const search = sp.q?.trim();
