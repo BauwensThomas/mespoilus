@@ -66,11 +66,29 @@ export default function OrchestratePage() {
         body: JSON.stringify({ objective, ...(overrideImageUrl ? { overrideImageUrl } : {}) }),
       });
 
+      // Check if response is ok first
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('[orchestrate] Response error:', res.status, text);
+        let errorMsg = `Erreur ${res.status}`;
+        try {
+          const errData = JSON.parse(text);
+          errorMsg = errData.error ?? text;
+        } catch {
+          errorMsg = text || `Erreur ${res.status}`;
+        }
+        throw new Error(errorMsg);
+      }
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? `Erreur ${res.status}`);
+      if (!data.success && data.error) {
+        throw new Error(data.error);
+      }
       setResult(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur inconnue');
+      const msg = e instanceof Error ? e.message : 'Erreur inconnue';
+      console.error('[orchestrate] Error:', msg);
+      setError(msg);
     } finally {
       setIsLoading(false);
     }

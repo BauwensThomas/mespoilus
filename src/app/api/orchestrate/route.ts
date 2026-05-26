@@ -125,11 +125,26 @@ INTENTION: [ce que cherche l'internaute]`;
       const marieTaskDef = plan.tasks.find((t) => t.agent === 'marie');
       const mariePrompt = marieTaskDef?.task
         ? `${marieTaskDef.task}\nMots-clés SEO : ${motsCles.join(', ')}\nCatégorie : ${category}`
-        : `Écris un article de conseil pratique sur : ${sujet}
-Mots-clés à intégrer naturellement : ${motsCles.join(', ')}
-Animal : ${category}
-Intègre 2-3 recommandations de produits et renvoie vers mespoilus.com/boutique.
-Ton bienveillant et pratique, destiné aux propriétaires francophones.`;
+        : `Écris un article COMPLET de conseil pratique sur : ${sujet}
+
+IMPORTANT - Tu DOIS respecter EXACTEMENT ce format de sortie :
+---
+title: [Titre accrocheur]
+slug: [slug-url-friendly-sans-accents]
+excerpt: [Résumé 1 phrase court]
+category: ${category}
+categories: ${category}
+seo_keywords: [${motsCles.join(', ')}]
+meta_description: [155 chars max]
+reading_time: 5
+---
+
+[Ton article complet en Markdown - 800-900 mots]
+
+Mots-clés SEO à intégrer : ${motsCles.join(', ')}
+Intègre 2-3 recommandations de produits avec liens vers mespoilus.com/boutique.
+Ton bienveillant et pratique, destiné aux propriétaires francophones.
+Termine avec une conclusion + CTA court.`;
 
       const marieResult = await executeAgentTask('marie', mariePrompt);
       results.push({ agent: 'marie', success: marieResult.success, content: marieResult.content, priority: 1 });
@@ -314,6 +329,7 @@ IMPORTANT : inclure ce lien EXACT : https://mespoilus.com/blog/${data.slug}`;
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur interne';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[orchestrate] Error:', message, error);
+    return NextResponse.json({ error: message, success: false }, { status: 500 });
   }
 }
