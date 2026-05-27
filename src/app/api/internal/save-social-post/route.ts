@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
         hashtags: hashtags.join(' '),
       };
       if (imageUrl) body.image_url = imageUrl;
-      if (articleLink) body.article_url = articleLink; // Lien explicite pour Make/Facebook
+      if (articleLink) body.article_url = articleLink;
 
       const res = await fetch(makeUrl, {
         method: 'POST',
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
         signal: ctrl.signal,
       });
       clearTimeout(t);
-      console.log('[save-post] webhook:', res.ok ? 'OK' : `erreur ${res.status}`, articleLink ? `(lien: ${articleLink.slice(0, 50)})` : '');
+      console.log('[save-post] webhook:', res.ok ? 'OK' : `erreur ${res.status}`);
     } catch (err) {
       clearTimeout(t);
       console.log('[save-post] webhook exception:', err instanceof Error ? err.message : err);
