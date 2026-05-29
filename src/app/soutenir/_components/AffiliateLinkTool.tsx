@@ -173,7 +173,7 @@ export default function AffiliateLinkTool() {
           </a>
           <p className="mt-3 text-xs text-gray-500 flex items-center gap-1.5">
             <Heart size={12} className="text-orange-400 shrink-0" />
-            En achetant via ce lien, une petite commission revient à Mes Poilus - sans aucun surcoût pour vous. Merci ! 🐾
+            En achetant via ce lien, une petite commission revient à Mes Poilus - sans aucun surcoût pour vous. Merci !
           </p>
         </div>
       )}
