@@ -3,6 +3,7 @@ import { AGENTS } from '@/lib/agents/config';
 import { streamAgentTask } from '@/lib/agents/runner';
 import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 import { sanitizeInput, logSecurityEvent, isIPBlocked, analyzeThreat } from '@/lib/security';
+import { createAdminClient } from '@/lib/supabase/server';
 import type { AgentId } from '@/types';
 
 export const runtime = 'nodejs';
@@ -72,8 +73,26 @@ export async function POST(
     return NextResponse.json({ error: 'Requête bloquée par le système de sécurité' }, { status: 403 });
   }
 
-  const task = sanitizeInput(rawTask);
+  let task = sanitizeInput(rawTask);
   const imageUrl = typeof body.imageUrl === 'string' && body.imageUrl.startsWith('https://') ? body.imageUrl : undefined;
+
+  // Emma n'a pas accès à la base : si la tâche vise "le dernier article publié",
+  // on récupère le vrai article et on construit le prompt exact (évite que le LLM hallucine et publie n'importe quoi)
+  if (agentId === 'emma' && /derni[eè]re?\s+article|dernier\s+article|article\s+publi/i.test(task)) {
+    try {
+      const supabase = createAdminClient();
+      const { data } = await supabase
+        .from('articles')
+        .select('title, slug, excerpt')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.slug) {
+        task = `Crée un post Facebook et Instagram pour cet article de conseils :\nTitre : ${data.title}\nRésumé : ${data.excerpt || data.title}\nLe post doit donner envie de lire l'article complet.\nIMPORTANT : tu dois inclure ce lien EXACT à la fin du post, sans le modifier ni le raccourcir :\nhttps://www.mespoilus.com/blog/${data.slug}`;
+      }
+    } catch { /* fallback : garde la tâche brute */ }
+  }
 
   // Stream la réponse
   try {
