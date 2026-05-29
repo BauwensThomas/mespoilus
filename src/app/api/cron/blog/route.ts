@@ -346,12 +346,32 @@ RACE_SLUG : AUCUN`,
         ].filter(Boolean).join('\n') + '\n\n'
       : '';
 
+    // Garde-fou anti-doublon : compare le sujet aux titres récents (Jaccard sur mots significatifs)
+    const subjectTooSimilar = (candidate: string, titles: string[]): string | null => {
+      const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 3);
+      const cand = new Set(norm(candidate));
+      if (cand.size === 0) return null;
+      for (const t of titles) {
+        const tw = new Set(norm(t));
+        if (tw.size === 0) continue;
+        let inter = 0;
+        for (const w of cand) if (tw.has(w)) inter++;
+        const jaccard = inter / (cand.size + tw.size - inter);
+        if (jaccard >= 0.5) return t;
+      }
+      return null;
+    };
+
+    let dupWarning = '';
+    let lucasAttempt = 0;
+    for (; lucasAttempt < 2; lucasAttempt++) {
     const lucasPrompt = `${forcedPartnerBlock}Trouve le meilleur sujet d'article SEO pour les propriétaires de ${animal}${forcedType === 'trending' ? ` (${monthName})` : ''}.
 
 ${typeInstructions[forcedType]}
 ${suggestionsContext ? `\n${suggestionsContext}\nCe sont les vraies recherches Google en ce moment sur les ${animal}. Utilise l'une d'elles comme sujet ou angle d'article.\n` : ''}${trendsContext && forcedType === 'trending' ? `\n${trendsContext}\nTendances générales du jour - si l'une peut être reliée aux ${animal}, c'est un excellent angle. Sinon, ignore-les.\n` : ''}${gscContext ? `\n${gscContext}\nUtilise ces données GSC pour orienter ton choix : privilégie les requêtes à fort potentiel (impressions élevées, mauvaise position ou CTR faible) en lien avec les ${animal}.\n` : ''}
 Articles déjà publiés (à ne pas dupliquer) :
-${recentContext}
+${recentContext}${dupWarning}
 
 Retourne UNIQUEMENT :
 SUJET: [le sujet choisi]
@@ -413,11 +433,20 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
         }
       }
 
+      // Si le sujet ressemble trop à un article récent → relancer Lucas une fois
+      const dupTitle = forcedType === 'affiliation' ? null : subjectTooSimilar(sujet, recentTitles);
+      if (dupTitle && lucasAttempt === 0) {
+        console.log(`[Cron1] Sujet "${sujet}" trop proche de "${dupTitle}" → relance Lucas`);
+        dupWarning = `\n\n🚫 INTERDICTION : ton sujet précédent ressemblait trop à l'article existant "${dupTitle}". Choisis un sujet RADICALEMENT différent (autre thème, autre angle, autre intention). Ne propose PAS une variation du même sujet.`;
+        continue;
+      }
+
       console.log(`[Cron1] Lucas : sujet=${sujet}${nomProduit ? `, produit=${nomProduit}` : ''}`);
       await logActivity('thomas', 'Thomas',
         `Cron étape 2 : Lucas → ${sujet}`,
-        'success', Date.now() - step2Start, { sujet, mots_cles: motsCles }
+        'success', Date.now() - step2Start, { sujet, mots_cles: motsCles, attempt: lucasAttempt }
       );
+      break;
     } else {
       sujet = `Conseils pratiques pour votre ${animal.replace(/s$/, '')} en ${season}`;
       motsCles = [animal, season, 'conseils', 'bien-être', 'santé'];
@@ -426,7 +455,9 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
         `Cron étape 2 erreur Lucas -fallback sujet utilisé`,
         'error', Date.now() - step2Start
       );
+      break;
     }
+    }  // fin boucle retry Lucas
 
     // ─── ÉTAPE 3 : Marie écrit l'article ─────────────────────────────────
     const step3Start = Date.now();
@@ -578,10 +609,7 @@ CONSIGNES :
             // Image du produit Awin - télécharger dans Supabase Storage (URL CDN Awin rejetée par Instagram)
             console.log(`[Cron1] Image: produit Awin "${nomProduit}"...`);
             const hdImageUrl = imageProduit.replace(/([?&])(w|h)=\d+/g, '$1$2=800');
-            const stored = await Promise.race([
-              downloadAndStorePhoto(hdImageUrl, `article-${articleSlug}.jpg`),
-              new Promise<null>(r => setTimeout(() => r(null), 7000)),
-            ]);
+            const stored = await downloadAndStorePhoto(hdImageUrl, `article-${articleSlug}.jpg`);
             if (stored) {
               imageUrl = stored;
               await supabase.from('articles').update({ image_url: imageUrl }).eq('slug', articleSlug);
@@ -594,10 +622,7 @@ CONSIGNES :
                 new Promise<null>(r => setTimeout(() => r(null), 5000)),
               ]);
               if (photo) {
-                const pexelsStored = await Promise.race([
-                  downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`),
-                  new Promise<null>(r => setTimeout(() => r(null), 5000)),
-                ]);
+                const pexelsStored = await downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`);
                 imageUrl = pexelsStored ?? photo.url;
                 await supabase.from('articles').update({
                   image_url: imageUrl,
@@ -617,10 +642,7 @@ CONSIGNES :
               new Promise<null>(r => setTimeout(() => r(null), 5000)),
             ]);
             if (photo) {
-              const stored = await Promise.race([
-                downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`),
-                new Promise<null>(r => setTimeout(() => r(null), 5000)),
-              ]);
+              const stored = await downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`);
               imageUrl = stored ?? photo.url;
               await supabase.from('articles').update({
                 image_url: imageUrl,
@@ -641,7 +663,11 @@ CONSIGNES :
       }
     }
 
+    // Supersede les anciens article_ready non consommés (évite que le social poste un vieux sujet)
+    await supabase.from('cron_state').update({ status: 'superseded' }).eq('status', 'article_ready');
+
     // Sauvegarde dans cron_state pour que le cron social le lise dans 30min
+    // (le social récupère l'image via le slug → save-social-post, garantissant la même image que l'article)
     await supabase.from('cron_state').insert({
       slug: articleSlug,
       title: articleTitle,

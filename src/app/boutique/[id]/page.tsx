@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Package, Star, Tag, Weight, Heart } from 'lucide-react';
+import { ExternalLink, Package, Star, Tag, Weight, Heart, EyeOff } from 'lucide-react';
 import BackBreadcrumb from './_components/BackBreadcrumb';
 import FavoriteButton from '../_components/FavoriteButton';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
@@ -47,12 +47,12 @@ async function getCatalogEntry(id: string) {
       .from('product_offers')
       .select('id, merchant_name, country, price, currency, affiliate_url, in_stock, source, last_synced_at')
       .eq('catalog_id', id)
+      .eq('in_stock', true)
       .gt('price', 0)
       .order('price', { ascending: true }),
   ]);
 
   if (catalogRes.error || !catalogRes.data) return null;
-  if (catalogRes.data.status !== 'active') return 'hidden';
 
   // Garder 1 offre par marchand (la moins chère)
   const merchantMap = new Map<string, NonNullable<typeof offersRes.data>[0]>();
@@ -90,9 +90,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const result = await getCatalogEntry(id);
+  const [result, { data: { user } }] = await Promise.all([
+    getCatalogEntry(id),
+    createClient().then(s => s.auth.getUser()),
+  ]);
+  const isAdmin = !!user;
+
   if (!result) notFound();
-  if (result === 'hidden') redirect('/boutique');
+  if (result.catalog.status === 'hidden' && !isAdmin) redirect('/boutique');
 
   const { catalog, offers } = result;
   const bestOffer = offers[0] ?? null;
@@ -102,6 +107,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   return (
     <DirectionalTransition>
     <div className="min-h-screen bg-gray-50 pb-20">
+      {isAdmin && catalog.status === 'hidden' && (
+        <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2 bg-red-600/95 backdrop-blur text-white text-xs">
+          <EyeOff size={13} />
+          <span className="font-semibold">Produit masqué</span>
+          <span className="text-red-200">- visible uniquement pour les admins</span>
+          <Link href="/boutique-v2-admin?status=hidden" className="ml-auto underline hover:text-red-100">Gérer les produits masqués</Link>
+        </div>
+      )}
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8 py-6">
 
         {/* Fil d'ariane */}

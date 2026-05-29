@@ -370,9 +370,10 @@ async function saveSocialPost(content: string, overrideImageUrl?: string) {
       ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:3000';
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 3000);
+  const t = setTimeout(() => ctrl.abort(), 20000);
   try {
-    fetch(`${appUrl}/api/internal/save-social-post`, {
+    // AWAIT obligatoire : en serverless, un fetch fire-and-forget est tué dès que le handler renvoie
+    const res = await fetch(`${appUrl}/api/internal/save-social-post`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -380,12 +381,12 @@ async function saveSocialPost(content: string, overrideImageUrl?: string) {
       },
       body: JSON.stringify({ content: postContent, hashtags, ...(overrideImageUrl ? { overrideImageUrl } : {}) }),
       signal: ctrl.signal,
-    }).catch(() => {});
+    });
     clearTimeout(t);
-    console.log('[Emma] save-social-post déclenché');
-  } catch {
+    console.log('[Emma] save-social-post:', res.ok ? 'OK ✅' : `erreur ${res.status}`);
+  } catch (err) {
     clearTimeout(t);
-    console.log('[Emma] save-social-post échec déclenchement');
+    console.log('[Emma] save-social-post échec:', err instanceof Error ? err.message : err);
   }
 
   console.log('[Emma] saveSocialPost terminé');

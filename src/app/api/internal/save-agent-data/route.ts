@@ -127,7 +127,13 @@ async function saveMarie(content: string, overrideImageUrl?: string) {
   const fm = frontmatterMatch[1];
   const getField = (key: string) => { const m = fm.match(new RegExp(`${key}:\\s*(.+)`)); return m ? m[1].trim() : ''; };
   const title = getField('title');
-  const slug = getField('slug') || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  // Slugify robuste : retire les accents (NFD) puis tout caractère non ASCII → évite les 404 (ex: "coincé" → "coince")
+  const slugify = (s: string) => s
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const slug = slugify(getField('slug') || title);
   const excerpt = getField('excerpt');
   const category = getField('category') || 'general';
   const metaDescription = getField('meta_description');

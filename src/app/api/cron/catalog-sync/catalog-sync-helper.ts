@@ -167,7 +167,7 @@ async function processBatch(
           categories:   p.categories ?? [],
           product_type: p.product_type ?? null,
           image_url:    p.image_url || null,
-          description:  p.description?.slice(0, 500) || null,
+          description:  p.description?.slice(0, 2000) || null,
           weight_g:     extractWeightG(p.name),
           status:       'active',
         }))
@@ -208,7 +208,7 @@ async function processBatch(
         .from('products_catalog')
         .update({ status: 'active' })
         .in('id', uniqueCatalogIds.slice(i, i + 200))
-        .eq('status', 'hidden');
+        .in('status', ['hidden', 'deleted']);
     }
   }
 
@@ -224,7 +224,7 @@ async function cleanupStaleOffersForCategory(
   syncTime: string,
   merchantName?: string
 ): Promise<{ deletedOffers: number; hiddenProducts: number }> {
-  // Récupère tous les catalog_id de cette catégorie (actifs)
+  // Récupère tous les catalog_id de cette catégorie (actifs, hors pinned)
   const allCategoryIds: string[] = [];
   let page = 0;
   while (true) {
@@ -242,16 +242,17 @@ async function cleanupStaleOffersForCategory(
 
   if (allCategoryIds.length === 0) return { deletedOffers: 0, hiddenProducts: 0 };
 
-  // Supprime les offres périmées (non vues dans ce sync)
+  // Marque les offres périmées comme hors stock (soft-delete : préserve l'affiliate_url)
   let deletedOffers = 0;
   for (let i = 0; i < allCategoryIds.length; i += 200) {
     const batch = allCategoryIds.slice(i, i + 200);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let q: any = supabase
       .from('product_offers')
-      .delete({ count: 'exact' })
+      .update({ in_stock: false })
       .eq('source', source)
       .lt('last_synced_at', syncTime)
+      .eq('in_stock', true)
       .in('catalog_id', batch);
     if (merchantName) q = q.eq('merchant_name', merchantName);
     const { count } = await q;
@@ -260,14 +261,16 @@ async function cleanupStaleOffersForCategory(
 
   if (deletedOffers === 0) return { deletedOffers: 0, hiddenProducts: 0 };
 
-  // Identifie les produits sans aucune offre restante → masquer
+  // Identifie les produits sans aucune offre en stock restante → masquer
   const withOfferIds = new Set<string>();
   for (let i = 0; i < allCategoryIds.length; i += 500) {
     const batch = allCategoryIds.slice(i, i + 500);
     const { data } = await supabase
       .from('product_offers')
       .select('catalog_id')
-      .in('catalog_id', batch);
+      .in('catalog_id', batch)
+      .eq('in_stock', true)
+      .gt('price', 0);
     for (const row of data ?? []) withOfferIds.add(row.catalog_id);
   }
 

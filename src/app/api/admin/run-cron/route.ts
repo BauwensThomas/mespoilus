@@ -82,6 +82,8 @@ export async function POST(req: NextRequest) {
   if (step === 'blog' && forcedImage) params.set('forcedImage', forcedImage);
   if (step === 'newsletter' && bypass === 'true') params.set('bypass', 'true');
   if (step === 'newsletter' && target) params.set('target', target);
+  // Déclenchement manuel (admin) du social → bypass le garde-fou de fraîcheur 6h
+  if (step === 'social') params.set('manual', 'true');
   const queryParams = params.toString() ? `?${params.toString()}` : '';
 
   try {

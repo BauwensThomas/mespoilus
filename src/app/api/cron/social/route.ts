@@ -33,7 +33,7 @@ export async function GET(req: Request) {
   // Lire le dernier article prêt depuis cron_state
   const { data: stateRow } = await supabase
     .from('cron_state')
-    .select('id, slug, title, excerpt')
+    .select('id, slug, title, excerpt, created_at')
     .eq('status', 'article_ready')
     .order('created_at', { ascending: false })
     .limit(1)
@@ -43,6 +43,17 @@ export async function GET(req: Request) {
     console.log('[Cron2] Aucun article prêt dans cron_state, abandon.');
     await logActivity('thomas', 'Thomas', '[Cron social] abandon - aucun article_ready dans cron_state', 'error', Date.now() - globalStart);
     return NextResponse.json({ success: false, reason: 'no_article_ready' });
+  }
+
+  // Garde-fou fraîcheur : ne pas poster un article périmé (blog n'a pas tourné ce cycle)
+  // Bypass si déclenchement manuel admin (?manual=true) — l'humain sait ce qu'il fait
+  const isManual = new URL(req.url).searchParams.get('manual') === 'true';
+  const ageMs = Date.now() - new Date(stateRow.created_at).getTime();
+  if (!isManual && ageMs > 6 * 60 * 60 * 1000) {
+    console.log(`[Cron2] Article prêt trop ancien (${Math.round(ageMs / 3600000)}h), abandon pour éviter un post périmé.`);
+    await supabase.from('cron_state').update({ status: 'superseded' }).eq('id', stateRow.id);
+    await logActivity('thomas', 'Thomas', `[Cron social] abandon - article_ready périmé (${Math.round(ageMs / 3600000)}h)`, 'error', Date.now() - globalStart);
+    return NextResponse.json({ success: false, reason: 'article_too_old' });
   }
 
   const { id: stateId, slug, title, excerpt } = stateRow;
