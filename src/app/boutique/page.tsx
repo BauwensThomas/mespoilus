@@ -283,13 +283,28 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8 py-6">
 
         {/* Header */}
-        <div className="mb-4">
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Boutique</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {total > 0
-              ? `${total.toLocaleString('fr-FR')} produit${total !== 1 ? 's' : ''}${search ? ` pour "${search}"` : ` · ${currentCategoryLabel}`}`
-              : 'Aucun produit trouve'}
-          </p>
+        <div className="mb-4 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Boutique</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {total > 0
+                ? `${total.toLocaleString('fr-FR')} produit${total !== 1 ? 's' : ''}${search ? ` pour "${search}"` : ` · ${currentCategoryLabel}`}`
+                : 'Aucun produit trouve'}
+            </p>
+          </div>
+          <Link
+            href="/soutenir"
+            className="w-full sm:w-auto sm:max-w-md bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl px-4 py-2.5 hover:border-orange-400 hover:shadow-sm transition-all group flex items-center gap-3"
+          >
+            <div className="shrink-0 w-9 h-9 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-colors">
+              <Heart size={16} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-gray-900 leading-tight">Vous ne trouvez pas un produit ?</p>
+              <p className="text-xs text-gray-600 leading-tight mt-0.5">Collez son lien (Amazon, Maxi Zoo, CanadaPetCare, Tuft &amp; Paw) et soutenez Mes Poilus gratuitement.</p>
+            </div>
+            <ChevronRight size={18} className="text-orange-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
         </div>
 
         {/* Barre de controle */}

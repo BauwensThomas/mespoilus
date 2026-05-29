@@ -403,7 +403,7 @@ export default async function LandingPage() {
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
       <footer className="bg-gray-900 text-gray-400 pt-12 pb-6 px-6 border-t border-gray-800">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-6 border-b border-gray-800">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8 pb-6 border-b border-gray-800">
             {/* Brand */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-3">
@@ -427,8 +427,23 @@ export default async function LandingPage() {
               <h3 className="text-white text-sm font-semibold mb-3 uppercase tracking-wider">Navigation</h3>
               <ul className="space-y-2">
                 {[
-                  { href: '/blog',                   label: 'Blog'     },
-                  { href: '/adoption',               label: 'Adoption' },
+                  { href: '/blog',     label: 'Blog'     },
+                  { href: '/boutique', label: 'Boutique' },
+                  { href: '/races',    label: 'Races'    },
+                  { href: '/outils',   label: 'Outils'   },
+                  { href: '/soutenir', label: 'Soutenir Mes Poilus' },
+                  { href: '/adoption', label: 'Adoption' },
+                ].map(({ href, label }) => (
+                  <li key={href}><Link href={href} className="text-sm hover:text-orange-400 transition-colors focus:outline-none focus-visible:underline">{label}</Link></li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Catégories */}
+            <div>
+              <h3 className="text-white text-sm font-semibold mb-3 uppercase tracking-wider">Catégories</h3>
+              <ul className="space-y-2">
+                {[
                   { href: '/blog/chiens',   label: 'Chiens'   },
                   { href: '/blog/chats',    label: 'Chats'    },
                   { href: '/blog/oiseaux',  label: 'Oiseaux'  },

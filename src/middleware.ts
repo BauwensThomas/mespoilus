@@ -80,7 +80,7 @@ export async function middleware(request: NextRequest) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=()');
 
-  // 2. IP bloquée — cache mémoire (rapide) + Redis (persistant cross-instances)
+  // 2. IP bloquée - cache mémoire (rapide) + Redis (persistant cross-instances)
   const now = Date.now();
   const blockedUntil = BLOCKED_IPS_CACHE.get(ip);
   if (blockedUntil && now < blockedUntil) {
@@ -103,7 +103,7 @@ export async function middleware(request: NextRequest) {
 
   // 3. Détection de menaces + rate limiting sur les routes API
   if (pathname.startsWith('/api/')) {
-    const url = pathname + request.nextUrl.search;
+    const url = request.nextUrl.search; // query params only, pas le pathname
     if (detectThreat(url)) {
       BLOCKED_IPS_CACHE.set(ip, Date.now() + 60 * 60 * 1000);
       return NextResponse.json(

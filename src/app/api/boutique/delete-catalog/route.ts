@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
@@ -6,23 +6,22 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autorise' }, { status: 401 });
 
-  const { catalog_id, action } = await req.json() as { catalog_id: string; action?: 'hide' | 'show' | 'pin' };
+  const { catalog_id } = await req.json() as { catalog_id: string };
   if (!catalog_id) return NextResponse.json({ error: 'catalog_id requis' }, { status: 400 });
 
-  const newStatus = action === 'show' ? 'pinned' : 'hidden';
+  const admin = createAdminClient();
 
-  const adminSupabase = createAdminClient();
-  const { error } = await adminSupabase
+  const { error } = await admin
     .from('products_catalog')
-    .update({ status: newStatus })
+    .update({ status: 'deleted' })
     .eq('id', catalog_id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await adminSupabase.from('activity_logs').insert({
+  await admin.from('activity_logs').insert({
     agent_id: 'thomas', agent_name: 'Thomas',
-    action: `[Boutique V2] Produit ${newStatus === 'hidden' ? 'masque' : 'remis'} : ${catalog_id}`,
-    details: { catalog_id, status: newStatus },
+    action: `[Boutique V2] Produit marqué supprimé : ${catalog_id}`,
+    details: { catalog_id },
     status: 'success',
   });
 

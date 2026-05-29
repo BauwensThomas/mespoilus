@@ -4,8 +4,9 @@ import { normalizeSearch } from '@/lib/search';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ExternalLink, Package, ShoppingBag, Tag, AlertCircle, Eye, EyeOff, ChevronLeft, ChevronRight, GitMerge, Store } from 'lucide-react';
+import { ExternalLink, Package, ShoppingBag, Tag, AlertCircle, Eye, EyeOff, ChevronLeft, ChevronRight, GitMerge, Store, Pin, Search } from 'lucide-react';
 import AdminHideToggle from './_components/AdminHideToggle';
+import AddOfferButton from './_components/AddOfferButton';
 import DateRangeFilter from './_components/DateRangeFilter';
 import TranslationEditCell from './_components/TranslationEditCell';
 import ProductTypeCell from './_components/ProductTypeCell';
@@ -32,9 +33,9 @@ async function getStats() {
     supabase.from('catalog_best_offer').select('catalog_id', { count: 'exact', head: true }),
     supabase.from('products_catalog').select('id', { count: 'exact', head: true }).eq('status', 'hidden'),
     supabase.from('product_offers').select('id', { count: 'exact', head: true }),
-    supabase.from('products_catalog').select('id', { count: 'exact', head: true }).in('status', ['active', 'hidden']).or('ean.is.null,ean.eq.'),
+    supabase.from('products_catalog').select('id', { count: 'exact', head: true }).in('status', ['active', 'hidden', 'pinned']).or('ean.is.null,ean.eq.'),
     supabase.rpc('get_multi_merchant_count'),
-    supabase.from('products_catalog').select('id', { count: 'exact', head: true }).gte('created_at', since24h),
+    supabase.from('products_catalog').select('id', { count: 'exact', head: true }).in('status', ['active', 'hidden', 'pinned']).gte('created_at', since24h),
   ]);
   return {
     active:   activeRes.count  ?? 0,
@@ -57,6 +58,28 @@ async function getMerchantsAdmin(): Promise<string[]> {
   }
 }
 
+async function getAwinTemplates(): Promise<Record<string, string>> {
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from('product_offers')
+      .select('merchant_name, affiliate_url')
+      .eq('source', 'awin')
+      .not('affiliate_url', 'is', null)
+      .order('merchant_name')
+      .limit(5000);
+    const map: Record<string, string> = {};
+    for (const row of data ?? []) {
+      if (!map[row.merchant_name] && row.affiliate_url) {
+        map[row.merchant_name] = row.affiliate_url;
+      }
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 async function getCatalogList(params: {
   search?: string;
   category?: string;
@@ -73,30 +96,52 @@ async function getCatalogList(params: {
   const supabase = createAdminClient();
   const offset = (params.page - 1) * PAGE_SIZE;
 
-  type MerchantPrice = { name: string; minPrice: number; currency: string };
+  type MerchantPrice = { name: string; minPrice: number; currency: string; affiliateUrl: string | null };
   type OfferSummary = { count: number; minPrice: number; currency: string; merchants: MerchantPrice[] };
   type CatalogRow = { id: string; name: string; name_fr: string | null; description: string | null; description_fr: string | null; brand: string | null; category: string; image_url: string | null; ean: string | null; status: string; created_at: string; product_type: string | null };
 
   async function fetchOffers(ids: string[]) {
     if (ids.length === 0) return new Map<string, OfferSummary>();
-    const { data: offers } = await supabase
+    // Offres actives (in_stock = true) pour les prix
+    const { data: activeOffers } = await supabase
       .from('product_offers')
-      .select('catalog_id, merchant_name, price, currency')
+      .select('catalog_id, merchant_name, price, currency, affiliate_url')
       .in('catalog_id', ids)
+      .eq('in_stock', true)
       .gt('price', 0)
       .limit(5000);
+    // Offres expirées (in_stock = false) pour l'URL de fallback sur produits masqués
+    const { data: staleOffers } = await supabase
+      .from('product_offers')
+      .select('catalog_id, merchant_name, affiliate_url')
+      .in('catalog_id', ids)
+      .eq('in_stock', false)
+      .not('affiliate_url', 'is', null)
+      .limit(2000);
+    // Index des dernières URLs connues par catalog_id
+    const lastUrlMap = new Map<string, string>();
+    for (const o of staleOffers ?? []) {
+      if (o.affiliate_url && !lastUrlMap.has(o.catalog_id)) lastUrlMap.set(o.catalog_id, o.affiliate_url);
+    }
+
     const offerMap = new Map<string, OfferSummary>();
-    for (const o of offers ?? []) {
+    for (const o of activeOffers ?? []) {
       const entry: OfferSummary = offerMap.get(o.catalog_id) ?? { count: 0, minPrice: Infinity, currency: o.currency ?? 'EUR', merchants: [] };
       entry.count++;
       if (o.price < entry.minPrice) { entry.minPrice = o.price; entry.currency = o.currency ?? 'EUR'; }
       const existing = entry.merchants.find(m => m.name === o.merchant_name);
       if (existing) {
-        if (o.price < existing.minPrice) existing.minPrice = o.price;
+        if (o.price < existing.minPrice) { existing.minPrice = o.price; existing.affiliateUrl = o.affiliate_url ?? null; }
       } else {
-        entry.merchants.push({ name: o.merchant_name, minPrice: o.price, currency: o.currency ?? 'EUR' });
+        entry.merchants.push({ name: o.merchant_name, minPrice: o.price, currency: o.currency ?? 'EUR', affiliateUrl: o.affiliate_url ?? null });
       }
       offerMap.set(o.catalog_id, entry);
+    }
+    // Injecter lastUrl pour les produits sans offre active
+    for (const [catalogId, url] of lastUrlMap) {
+      if (!offerMap.has(catalogId)) {
+        offerMap.set(catalogId, { count: 0, minPrice: 0, currency: '', merchants: [{ name: 'Dernière URL connue', minPrice: 0, currency: '', affiliateUrl: url }] });
+      }
     }
     return offerMap;
   }
@@ -139,7 +184,7 @@ async function getCatalogList(params: {
       if (params.category && params.category !== 'all') tq = tq.eq('category', params.category);
       if (params.status === 'active') tq = tq.eq('status', 'active');
       else if (params.status === 'hidden') tq = tq.eq('status', 'hidden');
-      else tq = tq.in('status', ['active', 'hidden']);
+      else tq = tq.in('status', ['active', 'hidden', 'pinned']);
       const { data: tRows, error: tqErr } = await tq;
       if (tqErr || !tRows?.length) break;
       cursor = tRows[tRows.length - 1].id;
@@ -189,7 +234,7 @@ async function getCatalogList(params: {
 
   if (params.status === 'active') q = q.eq('status', 'active');
   else if (params.status === 'hidden') q = q.eq('status', 'hidden');
-  else q = q.in('status', ['active', 'hidden']);
+  else q = q.in('status', ['active', 'hidden', 'pinned']);
   if (params.category && params.category !== 'all') q = q.eq('category', params.category);
   if (params.search) q = q.ilike('name_search', `%${normalizeSearch(params.search)}%`);
   if (params.ean === 'with')    q = q.not('ean', 'is', null).neq('ean', '');
@@ -265,9 +310,10 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
   const translation = sp.translation ?? '';
   const page        = Math.max(1, parseInt(sp.page ?? '1'));
 
-  const [stats, allMerchants, { items, total }] = await Promise.all([
+  const [stats, allMerchants, awinTemplates, { items, total }] = await Promise.all([
     getStats(),
     getMerchantsAdmin(),
+    getAwinTemplates(),
     getCatalogList({ search, category, status, ean, merchant: merchant || undefined, multi, newDays, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined, translation: translation || undefined, page }),
   ]);
 
@@ -286,7 +332,7 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-screen-xl mx-auto px-4 py-6">
+      <div className="max-w-screen-2xl mx-auto px-4 py-6">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -314,17 +360,24 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
           {[
-            { label: 'Produits actifs',     value: stats.active,        color: 'text-green-600',  bg: 'bg-green-50',  border: 'border-green-200' },
-            { label: 'Produits masques',    value: stats.hidden,        color: 'text-red-500',    bg: 'bg-red-50',    border: 'border-red-200' },
-            { label: 'Total offres',        value: stats.offers,        color: 'text-blue-600',   bg: 'bg-blue-50',   border: 'border-blue-200' },
-            { label: 'Multi-marchands',     value: stats.multiMerchant, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
-            { label: 'Sans EAN',            value: stats.noEan,         color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' },
-            { label: 'Nouveaux (24h)',       value: stats.new24h,        color: 'text-teal-600',   bg: 'bg-teal-50',   border: 'border-teal-200' },
+            { label: 'Produits actifs',     value: stats.active,        color: 'text-green-600',  bg: 'bg-green-50',  border: 'border-green-200', href: buildUrl(baseParams, { status: 'active' }) },
+            { label: 'Produits masques',    value: stats.hidden,        color: 'text-red-500',    bg: 'bg-red-50',    border: 'border-red-200',   href: buildUrl(baseParams, { status: 'hidden' }) },
+            { label: 'Total offres',        value: stats.offers,        color: 'text-blue-600',   bg: 'bg-blue-50',   border: 'border-blue-200',   href: null },
+            { label: 'Multi-marchands',     value: stats.multiMerchant, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200', href: buildUrl(baseParams, { multi: '1' }) },
+            { label: 'Sans EAN',            value: stats.noEan,         color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200', href: buildUrl(baseParams, { ean: 'without' }) },
+            { label: 'Nouveaux (24h)',       value: stats.new24h,        color: 'text-teal-600',   bg: 'bg-teal-50',   border: 'border-teal-200',   href: buildUrl(baseParams, { newDays: '1' }) },
           ].map(s => (
+            s.href ? (
+            <Link key={s.label} href={s.href} className={`${s.bg} border ${s.border} rounded-xl p-4 hover:shadow-sm transition-shadow`}>
+              <p className="text-xs text-gray-500 font-medium">{s.label}</p>
+              <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value.toLocaleString('fr-FR')}</p>
+            </Link>
+            ) : (
             <div key={s.label} className={`${s.bg} border ${s.border} rounded-xl p-4`}>
               <p className="text-xs text-gray-500 font-medium">{s.label}</p>
               <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value.toLocaleString('fr-FR')}</p>
             </div>
+            )
           ))}
         </div>
 
@@ -399,6 +452,26 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
                     ean === v
                       ? 'bg-gray-900 text-white border-gray-900'
                       : 'bg-white text-gray-600 border-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  {l}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Nouveaux */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Nouveaux</label>
+            <div className="flex gap-1">
+              {([['1', '24h'], ['7', '7j'], ['30', '30j']] as [string, string][]).map(([v, l]) => (
+                <Link
+                  key={v}
+                  href={buildUrl(baseParams, { newDays: newDays === parseInt(v) ? null : v })}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                    newDays === parseInt(v)
+                      ? 'bg-teal-600 text-white border-teal-600'
+                      : 'bg-white text-gray-600 border-gray-300 hover:border-teal-400'
                   }`}
                 >
                   {l}
@@ -509,7 +582,7 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
                 <th className="text-center px-4 py-3 text-xs text-gray-500 font-semibold uppercase tracking-wider hidden lg:table-cell">EAN</th>
                 <th className="text-left px-4 py-3 text-xs text-gray-500 font-semibold uppercase tracking-wider hidden md:table-cell">Prix / Marchands</th>
                 <th className="text-center px-4 py-3 text-xs text-gray-500 font-semibold uppercase tracking-wider">Statut</th>
-                <th className="px-4 py-3" />
+                <th className="px-4 py-3 w-64" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -538,7 +611,9 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-gray-900 line-clamp-1 text-sm">{item.name}</p>
+                          <div style={{ width: 0, overflow: 'visible', whiteSpace: 'nowrap' }}>
+                            <p className="font-medium text-gray-900 text-sm">{item.name}</p>
+                          </div>
                           {item.brand && (
                             <p className="text-[11px] text-gray-400 line-clamp-1 mb-0.5">{item.brand}</p>
                           )}
@@ -601,9 +676,24 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
 
                     {/* Offres */}
                     <td className="px-4 py-3 hidden md:table-cell">
-                      {o ? (
+                      {o && o.count > 0 ? (
                         <div className="flex flex-wrap gap-1">
-                          {o.merchants.map(m => (
+                          {o.merchants.map(m => m.affiliateUrl ? (
+                            <a
+                              key={m.name}
+                              href={m.affiliateUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`text-xs px-2.5 py-1 rounded-lg whitespace-nowrap flex items-center gap-1 transition-opacity hover:opacity-75 ${
+                                m.minPrice === o.minPrice
+                                  ? 'bg-orange-50 text-orange-600 border border-orange-200 font-semibold'
+                                  : 'bg-gray-100 text-gray-500 border border-gray-200'
+                              }`}
+                            >
+                              {m.name} · {m.minPrice.toFixed(2)} {m.currency}
+                              <ExternalLink size={9} className="shrink-0 opacity-60" />
+                            </a>
+                          ) : (
                             <span
                               key={m.name}
                               className={`text-xs px-2.5 py-1 rounded-lg whitespace-nowrap flex items-center gap-1 ${
@@ -616,8 +706,27 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
                             </span>
                           ))}
                         </div>
+                      ) : o && o.count === 0 && o.merchants[0]?.affiliateUrl ? (
+                        <a
+                          href={o.merchants[0].affiliateUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs px-2.5 py-1 rounded-lg whitespace-nowrap flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 hover:opacity-75 transition-opacity"
+                        >
+                          Dernière URL connue
+                          <ExternalLink size={9} className="shrink-0 opacity-60" />
+                        </a>
                       ) : (
-                        <span className="text-xs text-gray-400 italic whitespace-nowrap">Aucune offre</span>
+                        <a
+                          href={`https://www.google.com/search?q=${encodeURIComponent([item.name, item.brand, item.ean].filter(Boolean).join(' '))}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs px-2.5 py-1 rounded-lg whitespace-nowrap flex items-center gap-1 bg-gray-50 text-gray-400 border border-gray-200 hover:text-gray-700 hover:border-gray-400 transition-colors"
+                          title="Rechercher ce produit sur Google"
+                        >
+                          <Search size={10} />
+                          Rechercher
+                        </a>
                       )}
                     </td>
 
@@ -627,6 +736,11 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
                         <span className="inline-flex items-center gap-1 text-xs bg-red-50 text-red-500 px-2 py-0.5 rounded-full border border-red-200 font-medium">
                           <EyeOff size={10} />
                           Masque
+                        </span>
+                      ) : item.status === 'pinned' ? (
+                        <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-200 font-medium">
+                          <Pin size={10} />
+                          Épinglé
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full border border-green-200 font-medium">
@@ -639,6 +753,13 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
                     {/* Actions */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 justify-end">
+                        {(!o || o.count === 0) && (
+                          <AddOfferButton
+                            catalogId={item.id}
+                            merchants={allMerchants}
+                            awinTemplates={awinTemplates}
+                          />
+                        )}
                         <Link
                           href={`/boutique/${item.id}`}
                           target="_blank"
@@ -647,7 +768,7 @@ export default async function BoutiqueV2AdminPage({ searchParams }: Props) {
                         >
                           <ExternalLink size={14} />
                         </Link>
-                        <AdminHideToggle catalogId={item.id} name={(item as { name_fr?: string | null }).name_fr ?? item.name} status={item.status as 'active' | 'hidden'} />
+                        <AdminHideToggle catalogId={item.id} name={(item as { name_fr?: string | null }).name_fr ?? item.name} status={item.status as 'active' | 'hidden' | 'pinned'} />
                       </div>
                     </td>
                   </tr>

@@ -55,7 +55,7 @@ const CRONS: CronConfig[] = [
     accentColor: 'border-purple-200',
     group: 'Contenu',
     steps: [
-      { key: 'blog',   label: 'Blog (Lucas + Marie)', waitAfterMs: 35000 },
+      { key: 'blog',   label: 'Blog (Lucas + Marie)', waitAfterMs: 70000 },
       { key: 'social', label: 'Réseaux (Emma → Facebook)' },
     ],
   },
