@@ -210,6 +210,35 @@ async function processBatch(
         .in('id', uniqueCatalogIds.slice(i, i + 200))
         .in('status', ['hidden', 'deleted']);
     }
+
+    // Auto-healing description : met à jour les fiches dont la description stockée est plus courte
+    // que celle du feed (corrige les anciennes fiches coupées à 200 car.). Plafonné pour ne pas
+    // alourdir le sync → se répare progressivement sur plusieurs runs. Non-bloquant.
+    try {
+      const descById = new Map<string, string>();
+      for (const { catalog_id, product } of offerPairs) {
+        const d = product.description?.slice(0, 2000);
+        if (d && d.length > (descById.get(catalog_id)?.length ?? 0)) descById.set(catalog_id, d);
+      }
+      const ids = [...descById.keys()];
+      let healed = 0;
+      for (let i = 0; i < ids.length && healed < 200; i += 300) {
+        const chunk = ids.slice(i, i + 300);
+        const { data: current } = await supabase
+          .from('products_catalog')
+          .select('id, description')
+          .in('id', chunk);
+        for (const row of current ?? []) {
+          if (healed >= 200) break;
+          const newDesc = descById.get(row.id);
+          if (newDesc && newDesc.length > (row.description?.length ?? 0) + 20) {
+            await supabase.from('products_catalog').update({ description: newDesc }).eq('id', row.id);
+            healed++;
+          }
+        }
+      }
+      if (healed > 0) console.log(`[catalog-sync] ${healed} descriptions rafraîchies`);
+    } catch { /* non-bloquant */ }
   }
 
   return { inserted, updated };
