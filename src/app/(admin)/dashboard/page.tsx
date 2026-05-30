@@ -27,7 +27,7 @@ async function getDashboardData() {
       supabase.rpc('get_agent_stats_aggregated', { start_of_month: startOfMonth.toISOString() }),
       supabase.from('security_logs').select('id', { count: 'exact' }).in('threat_level', ['high', 'critical']).gte('created_at', startOfMonth.toISOString()),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published').gte('published_at', startOfMonth.toISOString()),
-      supabase.from('products_catalog').select('id', { count: 'exact' }).eq('status', 'active'),
+      supabase.from('products_catalog').select('id', { count: 'exact' }).in('status', ['active', 'pinned']),
       supabase.from('activity_logs')
         .select('created_at')
         .ilike('action', '[Catalog sync%')
