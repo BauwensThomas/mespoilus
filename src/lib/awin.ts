@@ -264,7 +264,7 @@ async function parseCSVStreamingWithFlush(
     totalFromFeed++;
 
     batch.push({
-      id: pid, name, description: desc.slice(0, 200),
+      id: pid, name, description: desc.slice(0, 2000),
       price, currency, image_url: imageUrl,
       affiliate_url: deepLink, merchant_name: merchantName ?? '',
       category: primary, categories: cats,
@@ -535,7 +535,7 @@ export async function fetchAwinProducts(
         if (allProducts.find(x => x.id === pid)) continue;
 
         allProducts.push({
-          id: pid, name, description: desc.slice(0, 200),
+          id: pid, name, description: desc.slice(0, 2000),
           price, currency, image_url: imageUrl,
           affiliate_url: deepLink, merchant_name: merchantName ?? '',
           category, categories: [category],
