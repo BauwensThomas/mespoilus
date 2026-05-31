@@ -7,12 +7,28 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com';
 
 // Validez et nettoyez les URLs pour le sitemap XML
 function sanitizeUrl(url: string): string {
+  if (!url || typeof url !== 'string') return '';
   try {
     // Vérifier que c'est une URL valide
     new URL(url);
+    // Vérifier qu'elle ne contient pas de caractères interdits en XML
+    if (/<|>|&(?!(?:[a-zA-Z]+|#[0-9]+|#x[0-9a-fA-F]+);)/.test(url)) {
+      return '';
+    }
     return url;
   } catch {
     return '';
+  }
+}
+
+// Valider les entrées du sitemap
+function isValidSitemapEntry(entry: any): boolean {
+  if (!entry?.url) return false;
+  try {
+    new URL(entry.url);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -30,13 +46,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .eq('status', 'published')
       .order('published_at', { ascending: false });
 
-    articleEntries = (articles ?? []).map((article) => ({
-      url: `${APP_URL}/blog/${article.slug}`,
-      lastModified: new Date(article.updated_at ?? article.published_at ?? Date.now()),
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-      ...(article.image_url && sanitizeUrl(article.image_url) ? { images: [sanitizeUrl(article.image_url)] } : {}),
-    }));
+    articleEntries = (articles ?? [])
+      .filter(article => article.slug)
+      .map((article) => ({
+        url: `${APP_URL}/blog/${encodeURIComponent(article.slug)}`,
+        lastModified: new Date(article.updated_at ?? article.published_at ?? Date.now()),
+        changeFrequency: 'monthly' as const,
+        priority: 0.8,
+        ...(article.image_url && sanitizeUrl(article.image_url) ? { images: [sanitizeUrl(article.image_url)] } : {}),
+      }))
+      .filter(isValidSitemapEntry);
   } catch {
     // Supabase unavailable - sitemap without articles
   }
@@ -48,12 +67,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select('slug, created_at')
       .eq('active', true);
 
-    guideEntries = (guides ?? []).map((guide) => ({
-      url: `${APP_URL}/guides/${guide.slug}`,
-      lastModified: new Date(guide.created_at ?? Date.now()),
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    }));
+    guideEntries = (guides ?? [])
+      .filter(guide => guide.slug)
+      .map((guide) => ({
+        url: `${APP_URL}/guides/${encodeURIComponent(guide.slug)}`,
+        lastModified: new Date(guide.created_at ?? Date.now()),
+        changeFrequency: 'monthly' as const,
+        priority: 0.8,
+      }))
+      .filter(isValidSitemapEntry);
   } catch {
     // Supabase unavailable - sitemap without guides
   }
@@ -67,13 +89,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .not('content', 'is', null);
 
     const ANIMAL_URL: Record<string, string> = { chien: 'chiens', chat: 'chats', oiseau: 'oiseaux', rongeur: 'rongeurs', reptile: 'reptiles' };
-    breedEntries = (breeds ?? []).map(b => ({
-      url: `${APP_URL}/races/${ANIMAL_URL[b.animal] ?? b.animal}/${b.slug}`,
-      lastModified: new Date(b.generated_at ?? Date.now()),
-      changeFrequency: 'yearly' as const,
-      priority: 0.7,
-      ...(b.photo_url && sanitizeUrl(b.photo_url) ? { images: [sanitizeUrl(b.photo_url)] } : {}),
-    }));
+    breedEntries = (breeds ?? [])
+      .filter(b => b.slug && ANIMAL_URL[b.animal])
+      .map(b => ({
+        url: `${APP_URL}/races/${ANIMAL_URL[b.animal]}/${encodeURIComponent(b.slug)}`,
+        lastModified: new Date(b.generated_at ?? Date.now()),
+        changeFrequency: 'yearly' as const,
+        priority: 0.7,
+        ...(b.photo_url && sanitizeUrl(b.photo_url) ? { images: [sanitizeUrl(b.photo_url)] } : {}),
+      }))
+      .filter(isValidSitemapEntry);
   } catch {
     // Supabase unavailable - sitemap without breeds
   }
@@ -85,13 +110,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select('id, created_at, photo_urls')
       .eq('status', 'approved');
 
-    adoptionEntries = (adoptionPosts ?? []).map((post) => ({
-      url: `${APP_URL}/adoption/${post.id}`,
-      lastModified: new Date(post.created_at ?? Date.now()),
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-      ...(post.photo_urls?.[0] && sanitizeUrl(post.photo_urls[0]) ? { images: [sanitizeUrl(post.photo_urls[0])] } : {}),
-    }));
+    adoptionEntries = (adoptionPosts ?? [])
+      .filter(post => post.id)
+      .map((post) => ({
+        url: `${APP_URL}/adoption/${encodeURIComponent(String(post.id))}`,
+        lastModified: new Date(post.created_at ?? Date.now()),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+        ...(post.photo_urls?.[0] && sanitizeUrl(post.photo_urls[0]) ? { images: [sanitizeUrl(post.photo_urls[0])] } : {}),
+      }))
+      .filter(isValidSitemapEntry);
   } catch {
     // Supabase unavailable - sitemap without adoption posts
   }
@@ -131,9 +159,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${APP_URL}/politique-confidentialite`, lastModified: new Date(), changeFrequency: 'yearly' as const,  priority: 0.3 },
     { url: `${APP_URL}/cgu`,     lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.3 },
     { url: `${APP_URL}/cookies`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.3 },
-    ...articleEntries,
-    ...guideEntries,
-    ...breedEntries,
-    ...adoptionEntries,
+    ...articleEntries.filter(isValidSitemapEntry),
+    ...guideEntries.filter(isValidSitemapEntry),
+    ...breedEntries.filter(isValidSitemapEntry),
+    ...adoptionEntries.filter(isValidSitemapEntry),
   ];
 }
