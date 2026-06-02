@@ -76,6 +76,11 @@ const WEEKDAY_CRONS: Record<number, Array<{ label: string; pattern: string; hour
   ],
 };
 
+// Comparaison insensible aux accents et à la casse (les logs écrivent "Cron prénoms"/"Cron sécurité"
+// alors que les patterns sont sans accent → évite les faux négatifs "manquant")
+const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const cronMatches = (action: string, pattern: string) => norm(action).includes(norm(pattern));
+
 function getExpectedCrons(now: Date) {
   const dow = now.getUTCDay();
   const dom = now.getUTCDate();
@@ -119,7 +124,7 @@ export async function GET(req: Request) {
   const totalTokens  = entries.reduce((sum, l) => sum + (l.tokens_used ?? 0), 0);
 
   const expectedCrons = getExpectedCrons(now);
-  const missingList   = expectedCrons.filter(ec => !entries.some(l => l.action.includes(ec.pattern)));
+  const missingList   = expectedCrons.filter(ec => !entries.some(l => cronMatches(l.action, ec.pattern)));
   const missingCount  = missingList.length;
 
   // Crons prévus demain
@@ -139,12 +144,12 @@ export async function GET(req: Request) {
 
   // Entrées non attendues aujourd'hui (pattern ne correspond à aucun cron prévu ce jour)
   const unexpectedEntries = entries.filter(
-    l => !expectedCrons.some(ec => l.action.includes(ec.pattern))
+    l => !expectedCrons.some(ec => cronMatches(l.action, ec.pattern))
   );
 
   // Tableau "Crons attendus" - tous les crons (trouvés ou non)
   const expectedCronRows = expectedCrons.map(ec => {
-    const match = entries.find(l => l.action.includes(ec.pattern));
+    const match = entries.find(l => cronMatches(l.action, ec.pattern));
     const beTime = utcHourToBE(parseInt(ec.hour, 10), now);
     if (match) {
       const d = new Date(match.created_at);
