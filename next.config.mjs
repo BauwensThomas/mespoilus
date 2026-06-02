@@ -6,6 +6,11 @@ const nextConfig = {
   serverExternalPackages: ['@anthropic-ai/sdk'],
   experimental: { viewTransition: true },
   images: {
+    // Optimisation Vercel désactivée → 0 transformation (plan gratuit limité à 5000/mois).
+    // Sûr car les images sont déjà compressées en amont : Pexels servi en 'large' (940px),
+    // buckets blog-images/hero-photos recompressés (~150 KB). Servies directement depuis
+    // Supabase/Pexels → egress faible (petites images) et aucune transformation Vercel.
+    unoptimized: true,
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'images.pexels.com' },
