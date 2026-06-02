@@ -126,17 +126,6 @@ const CRONS: CronConfig[] = [
     steps: [{ key: 'breeds', label: 'Génération fiches races (Haiku × 10)' }],
   },
   {
-    id: 'finance',
-    label: 'Rapport financier',
-    description: 'Antoine génère le rapport financier mensuel complet.',
-    icon: Clipboard,
-    iconBg: 'bg-slate-100',
-    iconColor: 'text-slate-600',
-    accentColor: 'border-slate-200',
-    group: 'Maintenance',
-    steps: [{ key: 'finance', label: 'Rapport financier (Antoine)' }],
-  },
-  {
     id: 'security',
     label: 'Sécurité & Maintenance',
     description: 'Nathalie effectue l\'audit sécurité, Maxime l\'audit technique.',
@@ -1106,8 +1095,8 @@ export default function CronLauncher({ floating = false }: { floating?: boolean 
                           <UtilCard
                             icon={ImageIcon} iconBg="bg-slate-100" iconColor="text-slate-600"
                             accentColor="border-slate-200"
-                            label="Compression images hero"
-                            idleDesc="Sharp · max 1200px · JPEG 80% · Relancer après ajout de photos"
+                            label="Compression images (blog + races)"
+                            idleDesc="Sharp · blog-images 1200px + hero-photos 600px · JPEG 80% · les 2 buckets en 1 passage"
                             exportHref="/api/admin/export-operations?type=compression"
                             onLaunch={async () => {
                               const r = await fetch('/api/admin/compress-hero-images');
@@ -1326,8 +1315,8 @@ export default function CronLauncher({ floating = false }: { floating?: boolean 
                         <UtilCard
                           icon={ImageIcon} iconBg="bg-slate-100" iconColor="text-slate-600"
                           accentColor="border-slate-200"
-                          label="Compression images hero"
-                          idleDesc="Sharp · max 1200px · JPEG 80% · Relancer après ajout de photos"
+                          label="Compression images (blog + races)"
+                          idleDesc="Sharp · blog-images 1200px + hero-photos 600px · JPEG 80% · les 2 buckets en 1 passage"
                           exportHref="/api/admin/export-operations?type=compression"
                           onLaunch={async () => {
                             const r = await fetch('/api/admin/compress-hero-images');

@@ -4,7 +4,6 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 const CRON_PATHS: Record<string, string> = {
   blog:                 '/api/cron/blog',
   social:               '/api/cron/social',
-  finance:              '/api/cron/finance',
   security:             '/api/cron/security',
   newsletter:           '/api/cron/newsletter',
   prenoms:              '/api/cron/prenoms',
