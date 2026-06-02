@@ -49,8 +49,10 @@ export async function POST(req: NextRequest) {
 
   if (!grille) return new NextResponse('Grille introuvable', { status: 404 });
 
-  // Fonction PostgreSQL atomique - évite les race conditions sur les positions
-  await supabase.rpc('assign_pixel_positions', {
+  // Fonction PostgreSQL atomique - évite les race conditions sur les positions.
+  // Retourne le nombre de pixels RÉELLEMENT assignés (peut être < payé si la grille
+  // s'est remplie entre le checkout et le webhook).
+  const { data: assignedRaw, error: rpcError } = await supabase.rpc('assign_pixel_positions', {
     p_grille_id: grille_id,
     p_nb_pixels: nbPixels,
     p_prenom: prenom,
@@ -58,6 +60,26 @@ export async function POST(req: NextRequest) {
     p_montant_cents: nbPixels * 100,
     p_stripe_session_id: session.id,
   });
+  if (rpcError) {
+    console.error('[grille webhook] assign_pixel_positions échoué:', rpcError.message);
+    return new NextResponse('RPC error', { status: 500 }); // Stripe retentera
+  }
+
+  // Remboursement partiel si moins de pixels assignés que payés (anti-surfacturation).
+  // idempotencyKey basé sur la session → pas de double remboursement si Stripe retente.
+  const assigned = typeof assignedRaw === 'number' ? assignedRaw : nbPixels;
+  const overpaidPixels = nbPixels - assigned;
+  if (overpaidPixels > 0 && session.payment_intent) {
+    try {
+      await stripe.refunds.create(
+        { payment_intent: session.payment_intent as string, amount: overpaidPixels * 100 },
+        { idempotencyKey: `grille_refund_${session.id}` }
+      );
+      console.log(`[grille webhook] ${overpaidPixels} pixel(s) surpayé(s) remboursé(s)`);
+    } catch (e) {
+      console.error('[grille webhook] remboursement échoué:', e instanceof Error ? e.message : e);
+    }
+  }
 
   // Démarre le compte à rebours (90 jours) au PREMIER achat : ne s'applique
   // que si ends_at est encore NULL (condition atomique → un seul déclenchement).
