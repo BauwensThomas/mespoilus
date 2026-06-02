@@ -41,13 +41,17 @@ export async function GET(
   const done = !!grille.gagnant_devinette_id || grille.statut === 'completed';
   const fmt = isJpg ? 'jpg' : 'webp';
   const ct = isJpg ? 'image/jpeg' : 'image/webp';
+  // Grille terminée → image figée, cacheable longtemps (réduit l'egress sur les
+  // grilles passées encore partagées/crawlées). En live, l'image change à chaque
+  // pixel révélé → no-store obligatoire pour ne pas servir un masque périmé.
+  const cacheControl = done ? 'public, max-age=86400, immutable' : 'no-store';
 
   // Sert depuis le cache composé si disponible
   const composedKey = `${id}:${revealedSet.size}:${fmt}:${done ? 'done' : 'live'}`;
   const cachedComposed = composedCache.get(composedKey);
   if (cachedComposed) {
     return new Response(new Uint8Array(cachedComposed), {
-      headers: { 'Content-Type': ct, 'Cache-Control': 'no-store' },
+      headers: { 'Content-Type': ct, 'Cache-Control': cacheControl },
     });
   }
 
@@ -72,7 +76,7 @@ export async function GET(
     const composed = isJpg ? await s.jpeg({ quality: 85 }).toBuffer() : await s.webp({ quality: 85 }).toBuffer();
     composedCache.set(composedKey, composed);
     return new Response(new Uint8Array(composed), {
-      headers: { 'Content-Type': ct, 'Cache-Control': 'no-store' },
+      headers: { 'Content-Type': ct, 'Cache-Control': cacheControl },
     });
   }
 
@@ -101,6 +105,6 @@ export async function GET(
 
   composedCache.set(composedKey, composed);
   return new Response(new Uint8Array(composed), {
-    headers: { 'Content-Type': ct, 'Cache-Control': 'no-store' },
+    headers: { 'Content-Type': ct, 'Cache-Control': cacheControl },
   });
 }
