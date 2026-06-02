@@ -58,7 +58,9 @@ export async function getPhotoForCategory(category: string, title?: string, orie
     }
     const photo = data.photos[Math.floor(Math.random() * data.photos.length)];
     return {
-      url: orientation === 'square' ? (photo.src.square || photo.src.large) : (photo.src.large2x || photo.src.large),
+      // 'large' (940px) au lieu de 'large2x' (1880px) : les images s'affichent au max à ~940px,
+      // donc large2x doublait le poids pour rien → réduit fortement le Cached Egress Supabase.
+      url: orientation === 'square' ? (photo.src.square || photo.src.large) : (photo.src.large || photo.src.large2x),
       alt: photo.alt || `Photo ${category}`,
       credit: photo.photographer,
       creditUrl: photo.photographer_url,
