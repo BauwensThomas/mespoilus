@@ -21,6 +21,8 @@ const CRON_PATHS: Record<string, string> = {
   'catalog-dedup-title':         '/api/cron/catalog-sync/dedup-title',
   'catalog-dedup-image':         '/api/cron/catalog-sync/dedup-image',
   'adoption-social':         '/api/cron/adoption-social',
+  'grille-social':           '/api/cron/grille-social',
+  'grille-rotation':         '/api/cron/grille-rotation',
   'breeds':                  '/api/cron/breeds',
   'daily-recap':             '/api/cron/daily-recap',
 };

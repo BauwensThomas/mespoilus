@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: '/#categories', label: 'Animaux'    },
   { href: '/races',       label: 'Races'      },
   { href: '/adoption',    label: 'Adoption'   },
+  { href: '/grille',      label: 'Grille Mystère' },
   { href: '/#newsletter', label: 'Newsletter' },
 ];
 

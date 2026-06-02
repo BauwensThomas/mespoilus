@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import PartenairesSection from '@/components/landing/PartenairesSection';
 import AdoptionPreviewSection from '@/components/landing/AdoptionPreviewSection';
+import GrilleSection from '@/components/landing/GrilleSection';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronRight, UtensilsCrossed, Calculator, HelpCircle, Sparkles, BookOpen, ClipboardList } from 'lucide-react';
 
 export const revalidate = 3600;
@@ -367,6 +368,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ── GRILLE MYSTÈRE ────────────────────────────────────────────────── */}
+      <GrilleSection />
       {/* ── ADOPTION ──────────────────────────────────────────────────────── */}
       <AdoptionPreviewSection />
       {/* ── PARTENAIRES ───────────────────────────────────────────────────── */}
@@ -431,6 +434,7 @@ export default async function LandingPage() {
                   { href: '/boutique', label: 'Boutique' },
                   { href: '/races',    label: 'Races'    },
                   { href: '/outils',   label: 'Outils'   },
+                  { href: '/grille',   label: 'Grille Mystère' },
                   { href: '/soutenir', label: 'Soutenir Mes Poilus' },
                   { href: '/adoption', label: 'Adoption' },
                 ].map(({ href, label }) => (

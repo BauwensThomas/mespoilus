@@ -1,5 +1,5 @@
 // ============================================================
-// MON CHIEN — Tamagotchi Game Logic
+// MON CHIEN - Tamagotchi Game Logic
 // localStorage only (no server needed for localhost testing)
 // ============================================================
 
@@ -21,7 +21,7 @@ const STAGES = {
 };
 
 const QUESTIONS = [
-  // ══ OEUF — Identité ══
+  // ══ OEUF - Identité ══
   {
     id: 'q001',
     texte: "✨ Quelque chose s'agite dans l'œuf...\nQui es-tu ?",
@@ -185,7 +185,7 @@ const QUESTIONS = [
     ],
   },
 
-    // ══ BABY — Découverte du monde ══
+    // ══ BABY - Découverte du monde ══
   {
     id: 'q010',
     texte: '🐣 Tu es né !\nTa toute première action ?',
@@ -491,7 +491,7 @@ const QUESTIONS = [
     tags_requis: ['muscu'],
     tags_exclus: [],
     reponses: [
-      { texte: '🔥 7/7 — je suis une machine !', effets: { poids: -10, energie: -8, bonheur: 8 }, tags: ['tres_sportif'] },
+      { texte: '🔥 7/7 - je suis une machine !', effets: { poids: -10, energie: -8, bonheur: 8 }, tags: ['tres_sportif'] },
       { texte: '💪 5 séances raisonnables.', effets: { poids: -5, energie: -3, bonheur: 10 }, tags: ['tres_sportif'] },
       { texte: '😅 2 séances, je suis occupé.', effets: { poids: -2 }, tags: [] },
     ],

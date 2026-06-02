@@ -70,14 +70,21 @@ export default function MentionsLegalesPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">6. Limitation de responsabilité</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">6. Jeu « Grille Mystère » et paiements</h2>
+            <p className="text-sm">
+              Mes Poilus organise un jeu en ligne payant, la « Grille Mystère », dont les modalités complètes figurent dans les <Link href="/cgu" className="text-amber-600 hover:underline">Conditions Générales d'Utilisation</Link>. Il ne s'agit ni d'une loterie ni d'une tombola : les gains reposent sur une devinette et sur le nombre de pixels achetés, non sur le hasard. Les paiements sont traités par <strong>Stripe Payments Europe Ltd</strong>. Une partie des recettes de chaque grille est reversée à un refuge animalier ou une association.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">7. Limitation de responsabilité</h2>
             <p className="text-sm">
               Les informations publiées sur ce site sont fournies à titre indicatif. L'éditeur décline toute responsabilité quant à l'exactitude, l'exhaustivité ou l'actualité des informations diffusées. En aucun cas, les conseils publiés sur ce site ne sauraient se substituer à une consultation vétérinaire professionnelle.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">7. Droit applicable</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">8. Droit applicable</h2>
             <p className="text-sm">
               Le présent site est soumis au droit belge. Tout litige relatif à l'utilisation de ce site sera soumis à la compétence exclusive des tribunaux compétents en Belgique.
             </p>

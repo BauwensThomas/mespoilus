@@ -51,7 +51,7 @@ export default function AnimalDayPopup() {
       onClick={close}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-7 text-center relative"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-sm p-5 sm:p-7 text-center relative mx-4"
         onClick={e => e.stopPropagation()}
       >
         <button
@@ -62,10 +62,10 @@ export default function AnimalDayPopup() {
           &times;
         </button>
 
-        <div className="text-6xl mb-4">{event.emoji}</div>
+        <div className="text-5xl mb-3">{event.emoji}</div>
 
-        <h2 className="text-xl font-bold text-gray-900 mb-2">{event.title}</h2>
-        <p className="text-sm text-gray-500 leading-relaxed mb-6">{event.description}</p>
+        <h2 className="text-lg font-bold text-gray-900 mb-2">{event.title}</h2>
+        <p className="text-xs sm:text-sm text-gray-500 leading-relaxed mb-4">{event.description}</p>
 
         <Link
           href={event.boutique}

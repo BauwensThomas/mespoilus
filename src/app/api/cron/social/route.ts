@@ -46,7 +46,7 @@ export async function GET(req: Request) {
   }
 
   // Garde-fou fraîcheur : ne pas poster un article périmé (blog n'a pas tourné ce cycle)
-  // Bypass si déclenchement manuel admin (?manual=true) — l'humain sait ce qu'il fait
+  // Bypass si déclenchement manuel admin (?manual=true) - l'humain sait ce qu'il fait
   const isManual = new URL(req.url).searchParams.get('manual') === 'true';
   const ageMs = Date.now() - new Date(stateRow.created_at).getTime();
   if (!isManual && ageMs > 6 * 60 * 60 * 1000) {

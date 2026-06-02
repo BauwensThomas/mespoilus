@@ -128,11 +128,14 @@ async function getCatalogItems(params: {
 async function getMerchants(): Promise<string[]> {
   try {
     const supabase = createAdminClient();
-    const { data } = await supabase
-      .from('catalog_best_offer')
-      .select('merchant_name')
-      .limit(15000);
-    return [...new Set((data ?? []).map(r => r.merchant_name as string).filter(Boolean))].sort();
+    // RPC dédiée (renvoie la liste distincte des marchands, ~5 lignes) au lieu de
+    // télécharger 15 000 lignes à chaque chargement → réduit fortement l'egress Supabase.
+    const { data, error } = await supabase.rpc('get_all_merchants');
+    if (error) return [];
+    return (data ?? [])
+      .map((r: { merchant_name: string }) => r.merchant_name)
+      .filter(Boolean)
+      .sort();
   } catch {
     return [];
   }
