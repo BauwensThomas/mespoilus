@@ -1,9 +1,27 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import sharp from 'sharp';
+
+const MAX_WIDTH = 1200;
+const QUALITY = 80;
+
+/** Compresse l'image (resize ≤1200px + JPEG q80) pour limiter l'egress Supabase.
+ *  Si sharp échoue (format exotique), on garde le buffer d'origine. */
+async function compress(buffer: ArrayBuffer): Promise<Buffer> {
+  try {
+    return await sharp(Buffer.from(buffer))
+      .resize({ width: MAX_WIDTH, withoutEnlargement: true })
+      .jpeg({ quality: QUALITY, progressive: true })
+      .toBuffer();
+  } catch {
+    return Buffer.from(buffer);
+  }
+}
 
 /**
- * Télécharge une image et la stocke dans Supabase Storage (bucket blog-images).
- * Timeout interne via AbortController + retries → garantit au mieux que l'image
- * appartient à Mes Poilus (survit à la suppression de la source Pexels/Awin).
+ * Télécharge une image, la COMPRESSE (≤1200px, q80) et la stocke dans Supabase Storage
+ * (bucket blog-images). Timeout interne via AbortController + retries → garantit au mieux
+ * que l'image appartient à Mes Poilus (survit à la suppression de la source Pexels/Awin).
+ * La compression à la source évite tout futur dépassement du Cached Egress Supabase.
  * Retourne l'URL publique Supabase, ou null si tous les essais échouent.
  */
 export async function downloadAndStorePhoto(
@@ -24,9 +42,10 @@ export async function downloadAndStorePhoto(
         console.error(`[storage] fetch échoué (tentative ${attempt}/${maxAttempts}):`, res.status, imageUrl.slice(0, 80));
         continue;
       }
-      const buffer = await res.arrayBuffer();
+      const rawBuffer = await res.arrayBuffer();
       clearTimeout(t);
-      console.log('[storage] image téléchargée:', buffer.byteLength, 'bytes');
+      const buffer = await compress(rawBuffer);
+      console.log('[storage] image téléchargée:', rawBuffer.byteLength, '→ compressée:', buffer.byteLength, 'bytes');
 
       const supabase = createAdminClient();
       const { data, error } = await supabase.storage
