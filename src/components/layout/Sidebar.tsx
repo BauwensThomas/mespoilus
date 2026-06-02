@@ -180,15 +180,15 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 )}
               >
-                <IconComponent size={17} strokeWidth={1.5} className="flex-shrink-0" />
-                <div className="min-w-0 flex-1">
+                <IconComponent size={17} strokeWidth={1.5} className={clsx('flex-shrink-0', agent.disabled && 'opacity-50')} />
+                <div className={clsx('min-w-0 flex-1', agent.disabled && 'opacity-50')}>
                   <div className={clsx('font-medium text-sm truncate', isActive ? 'text-orange-700' : 'text-gray-700')}>
                     {agent.name}
                   </div>
-                  <div className="text-xs text-gray-500 truncate leading-tight">{agent.role}</div>
+                  <div className="text-xs text-gray-500 truncate leading-tight">{agent.disabled ? 'Désactivé' : agent.role}</div>
                 </div>
                 <div className="ml-auto flex-shrink-0">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 opacity-70" />
+                  <div className={clsx('w-1.5 h-1.5 rounded-full', agent.disabled ? 'bg-gray-300' : 'bg-emerald-400 opacity-70')} />
                 </div>
               </Link>
             );

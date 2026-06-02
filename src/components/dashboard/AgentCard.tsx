@@ -45,13 +45,15 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
   const completed = total?.tasks ?? stat?.tasks_completed ?? 0;
   const failed = total?.failed ?? stat?.tasks_failed ?? 0;
   const score = completed + failed > 0 ? (completed / (completed + failed)) * 100 : null;
+  const isDisabled = agent.disabled === true;
 
   return (
     <Link href={`/agents/${agent.id}`} className="block group">
       <div
         className={clsx(
           'card-hover p-4 h-full flex flex-col gap-3 relative overflow-hidden',
-          'group-hover:shadow-lg transition-all duration-200'
+          'group-hover:shadow-lg transition-all duration-200',
+          isDisabled && 'opacity-60 grayscale'
         )}
       >
         {/* Gradient accent en arrière-plan */}
@@ -85,10 +87,17 @@ export default function AgentCard({ agent, stat, monthly, total }: AgentCardProp
           </div>
 
           {/* Status */}
-          <div className="flex items-center gap-1.5">
-            <div className="status-dot-online" />
-            <span className="text-xs text-emerald-600 font-medium">En ligne</span>
-          </div>
+          {isDisabled ? (
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-gray-400" />
+              <span className="text-xs text-gray-500 font-medium">Désactivé</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <div className="status-dot-online" />
+              <span className="text-xs text-emerald-600 font-medium">En ligne</span>
+            </div>
+          )}
         </div>
 
         {/* Description */}

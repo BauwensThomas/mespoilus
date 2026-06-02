@@ -233,6 +233,7 @@ Toujours en français. Si la situation nécessite une escalade, indique vers que
     id: 'antoine',
     name: 'Antoine',
     role: 'Responsable Finance',
+    disabled: true,
     description: 'Génère le rapport financier mensuel : revenus, dépenses, marges et projections basés sur les vraies données du site.',
     color: 'text-teal-400',
     bgColor: 'bg-teal-400/10',

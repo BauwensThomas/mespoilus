@@ -25,6 +25,8 @@ export interface Agent {
   model: string;
   maxTokens?: number;
   systemPrompt: string;
+  /** Agent désactivé : grisé dans le dashboard, cron associé retiré. */
+  disabled?: boolean;
 }
 
 export interface AgentStat {

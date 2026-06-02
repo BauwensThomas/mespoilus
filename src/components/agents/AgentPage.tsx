@@ -151,7 +151,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
   }
 
   async function runTask(taskText: string) {
-    if (!taskText.trim() || isLoading) return;
+    if (!taskText.trim() || isLoading || agent.disabled) return;
 
     setIsLoading(true);
     setIsStreaming(true);
@@ -275,7 +275,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
       <div className="max-w-5xl mx-auto px-6 pb-8 space-y-6 -mt-16 relative z-10">
 
         {/* Agent Header */}
-        <div className={clsx('card p-6 border', agent.borderColor)}>
+        <div className={clsx('card p-6 border', agent.borderColor, agent.disabled && 'opacity-60 grayscale')}>
           <div className="flex items-start gap-5">
             <div className={clsx('w-16 h-16 rounded-2xl flex items-center justify-center border-2 flex-shrink-0', agent.bgColor, agent.borderColor)}>
               {(() => {
@@ -290,8 +290,17 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
                 <span className="text-gray-400">-</span>
                 <span className="text-gray-700 text-base">{agent.role}</span>
                 <div className="flex items-center gap-1.5 ml-auto">
-                  <div className="status-dot-online" />
-                  <span className="text-sm text-emerald-600 font-medium">En ligne</span>
+                  {agent.disabled ? (
+                    <>
+                      <div className="w-2.5 h-2.5 rounded-full bg-gray-400" />
+                      <span className="text-sm text-gray-500 font-medium">Désactivé</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="status-dot-online" />
+                      <span className="text-sm text-emerald-600 font-medium">En ligne</span>
+                    </>
+                  )}
                 </div>
               </div>
               <p className="text-gray-600 text-sm mt-2 leading-relaxed">{agent.description}</p>
@@ -309,6 +318,12 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
         </div>
 
         {/* Zone d'exécution */}
+        {agent.disabled ? (
+          <div className="card p-8 border border-gray-200 bg-gray-50 text-center">
+            <p className="text-gray-700 font-semibold">Agent désactivé</p>
+            <p className="text-sm text-gray-500 mt-1">{agent.name} est actuellement désactivé. Ses tâches automatiques et manuelles sont suspendues.</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
           {/* Panneau gauche */}
@@ -470,6 +485,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
             </div>
           </div>
         </div>
+        )}
 
         {/* Délégation Thomas */}
         {delegationState !== 'idle' && (
