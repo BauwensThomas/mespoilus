@@ -69,12 +69,50 @@ export async function GET(req: Request) {
     })
     .join('\n\n');
 
+  // ── Bloc Grille Mystère (si une grille est active) ──────────────────────────
+  let grilleBlock = '';
+  try {
+    const { data: grille } = await supabase
+      .from('pixel_grilles')
+      .select('id, grille_taille, ends_at, created_at')
+      .eq('statut', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (grille) {
+      const { data: achats } = await supabase
+        .from('pixel_achats')
+        .select('positions')
+        .eq('grille_id', grille.id)
+        .not('confirmed_at', 'is', null);
+      const totalPixels = grille.grille_taille * grille.grille_taille;
+      const vendus = (achats ?? []).reduce((s, a) => s + (a.positions as number[]).length, 0);
+      const pct = (vendus / totalPixels) * 100;
+      const pctLabel = vendus > 0 && pct < 1 ? pct.toFixed(2).replace('.', ',') : String(Math.round(pct));
+      const end = grille.ends_at ? new Date(grille.ends_at) : new Date(new Date(grille.created_at).setMonth(new Date(grille.created_at).getMonth() + 3));
+      const jours = Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400000));
+      const imageUrl = `https://www.mespoilus.com/api/grille/${grille.id}/image?fmt=jpg`;
+
+      grilleBlock = `
+
+SECTION SPÉCIALE À INCLURE — "Grille Mystère" (mets-la en avant, c'est un jeu en cours) :
+- Concept : un animal mystère caché derrière une grille de pixels, à révéler en achetant des pixels. Devine la race en premier pour gagner, 3 cadeaux, une partie reversée à un refuge.
+- État actuel : ${pctLabel}% de l'image révélée, il reste ${jours} jours.
+- Image à afficher dans cette section (balise <img> avec cette URL exacte, largeur 100%, coins arrondis) : ${imageUrl}
+- Bouton/lien vers : https://www.mespoilus.com/grille
+- ⚠️ CONTRASTE : le texte de cette section DOIT être foncé et lisible (couleur #1f2937 ou plus foncé) sur fond clair. N'utilise JAMAIS de gris clair (#9ca3af, #d1d5db…) sur fond blanc. Le titre en orange #ea580c, le corps en gris foncé #374151.
+- ⚠️ NE révèle AUCUN indice sur l'animal (pas de race, type, couleur, "quatre pattes"…). Garde le mystère entier.`;
+    }
+  } catch { /* pas de grille active, on ignore */ }
+
   try {
     // ── Étape 1 : Sofia génère la newsletter ──────────────────────────────────
     const currentYear = new Date().getFullYear();
     const sofiaPrompt = `Crée la newsletter de Mes Poilus avec les meilleurs articles récents :
 
 ${articlesStr}
+${grilleBlock}
 
 Année actuelle : ${currentYear} (utilise cette année dans le footer copyright).
 

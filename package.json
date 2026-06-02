@@ -12,10 +12,12 @@
     "@anthropic-ai/sdk": "^0.26.0",
     "@sentry/nextjs": "^10.53.1",
     "@sentry/profiling-node": "^10.53.1",
+    "@stripe/stripe-js": "^9.7.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.43.4",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
+    "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "lucide-react": "^0.395.0",
@@ -26,6 +28,7 @@
     "react-dom": "^18",
     "recharts": "^2.12.7",
     "sharp": "^0.34.5",
+    "stripe": "^22.2.0",
     "uuid": "^14.0.0"
   },
   "browserslist": [
@@ -36,6 +39,7 @@
   ],
   "devDependencies": {
     "@playwright/test": "^1.60.0",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/google.maps": "^3.64.1",
     "@types/node": "^20",
     "@types/react": "^18",

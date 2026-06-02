@@ -1,4 +1,4 @@
-# Tamagotchi — Mon Chien
+# Tamagotchi - Mon Chien
 
 ## Vision
 Jeu Tamagotchi web en HTML/CSS/JS vanilla, jouable sur PC et mobile. Le chien commence dans un oeuf, éclot, grandit selon les choix quotidiens (3 questions/jour). Le style visuel est aligné sur le site PetAgency : fond crème `#FFF7ED`, accent orange `#F97316`, polices Fredoka + Nunito, cartes arrondies, pas de pixel art.
@@ -6,21 +6,21 @@ Jeu Tamagotchi web en HTML/CSS/JS vanilla, jouable sur PC et mobile. Le chien co
 ## Structure des fichiers
 ```
 tamagotchi/
-├── index.html       — 5 écrans (intro, nom, jeu, fin de journée, mort)
-├── style.css        — style warm/orange, responsive
-├── app.js           — toute la logique du jeu
-└── tamagotchi.md    — cette documentation
+├── index.html       - 5 écrans (intro, nom, jeu, fin de journée, mort)
+├── style.css        - style warm/orange, responsive
+├── app.js           - toute la logique du jeu
+└── tamagotchi.md    - cette documentation
 ```
 
 ## Écrans
-1. **Intro** — oeuf animé + bouton COMMENCER
-2. **Nom** — saisie du prénom, oeuf à gauche
-3. **Jeu** — header | [sprite (gauche) + stats (droite)] | message matin | question | réponses
-4. **Fin de journée** — sprite + countdown 24h + boutons de test
-5. **Mort** — sprite en niveaux de gris + message cause + bouton RECOMMENCER
+1. **Intro** - oeuf animé + bouton COMMENCER
+2. **Nom** - saisie du prénom, oeuf à gauche
+3. **Jeu** - header | [sprite (gauche) + stats (droite)] | message matin | question | réponses
+4. **Fin de journée** - sprite + countdown 24h + boutons de test
+5. **Mort** - sprite en niveaux de gris + message cause + bouton RECOMMENCER
 
 ## Layout du jeu
-- `.pet-row` : flex row — sprite à gauche (190×190px), stats panel à droite (`flex: 1`)
+- `.pet-row` : flex row - sprite à gauche (190×190px), stats panel à droite (`flex: 1`)
 - Pendant l'oeuf : stats visibles mais barres grises + `?` (valeurs mystère)
 - Après éclosion : barres colorées avec vraies valeurs
 - Conteneur max-width : 560px
@@ -28,11 +28,11 @@ tamagotchi/
 ## Stades de progression
 | Stade | Jour | Condition |
 |---|---|---|
-| `egg_1` | 1 | — |
-| `egg_2` | 2 | — |
-| `egg_3` | 3 | — |
-| `egg_open` | 4 | — |
-| `baby` | 5–7 | — |
+| `egg_1` | 1 | - |
+| `egg_2` | 2 | - |
+| `egg_3` | 3 | - |
+| `egg_open` | 4 | - |
+| `baby` | 5–7 | - |
 | `muscular` | 8+ | tags `tres_sportif` + `muscu` + poids < 45 |
 | `fat` | 8+ | poids ≥ 75 |
 | `normal` | 8+ | poids ≥ 42 |
@@ -45,14 +45,14 @@ tamagotchi/
 | `energie` | ⚡ | −3 | −15 | Vitalité ; → 0 = mort |
 | `poids` | 🍖 | −2 | −5 | Corpulence ; → 0 = mort |
 
-**Gains positifs divisés par 2** (`Math.ceil(val/2)`) — les stats montent deux fois moins vite qu'elles descendent.
+**Gains positifs divisés par 2** (`Math.ceil(val/2)`) - les stats montent deux fois moins vite qu'elles descendent.
 
 **Manger ne donne jamais de poids négatif.** Seul le sport réduit le poids :
 - Repas léger → +2 | Repas sain / légumes → +3 | Poulet grillé → +5
 - Course, natation, vélo → poids négatif
 
 ## Effets de nuit (applyNightEffects)
-- **Pendant l'oeuf** (`EGG_STAGES`) : decay minimal (−3 / −3 / −2) — dormance
+- **Pendant l'oeuf** (`EGG_STAGES`) : decay minimal (−3 / −3 / −2) - dormance
 - **Après éclosion** : decay complet (−10 / −15 / −5)
 
 ## Passage de jour (advanceDay)

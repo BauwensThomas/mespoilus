@@ -135,6 +135,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${APP_URL}/blog/reptiles`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.8 },
     { url: `${APP_URL}/adoption`, lastModified: new Date(), changeFrequency: 'daily' as const,  priority: 0.8 },
     { url: `${APP_URL}/boutique`, lastModified: new Date(), changeFrequency: 'daily' as const,  priority: 0.8 },
+    { url: `${APP_URL}/grille`,   lastModified: new Date(), changeFrequency: 'daily' as const,  priority: 0.8 },
+    { url: `${APP_URL}/grilles`,  lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.6 },
     { url: `${APP_URL}/outils/age`,       lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.7 },
     { url: `${APP_URL}/outils/nutrition`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.7 },
     { url: `${APP_URL}/outils/prenom`,    lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.7 },

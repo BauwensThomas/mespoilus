@@ -100,6 +100,7 @@ export default function CookiesPage() {
             <div className="text-sm space-y-3">
               <p>Lors de votre première visite, un bandeau vous permet d'accepter ou de refuser les cookies non essentiels.</p>
               <p>Vous pouvez modifier votre choix à tout moment en cliquant sur le bouton ci-dessous ou en vidant les données de votre navigateur (<code className="bg-gray-200 px-1.5 py-0.5 rounded text-xs">localStorage</code>).</p>
+              <p className="text-gray-600">À noter : le jeu « Grille Mystère » utilise un petit espace de stockage local (<code className="bg-gray-200 px-1.5 py-0.5 rounded text-xs">localStorage</code>) pour se souvenir que vous avez un achat en attente de devinette. Ce n'est pas un cookie, aucune donnée n'est transmise à un tiers, et il se vide automatiquement une fois la devinette soumise.</p>
               <CookieResetButton />
             </div>
           </section>

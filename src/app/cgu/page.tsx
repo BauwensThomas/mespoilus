@@ -52,7 +52,25 @@ export default function CGUPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">4. Contenu éditorial</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">4. Jeu « Grille Mystère »</h2>
+            <div className="text-sm space-y-3">
+              <p>Mes Poilus propose un jeu en ligne intitulé « Grille Mystère » : une photo d'animal est masquée par une grille de pixels que les participants révèlent en achetant des pixels. L'objectif est de deviner la race de l'animal.</p>
+              <p><strong>Nature du jeu :</strong> il ne s'agit pas d'une loterie ni d'une tombola. Le gain repose sur une devinette (concours de connaissance) et/ou sur le nombre de pixels achetés (critère déterministe), et non sur un tirage au sort.</p>
+              <ul className="list-disc list-inside space-y-1 text-gray-600 ml-2">
+                <li>L'achat de pixels est <strong>définitif et non remboursable</strong>. Le paiement est traité par Stripe ; Mes Poilus ne stocke aucune donnée bancaire.</li>
+                <li>Les pixels achetés sont attribués <strong>aléatoirement</strong> sur la grille.</li>
+                <li>Chaque achat donne droit à <strong>une seule tentative</strong> de devinette.</li>
+                <li>À l'issue de chaque grille, <strong>3 gagnants</strong> sont désignés : le 1er prix revient à la première personne ayant trouvé la race (ou, à défaut, au plus gros acheteur de pixels) ; les 2e et 3e prix reviennent aux plus gros acheteurs.</li>
+                <li>Une grille dure <strong>90 jours maximum</strong> et peut se terminer plus tôt si la race est trouvée.</li>
+                <li>Les lots sont des « cadeaux surprises » dont la valeur dépend du montant collecté ; aucune valeur n'est garantie à l'avance.</li>
+                <li>Une partie des recettes est reversée à un refuge animalier ou une association.</li>
+                <li>Mes Poilus se réserve le droit de modifier, suspendre ou annuler une grille en cas de force majeure ou de dysfonctionnement, et de disqualifier toute participation frauduleuse.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">5. Contenu éditorial</h2>
             <div className="text-sm space-y-3">
               <p>Les articles publiés sur Mes Poilus sont rédigés à titre informatif. Ils ne constituent en aucun cas un avis vétérinaire professionnel. En cas de doute sur la santé de votre animal, consultez un vétérinaire.</p>
               <p>Une partie des contenus est produite avec l'aide d'outils d'intelligence artificielle et relue par un éditeur humain.</p>
@@ -61,28 +79,28 @@ export default function CGUPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">5. Propriété intellectuelle</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">6. Propriété intellectuelle</h2>
             <p className="text-sm">
               L'ensemble des contenus du site (textes, images, logo, structure) est protégé par le droit d'auteur belge. Toute reproduction, même partielle, est interdite sans autorisation écrite préalable de Mes Poilus.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">6. Limitation de responsabilité</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">7. Limitation de responsabilité</h2>
             <p className="text-sm">
               Mes Poilus ne peut être tenu responsable des dommages directs ou indirects résultant de l'utilisation du site, de l'application des conseils publiés, ou de transactions effectuées sur des sites tiers accessibles via des liens affiliés.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">7. Contact</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">8. Contact</h2>
             <p className="text-sm">
               Pour toute question : <a href="mailto:contact@mespoilus.com" className="text-amber-600 hover:underline">contact@mespoilus.com</a>
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">8. Droit applicable</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">9. Droit applicable</h2>
             <p className="text-sm">
               Les présentes CGU sont soumises au droit belge. Tout litige sera soumis à la compétence exclusive des tribunaux compétents en Belgique.
             </p>
