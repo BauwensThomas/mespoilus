@@ -52,14 +52,22 @@ export async function POST(req: NextRequest) {
     .update({ devinette: devinette.trim(), devinette_correcte: correct })
     .eq('id', achat.id);
 
-  // Premier à trouver la bonne réponse → devient le gagnant + termine la grille
+  // Premier à trouver la bonne réponse → devient le gagnant + termine la grille.
+  // Update ATOMIQUE conditionné à `gagnant_devinette_id IS NULL` : si deux bonnes
+  // réponses arrivent en même temps, une seule "revendique" le gagnant (Postgres
+  // verrouille la ligne). Seul ce call déclenche finishGrille → pas de double email.
   if (correct && !grille.gagnant_devinette_id) {
-    await supabase
+    const { data: claimed } = await supabase
       .from('pixel_grilles')
       .update({ gagnant_devinette_id: achat.id })
-      .eq('id', achat.grille_id);
-    // Fin de grille : dates, CSV backup, emails (participants + gagnants + admin)
-    await finishGrille(supabase, achat.grille_id, 'guessed');
+      .eq('id', achat.grille_id)
+      .is('gagnant_devinette_id', null)
+      .select('id')
+      .maybeSingle();
+    if (claimed) {
+      // Fin de grille : dates, CSV backup, emails (participants + gagnants + admin)
+      await finishGrille(supabase, achat.grille_id, 'guessed');
+    }
   }
 
   return NextResponse.json({ correct, race: correct ? grille.race_secrete : null });
