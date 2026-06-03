@@ -1,7 +1,8 @@
 ﻿import { NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 
-const PAGE_SIZE = 60;
+// 60 pour la boutique publique, 500 pour l'admin
+const PAGE_SIZE = 500;
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
   const admin = createAdminClient();
 
   // Construire la query sur products_catalog avec join !inner sur product_offers
-  const selectStr = 'id, name, description, image_url, categories, product_offers!inner(price, currency, affiliate_url, merchant_name)';
+  const selectStr = 'id, name, description, image_url, categories, product_type, product_offers!inner(price, currency, affiliate_url, merchant_name)';
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let dataQ: any = admin
@@ -57,6 +58,7 @@ export async function GET(request: Request) {
       image_url: pc.image_url ?? '',
       affiliate_url: offer?.affiliate_url ?? '',
       categories: pc.categories ?? [],
+      product_type: pc.product_type ?? null,
       merchant_name: offer?.merchant_name ?? merchant,
     };
   });

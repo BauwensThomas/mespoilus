@@ -63,3 +63,6 @@ backup-supabase.ps1
 
 # Tamagochi
 /tamagochi/
+
+# Amazon Scraper
+/amazon-scraper/
