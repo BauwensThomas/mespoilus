@@ -137,12 +137,16 @@ async function saveMarie(content: string, overrideImageUrl?: string) {
   const excerpt = getField('excerpt');
   const category = getField('category') || 'general';
   const metaDescription = getField('meta_description');
-  const readingTime = parseInt(getField('reading_time')) || 5;
   const seoKeywords = getField('seo_keywords').split(',').map(k => k.trim()).filter(Boolean);
   const categoriesRaw = getField('categories');
   const categories = categoriesRaw ? categoriesRaw.split(',').map(c => c.trim().toLowerCase()).filter(Boolean) : [category];
   const articleContent = normalized.replace(/^---[\s\S]*?---\n/, '').trim();
   if (!title || !slug) return null;
+
+  // Temps de lecture recalculé sur le VRAI nombre de mots (200 mots/min), pas la valeur
+  // déclarée par Marie dans le frontmatter → toujours cohérent avec la longueur réelle.
+  const wordCount = articleContent.split(/\s+/).filter(Boolean).length;
+  const readingTime = Math.max(1, Math.round(wordCount / 200));
 
   const socialFooter = `\n\n---\n\n**Rejoins la communauté Mes Poilus !** Suis-nous sur [Instagram](https://www.instagram.com/mespoilusofficiel) et [Facebook](https://www.facebook.com/profile.php?id=61589487954538) pour ne rien manquer des conseils et actualités animalières. 🐾`;
   const contentWithFooter = articleContent + socialFooter;

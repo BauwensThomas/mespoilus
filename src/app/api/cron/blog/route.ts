@@ -505,7 +505,7 @@ STRUCTURE OBLIGATOIRE :
 3. Conclusion avec un appel à l'action vers www.mespoilus.com/boutique ou www.mespoilus.com/adoption selon le sujet
 
 CONSIGNES :
-- Entre 550 et 700 mots au total
+- Entre 1000 et 1200 mots au total. IMPORTANT : la longueur doit venir de contenu RÉELLEMENT utile (sous-sections détaillées, exemples concrets, étapes pratiques, cas particuliers) — JAMAIS de remplissage ou de répétitions. Termine toujours tes phrases et l'article, ne coupe jamais au milieu.
 - Ton chaleureux, bienveillant, comme un ami expert
 - Public : propriétaires francophones (Belgique, France, Suisse, Canada)
 - Intègre au moins un lien interne : [notre boutique](https://www.mespoilus.com/boutique) ou [nos annonces d'adoption](https://www.mespoilus.com/adoption)
@@ -521,7 +521,7 @@ CONSIGNES :
     const fmEnd = marieResult.content.indexOf('---', 3);
     const bodyForCount = fmEnd > -1 ? marieResult.content.slice(fmEnd + 3) : marieResult.content;
     const wordCount = bodyForCount.trim().split(/\s+/).filter(Boolean).length;
-    if (wordCount < 350) console.warn(`[Cron1] Article court: ${wordCount} mots (cible: 550-700)`);
+    if (wordCount < 800) console.warn(`[Cron1] Article court: ${wordCount} mots (cible: 1000-1200)`);
     else console.log(`[Cron1] Article: ~${wordCount} mots ✓`);
 
     const slugMatch = marieResult.content.match(/^slug:\s*(.+)/m);
