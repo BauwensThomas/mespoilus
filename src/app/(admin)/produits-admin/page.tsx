@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, Pencil, Check, X, ShoppingBag, Search } from 'lucide-react';
+import { BookOpen, Plus, Trash2, ExternalLink, RefreshCw, Pencil, Check, X, ShoppingBag, Search, Upload } from 'lucide-react';
 import clsx from 'clsx';
 
 const ANIMAL_CATEGORIES = [
@@ -57,6 +57,73 @@ export default function ProduitsPage() {
   const [editType, setEditType]               = useState('accessoires');
   const [editUrl, setEditUrl]                 = useState('');
   const [editSaving, setEditSaving]           = useState(false);
+  const [importing, setImporting]             = useState(false);
+
+  async function handleImportJSON(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      
+      if (!Array.isArray(data)) {
+        setError('Le fichier JSON doit contenir un tableau de produits');
+        setImporting(false);
+        return;
+      }
+
+      const result = await fetch('/api/admin/import-products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products: data }),
+      });
+
+      const response = await result.json();
+      if (response.success) {
+        setSuccess(`${response.addedCount}/${response.total} produit(s) importé(s) avec succès${response.failedCount > 0 ? ` (${response.failedCount} en erreur)` : ''}`);
+        // Attendre un peu que la DB se synchronise
+        setTimeout(() => fetchProducts(), 1000);
+      } else {
+        setError(response.error || 'Erreur lors de l\'import');
+      }
+    } catch {
+      setError('Erreur lors de la lecture du fichier JSON');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  }
+
+  async function handleDeleteImportedProducts() {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer TOUS les produits importés du JSON? Cette action est irréversible.')) return;
+
+    setImporting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const result = await fetch('/api/admin/delete-imported-products', {
+        method: 'DELETE',
+      });
+
+      const data = await result.json();
+      if (data.success) {
+        setSuccess(`${data.deleted} produit(s) supprimé(s)`);
+        setTimeout(() => fetchProducts(), 1000);
+      } else {
+        setError(data.error || 'Erreur lors de la suppression');
+      }
+    } catch {
+      setError('Erreur de connexion lors de la suppression');
+    } finally {
+      setImporting(false);
+    }
+  }
 
   async function fetchProducts(affiliate = filterAffiliate) {
     setLoading(true);
@@ -105,7 +172,7 @@ export default function ProduitsPage() {
   function startEdit(p: Product) {
     setEditingId(p.id);
     setEditCats(p.categories.filter(c => c !== 'livres'));
-    setEditType(p.product_type ?? 'accessoires');
+    setEditType(p.product_type || (p.categories.includes('livres') ? 'livres' : 'accessoires'));
     setEditUrl('');
   }
 
@@ -182,10 +249,55 @@ export default function ProduitsPage() {
       {filterAffiliate === 'amazon' && (
         <>
           <div className="card p-6 border border-orange-200">
-            <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Plus size={16} strokeWidth={2} className="text-orange-600" />
-              Ajouter un produit Amazon
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                <Plus size={16} strokeWidth={2} className="text-orange-600" />
+                Ajouter un produit Amazon
+              </h2>
+              <div className="flex gap-2">
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportJSON}
+                    disabled={importing}
+                    className="hidden"
+                  />
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">
+                    {importing ? (
+                      <>
+                        <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        Import en cours
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={14} strokeWidth={2} />
+                        Importer JSON
+                      </>
+                    )}
+                  </span>
+                </label>
+                <button
+                  onClick={handleDeleteImportedProducts}
+                  disabled={importing}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {importing ? (
+                    <>
+                      <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Suppression en cours
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={14} strokeWidth={2} />
+                      Supprimer importés
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+            {success && <p className="text-sm text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">{success}</p>}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

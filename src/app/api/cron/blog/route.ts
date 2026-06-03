@@ -158,14 +158,15 @@ export async function GET(req: Request) {
 
     const { data: productRows } = await supabase
       .from('catalog_best_offer')
-      .select('name, affiliate_url, image_url')
+      .select('name, affiliate_url, image_url, rating, rating_count')
       .eq('category', animal)
       .gt('price', 0)
+      .order('rating', { ascending: false, nullsFirst: false })
       .limit(5);
-    type ProductRow = { name: string; affiliate_url: string; image_url: string };
+    type ProductRow = { name: string; affiliate_url: string; image_url: string; rating?: number | null; rating_count?: number | null };
     const productsWithLinks: ProductRow[] = (productRows && productRows.length > 0)
       ? (productRows as ProductRow[])
-      : GENERIC_PRODUCTS[animal].map(name => ({ name, affiliate_url: '', image_url: '' }));
+      : GENERIC_PRODUCTS[animal].map(name => ({ name, affiliate_url: '', image_url: '', rating: null, rating_count: null }));
 
     // Derniers articles de la même catégorie pour liens internes dans l'article de Marie
     try {
@@ -278,8 +279,9 @@ export async function GET(req: Request) {
     const partenairesStr = availablePartners.length
       ? availablePartners.map(p => `- ${p.nom} : ${p.description ?? ''}\n  Lien affilié : ${p.url}`).join('\n')
       : '';
+    const ratingStr = (p: ProductRow) => p.rating ? ` | note clients : ${p.rating}/5${p.rating_count ? ` (${p.rating_count} avis)` : ''}` : '';
     const productsForLucas = productsWithLinks
-      .map(p => p.affiliate_url ? `- ${p.name} | lien : ${p.affiliate_url}${p.image_url ? ` | image : ${p.image_url}` : ''}` : `- ${p.name}`)
+      .map(p => p.affiliate_url ? `- ${p.name} | lien : ${p.affiliate_url}${p.image_url ? ` | image : ${p.image_url}` : ''}${ratingStr(p)}` : `- ${p.name}`)
       .join('\n');
 
     const typeInstructions: Record<ArticleType, string> = {
@@ -463,13 +465,14 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
     // ─── ÉTAPE 3 : Marie écrit l'article ─────────────────────────────────
     const step3Start = Date.now();
     const productsStr = productsWithLinks
-      .map(p => p.affiliate_url ? `- ${p.name} → ${p.affiliate_url}` : `- ${p.name}`)
+      .map(p => p.affiliate_url ? `- ${p.name}${ratingStr(p)} → ${p.affiliate_url}` : `- ${p.name}`)
       .join('\n');
     const produitSection = forcedType === 'best_of'
       ? `\nSTRUCTURE OBLIGATOIRE POUR CET ARTICLE (sélection produits) :
 Présente un TOP 3 à 5 produits recommandés. Pour chaque produit :
 - Titre H3 : nom du produit
 - 2-3 phrases : pourquoi le choisir, avantages concrets pour l'animal
+- Si une note clients est indiquée (ex. 4.6/5), mentionne-la pour rassurer le lecteur (ex. « plébiscité par les acheteurs avec 4,6/5 »). N'invente JAMAIS de note si elle n'est pas fournie.
 - Lien d'achat en markdown${nomProduit && lienAffilie ? `\nProduit principal à mettre en avant en premier : [${nomProduit}](${lienAffilie})` : ''}
 Pour les autres produits, utilise des liens de recherche Amazon (remplace les espaces par +) :
 [Voir sur Amazon](https://www.amazon.fr/s?k=NOM+PRODUIT+${animal}&tag=mespoilus-21)\n`
