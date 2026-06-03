@@ -6,6 +6,7 @@ import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 import { PARTENAIRES } from '@/lib/partenaires';
 import { getGscInsights, formatGscForLucas } from '@/lib/gsc';
 import { getDailyTrends, formatTrendsForLucas, getAnimalSuggestions, formatSuggestionsForLucas, type TrendingItem } from '@/lib/trends';
+import { generateFaq } from '@/lib/generate-faq';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -508,7 +509,9 @@ CONSIGNES :
 - Ton chaleureux, bienveillant, comme un ami expert
 - Public : propriétaires francophones (Belgique, France, Suisse, Canada)
 - Intègre au moins un lien interne : [notre boutique](https://www.mespoilus.com/boutique) ou [nos annonces d'adoption](https://www.mespoilus.com/adoption)
-- Ne jamais inventer de faits médicaux ou vétérinaires sans nuance`;
+- Ne jamais inventer de faits médicaux ou vétérinaires sans nuance
+- TITRE optimisé pour le CLIC : commence par le mot-clé principal, sois spécifique et promets un bénéfice clair (ex: "Mon chien tousse : 5 causes et quoi faire en urgence"). Évite les titres vagues.
+- META DESCRIPTION : 150-155 caractères, donne envie de cliquer (bénéfice concret + légère curiosité), inclut le mot-clé principal.`;
 
     const marieResult = await executeAgentTask('marie', mariePrompt);
     pipelineTokens += marieResult.tokens_used ?? 0;
@@ -661,6 +664,20 @@ CONSIGNES :
       } catch (err) {
         console.warn('[Cron1] Image erreur:', err instanceof Error ? err.message : err);
       }
+    }
+
+    // FAQ SEO (longue traîne + JSON-LD FAQPage) — non bloquant
+    if (articleSlug) {
+      try {
+        const { data: art } = await supabase.from('articles').select('content').eq('slug', articleSlug).maybeSingle();
+        if (art?.content) {
+          const faq = await generateFaq(articleTitle, art.content);
+          if (faq.length > 0) {
+            await supabase.from('articles').update({ faq }).eq('slug', articleSlug);
+            console.log(`[Cron1] FAQ générée: ${faq.length} questions`);
+          }
+        }
+      } catch (e) { console.warn('[Cron1] FAQ erreur:', e instanceof Error ? e.message : e); }
     }
 
     // Supersede les anciens article_ready non consommés (évite que le social poste un vieux sujet)

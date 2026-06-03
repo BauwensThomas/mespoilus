@@ -70,6 +70,8 @@ export interface Article {
   created_at: string;
   updated_at: string;
   comment_count?: number;
+  /** Questions/réponses SEO (longue traîne + JSON-LD FAQPage). */
+  faq?: { q: string; a: string }[] | null;
 }
 
 export interface SecurityLog {
