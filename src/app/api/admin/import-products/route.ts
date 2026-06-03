@@ -33,6 +33,9 @@ export async function POST(req: NextRequest) {
   let addedCount = 0;
   let failedCount = 0;
   const errors: string[] = [];
+  // Toutes les URLs affiliées présentes dans CE JSON (= la vérité du jour).
+  // Les produits Amazon importés absents de cet ensemble seront retirés à la fin.
+  const seenUrls = new Set<string>();
 
   const categoryMap: { [key: string]: string } = {
     'chien': 'chiens',
@@ -81,6 +84,8 @@ export async function POST(req: NextRequest) {
         }
         affiliateUrl = buildAffiliateUrl(asin);
       }
+
+      seenUrls.add(affiliateUrl);
 
       // Mapper les catégories
       const categories = item.categorie_animal
@@ -170,10 +175,46 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ─── Synchronisation : retirer les produits Amazon absents de ce JSON ───
+  // Le dernier JSON importé fait foi : un produit Amazon (importé via JSON)
+  // qui n'est plus dans le fichier est considéré comme disparu → supprimé.
+  // Garde-fou : on ne synchronise que si au moins 1 produit a été importé,
+  // pour éviter un effacement total sur un fichier vide/corrompu.
+  let removedCount = 0;
+  if (seenUrls.size > 0) {
+    try {
+      // Toutes les offres Amazon rattachées à des fiches importées via JSON
+      const { data: existingAmazon } = await admin
+        .from('product_offers')
+        .select('catalog_id, affiliate_url, products_catalog!inner(amazon_imported_json)')
+        .eq('source', 'amazon')
+        .eq('products_catalog.amazon_imported_json', true);
+
+      const toDelete = (existingAmazon ?? [])
+        .filter((o: { affiliate_url: string }) => !seenUrls.has(o.affiliate_url))
+        .map((o: { catalog_id: string }) => o.catalog_id);
+
+      // Dédoublonner les catalog_id
+      const uniqueIds = [...new Set(toDelete)];
+      if (uniqueIds.length > 0) {
+        // Suppression des fiches (product_offers supprimées en CASCADE)
+        const { error: delErr } = await admin
+          .from('products_catalog')
+          .delete()
+          .in('id', uniqueIds);
+        if (!delErr) removedCount = uniqueIds.length;
+        else errors.push(`Synchronisation : ${delErr.message}`);
+      }
+    } catch (e) {
+      errors.push(`Synchronisation : ${e instanceof Error ? e.message : 'erreur inconnue'}`);
+    }
+  }
+
   return NextResponse.json({
     success: true,
     addedCount,
     failedCount,
+    removedCount,
     total: data.length,
     errors: errors.slice(0, 10), // Limiter à 10 erreurs
   });
