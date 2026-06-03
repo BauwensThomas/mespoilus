@@ -23,6 +23,14 @@ export async function POST(req: NextRequest) {
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
+
+  // Sécurité paiement : ne fulfill que si réellement payé. Pour les cartes,
+  // 'completed' = payé ; ce garde-fou protège si un moyen de paiement asynchrone
+  // (SEPA, virement…) est activé un jour ('completed' pouvant précéder le paiement).
+  if (session.payment_status !== 'paid') {
+    return new NextResponse('OK', { status: 200 });
+  }
+
   const { grille_id, prenom, email, nb_pixels, newsletter } = session.metadata ?? {};
 
   if (!grille_id || !prenom || !email || !nb_pixels) {
