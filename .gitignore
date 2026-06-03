@@ -66,3 +66,9 @@ backup-supabase.ps1
 
 # Amazon Scraper
 /amazon-scraper/
+
+# Scripts utilitaires locaux (helpers Supabase, lisent .env.local au runtime)
+/scripts/
+
+# Config Claude Code locale
+/.claude/
