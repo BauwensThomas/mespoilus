@@ -27,7 +27,9 @@ async function getDashboardData() {
       supabase.rpc('get_agent_stats_aggregated', { start_of_month: startOfMonth.toISOString() }),
       supabase.from('security_logs').select('id', { count: 'exact' }).in('threat_level', ['high', 'critical']).gte('created_at', startOfMonth.toISOString()),
       supabase.from('articles').select('id', { count: 'exact' }).eq('status', 'published').gte('published_at', startOfMonth.toISOString()),
-      supabase.from('products_catalog').select('id', { count: 'exact' }).in('status', ['active', 'pinned']),
+      // Compte les produits réellement achetables (offre en stock + prix > 0),
+      // comme la boutique — pas les fiches actives sans offre. Le libellé est « produits en stock ».
+      supabase.from('catalog_best_offer').select('catalog_id', { count: 'exact', head: true }),
       supabase.from('activity_logs')
         .select('created_at')
         .ilike('action', '[Catalog sync%')
