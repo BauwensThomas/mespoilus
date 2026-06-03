@@ -85,7 +85,7 @@ export default function ProduitsPage() {
 
       const response = await result.json();
       if (response.success) {
-        setSuccess(`${response.addedCount}/${response.total} produit(s) importé(s) avec succès${response.failedCount > 0 ? ` (${response.failedCount} en erreur)` : ''}`);
+        setSuccess(`${response.addedCount}/${response.total} produit(s) importé(s) avec succès${response.failedCount > 0 ? ` (${response.failedCount} en erreur)` : ''}${response.removedCount > 0 ? ` · ${response.removedCount} produit(s) retiré(s) (absents du JSON)` : ''}`);
         // Attendre un peu que la DB se synchronise
         setTimeout(() => fetchProducts(), 1000);
       } else {
