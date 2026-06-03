@@ -1112,6 +1112,26 @@ export default function CronLauncher({ floating = false }: { floating?: boolean 
                             }}
                           />
                         )}
+                        {group.id === 'Maintenance' && (
+                          <UtilCard
+                            icon={MessageSquare} iconBg="bg-slate-100" iconColor="text-slate-600"
+                            accentColor="border-slate-200"
+                            label="Backfill FAQ articles"
+                            idleDesc="Génère la FAQ (Haiku) des articles sans FAQ · 10 par lot · relancer jusqu'à terminé"
+                            onLaunch={async () => {
+                              const r = await fetch('/api/admin/backfill-faq');
+                              const data = await r.json();
+                              if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
+                              return {
+                                result: data.done ? 'Tous les articles ont une FAQ' : `${data.processed} traité(s) · ${data.remaining} restant(s) — relancer`,
+                                stats: [
+                                  { label: 'Traités', value: `${data.processed ?? 0}` },
+                                  { label: 'Restants', value: `${data.remaining ?? 0}` },
+                                ],
+                              };
+                            }}
+                          />
+                        )}
                       </div>
                     </div>
                   );
@@ -1327,6 +1347,26 @@ export default function CronLauncher({ floating = false }: { floating?: boolean 
                               stats: [
                                 { label: 'Compressées', value: `${data.compressed}/${data.total}` },
                                 { label: 'Espace gagné', value: data.saved ?? '-' },
+                              ],
+                            };
+                          }}
+                        />
+                      )}
+                      {group.id === 'Maintenance' && (
+                        <UtilCard
+                          icon={MessageSquare} iconBg="bg-slate-100" iconColor="text-slate-600"
+                          accentColor="border-slate-200"
+                          label="Backfill FAQ articles"
+                          idleDesc="Génère la FAQ (Haiku) des articles sans FAQ · 10 par lot · relancer jusqu'à terminé"
+                          onLaunch={async () => {
+                            const r = await fetch('/api/admin/backfill-faq');
+                            const data = await r.json();
+                            if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
+                            return {
+                              result: data.done ? 'Tous les articles ont une FAQ' : `${data.processed} traité(s) · ${data.remaining} restant(s) — relancer`,
+                              stats: [
+                                { label: 'Traités', value: `${data.processed ?? 0}` },
+                                { label: 'Restants', value: `${data.remaining ?? 0}` },
                               ],
                             };
                           }}
