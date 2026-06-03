@@ -162,7 +162,7 @@ export async function GET(req: Request) {
       .eq('category', animal)
       .gt('price', 0)
       .order('rating', { ascending: false, nullsFirst: false })
-      .limit(5);
+      .limit(8);
     type ProductRow = { name: string; affiliate_url: string; image_url: string; rating?: number | null; rating_count?: number | null };
     const productsWithLinks: ProductRow[] = (productRows && productRows.length > 0)
       ? (productRows as ProductRow[])
@@ -319,7 +319,7 @@ NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT doivent être AUCUN.`,
 Propose un sujet d'article comparatif "Meilleur(s) X pour ${animal}" avec fort potentiel SEO et intention d'achat.
 Exemples : "Meilleure nourriture pour ${animal.replace(/s$/, '')} senior", "Meilleur jouet interactif pour ${animal.replace(/s$/, '')} d'appartement", "Meilleure cage pour ${animal.replace(/s$/, '')}"
 Choisis un angle PRÉCIS avec forte intention d'achat sur Google.
-${partenairesStr ? `Partenaires Awin disponibles (privilégie-les comme produit principal) :\n${partenairesStr}\n` : ''}Pour les produits complémentaires, Marie utilisera des liens de recherche Amazon avec le tag mespoilus-21.
+${partenairesStr ? `Partenaires Awin disponibles (privilégie-les comme produit principal) :\n${partenairesStr}\n` : ''}Pour les produits complémentaires, Marie utilisera UNIQUEMENT les produits réellement disponibles dans notre boutique (fournis à l'étape suivante) ou un lien vers notre boutique — jamais de liens de recherche Amazon ni de produits inventés.
 NOM_PRODUIT : le partenaire/produit Awin principal si pertinent, sinon AUCUN
 LIEN_AFFILIE : son lien affilié si disponible, sinon AUCUN
 IMAGE_PRODUIT : AUCUN (image Pexels sera utilisée)
@@ -467,18 +467,21 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
     const productsStr = productsWithLinks
       .map(p => p.affiliate_url ? `- ${p.name}${ratingStr(p)} → ${p.affiliate_url}` : `- ${p.name}`)
       .join('\n');
+    // Lien vers la boutique filtrée sur l'animal (catch-all : on garde le trafic sur le site)
+    const boutiqueUrl = `https://www.mespoilus.com/boutique?category=${animal}`;
     const produitSection = forcedType === 'best_of'
       ? `\nSTRUCTURE OBLIGATOIRE POUR CET ARTICLE (sélection produits) :
-Présente un TOP 3 à 5 produits recommandés. Pour chaque produit :
+Présente un TOP 3 à 5 produits recommandés, choisis EXCLUSIVEMENT dans la liste ci-dessous (ce sont les produits réellement disponibles dans notre boutique) :
+${productsStr || '(aucun produit fourni)'}
+Pour chaque produit :
 - Titre H3 : nom du produit
 - 2-3 phrases : pourquoi le choisir, avantages concrets pour l'animal
-- Si une note clients est indiquée (ex. 4.6/5), mentionne-la pour rassurer le lecteur (ex. « plébiscité par les acheteurs avec 4,6/5 »). N'invente JAMAIS de note si elle n'est pas fournie.
-- Lien d'achat en markdown${nomProduit && lienAffilie ? `\nProduit principal à mettre en avant en premier : [${nomProduit}](${lienAffilie})` : ''}
-Pour les autres produits, utilise des liens de recherche Amazon (remplace les espaces par +) :
-[Voir sur Amazon](https://www.amazon.fr/s?k=NOM+PRODUIT+${animal}&tag=mespoilus-21)\n`
+- Si une note clients est indiquée (ex. 4.6/5), mentionne-la pour rassurer le lecteur. N'invente JAMAIS de note si elle n'est pas fournie.
+- Lien d'achat en markdown en utilisant EXACTEMENT le lien fourni à côté du produit.${nomProduit && lienAffilie ? `\nProduit à mettre en avant en premier : [${nomProduit}](${lienAffilie})` : ''}
+RÈGLE ABSOLUE : n'invente JAMAIS de produit ni de lien. N'utilise PAS de liens de recherche Amazon. Si tu veux suggérer plus de choix que la liste, ajoute un lien vers notre boutique : [Voir notre sélection ${animal}](${boutiqueUrl}).\n`
       : nomProduit && lienAffilie
-        ? `\nPRODUIT / PARTENAIRE PRINCIPAL À METTRE EN AVANT :${urlPartner ? `\n- Marque : ${urlPartner} (mentionne ce nom nommément dans l'article)` : ''}\n- Nom produit : ${nomProduit}\n- Lien affilié (utilise ce lien EXACT dans le texte, ne l'invente pas) : ${lienAffilie}\n  Ex. dans le texte : [${nomProduit}](${lienAffilie})\n`
-        : `\nIntègre naturellement 1-2 recommandations de produits dans le texte avec leurs liens :\n${productsStr}\nSi aucun lien n'est disponible, renvoie vers www.mespoilus.com/boutique\n`;
+        ? `\nPRODUIT / PARTENAIRE PRINCIPAL À METTRE EN AVANT :${urlPartner ? `\n- Marque : ${urlPartner} (mentionne ce nom nommément dans l'article)` : ''}\n- Nom produit : ${nomProduit}\n- Lien affilié (utilise ce lien EXACT dans le texte, ne l'invente pas) : ${lienAffilie}\n  Ex. dans le texte : [${nomProduit}](${lienAffilie})\n- Pour toute autre recommandation, utilise UNIQUEMENT les produits de la liste fournie ou un lien vers la boutique : [notre boutique](${boutiqueUrl}). N'invente jamais de produit ni de lien de recherche Amazon.\n`
+        : `\nIntègre naturellement 1-2 recommandations de produits, choisies UNIQUEMENT dans cette liste de produits réellement disponibles (utilise leurs liens EXACTS) :\n${productsStr || '(aucun produit disponible)'}\nN'invente jamais de produit ni de lien. Si aucun produit ne convient, renvoie simplement vers notre boutique : [notre boutique](${boutiqueUrl}).\n`;
     const contextLines = [
       forcedType !== 'affiliation' ? `Saison : ${season}` : '',
       intention ? `Ce que cherche le lecteur : ${intention}` : '',
