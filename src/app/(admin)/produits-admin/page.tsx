@@ -13,8 +13,18 @@ const ANIMAL_CATEGORIES = [
 ];
 
 const AFFILIATE_SOURCES = [
-  { id: 'amazon',        label: 'Amazon Livres', merchant: 'Amazon FR',     icon: BookOpen    },
+  { id: 'amazon',        label: 'Amazon', merchant: 'Amazon FR',     icon: BookOpen    },
   { id: 'canadapetcare', label: 'CanadaPetCare', merchant: 'CanadaPetCare', icon: ShoppingBag },
+];
+
+const PRODUCT_TYPES = [
+  { id: 'nourriture',  label: 'Nourriture' },
+  { id: 'jouets',      label: 'Jouets' },
+  { id: 'hygiene',     label: 'Hygiène' },
+  { id: 'sante',       label: 'Santé' },
+  { id: 'habitat',     label: 'Habitat' },
+  { id: 'accessoires', label: 'Accessoires' },
+  { id: 'livres',      label: 'Livres' },
 ];
 
 interface Product {
@@ -30,7 +40,7 @@ interface Product {
   product_type?: string;
 }
 
-const EMPTY_FORM = { name: '', description: '', price: '', amazon_url: '', image_url: '', categories: [] as string[] };
+const EMPTY_FORM = { name: '', description: '', price: '', amazon_url: '', image_url: '', categories: [] as string[], product_type: 'accessoires' };
 
 export default function ProduitsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -44,6 +54,8 @@ export default function ProduitsPage() {
   const [filterCat, setFilterCat]             = useState('all');
   const [editingId, setEditingId]             = useState<string | null>(null);
   const [editCats, setEditCats]               = useState<string[]>([]);
+  const [editType, setEditType]               = useState('accessoires');
+  const [editUrl, setEditUrl]                 = useState('');
   const [editSaving, setEditSaving]           = useState(false);
 
   async function fetchProducts(affiliate = filterAffiliate) {
@@ -80,7 +92,7 @@ export default function ProduitsPage() {
       });
       const data = await r.json();
       if (data.success) {
-        setSuccess(`Livre ajoute ! ASIN : ${data.asin}`);
+        setSuccess(`Produit ajoute ! ASIN : ${data.asin}`);
         setForm(EMPTY_FORM); setPreview('');
         fetchProducts();
       } else {
@@ -93,6 +105,8 @@ export default function ProduitsPage() {
   function startEdit(p: Product) {
     setEditingId(p.id);
     setEditCats(p.categories.filter(c => c !== 'livres'));
+    setEditType(p.product_type ?? 'accessoires');
+    setEditUrl('');
   }
 
   async function handleSaveEdit(id: string) {
@@ -101,10 +115,15 @@ export default function ProduitsPage() {
       const r = await fetch('/api/admin/products', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, categories: editCats }),
+        body: JSON.stringify({
+          id,
+          categories: editCats,
+          product_type: editType,
+          ...(editUrl.trim() ? { amazon_url: editUrl.trim() } : {}),
+        }),
       });
       const data = await r.json();
-      if (data.success) { setEditingId(null); fetchProducts(); }
+      if (data.success) { setEditingId(null); setEditUrl(''); fetchProducts(); }
     } catch { /* ignore */ }
     finally { setEditSaving(false); }
   }
@@ -134,7 +153,7 @@ export default function ProduitsPage() {
     <div className="px-8 py-8 space-y-6 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Produits affilies</h1>
-        <p className="text-gray-500 text-base mt-1">Amazon Livres et CanadaPetCare</p>
+        <p className="text-gray-500 text-base mt-1">Amazon et CanadaPetCare</p>
       </div>
 
       {/* Onglets */}
@@ -165,13 +184,13 @@ export default function ProduitsPage() {
           <div className="card p-6 border border-orange-200">
             <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Plus size={16} strokeWidth={2} className="text-orange-600" />
-              Ajouter un livre
+              Ajouter un produit Amazon
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-medium text-gray-700 mb-1 block">Titre du livre *</label>
-                  <input className="input-dark w-full" placeholder="ex : Mon chien, mon meilleur ami"
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Nom du produit *</label>
+                  <input className="input-dark w-full" placeholder="ex : Croquettes pour chien adulte"
                     value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
                 </div>
                 <div>
@@ -198,8 +217,22 @@ export default function ProduitsPage() {
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-700 mb-1 block">Description courte</label>
-                <textarea className="input-dark w-full resize-none h-16" placeholder="Resume du livre en 1-2 phrases"
+                <textarea className="input-dark w-full resize-none h-16" placeholder="Resumé en 1-2 phrases"
                   value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-2 block">Type de produit *</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {PRODUCT_TYPES.map(t => (
+                    <button key={t.id} type="button" onClick={() => setForm(f => ({ ...f, product_type: t.id }))}
+                      className={clsx(
+                        'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
+                        form.product_type === t.id ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      )}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-700 mb-2 block">Categories animales</label>
@@ -221,7 +254,7 @@ export default function ProduitsPage() {
                 className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                 {saving
                   ? <><span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />Ajout en cours</>
-                  : <><Plus size={14} strokeWidth={2} />Ajouter le livre</>}
+                  : <><Plus size={14} strokeWidth={2} />Ajouter le produit</>}
               </button>
             </form>
           </div>
@@ -249,6 +282,18 @@ export default function ProduitsPage() {
             )}
             renderExpand={p => editingId === p.id ? (
               <div className="border-t border-gray-200 px-4 py-3 bg-gray-50 rounded-b-lg">
+                <p className="text-xs font-medium text-gray-700 mb-2">Type de produit :</p>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {PRODUCT_TYPES.map(t => (
+                    <button key={t.id} type="button" onClick={() => setEditType(t.id)}
+                      className={clsx(
+                        'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
+                        editType === t.id ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      )}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
                 <p className="text-xs font-medium text-gray-700 mb-2">Categories animales :</p>
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {ANIMAL_CATEGORIES.map(c => (
@@ -262,6 +307,19 @@ export default function ProduitsPage() {
                     </button>
                   ))}
                 </div>
+                <p className="text-xs font-medium text-gray-700 mb-1">Nouvelle URL Amazon <span className="text-gray-400">(optionnel — laisse vide pour garder l'actuelle ; sera ré-affiliée automatiquement)</span> :</p>
+                <input
+                  className="input-dark w-full mb-3 text-sm"
+                  placeholder="https://www.amazon.fr/dp/XXXXXXXXXX"
+                  value={editUrl}
+                  onChange={e => setEditUrl(e.target.value)}
+                />
+                {editUrl.trim() && (() => {
+                  const m = editUrl.match(/(?:dp|gp\/product|ASIN)\/([A-Z0-9]{10})/i);
+                  return m
+                    ? <p className="text-xs text-emerald-600 mb-3 truncate">Lien affilié : https://www.amazon.fr/dp/{m[1].toUpperCase()}?tag=mespoilus-21</p>
+                    : <p className="text-xs text-red-500 mb-3">ASIN introuvable dans cette URL</p>;
+                })()}
                 <div className="flex gap-2">
                   <button onClick={() => handleSaveEdit(p.id)} disabled={editSaving}
                     className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-500 disabled:opacity-50">

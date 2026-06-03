@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
     amazon_url: string;
     image_url: string;
     categories: string[];
+    product_type?: string;
   };
 
   if (!body.name?.trim() || !body.amazon_url?.trim() || !body.image_url?.trim()) {
@@ -38,8 +39,14 @@ export async function POST(req: NextRequest) {
   if (!asin) return NextResponse.json({ error: 'ASIN introuvable dans l\'URL Amazon' }, { status: 400 });
 
   const affiliateUrl = buildAffiliateUrl(asin);
-  const categories = body.categories.length > 0 ? body.categories : ['livres'];
-  if (!categories.includes('livres')) categories.unshift('livres');
+
+  const VALID_TYPES = ['nourriture', 'jouets', 'hygiene', 'sante', 'habitat', 'accessoires', 'livres'];
+  const productType = body.product_type && VALID_TYPES.includes(body.product_type) ? body.product_type : 'accessoires';
+  // Catégories animales choisies (chiens, chats…). Catégorie principale = la 1re, sinon 'general'
+  // (sauf livres → catégorie 'livres' pour cohérence avec l'existant).
+  const animalCats = Array.isArray(body.categories) ? body.categories.filter(Boolean) : [];
+  const categories = animalCats;
+  const primaryCategory = productType === 'livres' ? 'livres' : (animalCats[0] ?? 'general');
 
   const admin = createAdminClient();
 
@@ -56,9 +63,11 @@ export async function POST(req: NextRequest) {
     catalogId = existingOffer.catalog_id;
     const { error } = await admin.from('products_catalog').update({
       name: body.name.trim(),
-      description: body.description?.trim()?.slice(0, 500) || null,
+      description: body.description?.trim()?.slice(0, 2000) || null,
       image_url: body.image_url.trim(),
+      category: primaryCategory,
       categories,
+      product_type: productType,
       status: 'active',
     }).eq('id', catalogId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -67,10 +76,11 @@ export async function POST(req: NextRequest) {
       ean: null, isbn: null,
       name: body.name.trim(),
       brand: null,
-      category: 'livres',
+      category: primaryCategory,
       categories,
+      product_type: productType,
       image_url: body.image_url.trim(),
-      description: body.description?.trim()?.slice(0, 500) || null,
+      description: body.description?.trim()?.slice(0, 2000) || null,
       status: 'active',
     }).select('id').single();
     if (error || !newEntry) return NextResponse.json({ error: error?.message ?? 'Erreur création fiche' }, { status: 500 });
@@ -99,17 +109,18 @@ export async function PATCH(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
-  const { id, categories, name, price, description } = await req.json() as {
-    id: string; categories: string[]; name?: string; price?: number; description?: string;
+  const { id, categories, name, price, description, product_type, amazon_url } = await req.json() as {
+    id: string; categories: string[]; name?: string; price?: number; description?: string; product_type?: string; amazon_url?: string;
   };
 
   if (!id || !isValidUUID(id)) return NextResponse.json({ error: 'ID invalide' }, { status: 400 });
 
-  const cats = categories.length > 0 ? categories : ['livres'];
-  if (!cats.includes('livres')) cats.unshift('livres');
+  const cats = Array.isArray(categories) ? categories.filter(Boolean) : [];
 
   const admin = createAdminClient();
   const update: Record<string, unknown> = { categories: cats };
+  const VALID_TYPES = ['nourriture', 'jouets', 'hygiene', 'sante', 'habitat', 'accessoires', 'livres'];
+  if (product_type && VALID_TYPES.includes(product_type)) update.product_type = product_type;
   if (name?.trim()) update.name = name.trim();
   if (price !== undefined) update.price = price;
   if (description !== undefined) update.description = description.trim();
@@ -120,6 +131,17 @@ export async function PATCH(req: NextRequest) {
       .update({ price })
       .eq('catalog_id', id)
       .eq('merchant_name', 'Amazon FR');
+  }
+
+  // Nouvelle URL Amazon → ré-affiliation auto (tag mespoilus-21) sur l'offre
+  if (amazon_url?.trim()) {
+    const asin = extractAsin(amazon_url);
+    if (!asin) return NextResponse.json({ error: 'ASIN introuvable dans l\'URL Amazon' }, { status: 400 });
+    const { error: offErr } = await admin.from('product_offers')
+      .update({ affiliate_url: buildAffiliateUrl(asin), in_stock: true })
+      .eq('catalog_id', id)
+      .eq('merchant_name', 'Amazon FR');
+    if (offErr) return NextResponse.json({ error: offErr.message }, { status: 500 });
   }
 
   const { error } = await admin.from('products_catalog').update(update).eq('id', id);
