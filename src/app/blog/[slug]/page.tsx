@@ -135,6 +135,18 @@ export default async function ArticlePage({ params }: Props) {
     url: articleUrl,
   };
 
+  // JSON-LD FAQPage (si l'article a une FAQ) — aide Google + AI Overviews
+  const faqList = Array.isArray(article.faq) ? article.faq.filter(f => f?.q && f?.a) : [];
+  const faqLd = faqList.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqList.map(f => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  } : null;
+
   const CategoryIcon = CATEGORY_ICONS[article.category] || PawPrint;
 
   const supabaseUser = await createClient();
@@ -160,6 +172,7 @@ export default async function ArticlePage({ params }: Props) {
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
 
       {/* Hero image */}
       <div className="relative w-full h-64 md:h-80 overflow-hidden bg-gray-200" style={{ viewTransitionName: `article-${slug}` }}>
@@ -263,6 +276,23 @@ export default async function ArticlePage({ params }: Props) {
             style={{ color: '#1f2937' }}
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
+
+          {faqList.length > 0 && (
+            <section className="mt-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Questions fréquentes</h2>
+              <div className="space-y-3">
+                {faqList.map((f, i) => (
+                  <details key={i} className="group border border-gray-200 rounded-xl bg-gray-50 open:bg-white open:shadow-sm transition-colors">
+                    <summary className="cursor-pointer list-none flex items-center justify-between gap-3 px-5 py-4 font-semibold text-gray-900">
+                      <span>{f.q}</span>
+                      <span className="text-orange-500 shrink-0 transition-transform group-open:rotate-45 text-xl leading-none">+</span>
+                    </summary>
+                    <p className="px-5 pb-4 -mt-1 text-gray-700 leading-relaxed">{f.a}</p>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
 
           <AdBanner slot="1266534148" variant="in-article" className="my-10" />
 
