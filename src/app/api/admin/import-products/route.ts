@@ -129,6 +129,7 @@ export async function POST(req: NextRequest) {
           product_type: productType,
           rating,
           rating_count: ratingCount,
+          amazon_imported_json: true,
           status: 'active',
         }).eq('id', catalogId);
         if (error) throw new Error(error.message);
