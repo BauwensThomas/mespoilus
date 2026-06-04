@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-// Variante Edge (pur fetch, sans `process`) — le middleware tourne sur l'Edge Runtime.
+// Variante Edge (pur fetch, sans `process`) - le middleware tourne sur l'Edge Runtime.
 // Les API routes (rateLimit.ts / security.ts) restent sur '@upstash/redis' (Node).
 import { Redis } from '@upstash/redis/cloudflare';
 
