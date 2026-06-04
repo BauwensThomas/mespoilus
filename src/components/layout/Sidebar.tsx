@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AGENTS } from '@/lib/agents/config';
 import { logout } from '@/app/actions/auth';
-import { Zap, Target, Shield, BookOpen, ShoppingBag, Package, PawPrint, LogOut, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Mail, Home, ChevronLeft, Menu, FileText, ClipboardList, Star, Send, Grid3x3 } from 'lucide-react';
+import { Zap, Target, Shield, BookOpen, ShoppingBag, Package, PawPrint, LogOut, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Mail, Home, ChevronLeft, Menu, FileText, ClipboardList, Star, Send, Grid3x3, Users } from 'lucide-react';
 import clsx from 'clsx';
 
 function getAgentIcon(iconId: string) {
@@ -35,6 +35,7 @@ const navItems = [
   { href: '/guides-admin',     label: 'Guides PDF',       icon: FileText,      isPublic: false },
   { href: '/partenaires-admin', label: 'Partenaires',     icon: Star,          isPublic: false },
   { href: '/outreach-admin',   label: 'Prospection',      icon: Send,          isPublic: false },
+  { href: '/abonnes-admin',    label: 'Abonnés',          icon: Users,         isPublic: false },
   { href: '/grille-admin',     label: 'Grille mystère',   icon: Grid3x3,       isPublic: false },
 ];
 
