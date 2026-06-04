@@ -158,10 +158,37 @@ export default function OutreachAdminPage() {
   const [history, setHistory] = useState<Campaign[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [articleOptions, setArticleOptions] = useState<{ slug: string; title: string }[]>([]);
+  const [genTemplate, setGenTemplate] = useState('default');
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState('');
 
   useEffect(() => {
     fetch('/api/admin/outreach').then(r => r.json()).then(d => { setHistory(Array.isArray(d) ? d : []); setLoadingHistory(false); }).catch(() => setLoadingHistory(false));
+    fetch('/api/admin/outreach/generate').then(r => r.json()).then(d => setArticleOptions(Array.isArray(d.articles) ? d.articles : [])).catch(() => {});
   }, []);
+
+  async function handleTemplateChange(value: string) {
+    setGenTemplate(value);
+    setGenError('');
+    if (value === 'default') {
+      setSubject(DEFAULT_SUBJECT);
+      setHtml(DEFAULT_HTML);
+      return;
+    }
+    setGenerating(true);
+    try {
+      const r = await fetch('/api/admin/outreach/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: value }),
+      });
+      const data = await r.json();
+      if (r.ok && data.html) { setSubject(data.subject); setHtml(data.html); }
+      else setGenError(data.error ?? 'Échec de la génération');
+    } catch { setGenError('Erreur de connexion'); }
+    finally { setGenerating(false); }
+  }
 
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -395,6 +422,38 @@ export default function OutreachAdminPage() {
 
         {/* Formulaire gauche */}
         <div className="flex-1 space-y-5 min-w-0">
+
+          {/* Modèle d'email */}
+          <div>
+            <label className="text-xs font-medium text-gray-700 mb-1 block">Modèle d'email</label>
+            <div className="flex items-center gap-2">
+              <select
+                value={genTemplate}
+                onChange={e => handleTemplateChange(e.target.value)}
+                disabled={generating}
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 disabled:opacity-50 bg-white"
+              >
+                <option value="default">Partenariat général (modèle par défaut)</option>
+                {articleOptions.length > 0 && (
+                  <optgroup label="✨ Email rédigé par l'IA pour un article">
+                    {articleOptions.map(a => (
+                      <option key={a.slug} value={a.slug}>{a.title}</option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+              {generating && (
+                <span className="flex items-center gap-1.5 text-xs text-orange-600 whitespace-nowrap">
+                  <span className="w-3 h-3 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                  L'IA rédige…
+                </span>
+              )}
+            </div>
+            {genError && <p className="text-xs text-red-600 mt-1">{genError}</p>}
+            <p className="text-[11px] text-gray-400 mt-1">
+              Choisis « Partenariat général » ou un article → l'IA rédige l'email, tu le relis puis tu ajoutes les destinataires.
+            </p>
+          </div>
 
           {/* Objet */}
           <div>
