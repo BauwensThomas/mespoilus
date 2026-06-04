@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       const rawType = item.type_produit?.toLowerCase().trim() || 'accessoires';
       const productType = typeMap[rawType] || 'accessoires';
 
-      // Note clients (étoiles) + nombre d'avis — optionnels
+      // Note clients (étoiles) + nombre d'avis - optionnels
       const ratingRaw = parseFloat(String(item.note ?? '').replace(',', '.'));
       const rating = Number.isFinite(ratingRaw) && ratingRaw > 0 && ratingRaw <= 5 ? Math.round(ratingRaw * 10) / 10 : null;
       const countRaw = parseInt(String(item.nb_avis ?? '').replace(/[^\d]/g, ''), 10);

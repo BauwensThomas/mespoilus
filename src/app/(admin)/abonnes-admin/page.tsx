@@ -118,7 +118,7 @@ export default function AbonnesAdminPage() {
 
       {/* Légende */}
       <div className="text-xs text-gray-500 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 leading-relaxed">
-        Chaque source est <strong>indépendante</strong>. La <Trash2 size={11} className="inline text-red-500" /> rouge sous chaque ✓ retire l'email de cette source uniquement : la newsletter est supprimée, les autres (grille, adoption, commentaires) sont <strong>anonymisées</strong> (l'enregistrement reste, l'email est effacé — RGPD).
+        Chaque source est <strong>indépendante</strong>. La <Trash2 size={11} className="inline text-red-500" /> rouge sous chaque ✓ retire l'email de cette source uniquement : la newsletter est supprimée, les autres (grille, adoption, commentaires) sont <strong>anonymisées</strong> (l'enregistrement reste, l'email est effacé - RGPD).
       </div>
 
       {/* Tableau */}
@@ -153,7 +153,7 @@ export default function AbonnesAdminPage() {
                         <div className="flex items-center justify-center gap-1.5">
                           {active
                             ? <span className={clsx('inline-block w-5 h-5 rounded-full text-xs font-bold leading-5', c.bg, c.color)}>✓</span>
-                            : <span className="inline-block w-5 h-5 rounded-full bg-gray-100 text-gray-300 text-xs font-bold leading-5">—</span>}
+                            : <span className="inline-block w-5 h-5 rounded-full bg-gray-100 text-gray-300 text-xs font-bold leading-5">-</span>}
                           {canDelete && (
                             <button
                               onClick={() => handleDelete(s, c.key as Action)}

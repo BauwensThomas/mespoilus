@@ -126,7 +126,7 @@ export async function finishGrille(supabase: SupabaseClient, grilleId: string, r
   // ── Emails ────────────────────────────────────────────
   const dateProchaine = nextStartsAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const podiumHtml = results.winners.map(w =>
-    `<p style="margin:6px 0;color:#374151"><strong>${['🥇','🥈','🥉'][w.rang - 1]} ${w.prenom}</strong> — ${w.raison}</p>`
+    `<p style="margin:6px 0;color:#374151"><strong>${['🥇','🥈','🥉'][w.rang - 1]} ${w.prenom}</strong> - ${w.raison}</p>`
   ).join('');
 
   // 1) Annonce à tous les participants + abonnés newsletter (sans montants)
@@ -144,7 +144,7 @@ export async function finishGrille(supabase: SupabaseClient, grilleId: string, r
         <p style="margin-top:20px"><a href="https://www.mespoilus.com/grille" style="background:#ea580c;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:600">Voir la grille</a></p>
         <p style="color:#9ca3af;font-size:12px;margin-top:24px"><a href="{{UNSUBSCRIBE_URL}}" style="color:#9ca3af">Se désinscrire</a></p>
       </div>`;
-      await sendBulkNewsletter({ subject: '🎉 La Grille Mystère est terminée — découvrez les gagnants', html, subscribers: Array.from(emails) });
+      await sendBulkNewsletter({ subject: '🎉 La Grille Mystère est terminée - découvrez les gagnants', html, subscribers: Array.from(emails) });
     }
   } catch (e) { console.error('[grille-finish] email annonce échoué:', e); }
 
@@ -171,7 +171,7 @@ export async function finishGrille(supabase: SupabaseClient, grilleId: string, r
     ).join('');
     await sendEmail({
       to: process.env.ADMIN_EMAIL ?? 'contact@mespoilus.com',
-      subject: `[Grille] Terminée (${reason === 'guessed' ? 'race trouvée' : 'compte à rebours'}) — ${grille.animal}`,
+      subject: `[Grille] Terminée (${reason === 'guessed' ? 'race trouvée' : 'compte à rebours'}) - ${grille.animal}`,
       html: `<div style="font-family:system-ui,sans-serif">
         <h2>Grille terminée : ${grille.animal} (${grille.race_secrete})</h2>
         <p>Raison : <strong>${reason === 'guessed' ? 'Race devinée' : 'Compte à rebours écoulé'}</strong></p>
@@ -201,7 +201,7 @@ async function publishGrilleArticle(
     .toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const imageUrl = `https://www.mespoilus.com/api/grille/${grille.id}/image`;
 
-  const podium = winners.map(w => `- ${['🥇', '🥈', '🥉'][w.rang - 1]} **${w.prenom}** — ${w.raison}`).join('\n');
+  const podium = winners.map(w => `- ${['🥇', '🥈', '🥉'][w.rang - 1]} **${w.prenom}** - ${w.raison}`).join('\n');
 
   const content = `![Grille Mystère révélée](${imageUrl})
 
@@ -209,7 +209,7 @@ La **Grille Mystère** de Mes Poilus est terminée ! Après plusieurs jours de s
 
 ## Les gagnants
 
-${podium || "Pas de participant cette fois — la prochaine sera la bonne !"}
+${podium || "Pas de participant cette fois - la prochaine sera la bonne !"}
 
 Un grand merci à toutes les personnes qui ont participé. Une partie des recettes de cette grille est reversée à un refuge animalier. ❤️
 
@@ -268,7 +268,7 @@ export async function activateNextGrille(supabase: SupabaseClient): Promise<stri
   if (!next) return null;
 
   // La grille devient active mais le compte à rebours ne démarre qu'au 1er achat
-  // (starts_at / ends_at restent NULL jusqu'à la première vente — voir webhook).
+  // (starts_at / ends_at restent NULL jusqu'à la première vente - voir webhook).
   await supabase.from('pixel_grilles').update({
     statut: 'active',
     starts_at: null,
@@ -292,7 +292,7 @@ export async function activateNextGrille(supabase: SupabaseClient): Promise<stri
         <p style="margin-top:20px"><a href="https://www.mespoilus.com/grille" style="background:#ea580c;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:600">Jouer maintenant</a></p>
         <p style="color:#9ca3af;font-size:12px;margin-top:24px"><a href="{{UNSUBSCRIBE_URL}}" style="color:#9ca3af">Se désinscrire</a></p>
       </div>`;
-      await sendBulkNewsletter({ subject: '🎉 Nouvelle Grille Mystère — à toi de jouer !', html, subscribers: Array.from(emails) });
+      await sendBulkNewsletter({ subject: '🎉 Nouvelle Grille Mystère - à toi de jouer !', html, subscribers: Array.from(emails) });
     }
   } catch (e) { console.error('[grille-finish] email lancement échoué:', e); }
 

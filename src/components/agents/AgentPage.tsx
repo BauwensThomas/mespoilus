@@ -777,7 +777,7 @@ function EmmaDirectPanel({ articles = [] }: { articles?: ArticleLite[] }) {
             )}
           </div>
           {pickedSlug && (
-            <p className="text-[11px] text-pink-600 mt-1.5">✓ Article sélectionné — instructions et image pré-remplies ci-dessous.</p>
+            <p className="text-[11px] text-pink-600 mt-1.5">✓ Article sélectionné - instructions et image pré-remplies ci-dessous.</p>
           )}
         </div>
       )}

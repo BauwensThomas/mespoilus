@@ -1123,7 +1123,7 @@ export default function CronLauncher({ floating = false }: { floating?: boolean 
                               const data = await r.json();
                               if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
                               return {
-                                result: data.done ? 'Tous les articles ont une FAQ' : `${data.processed} traité(s) · ${data.remaining} restant(s) — relancer`,
+                                result: data.done ? 'Tous les articles ont une FAQ' : `${data.processed} traité(s) · ${data.remaining} restant(s) - relancer`,
                                 stats: [
                                   { label: 'Traités', value: `${data.processed ?? 0}` },
                                   { label: 'Restants', value: `${data.remaining ?? 0}` },
@@ -1363,7 +1363,7 @@ export default function CronLauncher({ floating = false }: { floating?: boolean 
                             const data = await r.json();
                             if (!r.ok) throw new Error(data.error ?? `Erreur ${r.status}`);
                             return {
-                              result: data.done ? 'Tous les articles ont une FAQ' : `${data.processed} traité(s) · ${data.remaining} restant(s) — relancer`,
+                              result: data.done ? 'Tous les articles ont une FAQ' : `${data.processed} traité(s) · ${data.remaining} restant(s) - relancer`,
                               stats: [
                                 { label: 'Traités', value: `${data.processed ?? 0}` },
                                 { label: 'Restants', value: `${data.remaining ?? 0}` },

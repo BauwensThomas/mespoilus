@@ -62,7 +62,7 @@ export default async function GrillesHistoriquePage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`/api/grille/${grille.id}/image`}
-                  alt={`Grille révélée — ${grille.race_secrete}`}
+                  alt={`Grille révélée - ${grille.race_secrete}`}
                   className="w-full aspect-square object-cover"
                 />
                 <div className="p-5">

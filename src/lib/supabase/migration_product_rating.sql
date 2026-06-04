@@ -6,7 +6,7 @@
 ALTER TABLE products_catalog ADD COLUMN IF NOT EXISTS rating       NUMERIC(2,1);
 ALTER TABLE products_catalog ADD COLUMN IF NOT EXISTS rating_count INTEGER;
 
--- 2. Vue catalog_best_offer — ajoute rating + rating_count
+-- 2. Vue catalog_best_offer - ajoute rating + rating_count
 -- (CREATE OR REPLACE ne peut pas ajouter de colonnes → DROP + recreate)
 -- Le RPC catalog_for_merchants dépend du type de la vue → on le supprime puis on le recrée.
 DROP FUNCTION IF EXISTS catalog_for_merchants(text[]);

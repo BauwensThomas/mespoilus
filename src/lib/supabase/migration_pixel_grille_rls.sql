@@ -29,7 +29,7 @@ CREATE POLICY "achats_service_role_only" ON pixel_achats
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- (Optionnel) Retirer pixel_achats de la publication Realtime puisqu'on passe au polling.
--- Si la table n'y est pas, l'instruction échoue sans gravité — on l'enveloppe.
+-- Si la table n'y est pas, l'instruction échoue sans gravité - on l'enveloppe.
 DO $$
 BEGIN
   ALTER PUBLICATION supabase_realtime DROP TABLE pixel_achats;

@@ -112,7 +112,7 @@ export default function NewArticleClient({ createAction }: Props) {
           <div>
             <label className={labelCls}>
               Slug (adresse de l'article)
-              <span className="text-gray-400 font-normal"> — auto depuis le titre, modifiable</span>
+              <span className="text-gray-400 font-normal"> - auto depuis le titre, modifiable</span>
             </label>
             <input
               type="text" name="slug"
@@ -141,7 +141,7 @@ export default function NewArticleClient({ createAction }: Props) {
           </div>
 
           <div>
-            <label className={labelCls}>Résumé (excerpt) <span className="text-gray-400 font-normal">— phrase d'accroche affichée dans les listes</span></label>
+            <label className={labelCls}>Résumé (excerpt) <span className="text-gray-400 font-normal">- phrase d'accroche affichée dans les listes</span></label>
             <textarea
               name="excerpt" rows={2}
               value={excerpt} onChange={e => setExcerpt(e.target.value)}
@@ -150,7 +150,7 @@ export default function NewArticleClient({ createAction }: Props) {
           </div>
 
           <div>
-            <label className={labelCls}>Meta description <span className="text-gray-400 font-normal">— pour Google (≈ 150-160 caractères)</span></label>
+            <label className={labelCls}>Meta description <span className="text-gray-400 font-normal">- pour Google (≈ 150-160 caractères)</span></label>
             <textarea
               name="meta_description" rows={2}
               value={metaDescription} onChange={e => setMetaDescription(e.target.value)}
@@ -180,7 +180,7 @@ export default function NewArticleClient({ createAction }: Props) {
           </div>
 
           <div>
-            <label className={labelCls}>Image principale (hero) <span className="text-gray-400 font-normal">— affichée en haut de l'article</span></label>
+            <label className={labelCls}>Image principale (hero) <span className="text-gray-400 font-normal">- affichée en haut de l'article</span></label>
             <div className="flex gap-2">
               <input
                 type="text" name="image_url"
@@ -211,7 +211,7 @@ export default function NewArticleClient({ createAction }: Props) {
           </div>
 
           <div>
-            <label className={labelCls}>Texte alternatif de l'image <span className="text-gray-400 font-normal">— description pour le SEO et l'accessibilité</span></label>
+            <label className={labelCls}>Texte alternatif de l'image <span className="text-gray-400 font-normal">- description pour le SEO et l'accessibilité</span></label>
             <input
               type="text" name="image_alt"
               value={imageAlt} onChange={e => setImageAlt(e.target.value)}
@@ -221,7 +221,7 @@ export default function NewArticleClient({ createAction }: Props) {
 
           <div>
             <label className={labelCls}>
-              FAQ <span className="text-gray-400 font-normal">— optionnel · une question par ligne, format <code className="text-orange-600">Question :: Réponse</code></span>
+              FAQ <span className="text-gray-400 font-normal">- optionnel · une question par ligne, format <code className="text-orange-600">Question :: Réponse</code></span>
             </label>
             <textarea
               name="faq" rows={4}
