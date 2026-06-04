@@ -79,7 +79,7 @@ function ConfirmationContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
         <p className="text-gray-500">Confirmation de ton paiement en cours…</p>
       </div>
@@ -88,7 +88,7 @@ function ConfirmationContent() {
 
   if (notFound || !achat) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4 px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4">
         <p className="text-gray-500 text-center">
           Paiement non trouvé. S&apos;il vient d&apos;être effectué, attends quelques secondes et recharge la page.
         </p>
@@ -100,7 +100,7 @@ function ConfirmationContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-16 px-4">
+    <div className="min-h-screen py-16 px-4">
       <div className="max-w-lg mx-auto space-y-6">
 
         {/* Succès */}

@@ -96,7 +96,7 @@ export default async function GuidePage({ params }: Props) {
   const benefits = extractBenefits(guide.description);
 
   return (
-    <div className="min-h-screen bg-white px-6 md:px-8 py-6">
+    <div className="min-h-screen px-6 md:px-8 py-6">
       <div className="max-w-6xl mx-auto">
 
         {/* Breadcrumb */}

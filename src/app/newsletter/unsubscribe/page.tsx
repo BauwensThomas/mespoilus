@@ -11,7 +11,7 @@ function UnsubscribeContent() {
   const error = params.get('error');
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
         {success ? (
           <>

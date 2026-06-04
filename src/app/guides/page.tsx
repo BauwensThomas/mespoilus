@@ -40,7 +40,7 @@ export default async function GuidesPage() {
   const guides = await getGuides();
 
   return (
-    <div className="min-h-screen bg-white px-6 md:px-8 py-10">
+    <div className="min-h-screen px-6 md:px-8 py-10">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-10 text-center">
