@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
 
   const system = `Tu es Thomas, fondateur de Mes Poilus (mespoilus.com), un site francophone d'aide aux propriétaires d'animaux.
 Tu écris un email de prise de contact à une organisation (refuge, association, marque animalière) que tu as mise en avant dans un article de ton blog.
-BUT : créer une relation cordiale et l'inviter, si elle le souhaite, à partager l'article ou à le mentionner sur son site (page "liens utiles"/"partenaires") — SANS être commercial, insistant ni transactionnel.
+BUT : créer une relation cordiale et l'inviter, si elle le souhaite, à partager l'article ou à le mentionner sur son site (page "liens utiles"/"partenaires") - SANS être commercial, insistant ni transactionnel.
 CONTRAINTES :
 - Ton chaleureux, humain, sincère. 3 à 4 courts paragraphes maximum.
 - Email GÉNÉRIQUE (il sera envoyé à plusieurs destinataires) : commence par "Bonjour," (ne nomme pas un refuge précis).

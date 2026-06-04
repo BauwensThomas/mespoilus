@@ -319,7 +319,7 @@ NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT doivent être AUCUN.`,
 Propose un sujet d'article comparatif "Meilleur(s) X pour ${animal}" avec fort potentiel SEO et intention d'achat.
 Exemples : "Meilleure nourriture pour ${animal.replace(/s$/, '')} senior", "Meilleur jouet interactif pour ${animal.replace(/s$/, '')} d'appartement", "Meilleure cage pour ${animal.replace(/s$/, '')}"
 Choisis un angle PRÉCIS avec forte intention d'achat sur Google.
-${partenairesStr ? `Partenaires Awin disponibles (privilégie-les comme produit principal) :\n${partenairesStr}\n` : ''}Pour les produits complémentaires, Marie utilisera UNIQUEMENT les produits réellement disponibles dans notre boutique (fournis à l'étape suivante) ou un lien vers notre boutique — jamais de liens de recherche Amazon ni de produits inventés.
+${partenairesStr ? `Partenaires Awin disponibles (privilégie-les comme produit principal) :\n${partenairesStr}\n` : ''}Pour les produits complémentaires, Marie utilisera UNIQUEMENT les produits réellement disponibles dans notre boutique (fournis à l'étape suivante) ou un lien vers notre boutique - jamais de liens de recherche Amazon ni de produits inventés.
 NOM_PRODUIT : le partenaire/produit Awin principal si pertinent, sinon AUCUN
 LIEN_AFFILIE : son lien affilié si disponible, sinon AUCUN
 IMAGE_PRODUIT : AUCUN (image Pexels sera utilisée)
@@ -511,7 +511,7 @@ STRUCTURE OBLIGATOIRE :
 3. Conclusion avec un appel à l'action vers www.mespoilus.com/boutique ou www.mespoilus.com/adoption selon le sujet
 
 CONSIGNES :
-- Entre 1000 et 1200 mots au total. IMPORTANT : la longueur doit venir de contenu RÉELLEMENT utile (sous-sections détaillées, exemples concrets, étapes pratiques, cas particuliers) — JAMAIS de remplissage ou de répétitions. Termine toujours tes phrases et l'article, ne coupe jamais au milieu.
+- Entre 1000 et 1200 mots au total. IMPORTANT : la longueur doit venir de contenu RÉELLEMENT utile (sous-sections détaillées, exemples concrets, étapes pratiques, cas particuliers) - JAMAIS de remplissage ou de répétitions. Termine toujours tes phrases et l'article, ne coupe jamais au milieu.
 - Ton chaleureux, bienveillant, comme un ami expert
 - Public : propriétaires francophones (Belgique, France, Suisse, Canada)
 - Intègre au moins un lien interne : [notre boutique](https://www.mespoilus.com/boutique) ou [nos annonces d'adoption](https://www.mespoilus.com/adoption)
@@ -672,7 +672,7 @@ CONSIGNES :
       }
     }
 
-    // FAQ SEO (longue traîne + JSON-LD FAQPage) — non bloquant
+    // FAQ SEO (longue traîne + JSON-LD FAQPage) - non bloquant
     if (articleSlug) {
       try {
         const { data: art } = await supabase.from('articles').select('content').eq('slug', articleSlug).maybeSingle();

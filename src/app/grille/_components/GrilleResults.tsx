@@ -59,7 +59,7 @@ export default function GrilleResults({ grilleId, raceSecrete, winners, nextStar
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`/api/grille/${grilleId}/image?v=final`}
-                alt={`Grille révélée — ${raceSecrete}`}
+                alt={`Grille révélée - ${raceSecrete}`}
                 className="w-full aspect-square object-cover"
               />
             </div>

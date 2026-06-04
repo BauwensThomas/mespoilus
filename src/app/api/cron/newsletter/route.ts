@@ -96,7 +96,7 @@ export async function GET(req: Request) {
 
       grilleBlock = `
 
-SECTION SPÉCIALE À INCLURE — "Grille Mystère" (mets-la en avant, c'est un jeu en cours) :
+SECTION SPÉCIALE À INCLURE - "Grille Mystère" (mets-la en avant, c'est un jeu en cours) :
 - Concept : un animal mystère caché derrière une grille de pixels, à révéler en achetant des pixels. Devine la race en premier pour gagner, 3 cadeaux, une partie reversée à un refuge.
 - État actuel : ${pctLabel}% de l'image révélée, il reste ${jours} jours.
 - Image à afficher dans cette section (balise <img> avec cette URL exacte, largeur 100%, coins arrondis) : ${imageUrl}

@@ -135,7 +135,7 @@ export default async function ArticlePage({ params }: Props) {
     url: articleUrl,
   };
 
-  // JSON-LD FAQPage (si l'article a une FAQ) — aide Google + AI Overviews
+  // JSON-LD FAQPage (si l'article a une FAQ) - aide Google + AI Overviews
   const faqList = Array.isArray(article.faq) ? article.faq.filter(f => f?.q && f?.a) : [];
   const faqLd = faqList.length > 0 ? {
     '@context': 'https://schema.org',

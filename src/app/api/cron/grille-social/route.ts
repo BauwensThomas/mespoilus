@@ -67,7 +67,7 @@ Concept : un animal mystère est caché derrière une grille de pixels. Les gens
 - ${buyers.size} participant${buyers.size > 1 ? 's' : ''} pour l'instant
 - ${compteARebours}
 
-⚠️ RÈGLE ABSOLUE : l'animal et sa race sont SECRETS. Ne donne AUCUN indice sur son identité — ne mentionne jamais "quatre pattes", "félin", "canin", "oreilles", "museau", une couleur, une taille, ni quoi que ce soit qui pourrait aider à deviner. Reste totalement vague ("un animal mystère", "une surprise à plumes ou à poils…" est interdit aussi). Le mystère doit rester entier.
+⚠️ RÈGLE ABSOLUE : l'animal et sa race sont SECRETS. Ne donne AUCUN indice sur son identité - ne mentionne jamais "quatre pattes", "félin", "canin", "oreilles", "museau", une couleur, une taille, ni quoi que ce soit qui pourrait aider à deviner. Reste totalement vague ("un animal mystère", "une surprise à plumes ou à poils…" est interdit aussi). Le mystère doit rester entier.
 
 Consignes :
 - Ton intrigant et joueur, donne envie de participer avant les autres

@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
         // Email admin
         await sendEmail({
           to: process.env.ADMIN_EMAIL ?? 'contact@mespoilus.com',
-          subject: `[Grille] Palier ${palier}% atteint — ${g.animal}`,
+          subject: `[Grille] Palier ${palier}% atteint - ${g.animal}`,
           html: `<p>La grille <strong>${g.animal}</strong> vient d'atteindre <strong>${palier}%</strong> de pixels révélés (${vendus}/${total}).</p>`,
         }).catch(() => {});
         // Post automatique sur les réseaux (image actuelle + texte sans indice)

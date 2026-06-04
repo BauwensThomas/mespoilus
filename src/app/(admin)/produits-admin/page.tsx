@@ -419,7 +419,7 @@ export default function ProduitsPage() {
                     </button>
                   ))}
                 </div>
-                <p className="text-xs font-medium text-gray-700 mb-1">Nouvelle URL Amazon <span className="text-gray-400">(optionnel — laisse vide pour garder l'actuelle ; sera ré-affiliée automatiquement)</span> :</p>
+                <p className="text-xs font-medium text-gray-700 mb-1">Nouvelle URL Amazon <span className="text-gray-400">(optionnel - laisse vide pour garder l'actuelle ; sera ré-affiliée automatiquement)</span> :</p>
                 <input
                   className="input-dark w-full mb-3 text-sm"
                   placeholder="https://www.amazon.fr/dp/XXXXXXXXXX"
