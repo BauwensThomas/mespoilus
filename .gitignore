@@ -47,6 +47,7 @@ CONTEXT.md
 BOUTIQUE.md
 .agents/
 skills-lock.json
+/.claude/
 
 # Python
 __pycache__/
@@ -61,14 +62,11 @@ __pycache__/
 /backups/
 backup-supabase.ps1
 
-# Tamagochi
-/tamagochi/
-
 # Amazon Scraper
 /amazon-scraper/
 
 # Scripts utilitaires locaux (helpers Supabase, lisent .env.local au runtime)
 /scripts/
 
-# Config Claude Code locale
-/.claude/
+# BlackLinks
+/blacklinks/
