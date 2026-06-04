@@ -6,6 +6,7 @@ import { CheckCircle2, XCircle, Activity, MapPin, Scale, Heart } from 'lucide-re
 import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_EMOJI, ANIMAL_GRADIENT, ANIMAL_URL, type Breed } from '@/lib/breeds-list';
 import type { Article } from '@/types';
+import AdBanner from '@/components/ui/AdBanner';
 
 export const revalidate = 3600;
 
@@ -284,6 +285,9 @@ export default async function BreedPage({ params }: Props) {
         <p className="text-xs text-gray-500 text-center">
           Les informations sont des moyennes indicatives. Chaque animal est unique.
         </p>
+
+        {/* Publicité in-article (après le contenu, avant l'adoption — non intrusif) */}
+        <AdBanner slot="1266534148" variant="in-article" className="my-2" />
 
         {/* Annonces d'adoption */}
         {adoptionPosts.length > 0 && (
