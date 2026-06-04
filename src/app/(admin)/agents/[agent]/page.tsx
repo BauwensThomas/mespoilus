@@ -76,6 +76,21 @@ export default async function AgentPage({ params }: Props) {
   const photo = agentPhoto ?? null;
   const placeholderSrc = AGENT_PLACEHOLDER[agentId] ?? '/images/agents/thomas.svg';
 
+  // Pour Emma : liste des articles publiés (clic → post réseaux pour cet article,
+  // avec reprise de l'image de couverture)
+  let articles: { slug: string; title: string; image_url: string | null }[] = [];
+  if (agentId === 'emma') {
+    try {
+      const { data } = await createAdminClient()
+        .from('articles')
+        .select('slug, title, image_url')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(100);
+      articles = (data ?? []) as { slug: string; title: string; image_url: string | null }[];
+    } catch { /* non-bloquant */ }
+  }
+
   return (
     <AgentPageComponent
       agent={agent}
@@ -84,6 +99,7 @@ export default async function AgentPage({ params }: Props) {
       photo={photo}
       placeholderSrc={placeholderSrc}
       monthly={monthly}
+      articles={articles}
     />
   );
 }

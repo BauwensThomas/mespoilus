@@ -45,6 +45,8 @@ interface DelegationData {
   delegations: DelegationResult[];
 }
 
+interface ArticleLite { slug: string; title: string; image_url: string | null }
+
 interface AgentPageProps {
   agent: Agent;
   stat?: AgentStat;
@@ -52,6 +54,7 @@ interface AgentPageProps {
   photo?: UnsplashPhoto | null;
   placeholderSrc?: string;
   monthly?: { tasks: number; failed: number; tokens: number };
+  articles?: ArticleLite[];
 }
 
 const QUICK_TASKS: Record<string, string[]> = {
@@ -116,7 +119,7 @@ function getLogLink(log: ActivityLog): string | null {
   return null;
 }
 
-export default function AgentPage({ agent, stat, recentLogs, photo, placeholderSrc, monthly }: AgentPageProps) {
+export default function AgentPage({ agent, stat, recentLogs, photo, placeholderSrc, monthly, articles }: AgentPageProps) {
   const [task, setTask] = useState('');
   const [response, setResponse] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -328,7 +331,7 @@ export default function AgentPage({ agent, stat, recentLogs, photo, placeholderS
 
           {/* Panneau gauche */}
           <div className="lg:col-span-1 space-y-4">
-            {agent.id === 'emma' && <EmmaDirectPanel />}
+            {agent.id === 'emma' && <EmmaDirectPanel articles={articles ?? []} />}
             {agent.id === 'sofia' && <SofiaNewsletterPanel />}
             <div className="card p-5">
               <h2 className="text-base font-semibold text-gray-900 mb-3">Nouvelle tâche</h2>
@@ -666,14 +669,32 @@ function HistoryPanel({
 
 // ─── Panneau Emma : post direct réseaux sociaux ───────────────────────────────
 
-function EmmaDirectPanel() {
+function EmmaDirectPanel({ articles = [] }: { articles?: ArticleLite[] }) {
   const [instructions, setInstructions] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [pickedSlug, setPickedSlug] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Clic sur un article : remplit les instructions ET reprend l'image de couverture
+  function pickArticle(a: ArticleLite) {
+    setPickedSlug(a.slug);
+    setInstructions(
+      `Crée un post Facebook et Instagram pour cet article de blog :\n` +
+      `Titre : ${a.title}\n` +
+      `Lien : https://www.mespoilus.com/blog/${a.slug}\n` +
+      `Donne envie de le lire (ton chaleureux, emojis pertinents, hashtags adaptés).`
+    );
+    if (a.image_url) setImageUrl(a.image_url); // image de couverture de l'article
+  }
+
+  const filteredArticles = articles.filter(a =>
+    a.title.toLowerCase().includes(search.trim().toLowerCase())
+  );
 
   async function handleUpload(file: File) {
     setUploading(true);
@@ -719,6 +740,47 @@ function EmmaDirectPanel() {
         <Send size={14} strokeWidth={1.5} />
         Post direct réseaux sociaux
       </h2>
+
+      {/* Choisir un article → Emma reprend titre, lien et image de couverture */}
+      {articles.length > 0 && (
+        <div className="mb-3">
+          <p className="text-xs font-medium text-gray-600 mb-1.5">Créer un post pour un article</p>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Filtrer les articles…"
+            className="w-full text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 mb-1.5 focus:outline-none focus:border-pink-400"
+          />
+          <div className="max-h-40 overflow-y-auto space-y-1 border border-gray-100 rounded-lg p-1 bg-gray-50/50">
+            {filteredArticles.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-2">Aucun article</p>
+            ) : (
+              filteredArticles.slice(0, 100).map(a => (
+                <button
+                  key={a.slug}
+                  type="button"
+                  onClick={() => pickArticle(a)}
+                  className={clsx(
+                    'w-full flex items-center gap-2 text-left text-xs rounded-md px-2 py-1.5 transition-colors',
+                    pickedSlug === a.slug
+                      ? 'bg-pink-100 text-pink-700'
+                      : 'text-gray-700 hover:bg-pink-50 hover:text-pink-700'
+                  )}
+                >
+                  {a.image_url
+                    ? <img src={a.image_url} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
+                    : <div className="w-7 h-7 rounded bg-gray-200 flex-shrink-0" />}
+                  <span className="line-clamp-2">{a.title}</span>
+                </button>
+              ))
+            )}
+          </div>
+          {pickedSlug && (
+            <p className="text-[11px] text-pink-600 mt-1.5">✓ Article sélectionné — instructions et image pré-remplies ci-dessous.</p>
+          )}
+        </div>
+      )}
 
       <div
         onClick={() => !uploading && fileRef.current?.click()}
