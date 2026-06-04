@@ -6,6 +6,7 @@ import CookieBanner from '@/components/ui/CookieBanner';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import AdSense from '@/components/analytics/AdSense';
 import PinterestTag from '@/components/analytics/PinterestTag';
+import ExternalLinks from '@/components/ExternalLinks';
 import { createAdminClient } from '@/lib/supabase/server';
 
 async function getPendingCount(): Promise<number> {
@@ -83,6 +84,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <GoogleAnalytics />
         <AdSense />
         <PinterestTag />
+        <ExternalLinks />
       </body>
     </html>
   );
