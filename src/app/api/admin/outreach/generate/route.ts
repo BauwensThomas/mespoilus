@@ -39,7 +39,11 @@ function buildEmail(bodyHtml: string, articleTitle: string, articleUrl: string):
       <tr>
         <td bgcolor="#f3f4f6" style="background-color:#f3f4f6;padding:20px 40px;text-align:center;border-top:2px solid #e5e7eb;border-radius:0 0 12px 12px">
           <p style="color:#6b7280;font-size:12px;margin:0 0 4px">Mes Poilus - <a href="${SITE}" style="color:#6b7280;text-decoration:underline">mespoilus.com</a></p>
-          <p style="color:#9ca3af;font-size:11px;margin:0">Article concerné : ${articleTitle}</p>
+          <p style="text-align:center;margin:4px 0 4px">
+            <a href="https://www.facebook.com/profile.php?id=61589487954538" style="display:inline-block;margin:0 4px;background:#1877f2;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Facebook</a>
+            <a href="https://www.instagram.com/mespoilusofficiel/" style="display:inline-block;margin:0 4px;background:#e1306c;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Instagram</a>
+          </p>
+          <p style="color:#9ca3af;font-size:11px;margin:4px 0 0">Article concerné : ${articleTitle}</p>
         </td>
       </tr>
     </table>
@@ -55,7 +59,7 @@ export async function GET() {
 
   const { data } = await createAdminClient()
     .from('articles')
-    .select('slug, title')
+    .select('slug, title, published_at')
     .eq('status', 'published')
     .order('published_at', { ascending: false })
     .limit(100);

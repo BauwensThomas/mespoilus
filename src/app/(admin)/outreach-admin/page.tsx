@@ -122,6 +122,10 @@ const DEFAULT_HTML = `<table width="100%" cellpadding="0" cellspacing="0" border
             <p style="color:#6b7280;font-size:12px;margin:0 0 4px">
               Mes Poilus - <a href="https://mespoilus.com" style="color:#6b7280;text-decoration:underline">mespoilus.com</a>
             </p>
+            <p style="text-align:center;margin:0 0 8px">
+              <a href="https://www.facebook.com/profile.php?id=61589487954538" style="display:inline-block;margin:0 4px;background:#1877f2;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Facebook</a>
+              <a href="https://www.instagram.com/mespoilusofficiel/" style="display:inline-block;margin:0 4px;background:#e1306c;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Instagram</a>
+            </p>
             <p style="color:#9ca3af;font-size:11px;margin:0">
               Partenariat proposé dans une démarche de collaboration entre acteurs du monde animal.
             </p>
@@ -158,11 +162,14 @@ export default function OutreachAdminPage() {
   const [history, setHistory] = useState<Campaign[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-  const [articleOptions, setArticleOptions] = useState<{ slug: string; title: string }[]>([]);
+  const [articleOptions, setArticleOptions] = useState<{ slug: string; title: string; published_at: string | null }[]>([]);
   const [genTemplate, setGenTemplate] = useState('default');
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState('');
   const [modelSearch, setModelSearch] = useState('');
+  const [aiOpen, setAiOpen] = useState(false);
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/outreach').then(r => r.json()).then(d => { setHistory(Array.isArray(d) ? d : []); setLoadingHistory(false); }).catch(() => setLoadingHistory(false));
@@ -436,55 +443,78 @@ export default function OutreachAdminPage() {
               )}
             </div>
 
-            {/* Modèle par défaut (toujours accessible) */}
-            <button
-              type="button"
-              onClick={() => handleTemplateChange('default')}
-              disabled={generating}
-              className={clsx(
-                'w-full text-left text-sm rounded-lg px-3 py-2 border transition-colors mb-2 disabled:opacity-50',
-                genTemplate === 'default'
-                  ? 'bg-orange-50 border-orange-300 text-orange-700 font-medium'
-                  : 'bg-white border-gray-200 text-gray-700 hover:border-orange-300'
-              )}
-            >
-              📩 Partenariat général (modèle par défaut)
-            </button>
+            {/* Deux boutons compacts côte à côte */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => { handleTemplateChange('default'); setAiOpen(false); }}
+                disabled={generating}
+                className={clsx(
+                  'text-sm rounded-lg border px-3 py-2 transition-colors disabled:opacity-50',
+                  (!aiOpen && genTemplate === 'default')
+                    ? 'bg-orange-50 border-orange-300 text-orange-700 font-medium'
+                    : 'bg-white border-gray-200 text-gray-700 hover:border-orange-300'
+                )}
+              >
+                Partenariat général
+              </button>
+              <button
+                type="button"
+                onClick={() => setAiOpen(v => !v)}
+                disabled={generating || articleOptions.length === 0}
+                className={clsx(
+                  'flex items-center justify-center gap-1.5 text-sm rounded-lg border px-3 py-2 transition-colors disabled:opacity-50',
+                  (aiOpen || genTemplate !== 'default')
+                    ? 'bg-orange-50 border-orange-300 text-orange-700 font-medium'
+                    : 'bg-white border-gray-200 text-gray-700 hover:border-orange-300'
+                )}
+              >
+                Email IA pour un article
+                <span className="text-gray-400 text-xs">{aiOpen ? '▲' : '▼'}</span>
+              </button>
+            </div>
 
-            {articleOptions.length > 0 && (
-              <>
-                <p className="text-[11px] font-medium text-gray-500 mb-1">✨ Email rédigé par l'IA pour un article</p>
+            {/* Liste déroulante (ouverte au clic sur "Email IA") */}
+            {aiOpen && (
+              <div className="mt-2 rounded-lg border border-gray-200 p-2 bg-white shadow-sm">
                 <input
                   type="text"
                   value={modelSearch}
                   onChange={e => setModelSearch(e.target.value)}
                   placeholder="Rechercher un article…"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs mb-1.5 focus:outline-none focus:border-orange-400"
+                  className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs mb-1.5 focus:outline-none focus:border-orange-400"
                 />
-                <div className="max-h-40 overflow-y-auto space-y-1 border border-gray-100 rounded-lg p-1 bg-gray-50/50">
+                <div className="max-h-52 overflow-y-auto space-y-1 pr-0.5">
                   {articleOptions
                     .filter(a => a.title.toLowerCase().includes(modelSearch.trim().toLowerCase()))
                     .map(a => (
                       <button
                         key={a.slug}
                         type="button"
-                        onClick={() => handleTemplateChange(a.slug)}
+                        onClick={() => { handleTemplateChange(a.slug); setAiOpen(false); }}
                         disabled={generating}
                         className={clsx(
-                          'w-full text-left text-xs rounded-md px-2 py-1.5 transition-colors line-clamp-2 disabled:opacity-50',
+                          'w-full text-left rounded-md px-2 py-1.5 transition-colors disabled:opacity-50',
                           genTemplate === a.slug
                             ? 'bg-orange-100 text-orange-700'
                             : 'text-gray-700 hover:bg-orange-50 hover:text-orange-700'
                         )}
                       >
-                        {a.title}
+                        <span className="flex items-center gap-2">
+                          <span className="flex-1 text-xs line-clamp-1">{a.title}</span>
+                          {a.published_at && (
+                            <span className="text-[11px] text-gray-900 whitespace-nowrap flex-shrink-0">
+                              {format(new Date(a.published_at), 'd MMM yyyy', { locale: fr })}
+                            </span>
+                          )}
+                        </span>
                       </button>
                     ))}
                   {articleOptions.filter(a => a.title.toLowerCase().includes(modelSearch.trim().toLowerCase())).length === 0 && (
-                    <p className="text-xs text-gray-400 text-center py-2">Aucun article</p>
+                    <p className="text-xs text-gray-400 text-center py-2">Aucun résultat</p>
                   )}
                 </div>
-              </>
+              </div>
             )}
             {genError && <p className="text-xs text-red-600 mt-1">{genError}</p>}
             <p className="text-[11px] text-gray-400 mt-1">
@@ -764,17 +794,36 @@ export default function OutreachAdminPage() {
 
       {/* Historique */}
       <div className="border-t border-gray-100 pt-6">
-        <div className="flex items-center gap-2 mb-4">
+        <button
+          type="button"
+          onClick={() => setHistoryOpen(v => !v)}
+          className="flex items-center gap-2 mb-4 w-full text-left hover:text-orange-600 transition-colors"
+        >
           <History size={15} className="text-gray-400" />
           <h2 className="text-sm font-semibold text-gray-700">Historique des envois</h2>
-        </div>
+          {history.length > 0 && <span className="text-xs text-gray-400">({history.length})</span>}
+          <span className="ml-auto text-gray-400 text-xs">{historyOpen ? '▲ Fermer' : '▼ Ouvrir'}</span>
+        </button>
+        {historyOpen && (<>
+        {history.length > 0 && (
+          <input
+            type="text"
+            value={historySearch}
+            onChange={e => setHistorySearch(e.target.value)}
+            placeholder="Rechercher dans l'historique (objet)…"
+            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm mb-3 focus:outline-none focus:border-orange-400"
+          />
+        )}
         {loadingHistory ? (
           <p className="text-sm text-gray-400">Chargement...</p>
         ) : history.length === 0 ? (
           <p className="text-sm text-gray-400">Aucun envoi pour le moment.</p>
         ) : (
           <div className="space-y-2">
-            {history.map(c => (
+            {history.filter(c => c.subject.toLowerCase().includes(historySearch.trim().toLowerCase())).length === 0 && (
+              <p className="text-sm text-gray-400">Aucun résultat pour « {historySearch} ».</p>
+            )}
+            {history.filter(c => c.subject.toLowerCase().includes(historySearch.trim().toLowerCase())).map(c => (
               <div key={c.id} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-4">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate">{c.subject}</p>
@@ -793,8 +842,10 @@ export default function OutreachAdminPage() {
                     onClick={() => {
                       setSubject(c.subject);
                       setHtml(c.html ?? '');
-                      setEmails(Array.isArray(c.emails) ? c.emails : []);
+                      setEmails([]);          // destinataires vides → on ajoute les nouveaux
                       setGenTemplate('');
+                      setAiOpen(false);       // liste article fermée
+                      setModelSearch('');
                       setResult(null);
                       setConfirmOpen(false);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -841,6 +892,7 @@ export default function OutreachAdminPage() {
             ))}
           </div>
         )}
+        </>)}
       </div>
 
     </div>
