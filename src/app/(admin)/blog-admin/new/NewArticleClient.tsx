@@ -80,6 +80,17 @@ export default function NewArticleClient({ createAction }: Props) {
     }
   }, [content]);
 
+  // Parse la FAQ (format "Question :: Réponse" par ligne) pour l'aperçu
+  const faqList = useMemo(() => {
+    return faq.split('\n').map(line => {
+      const idx = line.indexOf('::');
+      if (idx === -1) return null;
+      const q = line.slice(0, idx).trim();
+      const a = line.slice(idx + 2).trim();
+      return q && a ? { q, a } : null;
+    }).filter(Boolean) as { q: string; a: string }[];
+  }, [faq]);
+
   const catLabel = CATEGORIES.find(c => c.id === category)?.label ?? category;
 
   return (
@@ -309,6 +320,21 @@ export default function NewArticleClient({ createAction }: Props) {
                   style={{ color: '#1f2937' }}
                   dangerouslySetInnerHTML={{ __html: htmlContent || '<p style="color:#9ca3af">Le contenu s\'affichera ici au fur et à mesure…</p>' }}
                 />
+
+                {/* FAQ (aperçu en accordéon, comme sur l'article public) */}
+                {faqList.length > 0 && (
+                  <div className="mt-8 pt-6 border-t border-gray-100">
+                    <h2 className="text-lg font-bold text-gray-900 mb-3">Questions fréquentes</h2>
+                    <div className="space-y-2">
+                      {faqList.map((item, i) => (
+                        <details key={i} className="border border-gray-200 rounded-xl px-4 py-2.5">
+                          <summary className="cursor-pointer font-medium text-gray-800 text-sm">{item.q}</summary>
+                          <p className="mt-2 text-sm text-gray-600 leading-relaxed">{item.a}</p>
+                        </details>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             </div>
