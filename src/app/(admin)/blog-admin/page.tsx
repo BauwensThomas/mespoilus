@@ -2,7 +2,7 @@ import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/server';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CheckCircle2, XCircle, MessageCircle, BookOpen } from 'lucide-react';
+import { CheckCircle2, XCircle, MessageCircle, BookOpen, Plus } from 'lucide-react';
 import Link from 'next/link';
 import ArticlesPanel from '@/components/blog/ArticlesPanel';
 import { notifyCommentSubscribers } from '@/lib/commentNotify';
@@ -108,9 +108,16 @@ export default async function GestionBlogPage({ searchParams }: PageProps) {
 
   return (
     <div className="px-8 py-8 space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Blog</h1>
-        <p className="text-gray-500 text-base mt-1">Gestion des articles et commentaires</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Blog</h1>
+          <p className="text-gray-500 text-base mt-1">Gestion des articles et commentaires</p>
+        </div>
+        <Link href="/blog-admin/new"
+          className="flex items-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold rounded-xl transition-colors shrink-0">
+          <Plus size={16} strokeWidth={2} />
+          Créer un article
+        </Link>
       </div>
 
       {/* Onglets */}
