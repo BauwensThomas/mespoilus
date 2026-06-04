@@ -155,7 +155,7 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <DirectionalTransition>
-    <div className="min-h-screen bg-white animate-fade-in">
+    <div className="min-h-screen animate-fade-in">
       {isAdmin && (
         <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2 bg-gray-900/95 backdrop-blur text-white text-xs">
           <Pencil size={13} strokeWidth={1.5} className="text-orange-400" />

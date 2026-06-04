@@ -57,7 +57,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
   const totalCount = total ?? 0;
 
   return (
-    <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5">
+    <div className="min-h-screen px-6 md:px-8 py-6 space-y-5">
 
       <div>
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">
