@@ -63,6 +63,7 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'ID requis' }, { status: 400 });
 
   const admin = createAdminClient();
+  // Supprime uniquement l'abonnement newsletter — la grille n'est pas touchée
   const { error } = await admin.from('newsletter_subscribers').delete().eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });

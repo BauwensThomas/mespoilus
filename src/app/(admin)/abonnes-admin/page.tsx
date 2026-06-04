@@ -35,9 +35,9 @@ export default function AbonnesAdminPage() {
 
   useEffect(() => { load(); }, []);
 
-  async function handleDelete(sub: Subscriber) {
+  async function handleDeleteNewsletter(sub: Subscriber) {
     if (!sub.id) return;
-    if (!confirm(`Supprimer l'abonné "${sub.email}" de la newsletter ?`)) return;
+    if (!confirm(`Désabonner "${sub.email}" de la newsletter ?\n\nSon historique grille sera conservé.`)) return;
     setDeleting(sub.id);
     try {
       await fetch('/api/admin/subscribers', {
@@ -45,7 +45,9 @@ export default function AbonnesAdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: sub.id }),
       });
-      setSubscribers(prev => prev.filter(s => s.id !== sub.id));
+      setSubscribers(prev => prev.map(s =>
+        s.id === sub.id ? { ...s, newsletter: false, status: 'unsubscribed', id: '' } : s
+      ).filter(s => s.newsletter || s.grille));
     } catch { /* ignore */ }
     finally { setDeleting(null); }
   }
@@ -99,7 +101,7 @@ export default function AbonnesAdminPage() {
                 <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500">Grille</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Source</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Date</th>
-                <th className="px-4 py-3" />
+                <th className="px-4 py-3 text-xs font-semibold text-gray-500">Désabonner newsletter</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -132,9 +134,9 @@ export default function AbonnesAdminPage() {
                   <td className="px-4 py-3">
                     {s.newsletter && s.id && (
                       <button
-                        onClick={() => handleDelete(s)}
+                        onClick={() => handleDeleteNewsletter(s)}
                         disabled={deleting === s.id}
-                        title="Supprimer de la newsletter"
+                        title="Désabonner de la newsletter (la grille reste intacte)"
                         className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                       >
                         {deleting === s.id
