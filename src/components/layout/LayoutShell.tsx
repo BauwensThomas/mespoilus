@@ -145,12 +145,16 @@ export default function LayoutShell({ children, pendingCount = 0 }: { children: 
   }
 
   const isBoutique = pathname.startsWith('/boutique');
+  const isHome = pathname === '/';
 
   return (
     <>
       <PublicHeader />
       <PartenairesBandeau />
-      <main>{children}</main>
+      {/* Largeur unifiée = celle de la boutique (max-w-screen-2xl), sauf l'accueil
+          et la boutique (référence, déjà à cette largeur). Sans effet sous 1536px
+          → mobile/tablette/laptop inchangés. */}
+      <main className={(isHome || isBoutique) ? undefined : 'mx-auto w-full max-w-screen-2xl'}>{children}</main>
       {!isBoutique && <RefugeFinderPanel />}
       {!isBoutique && <VetFinderPanel />}
       <AnimalDayPopup />
