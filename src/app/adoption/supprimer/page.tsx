@@ -38,7 +38,7 @@ function SupprimerContent() {
 
   if (!id || !token) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center space-y-3">
           <XCircle size={48} className="text-red-400 mx-auto" strokeWidth={1.5} />
           <p className="text-gray-700 font-medium">Lien invalide ou expiré.</p>
@@ -50,7 +50,7 @@ function SupprimerContent() {
 
   if (status === 'success') {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center space-y-3">
           <CheckCircle2 size={48} className="text-emerald-500 mx-auto" strokeWidth={1.5} />
           <h2 className="text-gray-900 font-semibold text-lg">Annonce retirée !</h2>
@@ -66,7 +66,7 @@ function SupprimerContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="bg-white border border-gray-200 rounded-2xl p-8 max-w-md w-full space-y-6">
 
         <div className="text-center space-y-1.5">
@@ -141,7 +141,7 @@ function SupprimerContent() {
 
 export default function SupprimerAnnoncePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" /></div>}>
       <SupprimerContent />
     </Suspense>
   );

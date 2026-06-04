@@ -40,7 +40,7 @@ export default async function PressePage() {
   const description = `Mes Poilus est un site de référence francophone dédié aux animaux de compagnie. Il propose des articles de conseils vétérinaires et pratiques, des fiches races détaillées, des outils interactifs (calculateur d'âge, calculateur nutritionnel, quiz, générateur de prénoms, guides PDF gratuits), une section adoption entre particuliers et une boutique de produits animaliers sélectionnés via des partenaires affiliés. Le contenu est rédigé de manière claire et accessible, avec pour objectif d'accompagner chaque propriétaire d'animal au quotidien.`;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-6 py-12">
 
         {/* Header */}
