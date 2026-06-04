@@ -150,7 +150,7 @@ export default async function BreedPage({ params }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-6 md:px-8 py-6 space-y-5">
+    <div className="min-h-screen px-6 md:px-8 py-6 space-y-5">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 

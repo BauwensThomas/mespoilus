@@ -111,7 +111,7 @@ export default async function AdoptionPage({ searchParams }: Props) {
 
   return (
     <DirectionalTransition>
-    <div className="min-h-screen bg-white px-6 md:px-8 py-6 space-y-5">
+    <div className="min-h-screen px-6 md:px-8 py-6 space-y-5">
 
       {/* Header */}
       <div>
