@@ -263,7 +263,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
 
   return (
     <DirectionalTransition>
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen pb-20">
 
       {/* Barre admin sticky */}
       {isAdmin && (
