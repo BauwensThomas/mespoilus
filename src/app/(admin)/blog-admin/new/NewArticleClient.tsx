@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Save, Eye, PawPrint, Monitor, Smartphone } from 'lucide-react';
+import { useState, useMemo, useRef } from 'react';
+import { Save, Eye, PawPrint, Monitor, Smartphone, ImagePlus, X } from 'lucide-react';
 import Link from 'next/link';
 import { marked } from 'marked';
 import ImageUploader from './ImageUploader';
@@ -44,6 +44,30 @@ export default function NewArticleClient({ createAction }: Props) {
   const [faq, setFaq] = useState('');
   const [status, setStatus] = useState('draft');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [uploadingMain, setUploadingMain] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const mainFileRef = useRef<HTMLInputElement>(null);
+
+  // Téléverse l'image principale → remplit l'URL (et le texte alt si vide) automatiquement
+  async function handleMainImage(file: File) {
+    if (!file.type.startsWith('image/')) return;
+    setUploadingMain(true);
+    setUploadError('');
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/admin/upload-image', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!data.url) throw new Error(data.error ?? 'Erreur upload');
+      setImageUrl(data.url);
+      if (!imageAlt) setImageAlt(file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '));
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : 'Erreur inconnue');
+    } finally {
+      setUploadingMain(false);
+      if (mainFileRef.current) mainFileRef.current.value = ''; // reset DOM via ref (permet de re-sélectionner le même fichier)
+    }
+  }
 
   // Slug auto-dérivé du titre tant que l'utilisateur ne l'a pas modifié à la main
   const effectiveSlug = slugEdited ? slug : slugify(title);
@@ -126,6 +150,15 @@ export default function NewArticleClient({ createAction }: Props) {
 
           <div>
             <label className={labelCls}>Contenu (Markdown) <span className="text-red-500">*</span></label>
+            <div className="mb-2 p-3 bg-gray-50 border border-gray-200 rounded-lg text-[11px] text-gray-600 leading-relaxed space-y-0.5">
+              <p className="font-semibold text-gray-700 mb-1">Aide Markdown</p>
+              <p><code className="text-orange-600">## Titre</code> → grand titre (H2)</p>
+              <p><code className="text-orange-600">### Sous-titre</code> → sous-titre (H3)</p>
+              <p><code className="text-orange-600">**gras**</code> → <strong>gras</strong> · <code className="text-orange-600">*italique*</code> → <em>italique</em></p>
+              <p><code className="text-orange-600">[texte du lien](https://adresse.com)</code> → lien cliquable</p>
+              <p><code className="text-orange-600">- élément</code> → liste à puces · <code className="text-orange-600">1. élément</code> → liste numérotée</p>
+              <p><code className="text-orange-600">&gt; citation</code> → encadré · une <strong>ligne vide</strong> = nouveau paragraphe</p>
+            </div>
             <ImageUploader />
             <textarea
               name="content" rows={22} required
@@ -135,27 +168,45 @@ export default function NewArticleClient({ createAction }: Props) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls}>URL image principale</label>
+          <div>
+            <label className={labelCls}>Image principale (hero) <span className="text-gray-400 font-normal">— affichée en haut de l'article</span></label>
+            <div className="flex gap-2">
               <input
                 type="text" name="image_url"
                 value={imageUrl} onChange={e => setImageUrl(e.target.value)}
-                placeholder="https://…" className={inputCls}
+                placeholder="Colle une URL, ou téléverse →" className={inputCls}
               />
-            </div>
-            <div>
-              <label className={labelCls}>Texte alternatif de l'image</label>
               <input
-                type="text" name="image_alt"
-                value={imageAlt} onChange={e => setImageAlt(e.target.value)}
-                placeholder="Ex. Chien adopté en refuge" className={inputCls}
+                ref={mainFileRef} type="file" accept="image/*" className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleMainImage(f); }}
               />
+              <button
+                type="button" onClick={() => mainFileRef.current?.click()} disabled={uploadingMain}
+                className="shrink-0 flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 hover:border-gray-300 transition-all disabled:opacity-50"
+              >
+                {uploadingMain
+                  ? <span className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                  : <ImagePlus size={14} strokeWidth={1.5} />}
+                {uploadingMain ? 'Upload…' : 'Téléverser'}
+              </button>
             </div>
+            {uploadError && (
+              <p className="text-xs text-red-600 mt-1 flex items-center gap-1"><X size={12} /> {uploadError}</p>
+            )}
+            {/* Aperçu en petit, juste sous le champ URL */}
+            {imageUrl && (
+              <img src={imageUrl} alt="" className="mt-2 h-24 w-auto rounded-lg border border-gray-200 object-cover" />
+            )}
           </div>
-          {imageUrl && (
-            <img src={imageUrl} alt="" className="h-24 w-auto rounded-lg border border-gray-200 object-cover" />
-          )}
+
+          <div>
+            <label className={labelCls}>Texte alternatif de l'image <span className="text-gray-400 font-normal">— description pour le SEO et l'accessibilité</span></label>
+            <input
+              type="text" name="image_alt"
+              value={imageAlt} onChange={e => setImageAlt(e.target.value)}
+              placeholder="Ex. Chien adopté en refuge" className={inputCls}
+            />
+          </div>
 
           <div>
             <label className={labelCls}>
