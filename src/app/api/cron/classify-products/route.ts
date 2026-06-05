@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropic } from '@/lib/anthropic';
 
 export const maxDuration = 60;
 
@@ -33,8 +33,6 @@ export async function GET(request: Request) {
     });
     return NextResponse.json({ classified: 0, message: 'Aucun produit à classifier' });
   }
-
-  const anthropic = new Anthropic();
 
   const productList = products
     .map(p => `${p.id}|${p.name}${p.brand ? ` (${p.brand})` : ''}|${p.category}`)
