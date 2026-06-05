@@ -12,7 +12,7 @@ export interface NlArticle {
 export interface NlGrille {
   imageUrl: string;
   pctLabel: string;
-  jours: number;
+  jours: number | null; // null = pas encore démarrée (aucun pixel acheté) → pas de compte à rebours
 }
 
 const ORANGE = '#ea580c';
@@ -57,7 +57,7 @@ function grilleSection(g: NlGrille): string {
         <h3 style="margin:0 0 12px;font-size:18px;font-weight:800;color:${TEXT}">La Grille Mystère : sauras-tu percer le secret ?</h3>
         <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:${MUTED}">Un animal mystère se cache derrière une grille de pixels. Révèle-les en achetant des pixels, devine la race en premier et remporte l'un des 3 cadeaux. Une partie des recettes est reversée à un refuge.</p>
         <img src="${g.imageUrl}" alt="Grille Mystère" style="display:block;margin:0 auto 14px;width:100%;max-width:260px;border-radius:8px">
-        <p style="margin:0 0 14px;font-size:13px;color:${MUTED}"><strong>${g.pctLabel}%</strong> de l'image révélée — il reste <strong>${g.jours} jours</strong>.</p>
+        <p style="margin:0 0 14px;font-size:13px;color:${MUTED}"><strong>${g.pctLabel}%</strong> de l'image révélée${g.jours !== null ? ` - il reste <strong>${g.jours} jours</strong>` : ' - sois le premier à jouer, le compte à rebours démarre au 1er pixel acheté'}.</p>
         <a href="https://www.mespoilus.com/grille" style="display:inline-block;background:${ORANGE};color:#fff;text-decoration:none;font-size:14px;font-weight:700;padding:10px 24px;border-radius:8px">Acheter des pixels et jouer</a>
       </td></tr>
     </table>`;
