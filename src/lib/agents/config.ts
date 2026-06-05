@@ -335,7 +335,7 @@ Structure du HTML à produire :
    - Si aucune URL "Image :" n'est fournie pour un article → pas d'image, seulement texte
    - Titre en gras, résumé (2 phrases), bouton lien orange
 4. Section "Le conseil de Sofia" : un conseil pratique et concret sur les animaux
-5. Footer sombre (#111827) : copyright "© [année] Mes Poilus - Tous droits réservés", lien de désabonnement ({{UNSUBSCRIBE_URL}}), boutons Facebook et Instagram
+5. Footer ORANGE (fond #ea580c, texte blanc) : copyright "© [année] Mes Poilus - Tous droits réservés", lien de désabonnement ({{UNSUBSCRIBE_URL}}), boutons Facebook et Instagram. (Le footer doit être orange #ea580c, JAMAIS sombre/bleu.)
    - Facebook : <a href="https://www.facebook.com/profile.php?id=61589487954538" style="display:inline-block;margin:0 4px;background:#1877f2;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Facebook</a>
    - Instagram : <a href="https://www.instagram.com/mespoilusofficiel/" style="display:inline-block;margin:0 4px;background:#e1306c;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;text-decoration:none">Instagram</a>
 

@@ -99,7 +99,7 @@ export async function GET(req: Request) {
 SECTION SPÉCIALE À INCLURE - "Grille Mystère" (mets-la en avant, c'est un jeu en cours) :
 - Concept : un animal mystère caché derrière une grille de pixels, à révéler en achetant des pixels. Devine la race en premier pour gagner, 3 cadeaux, une partie reversée à un refuge.
 - État actuel : ${pctLabel}% de l'image révélée, il reste ${jours} jours.
-- Image à afficher dans cette section (balise <img> avec cette URL exacte, largeur 100%, coins arrondis) : ${imageUrl}
+- Image à afficher dans cette section : balise <img> avec cette URL exacte et CE style EXACT \`style="display:block;margin:0 auto;width:100%;max-width:260px;border-radius:8px"\` (image carrée, ne JAMAIS la mettre en pleine largeur sinon elle est énorme) : ${imageUrl}
 - Bouton/lien vers : https://www.mespoilus.com/grille
 - ⚠️ CONTRASTE : le texte de cette section DOIT être foncé et lisible (couleur #1f2937 ou plus foncé) sur fond clair. N'utilise JAMAIS de gris clair (#9ca3af, #d1d5db…) sur fond blanc. Le titre en orange #ea580c, le corps en gris foncé #374151.
 - ⚠️ NE révèle AUCUN indice sur l'animal (pas de race, type, couleur, "quatre pattes"…). Garde le mystère entier.`;
