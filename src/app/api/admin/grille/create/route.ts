@@ -38,21 +38,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Image inaccessible : ${e instanceof Error ? e.message : 'erreur'}` }, { status: 400 });
   }
 
-  // Redimensionne en carré 1500×1500 et stocke en PNG dans le bucket privé pixel-grilles
+  // Redimensionne en carré 1500×1500 et stocke en WebP (q82) dans le bucket privé
+  // pixel-grilles. WebP ≈ 250 KB vs ~2.7 MB en PNG → ~90 % d'egress en moins au
+  // re-téléchargement de la source par la route image.
   let buffer: Buffer;
   try {
     buffer = await sharp(Buffer.from(sourceBytes))
       .resize(1500, 1500, { fit: 'cover' })
-      .png()
+      .webp({ quality: 82 })
       .toBuffer();
   } catch {
     return NextResponse.json({ error: 'Image illisible' }, { status: 400 });
   }
 
-  const imagePath = `grille-${Date.now()}.png`;
+  const imagePath = `grille-${Date.now()}.webp`;
   const { error: upErr } = await admin.storage
     .from('pixel-grilles')
-    .upload(imagePath, buffer, { contentType: 'image/png', upsert: false });
+    .upload(imagePath, buffer, { contentType: 'image/webp', upsert: false });
   if (upErr) return NextResponse.json({ error: `Upload: ${upErr.message}` }, { status: 500 });
 
   // Ordre = max(ordre) + 1
