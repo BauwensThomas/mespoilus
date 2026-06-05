@@ -3,6 +3,7 @@ import { Article } from '@/types';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BookOpen, ArrowRight } from 'lucide-react';
+import AdBanner from '@/components/ui/AdBanner';
 
 const INSTA = 'https://www.instagram.com/mespoilusofficiel';
 const FB = 'https://www.facebook.com/profile.php?id=61589487954538';
@@ -31,7 +32,7 @@ async function getLatestArticles(): Promise<Article[]> {
       .select('*')
       .eq('status', 'published')
       .order('published_at', { ascending: false })
-      .limit(5);
+      .limit(5); // 5 articles + 1 carte blog = grille 3x2
     return (data as Article[]) ?? [];
   } catch {
     return [];
@@ -42,82 +43,80 @@ export default async function LiensPage() {
   const articles = await getLatestArticles();
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 py-8">
-      <div className="w-full max-w-md mx-auto">
-
-        <h1 className="text-center text-xl font-extrabold tracking-tight text-gray-900 mb-1">
-          Nos derniers articles
-        </h1>
-        <p className="text-center text-sm text-gray-500 mb-6">
-          Conseils & guides pour vos animaux 🐾
-        </p>
-
-        {/* Grille 3 colonnes : 5 derniers articles + 1 cadre vers le blog */}
-        <div className="grid grid-cols-3 gap-2.5">
-          {articles.map((a) => (
-            <Link
-              key={a.id}
-              href={`/blog/${a.slug}`}
-              className="relative aspect-square rounded-xl overflow-hidden bg-orange-50 border border-orange-100 group focus:outline-none focus:ring-2 focus:ring-orange-300"
-            >
-              {a.image_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={a.image_url}
-                  alt={a.title}
-                  width={300}
-                  height={300}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
-              <p className="absolute bottom-0 left-0 right-0 p-2 text-white text-[11px] font-semibold leading-tight line-clamp-3">
-                {a.title}
-              </p>
-            </Link>
-          ))}
-
-          {/* 6e cadre : lien vers tout le blog */}
-          <Link
-            href="/blog"
-            className="aspect-square rounded-xl bg-gradient-to-br from-orange-600 to-gray-900 text-white flex flex-col items-center justify-center gap-1.5 px-2 text-center hover:brightness-110 transition focus:outline-none focus:ring-2 focus:ring-orange-300"
-          >
-            <BookOpen className="w-6 h-6" strokeWidth={1.75} />
-            <span className="text-xs font-bold leading-tight">Tout le blog</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        {articles.length === 0 && (
-          <p className="text-center text-sm text-gray-400 mt-6">
-            Les premiers articles arrivent bientôt !
-          </p>
-        )}
-
-        {/* Réseaux */}
-        <div className="mt-8 flex items-center justify-center gap-3">
-          <a
-            href={INSTA}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-[#e1306c] px-5 py-2.5 text-sm font-semibold text-white hover:brightness-95 transition"
-          >
-            Instagram
-          </a>
-          <a
-            href={FB}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-[#1877f2] px-5 py-2.5 text-sm font-semibold text-white hover:brightness-95 transition"
-          >
-            Facebook
-          </a>
-        </div>
-
-        <p className="mt-6 text-center text-xs text-gray-400">
-          <a href="https://www.mespoilus.com" className="hover:text-orange-600">mespoilus.com</a>
-        </p>
+    <div className="min-h-screen px-6 md:px-8 py-8">
+      <div className="mb-6 text-center">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Nos derniers articles</h1>
       </div>
+
+      {/* Mobile : 1 carte par ligne · tablette : 2 · desktop : 3 (grille 3x2) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+        {articles.map((a) => (
+          <Link
+            key={a.id}
+            href={`/blog/${a.slug}`}
+            className="rounded-2xl overflow-hidden border border-orange-200 bg-white shadow-sm hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-orange-300 flex flex-col"
+          >
+            {a.image_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={a.image_url}
+                alt={a.title}
+                width={600}
+                height={400}
+                className="w-full h-40 md:h-48 object-cover"
+              />
+            )}
+            <div className="p-4 flex-1 flex flex-col">
+              <p className="font-bold text-gray-900 leading-snug line-clamp-3">{a.title}</p>
+              <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-orange-600">
+                Lire l'article <ArrowRight className="w-4 h-4" />
+              </span>
+            </div>
+          </Link>
+        ))}
+
+        {/* Dernière carte : lien vers tout le blog */}
+        <Link
+          href="/blog"
+          className="rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-600 to-gray-900 text-white flex flex-col items-center justify-center gap-2.5 p-6 text-center hover:brightness-110 transition shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300 min-h-[220px]"
+        >
+          <BookOpen className="w-9 h-9" strokeWidth={1.5} />
+          <span className="text-lg font-bold leading-tight">Tout le blog</span>
+          <span className="inline-flex items-center gap-1 text-sm text-white/90">
+            Voir tous les articles <ArrowRight className="w-4 h-4" />
+          </span>
+        </Link>
+      </div>
+
+      {articles.length === 0 && (
+        <p className="text-center text-sm text-gray-400 mt-6">
+          Les premiers articles arrivent bientôt !
+        </p>
+      )}
+
+      {/* Réseaux */}
+      <div className="mt-10 flex items-center justify-center gap-3">
+        <a
+          href={INSTA}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-[#e1306c] px-5 py-2.5 text-sm font-semibold text-white hover:brightness-95 transition"
+        >
+          Instagram
+        </a>
+        <a
+          href={FB}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-[#1877f2] px-5 py-2.5 text-sm font-semibold text-white hover:brightness-95 transition"
+        >
+          Facebook
+        </a>
+      </div>
+
+      {/* Pub AdSense en bas — bloc dédié "Mes Poilus - Liens - bas de page"
+          (s'affiche seulement si AdSense activé + cookies acceptés) */}
+      <AdBanner slot="6028658236" variant="display" className="mt-10 max-w-3xl mx-auto" />
     </div>
   );
 }
