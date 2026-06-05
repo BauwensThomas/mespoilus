@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import sharp from 'sharp';
 import { createAdminClient } from '@/lib/supabase/server';
 import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 import { randomUUID } from 'crypto';
+
+export const runtime = 'nodejs';
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -20,15 +23,31 @@ export async function POST(req: NextRequest) {
     if (file.size > MAX_SIZE)
       return NextResponse.json({ error: 'Fichier trop volumineux (max 5 Mo)' }, { status: 400 });
 
-    const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase();
-    const path = `${randomUUID()}.${ext}`;
+    const original = Buffer.from(await file.arrayBuffer());
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    // Conversion en JPEG (exigé par l'API Instagram via Make) + auto-rotation EXIF
+    // et redimensionnement pour limiter l'egress. Repli sur l'original si sharp échoue.
+    let buffer: Buffer = original;
+    let contentType = file.type;
+    let ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase();
+    try {
+      buffer = await sharp(original)
+        .rotate()
+        .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 82, progressive: true })
+        .toBuffer();
+      contentType = 'image/jpeg';
+      ext = 'jpg';
+    } catch {
+      // format exotique non décodable par sharp : on garde l'original
+    }
+
+    const path = `${randomUUID()}.${ext}`;
     const supabase = createAdminClient();
 
     const { error } = await supabase.storage
       .from('adoption-photos')
-      .upload(path, buffer, { contentType: file.type, upsert: false });
+      .upload(path, buffer, { contentType, upsert: false });
 
     if (error) {
       console.error('[adoption:upload]', error);
