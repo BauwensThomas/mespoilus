@@ -2,21 +2,20 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { Article } from '@/types';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Gamepad2, ShoppingBag, BookOpen, Wrench, PawPrint, ArrowRight } from 'lucide-react';
+import { BookOpen, ArrowRight } from 'lucide-react';
 
-const SITE = 'https://www.mespoilus.com';
 const INSTA = 'https://www.instagram.com/mespoilusofficiel';
 const FB = 'https://www.facebook.com/profile.php?id=61589487954538';
 
-export const revalidate = 600; // 10 min : le dernier article reste frais sans page 100 % dynamique
+export const revalidate = 600; // 10 min : les derniers articles restent frais
 
 export const metadata: Metadata = {
-  title: 'Tous nos liens',
-  description: 'Le dernier article, la Grille Mystère, la boutique, les outils gratuits et l\'adoption — tous les liens Mes Poilus au même endroit.',
+  title: 'Nos derniers articles',
+  description: 'Les derniers conseils et guides Mes Poilus pour vos animaux de compagnie.',
   alternates: { canonical: '/liens' },
   openGraph: {
-    title: 'Mes Poilus - Tous nos liens',
-    description: 'Dernier article, Grille Mystère, boutique, outils et adoption.',
+    title: 'Mes Poilus - Nos derniers articles',
+    description: 'Les derniers conseils et guides pour vos animaux.',
     type: 'website',
     url: '/liens',
     siteName: 'Mes Poilus',
@@ -24,7 +23,7 @@ export const metadata: Metadata = {
   },
 };
 
-async function getLatestArticle(): Promise<Article | null> {
+async function getLatestArticles(): Promise<Article[]> {
   try {
     const supabase = createAdminClient();
     const { data } = await supabase
@@ -32,84 +31,68 @@ async function getLatestArticle(): Promise<Article | null> {
       .select('*')
       .eq('status', 'published')
       .order('published_at', { ascending: false })
-      .limit(1);
-    return ((data as Article[]) ?? [])[0] ?? null;
+      .limit(5);
+    return (data as Article[]) ?? [];
   } catch {
-    return null;
+    return [];
   }
 }
 
-const LINKS = [
-  { href: '/grille', label: 'Grille Mystère', sub: 'Le jeu solidaire qui aide les refuges', icon: Gamepad2 },
-  { href: '/boutique', label: 'La boutique', sub: 'Nos sélections pour vos compagnons', icon: ShoppingBag },
-  { href: '/blog', label: 'Tous les articles', sub: 'Conseils & guides animaux', icon: BookOpen },
-  { href: '/outils', label: 'Outils gratuits', sub: 'Calculateurs, quiz et plus', icon: Wrench },
-  { href: '/adoption', label: 'Adoption', sub: 'Donner ou adopter un animal', icon: PawPrint },
-];
-
 export default async function LiensPage() {
-  const latest = await getLatestArticle();
+  const articles = await getLatestArticles();
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 py-10">
+    <div className="min-h-screen flex flex-col items-center px-4 py-8">
       <div className="w-full max-w-md mx-auto">
 
-        {/* En-tête */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-2">
-            <span className="text-3xl" aria-hidden="true">🐾</span>
-            <span className="text-2xl font-extrabold tracking-tight text-gray-900">Mes Poilus</span>
-          </div>
-          <p className="text-gray-500 text-sm">Conseils, jeux et bons plans pour vos animaux</p>
-        </div>
+        <h1 className="text-center text-xl font-extrabold tracking-tight text-gray-900 mb-1">
+          Nos derniers articles
+        </h1>
+        <p className="text-center text-sm text-gray-500 mb-6">
+          Conseils & guides pour vos animaux 🐾
+        </p>
 
-        {/* Dernier article en vedette */}
-        {latest && (
-          <Link
-            href={`/blog/${latest.slug}`}
-            className="block mb-6 rounded-2xl overflow-hidden border border-orange-200 bg-white shadow-sm hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-orange-300"
-          >
-            {latest.image_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={latest.image_url}
-                alt={latest.title}
-                width={640}
-                height={320}
-                className="w-full h-44 object-cover"
-              />
-            )}
-            <div className="p-4">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-orange-600 mb-1">
-                Dernier article
-              </p>
-              <p className="font-bold text-gray-900 leading-snug">{latest.title}</p>
-              <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-orange-600">
-                Lire l'article <ArrowRight className="w-4 h-4" />
-              </span>
-            </div>
-          </Link>
-        )}
-
-        {/* Boutons principaux */}
-        <div className="space-y-3">
-          {LINKS.map(({ href, label, sub, icon: Icon }) => (
+        {/* Grille 3 colonnes : 5 derniers articles + 1 cadre vers le blog */}
+        <div className="grid grid-cols-3 gap-2.5">
+          {articles.map((a) => (
             <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white px-4 py-3.5 shadow-sm hover:border-orange-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-orange-300"
+              key={a.id}
+              href={`/blog/${a.slug}`}
+              className="relative aspect-square rounded-xl overflow-hidden bg-orange-50 border border-orange-100 group focus:outline-none focus:ring-2 focus:ring-orange-300"
             >
-              <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
-                <Icon className="w-5 h-5" strokeWidth={1.75} />
-              </span>
-              <span className="flex-1 min-w-0">
-                <span className="block font-semibold text-gray-900">{label}</span>
-                <span className="block text-xs text-gray-500 truncate">{sub}</span>
-              </span>
-              <ArrowRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+              {a.image_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={a.image_url}
+                  alt={a.title}
+                  width={300}
+                  height={300}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+              <p className="absolute bottom-0 left-0 right-0 p-2 text-white text-[11px] font-semibold leading-tight line-clamp-3">
+                {a.title}
+              </p>
             </Link>
           ))}
+
+          {/* 6e cadre : lien vers tout le blog */}
+          <Link
+            href="/blog"
+            className="aspect-square rounded-xl bg-gradient-to-br from-orange-600 to-gray-900 text-white flex flex-col items-center justify-center gap-1.5 px-2 text-center hover:brightness-110 transition focus:outline-none focus:ring-2 focus:ring-orange-300"
+          >
+            <BookOpen className="w-6 h-6" strokeWidth={1.75} />
+            <span className="text-xs font-bold leading-tight">Tout le blog</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
+
+        {articles.length === 0 && (
+          <p className="text-center text-sm text-gray-400 mt-6">
+            Les premiers articles arrivent bientôt !
+          </p>
+        )}
 
         {/* Réseaux */}
         <div className="mt-8 flex items-center justify-center gap-3">
@@ -131,9 +114,8 @@ export default async function LiensPage() {
           </a>
         </div>
 
-        {/* Pied */}
-        <p className="mt-8 text-center text-xs text-gray-400">
-          <a href={SITE} className="hover:text-orange-600">mespoilus.com</a>
+        <p className="mt-6 text-center text-xs text-gray-400">
+          <a href="https://www.mespoilus.com" className="hover:text-orange-600">mespoilus.com</a>
         </p>
       </div>
     </div>
