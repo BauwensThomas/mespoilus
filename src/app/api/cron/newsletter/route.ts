@@ -3,6 +3,7 @@ import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendBulkNewsletter, sendEmail } from '@/lib/resend';
 import { cronEmailWrapper, statsRow, sectionBlock } from '@/lib/cron-email';
+import { buildNewsletterHtml, type NlArticle, type NlGrille } from '@/lib/newsletter-template';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -32,7 +33,7 @@ export async function GET(req: Request) {
   const bypass = urlParams.get('bypass') === 'true';
   const target = urlParams.get('target') ?? 'all'; // 'admin' | 'all'
 
-  // Éviter les doublons sauf si bypass=true (envoi manuel depuis la page agent)
+  // Éviter les doublons sauf si bypass=true (envoi manuel)
   if (!bypass) {
     const since = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
     const { data: recentSent } = await supabase
@@ -50,89 +51,92 @@ export async function GET(req: Request) {
     }
   }
 
-  // Récupérer les 3 derniers articles publiés
-  const { data: articles } = await supabase
+  // Les 3 derniers articles publiés
+  const { data: articlesData } = await supabase
     .from('articles')
     .select('title, slug, excerpt, image_url')
     .eq('status', 'published')
     .order('published_at', { ascending: false })
     .limit(3);
 
-  if (!articles || articles.length === 0) {
+  if (!articlesData || articlesData.length === 0) {
     return NextResponse.json({ success: false, reason: 'no_articles' });
   }
+  const articles = articlesData as NlArticle[];
 
   const articlesStr = articles
-    .map((a: { title: string; slug: string; excerpt: string | null; image_url: string | null }) => {
-      const imgLine = a.image_url ? `\n  Image : ${a.image_url}` : '';
-      return `- ${a.title}\n  Lien : https://www.mespoilus.com/blog/${a.slug}\n  Résumé : ${a.excerpt ?? ''}${imgLine}`;
-    })
+    .map(a => `- ${a.title}\n  Résumé : ${a.excerpt ?? ''}`)
     .join('\n\n');
 
-  // ── Bloc Grille Mystère (si une grille est active) ──────────────────────────
-  let grilleBlock = '';
+  // ── Grille Mystère active (pour la section fixe du template) ─────────────────
+  let grille: NlGrille | null = null;
   try {
-    const { data: grille } = await supabase
+    const { data: g } = await supabase
       .from('pixel_grilles')
       .select('id, grille_taille, ends_at, created_at')
       .eq('statut', 'active')
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
-
-    if (grille) {
+    if (g) {
       const { data: achats } = await supabase
         .from('pixel_achats')
         .select('positions')
-        .eq('grille_id', grille.id)
+        .eq('grille_id', g.id)
         .not('confirmed_at', 'is', null);
-      const totalPixels = grille.grille_taille * grille.grille_taille;
+      const totalPixels = g.grille_taille * g.grille_taille;
       const vendus = (achats ?? []).reduce((s, a) => s + (a.positions as number[]).length, 0);
       const pct = (vendus / totalPixels) * 100;
       const pctLabel = vendus > 0 && pct < 1 ? pct.toFixed(2).replace('.', ',') : String(Math.round(pct));
-      const end = grille.ends_at ? new Date(grille.ends_at) : new Date(new Date(grille.created_at).setMonth(new Date(grille.created_at).getMonth() + 3));
+      const end = g.ends_at ? new Date(g.ends_at) : new Date(new Date(g.created_at).setMonth(new Date(g.created_at).getMonth() + 3));
       const jours = Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400000));
-      const imageUrl = `https://www.mespoilus.com/api/grille/${grille.id}/image?fmt=jpg`;
-
-      grilleBlock = `
-
-SECTION SPÉCIALE À INCLURE - "Grille Mystère" (mets-la en avant, c'est un jeu en cours) :
-- Concept : un animal mystère caché derrière une grille de pixels, à révéler en achetant des pixels. Devine la race en premier pour gagner, 3 cadeaux, une partie reversée à un refuge.
-- État actuel : ${pctLabel}% de l'image révélée, il reste ${jours} jours.
-- Image à afficher dans cette section : balise <img> avec cette URL exacte et CE style EXACT \`style="display:block;margin:0 auto;width:100%;max-width:260px;border-radius:8px"\` (image carrée, ne JAMAIS la mettre en pleine largeur sinon elle est énorme) : ${imageUrl}
-- Bouton/lien vers : https://www.mespoilus.com/grille
-- ⚠️ CONTRASTE : le texte de cette section DOIT être foncé et lisible (couleur #1f2937 ou plus foncé) sur fond clair. N'utilise JAMAIS de gris clair (#9ca3af, #d1d5db…) sur fond blanc. Le titre en orange #ea580c, le corps en gris foncé #374151.
-- ⚠️ NE révèle AUCUN indice sur l'animal (pas de race, type, couleur, "quatre pattes"…). Garde le mystère entier.`;
+      grille = { imageUrl: `https://www.mespoilus.com/api/grille/${g.id}/image?fmt=jpg`, pctLabel, jours };
     }
-  } catch { /* pas de grille active, on ignore */ }
+  } catch { /* pas de grille active */ }
 
   try {
-    // ── Étape 1 : Sofia génère la newsletter ──────────────────────────────────
+    // ── Étape 1 : Sofia génère UNIQUEMENT le texte (le HTML est fixe en code) ──
     const currentYear = new Date().getFullYear();
-    const sofiaPrompt = `Crée la newsletter de Mes Poilus avec les meilleurs articles récents :
+    const sofiaPrompt = `Rédige le TEXTE d'une newsletter Mes Poilus. IMPORTANT : tu ne fournis QUE le texte, le HTML (header, articles, footer) est mis en forme automatiquement.
 
+Articles de la semaine (pour inspirer l'intro, ne les réécris pas) :
 ${articlesStr}
-${grilleBlock}
 
-Année actuelle : ${currentYear} (utilise cette année dans le footer copyright).
-
-Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": "..." }`;
+Réponds UNIQUEMENT avec ce JSON (sans balises code, texte simple sans HTML) :
+{
+  "subject": "Objet accrocheur, max 60 caractères",
+  "preview_text": "Texte de prévisualisation, max 90 caractères",
+  "intro": "2-3 phrases d'introduction chaleureuses et personnelles",
+  "conseil": "Un conseil pratique et concret sur les animaux, 2-4 phrases"
+}`;
 
     const result = await executeAgentTask('sofia', sofiaPrompt);
     if (!result.success) throw new Error(result.error ?? 'Sofia a échoué');
 
-    // ── Étape 2 : Récupérer le brouillon que Sofia vient de sauvegarder ───────
+    // Parse direct de la sortie de Sofia (le HTML n'est plus généré par l'IA)
+    let parsed: { subject?: string; preview_text?: string; intro?: string; conseil?: string } = {};
+    try {
+      const cleaned = result.content.replace(/```json|```/g, '').trim();
+      const m = cleaned.match(/\{[\s\S]*\}/);
+      parsed = m ? JSON.parse(m[0]) : {};
+    } catch { parsed = {}; }
+
+    const subject = parsed.subject?.trim() || 'Les conseils Mes Poilus de la semaine';
+    const previewText = parsed.preview_text?.trim() || '';
+    const intro = parsed.intro?.trim() || 'Voici nos derniers conseils pour prendre soin de tes compagnons à poils, à plumes et à écailles.';
+    const conseil = parsed.conseil?.trim() || '';
+
+    // ── Étape 2 : Assemblage du HTML (template fixe, déterministe) ────────────
+    const html = buildNewsletterHtml({ intro, conseil, articles, grille, year: currentYear });
+
     const { data: campaign } = await supabase
       .from('newsletter_campaigns')
-      .select('id, subject, content_html')
-      .eq('status', 'draft')
-      .order('created_at', { ascending: false })
-      .limit(1)
+      .insert({ subject, preview_text: previewText || null, content_html: html, status: 'draft' })
+      .select('id')
       .single();
+    const campaignId = campaign?.id;
 
-    if (!campaign?.content_html) throw new Error('Brouillon newsletter introuvable après génération');
-
-    // ── Étape 3 : Destinataires selon target ─────────────────────────────────
+    // ── Étape 3 : Destinataires ──────────────────────────────────────────────
     let emails: string[] = [];
     if (target === 'admin') {
       const adminEmail = process.env.ADMIN_EMAIL ?? 'thozma.thomas@gmail.com';
@@ -151,25 +155,22 @@ Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": 
       return NextResponse.json({ success: true, reason: 'no_subscribers', draft_saved: true });
     }
 
-    // ── Étape 4 : Envoi via Resend ────────────────────────────────────────────
-    const { sent, failed } = await sendBulkNewsletter({
-      subject: campaign.subject,
-      html: campaign.content_html,
-      subscribers: emails,
-    });
+    // ── Étape 4 : Envoi via Resend ───────────────────────────────────────────
+    const { sent, failed } = await sendBulkNewsletter({ subject, html, subscribers: emails });
 
-    // Marquer la campagne comme envoyée
-    await supabase
-      .from('newsletter_campaigns')
-      .update({
-        status: 'sent',
-        sent_at: new Date().toISOString(),
-        recipients_count: emails.length,
-        sent_count: sent,
-        failed_count: failed,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', campaign.id);
+    if (campaignId) {
+      await supabase
+        .from('newsletter_campaigns')
+        .update({
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+          recipients_count: emails.length,
+          sent_count: sent,
+          failed_count: failed,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', campaignId);
+    }
 
     const duration = Date.now() - globalStart;
     await logActivity('thomas', 'Thomas',
@@ -179,9 +180,10 @@ Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": 
     );
     console.log(`[Cron Newsletter] Envoyée à ${sent}/${emails.length} abonnés en ${duration}ms`);
 
+    // Email de confirmation à l'admin
     try {
       const date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-      const articlesHtml = articles.map((a: { title: string; slug: string }) =>
+      const articlesHtml = articles.map(a =>
         `<p style="margin:4px 0;font-size:13px">• <a href="https://www.mespoilus.com/blog/${a.slug}" style="color:#ea580c">${a.title}</a></p>`
       ).join('');
       const body = statsRow([
@@ -189,7 +191,7 @@ Format JSON requis : { "subject": "...", "preview_text": "...", "content_html": 
         { label: 'Echecs', value: failed, color: failed > 0 ? '#dc2626' : '#9ca3af' },
         { label: 'Total abonnes', value: emails.length },
       ]) +
-      sectionBlock('Sujet de la newsletter', `<p style="margin:0;font-weight:600">${campaign.subject}</p>`, '#8b5cf6', '#faf5ff') +
+      sectionBlock('Sujet de la newsletter', `<p style="margin:0;font-weight:600">${subject}</p>`, '#8b5cf6', '#faf5ff') +
       sectionBlock('Articles inclus', articlesHtml, '#ea580c', '#fff7ed');
 
       await sendEmail({
