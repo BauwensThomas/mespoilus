@@ -11,7 +11,7 @@ export default function CGUPage() {
     <div className="min-h-screen text-gray-900">
       <div className="max-w-6xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Conditions Générales d'Utilisation</h1>
-        <p className="text-gray-600 text-sm mb-12">Applicables au site Mes Poilus - Dernière mise à jour : mai 2026</p>
+        <p className="text-gray-600 text-sm mb-12">Applicables au site Mes Poilus - Dernière mise à jour : juin 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 
@@ -63,7 +63,7 @@ export default function CGUPage() {
                 <li>À l'issue de chaque grille, <strong>3 gagnants</strong> sont désignés : le 1er prix revient à la première personne ayant trouvé la race (ou, à défaut, au plus gros acheteur de pixels) ; les 2e et 3e prix reviennent aux plus gros acheteurs.</li>
                 <li>Une grille dure <strong>90 jours maximum</strong> et peut se terminer plus tôt si la race est trouvée.</li>
                 <li>Les lots sont des « cadeaux surprises » dont la valeur dépend du montant collecté ; aucune valeur n'est garantie à l'avance.</li>
-                <li>Une partie des recettes est reversée à un refuge animalier ou une association.</li>
+                <li>Une partie des recettes est reversée à un refuge animalier ou une association. Le bénéficiaire est désigné par tirage au sort parmi les refuges et associations partenaires ayant relayé le jeu ; le montant reversé est conservé à titre de justificatif.</li>
                 <li>Mes Poilus se réserve le droit de modifier, suspendre ou annuler une grille en cas de force majeure ou de dysfonctionnement, et de disqualifier toute participation frauduleuse.</li>
               </ul>
             </div>
