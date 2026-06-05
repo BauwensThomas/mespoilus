@@ -222,10 +222,9 @@ async function saveMarie(content: string, overrideImageUrl?: string) {
 }
 
 async function saveNathalie(content: string) {
-  const match = content.match(/CRITIQUE|ÉLEVÉ|MOYEN|FAIBLE/i);
-  const levelMap: Record<string, string> = { CRITIQUE: 'critical', ÉLEVÉ: 'high', MOYEN: 'medium', FAIBLE: 'low' };
-  const threatLevel = match ? (levelMap[match[0].toUpperCase()] || 'low') : 'low';
-  await dbFetch('security_logs', 'POST', { threat_level: threatLevel, threat_type: 'Security Analysis', action_taken: 'Report generated', blocked: false, details: { analysis: content.slice(0, 2000) } });
+  // Un rapport d'audit N'EST PAS un incident : on le trace en 'Audit Report' niveau 'low'
+  // (sinon le mot "CRITIQUE" du rapport était relu comme un incident critique → fausse alerte).
+  await dbFetch('security_logs', 'POST', { threat_level: 'low', threat_type: 'Audit Report', action_taken: 'Report generated', blocked: false, details: { analysis: content.slice(0, 2000) } });
   console.log('[save-agent] Nathalie security_logs OK');
 }
 

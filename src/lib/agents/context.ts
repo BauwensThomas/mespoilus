@@ -82,11 +82,16 @@ Base tes analyses et recommandations sur ces chiffres réels mois par mois.`;
     }
 
     if (agentId === 'nathalie') {
+      // On exclut les artefacts d'audit ('Audit Report' + ancien 'Security Analysis') :
+      // ce sont les rapports de Nathalie, pas de vraies attaques (évite la boucle de fausse alerte).
+      const AUDIT_ARTIFACTS = '("Audit Report","Security Analysis")';
       const [logsRes, blockedRes, recentRes] = await Promise.all([
-        supabase.from('security_logs').select('id', { count: 'exact', head: true }),
+        supabase.from('security_logs').select('id', { count: 'exact', head: true })
+          .not('threat_type', 'in', AUDIT_ARTIFACTS),
         supabase.from('blocked_ips').select('id', { count: 'exact', head: true }),
         supabase.from('security_logs')
           .select('threat_level, threat_type, created_at')
+          .not('threat_type', 'in', AUDIT_ARTIFACTS)
           .order('created_at', { ascending: false })
           .limit(5),
       ]);

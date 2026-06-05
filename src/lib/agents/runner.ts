@@ -335,17 +335,13 @@ async function saveMariesArticle(content: string): Promise<string | null> {
 
 async function saveSecurityAnalysis(content: string) {
   try {
-    const threatLevelMatch = content.match(/CRITIQUE|ÉLEVÉ|MOYEN|FAIBLE/i);
-    const threatLevel = threatLevelMatch
-      ? ({ CRITIQUE: 'critical', ÉLEVÉ: 'high', MOYEN: 'medium', FAIBLE: 'low' } as Record<string, string>)[
-          threatLevelMatch[0].toUpperCase()
-        ] || 'low'
-      : 'low';
-
+    // Un rapport d'audit N'EST PAS un incident : on le trace en 'Audit Report' niveau 'low'
+    // pour ne pas gonfler le compteur critical du dashboard ni se faire relire comme une
+    // attaque par l'audit suivant (boucle de fausse alerte).
     const supabase = createAdminClient();
     await supabase.from('security_logs').insert({
-      threat_level: threatLevel,
-      threat_type: 'Security Analysis',
+      threat_level: 'low',
+      threat_type: 'Audit Report',
       action_taken: 'Report generated',
       blocked: false,
       details: { analysis: content.slice(0, 2000) },

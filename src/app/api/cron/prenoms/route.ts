@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropic } from '@/lib/anthropic';
 import { createAdminClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -43,7 +43,6 @@ export async function GET(req: Request) {
   }
 
   const globalStart = Date.now();
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   const supabase = createAdminClient();
   const results: Record<string, number> = {};
@@ -52,7 +51,7 @@ export async function GET(req: Request) {
 
   for (const animal of ANIMALS) {
     try {
-      const response = await client.messages.create({
+      const response = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 1500,
         messages: [{

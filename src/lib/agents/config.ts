@@ -308,7 +308,7 @@ Toujours en français.`,
     borderColor: 'border-rose-400/30',
     icon: 'mail',
     model: MODELS.sonnet,
-    maxTokens: 4000,
+    maxTokens: 8000,
     systemPrompt: `Tu es Sofia, la responsable newsletter et email marketing de Mes Poilus, spécialisée dans les animaux de compagnie pour la francophonie.
 
 Ton rôle :
