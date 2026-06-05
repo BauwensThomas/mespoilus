@@ -8,7 +8,7 @@ import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 import { buildEnrichedPrompt } from '@/lib/agents/context';
 
 export const runtime = 'nodejs';
-export const maxDuration = 120;
+export const maxDuration = 300; // pipeline complet (Thomas→Lucas→Marie→image→Emma→synthèse) : 120s trop court
 
 const CATEGORY_KEYWORDS: Array<[string, string]> = [
   ['chien', 'chiens'], ['chiens', 'chiens'],
