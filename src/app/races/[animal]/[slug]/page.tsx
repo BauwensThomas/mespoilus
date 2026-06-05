@@ -286,7 +286,7 @@ export default async function BreedPage({ params }: Props) {
           Les informations sont des moyennes indicatives. Chaque animal est unique.
         </p>
 
-        {/* Publicité in-article (après le contenu, avant l'adoption — non intrusif) */}
+        {/* Publicité in-article (après le contenu, avant l'adoption - non intrusif) */}
         <AdBanner slot="1266534148" variant="in-article" className="my-2" />
 
         {/* Annonces d'adoption */}

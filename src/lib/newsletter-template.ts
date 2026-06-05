@@ -55,7 +55,7 @@ function grilleSection(g: NlGrille): string {
       <tr><td style="padding:18px;text-align:center">
         <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${ORANGE}">Jeu en cours</p>
         <h3 style="margin:0 0 12px;font-size:18px;font-weight:800;color:${TEXT}">La Grille Mystère : sauras-tu percer le secret ?</h3>
-        <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:${MUTED}">Un animal mystère se cache derrière une grille de pixels. Révèle-les en achetant des pixels, devine la race en premier et remporte l'un des 3 cadeaux. Une partie des recettes est reversée à un refuge.</p>
+        <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:${MUTED}">Un animal mystère se cache derrière une grille de pixels. Révèle-les en achetant des pixels, devine la race en premier et remporte l'un des 3 cadeaux. Une partie des recettes est reversée à un refuge ou à une association.</p>
         <img src="${g.imageUrl}" alt="Grille Mystère" style="display:block;margin:0 auto 14px;width:100%;max-width:260px;border-radius:8px">
         <p style="margin:0 0 14px;font-size:13px;color:${MUTED}"><strong>${g.pctLabel}%</strong> de l'image révélée${g.jours !== null ? ` - il reste <strong>${g.jours} jours</strong>` : ' - sois le premier à jouer, le compte à rebours démarre au 1er pixel acheté'}.</p>
         <a href="https://www.mespoilus.com/grille" style="display:inline-block;background:${ORANGE};color:#fff;text-decoration:none;font-size:14px;font-weight:700;padding:10px 24px;border-radius:8px">Acheter des pixels et jouer</a>
@@ -108,7 +108,7 @@ export function buildNewsletterHtml(opts: {
           <a href="${FB}" style="display:inline-block;margin:0 4px;background:#1877f2;color:#fff;font-size:11px;font-weight:700;padding:5px 14px;border-radius:5px;text-decoration:none">Facebook</a>
           <a href="${INSTA}" style="display:inline-block;margin:0 4px;background:#e1306c;color:#fff;font-size:11px;font-weight:700;padding:5px 14px;border-radius:5px;text-decoration:none">Instagram</a>
         </p>
-        <p style="margin:0 0 6px;color:rgba(255,255,255,.92);font-size:12px">© ${year} Mes Poilus — Tous droits réservés</p>
+        <p style="margin:0 0 6px;color:rgba(255,255,255,.92);font-size:12px">© ${year} Mes Poilus - Tous droits réservés</p>
         <p style="margin:0;font-size:11px"><a href="{{UNSUBSCRIBE_URL}}" style="color:rgba(255,255,255,.85);text-decoration:underline">Se désabonner</a></p>
       </td></tr>
 

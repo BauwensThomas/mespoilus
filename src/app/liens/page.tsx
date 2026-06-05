@@ -116,7 +116,7 @@ export default async function LiensPage() {
         </a>
       </div>
 
-      {/* Pub AdSense en bas — bloc dédié "Mes Poilus - Liens - bas de page"
+      {/* Pub AdSense en bas - bloc dédié "Mes Poilus - Liens - bas de page"
           (s'affiche seulement si AdSense activé + cookies acceptés) */}
       <AdBanner slot="6028658236" variant="display" className="mt-10 max-w-3xl mx-auto" />
     </div>

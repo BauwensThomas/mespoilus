@@ -211,7 +211,7 @@ La **Grille Mystère** de Mes Poilus est terminée ! Après plusieurs jours de s
 
 ${podium || "Pas de participant cette fois - la prochaine sera la bonne !"}
 
-Un grand merci à toutes les personnes qui ont participé. Une partie des recettes de cette grille est reversée à un refuge animalier. ❤️
+Un grand merci à toutes les personnes qui ont participé. Une partie des recettes de cette grille est reversée à un refuge animalier ou à une association. ❤️
 
 ## Une nouvelle grille arrive bientôt
 
