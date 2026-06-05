@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 import { buildEnrichedPrompt } from '@/lib/agents/context';
+import { generateFaq } from '@/lib/generate-faq';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300; // pipeline complet (Thomas→Lucas→Marie→image→Emma→synthèse) : 120s trop court
@@ -211,6 +212,15 @@ Termine avec une conclusion + CTA court.`;
               }
             }
           } catch { /* non-bloquant */ }
+
+          // FAQ SEO (longue traîne + JSON-LD FAQPage), comme le cron blog - non bloquant
+          try {
+            const faq = await generateFaq(articleTitle, marieResult.content);
+            if (faq.length > 0) {
+              await supabase.from('articles').update({ faq }).eq('slug', articleSlug);
+              console.log(`[orchestrate] FAQ générée: ${faq.length} questions`);
+            }
+          } catch (e) { console.warn('[orchestrate] FAQ erreur:', e instanceof Error ? e.message : e); }
 
           // Sauvegarder dans cron_state en 'done' : orchestrate publie déjà Emma lui-même,
           // donc on NE met PAS 'article_ready' (sinon le cron social re-posterait le même article).
