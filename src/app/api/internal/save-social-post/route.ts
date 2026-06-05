@@ -103,7 +103,11 @@ export async function POST(req: NextRequest) {
       const articleLink = articleLinkMatch?.[0] ?? '';
 
       const body: Record<string, string> = {
-        content: content.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim(),
+        content: content
+          .replace(/#[\wÀ-ɏ]+/g, '')                   // retire les hashtags
+          .replace(/^.*\bmespoilus\.com\S*.*$/gim, '')  // retire la/les ligne(s) contenant le lien du site
+          .replace(/\n{3,}/g, '\n\n')                   // compacte les lignes vides en trop
+          .trim(),
         hashtags: hashtags.join(' '),
       };
       if (imageUrl) body.image_url = imageUrl;
