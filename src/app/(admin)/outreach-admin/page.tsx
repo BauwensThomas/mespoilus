@@ -390,7 +390,7 @@ export default function OutreachAdminPage() {
   }
 
   function addEmails() {
-    const raw = emailInput.split(/[\n,;]+/).map(e => e.trim().toLowerCase()).filter(e => e.includes('@'));
+    const raw = emailInput.split(/[\s,;]+/).map(e => e.trim().toLowerCase()).filter(e => e.includes('@'));
     const newOnes = raw.filter(e => !emails.includes(e));
     if (newOnes.length) setEmails(prev => [...prev, ...newOnes]);
     setEmailInput('');

@@ -143,6 +143,7 @@ export default function GrilleView({
   );
 
   const refreshData = useCallback(async () => {
+   try {
     const res = await fetch('/api/grille');
     const data = await res.json();
     if (data.grille) {
@@ -178,6 +179,10 @@ export default function GrilleView({
       }
       lastAchatAtRef.current = at;
     }
+   } catch {
+     // Rafraîchissement en arrière-plan : on ignore les erreurs réseau
+     // (onglet fermé, navigation, micro-coupure) pour ne pas polluer Sentry.
+   }
   }, [totalPixels]);
 
   // Auto-masquage du toast après 5s
