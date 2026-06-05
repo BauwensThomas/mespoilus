@@ -212,12 +212,13 @@ Termine avec une conclusion + CTA court.`;
             }
           } catch { /* non-bloquant */ }
 
-          // Sauvegarder dans cron_state
+          // Sauvegarder dans cron_state en 'done' : orchestrate publie déjà Emma lui-même,
+          // donc on NE met PAS 'article_ready' (sinon le cron social re-posterait le même article).
           await supabase.from('cron_state').insert({
             slug: articleSlug,
             title: articleTitle,
             excerpt: articleExcerpt,
-            status: 'article_ready',
+            status: 'done',
           });
         }
       }
