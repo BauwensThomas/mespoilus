@@ -9,6 +9,13 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
+    # On IGNORE les montées de version MAJEURES (souvent cassantes : react-dom 19,
+    # eslint 10 incompatible Next 15, recharts 3, date-fns 4...). On les fera à la main.
+    # NB : les CORRECTIFS DE SÉCURITÉ restent envoyés même sur une majeure.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
     groups:
       # Regroupe les mises à jour mineures/patch en une seule PR pour limiter le bruit
       minor-and-patch:
