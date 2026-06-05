@@ -88,8 +88,8 @@ export async function GET(req: Request) {
       const vendus = (achats ?? []).reduce((s, a) => s + (a.positions as number[]).length, 0);
       const pct = (vendus / totalPixels) * 100;
       const pctLabel = vendus > 0 && pct < 1 ? pct.toFixed(2).replace('.', ',') : String(Math.round(pct));
-      const end = g.ends_at ? new Date(g.ends_at) : new Date(new Date(g.created_at).setMonth(new Date(g.created_at).getMonth() + 3));
-      const jours = Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400000));
+      // Le compte à rebours ne démarre qu'au 1er pixel acheté (ends_at NULL avant) → jours = null sinon
+      const jours = g.ends_at ? Math.max(0, Math.ceil((new Date(g.ends_at).getTime() - Date.now()) / 86400000)) : null;
       grille = { imageUrl: `https://www.mespoilus.com/api/grille/${g.id}/image?fmt=jpg`, pctLabel, jours };
     }
   } catch { /* pas de grille active */ }
