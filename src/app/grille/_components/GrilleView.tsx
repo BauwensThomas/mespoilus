@@ -237,6 +237,10 @@ export default function GrilleView({
           <p className="text-orange-600 font-medium text-sm mt-1">
             3 cadeaux surprises à gagner. Plus la grille se remplit, plus les cadeaux sont généreux.
           </p>
+          <p className="inline-flex items-center gap-1.5 text-green-700 bg-green-50 border border-green-200 rounded-full px-3 py-1 text-xs font-medium mt-3">
+            <span aria-hidden="true">💚</span>
+            Une partie des recettes est reversée à un refuge animalier ou à une association.
+          </p>
 
           {/* Partage */}
           <div className="flex items-center justify-center gap-2 mt-4">
