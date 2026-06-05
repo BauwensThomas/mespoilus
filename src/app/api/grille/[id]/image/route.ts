@@ -42,9 +42,10 @@ export async function GET(
   const fmt = isJpg ? 'jpg' : 'webp';
   const ct = isJpg ? 'image/jpeg' : 'image/webp';
   // Grille terminée → image figée, cacheable longtemps (réduit l'egress sur les
-  // grilles passées encore partagées/crawlées). En live, l'image change à chaque
-  // pixel révélé → no-store obligatoire pour ne pas servir un masque périmé.
-  const cacheControl = done ? 'public, max-age=86400, immutable' : 'no-store';
+  // grilles passées encore partagées/crawlées). En live, cache court (60s) : on
+  // tolère un masque jusqu'à 60s périmé pour éviter de re-servir l'image à chaque
+  // affichage/refresh (gros poste d'egress quand la page a du trafic).
+  const cacheControl = done ? 'public, max-age=86400, immutable' : 'public, max-age=60';
 
   // Sert depuis le cache composé si disponible
   const composedKey = `${id}:${revealedSet.size}:${fmt}:${done ? 'done' : 'live'}`;
