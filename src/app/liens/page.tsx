@@ -13,7 +13,9 @@ export const revalidate = 600; // 10 min : les derniers articles restent frais
 export const metadata: Metadata = {
   title: 'Nos derniers articles',
   description: 'Les derniers conseils et guides Mes Poilus pour vos animaux de compagnie.',
-  alternates: { canonical: '/liens' },
+  // Page "link in bio" : pas indexée (évite le duplicate avec /blog), mais les liens
+  // vers les articles restent suivis. AdSense fonctionne malgré le noindex.
+  robots: { index: false, follow: true },
   openGraph: {
     title: 'Mes Poilus - Nos derniers articles',
     description: 'Les derniers conseils et guides pour vos animaux.',
