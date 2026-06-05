@@ -33,11 +33,13 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 // Crons attendus selon le jour - pattern de detection dans action log
-const DAILY_CRONS = [
+
+// Crons catalogue : tournent TOUS LES 3 JOURS (vercel.json `*/3 * *` = jours 1,4,7,10...).
+// → attendus uniquement ces jours-là (sinon faux "manquants" 2 jours sur 3).
+const CATALOG_CRONS = [
   { label: 'Catalog sync chiens',          pattern: '[Catalog sync:chiens]',          hour: '02h', agent: 'Thomas' },
   { label: 'Catalog sync chats',           pattern: '[Catalog sync:chats]',           hour: '02h', agent: 'Thomas' },
   { label: 'Catalog sync oiseaux',         pattern: '[Catalog sync:oiseaux]',         hour: '02h', agent: 'Thomas' },
-  { label: 'Adoption cleanup',             pattern: '[Adoption cleanup]',             hour: '03h', agent: 'Thomas' },
   { label: 'Catalog sync rongeurs',        pattern: '[Catalog sync:rongeurs]',        hour: '03h', agent: 'Thomas' },
   { label: 'Catalog sync reptiles',        pattern: '[Catalog sync:reptiles]',        hour: '03h', agent: 'Thomas' },
   { label: 'Catalog sync livres',          pattern: '[Catalog sync:livres]',          hour: '03h', agent: 'Thomas' },
@@ -50,6 +52,14 @@ const DAILY_CRONS = [
   { label: 'Dedup titre',                  pattern: '[Dedup titre]',                  hour: '06h', agent: 'Thomas' },
   { label: 'Classify products',            pattern: '[Classify products]',            hour: '07h', agent: 'Thomas' },
 ];
+
+// Crons réellement quotidiens
+const DAILY_CRONS = [
+  { label: 'Adoption cleanup',             pattern: '[Adoption cleanup]',             hour: '03h', agent: 'Thomas' },
+];
+
+// Un cron catalogue tourne ce jour-là si le jour du mois suit le pas `*/3` (1,4,7,10...)
+const isCatalogDay = (dom: number) => (dom - 1) % 3 === 0;
 
 const WEEKDAY_CRONS: Record<number, Array<{ label: string; pattern: string; hour: string; agent: string }>> = {
   1: [ // Lundi
@@ -85,6 +95,7 @@ function getExpectedCrons(now: Date) {
   const dow = now.getUTCDay();
   const dom = now.getUTCDate();
   const expected = [...DAILY_CRONS];
+  if (isCatalogDay(dom)) expected.push(...CATALOG_CRONS); // catalogue : tous les 3 jours
   if (WEEKDAY_CRONS[dow]) expected.push(...WEEKDAY_CRONS[dow]);
   if (dom === 1) {
     expected.push({ label: 'Finance (Antoine)',   pattern: 'Cron finance',   hour: '08h', agent: 'Antoine'  });
