@@ -491,6 +491,18 @@ export async function runCatalogSyncForCategory(
     }
   } else if (category === 'entirelypets') {
     // EntirelyPets (CJ advertiser 1475632) : flux produits CJ propre via l'API GraphQL.
+    // DÉSACTIVÉ par défaut : on évite d'importer ~10k produits US/CA tant que l'usage
+    // Vercel/Supabase n'a pas baissé et qu'on n'a pas de trafic CA/US.
+    // Pour activer l'import : définir ENTIRELYPETS_SYNC_ENABLED=true sur Vercel.
+    if (process.env.ENTIRELYPETS_SYNC_ENABLED !== 'true') {
+      await supabase.from('activity_logs').insert({
+        agent_id: 'thomas', agent_name: 'Thomas',
+        action: `[Catalog sync:entirelypets] desactive (ENTIRELYPETS_SYNC_ENABLED != true)`,
+        details: {}, status: 'success',
+      });
+      return NextResponse.json({ success: true, category, disabled: true, inserted: 0, updated: 0 });
+    }
+
     const token = process.env.CJ_API_TOKEN;
     const companyId = process.env.CJ_CID;
     const advertiserId = process.env.CJ_ADVERTISER_ENTIRELYPETS;
