@@ -622,6 +622,7 @@ const CATALOG_CATEGORIES = [
   { key: 'livres',          label: 'Livres',   icon: '📚' },
   { key: 'general',         label: 'Général',  icon: '🐾' },
   { key: 'canada-pet-care', label: 'CPC',      icon: '🇨🇦' },
+  { key: 'entirelypets',    label: 'EntirelyPets', icon: '🇺🇸' },
 ] as const;
 
 type CatalogCategory = typeof CATALOG_CATEGORIES[number]['key'];

@@ -15,6 +15,7 @@ const CRON_PATHS: Record<string, string> = {
   'catalog-sync-livres':         '/api/cron/catalog-sync/livres',
   'catalog-sync-general':        '/api/cron/catalog-sync/general',
   'catalog-sync-canada-pet-care':'/api/cron/catalog-sync/canada-pet-care',
+  'catalog-sync-entirelypets':   '/api/cron/catalog-sync/entirelypets',
   'catalog-sync-translate':      '/api/cron/catalog-sync/translate',
   'catalog-dedup-ean':           '/api/cron/catalog-sync/dedup-ean',
   'catalog-dedup-title':         '/api/cron/catalog-sync/dedup-title',
@@ -26,7 +27,7 @@ const CRON_PATHS: Record<string, string> = {
   'daily-recap':             '/api/cron/daily-recap',
 };
 
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
