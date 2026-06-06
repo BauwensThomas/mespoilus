@@ -125,17 +125,20 @@ export async function fetchCJProductsForAdvertiser(
   onBatch: (batch: DBProduct[]) => Promise<void>
 ): Promise<number> {
   const LIMIT = 100;
+  // CJ refuse de paginer au-delà de 10 000 enregistrements (limit + offset <= 10000).
+  const MAX_OFFSET = 10000;
   let offset = 0;
   let totalSynced = 0;
   let totalCount = Infinity;
 
-  while (offset < totalCount) {
+  while (offset < totalCount && offset < MAX_OFFSET) {
+    const limit = Math.min(LIMIT, MAX_OFFSET - offset);
     const data = await queryCJ<{
       products: { totalCount: number; resultList: CJShoppingProduct[] };
     }>(token, SHOPPING_PRODUCTS_QUERY, {
       companyId,
       partnerIds: [advertiserId],
-      limit: LIMIT,
+      limit,
       offset,
     });
 
@@ -151,7 +154,7 @@ export async function fetchCJProductsForAdvertiser(
     }
 
     offset += resultList.length;
-    if (resultList.length < LIMIT) break;
+    if (resultList.length < limit) break;
   }
 
   return totalSynced;

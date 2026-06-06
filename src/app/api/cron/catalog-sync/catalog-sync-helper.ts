@@ -325,6 +325,9 @@ const CPC_PUBLISHER_SID = '101746286';
 const CPC_ADVERTISER_ID = '17287368';
 const CPC_SITEMAP_URL = 'https://www.canadapetcare.com/sitemap.xml';
 
+// EntirelyPets : base du deep link CJ (Link Generator) — publisher 101746286, AID 15524299, domaine dpbolvw.net.
+const ENTIRELYPETS_AFFILIATE_BASE = `https://www.dpbolvw.net/click-${CPC_PUBLISHER_SID}-15524299`;
+
 function buildCPCAffiliateUrl(productUrl: string): string {
   return `https://www.jdoqocy.com/click-${CPC_PUBLISHER_SID}-${CPC_ADVERTISER_ID}?url=${encodeURIComponent(productUrl)}`;
 }
@@ -525,7 +528,9 @@ export async function runCatalogSyncForCategory(
           price:        p.price,
           currency:     p.currency,
           image_url:    p.image_url,
-          affiliate_url: p.affiliate_url,
+          // Le flux CJ renvoie l'URL brute entirelypets.com → on l'enveloppe dans le
+          // lien de tracking CJ (sinon clics non comptabilisés = pas de commission).
+          affiliate_url: `${ENTIRELYPETS_AFFILIATE_BASE}?url=${encodeURIComponent(p.affiliate_url)}`,
           merchant_name: p.merchant_name,
           category:     p.category,
           categories:   p.categories,
