@@ -8,7 +8,7 @@ const BATCH_SIZE_DESC = 5;
 const MAX_RETRIES = 4;
 
 // Marchands anglophones : leurs produits sont TOUJOURS traduits, jamais marqués "déjà FR"
-const FORCE_MERCHANTS = ['CanadaPetCare', 'Puft', 'Tuft & Paw'];
+const FORCE_MERCHANTS = ['CanadaPetCare', 'Puft', 'Tuft & Paw', 'EntirelyPets'];
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
