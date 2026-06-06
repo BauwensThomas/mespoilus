@@ -35,6 +35,7 @@ function extractWeightG(name: string): number | null {
 
 const MERCHANT_COUNTRY_OVERRIDES: Record<string, string> = {
   'tuft & paw': 'us',
+  'entirelypets': 'ca',
 };
 
 const MERCHANT_CURRENCY_OVERRIDES: Record<string, string> = {
