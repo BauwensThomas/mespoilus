@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { Article } from '@/types';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { BookOpen, ArrowRight } from 'lucide-react';
+import { BookOpen, ArrowRight, Mail, Puzzle } from 'lucide-react';
 import AdBanner from '@/components/ui/AdBanner';
 
 const INSTA = 'https://www.instagram.com/mespoilusofficiel';
@@ -34,7 +34,7 @@ async function getLatestArticles(): Promise<Article[]> {
       .select('*')
       .eq('status', 'published')
       .order('published_at', { ascending: false })
-      .limit(5); // 5 articles + 1 carte blog = grille 3x2
+      .limit(3); // 3 articles + grille + newsletter + blog = grille 3x2
     return (data as Article[]) ?? [];
   } catch {
     return [];
@@ -76,6 +76,30 @@ export default async function LiensPage() {
             </div>
           </Link>
         ))}
+
+        {/* Carte jeu : La Grille Mystère (jeu solidaire) */}
+        <Link
+          href="/grille"
+          className="rounded-2xl border border-orange-200 bg-gradient-to-br from-fuchsia-600 to-purple-700 text-white flex flex-col items-center justify-center gap-2.5 p-6 text-center hover:brightness-110 transition shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300 min-h-[220px]"
+        >
+          <Puzzle className="w-9 h-9" strokeWidth={1.5} />
+          <span className="text-lg font-bold leading-tight">La Grille Mystère</span>
+          <span className="inline-flex items-center gap-1 text-sm text-white/90">
+            Joue et soutiens un refuge <ArrowRight className="w-4 h-4" />
+          </span>
+        </Link>
+
+        {/* Carte newsletter : inscription (ancre #newsletter de la homepage) */}
+        <Link
+          href="/#newsletter"
+          className="rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-500 to-red-500 text-white flex flex-col items-center justify-center gap-2.5 p-6 text-center hover:brightness-110 transition shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300 min-h-[220px]"
+        >
+          <Mail className="w-9 h-9" strokeWidth={1.5} />
+          <span className="text-lg font-bold leading-tight">Newsletter</span>
+          <span className="inline-flex items-center gap-1 text-sm text-white/90">
+            Mes conseils chaque semaine <ArrowRight className="w-4 h-4" />
+          </span>
+        </Link>
 
         {/* Dernière carte : lien vers tout le blog */}
         <Link
