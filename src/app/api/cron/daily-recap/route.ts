@@ -45,6 +45,7 @@ const CATALOG_CRONS = [
   { label: 'Catalog sync livres',          pattern: '[Catalog sync:livres]',          hour: '03h', agent: 'Thomas' },
   { label: 'Catalog sync general',         pattern: '[Catalog sync:general]',         hour: '04h', agent: 'Thomas' },
   { label: 'Catalog sync canada-pet-care', pattern: '[Catalog sync:canada-pet-care]', hour: '04h', agent: 'Thomas' },
+  { label: 'Catalog sync entirelypets',    pattern: '[Catalog sync:entirelypets]',    hour: '04h', agent: 'Thomas' },
   { label: 'Dedup EAN',                    pattern: '[Dedup EAN]',                    hour: '05h', agent: 'Thomas' },
   { label: 'Dedup image',                  pattern: '[Dedup image]',                  hour: '05h', agent: 'Thomas' },
   { label: 'Traduction pass 1',            pattern: '[Catalog translate]',            hour: '05h', agent: 'Thomas' },
