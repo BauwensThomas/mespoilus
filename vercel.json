@@ -8,6 +8,7 @@
     { "path": "/api/cron/catalog-sync/livres",           "schedule": "40 3 */3 * *" },
     { "path": "/api/cron/catalog-sync/general",          "schedule": "0 4 */3 * *" },
     { "path": "/api/cron/catalog-sync/canada-pet-care",  "schedule": "30 4 */3 * *" },
+    { "path": "/api/cron/catalog-sync/entirelypets",     "schedule": "50 4 */3 * *" },
     { "path": "/api/cron/catalog-sync/dedup-ean",        "schedule": "0 5 */3 * *" },
     { "path": "/api/cron/catalog-sync/dedup-image",      "schedule": "20 5 */3 * *" },
     { "path": "/api/cron/catalog-sync/translate",        "schedule": "40 5 */3 * *" },

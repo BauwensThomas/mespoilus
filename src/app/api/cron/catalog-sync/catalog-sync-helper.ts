@@ -1,10 +1,11 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { fetchAwinProductsByCategory, type AwinSyncCategory } from '@/lib/awin';
+import { fetchCJProductsForAdvertiser } from '@/lib/cj';
 import { NextResponse } from 'next/server';
 
 export type CatalogSyncCategory =
   | 'chiens' | 'chats' | 'oiseaux' | 'rongeurs'
-  | 'reptiles' | 'livres' | 'general' | 'canada-pet-care';
+  | 'reptiles' | 'livres' | 'general' | 'canada-pet-care' | 'entirelypets';
 
 interface ProductRow {
   id: string;
@@ -60,8 +61,9 @@ function extractCountry(merchantName: string, currency: string): string {
 }
 
 function resolveSource(merchantName: string): 'awin' | 'cj' | 'amazon' {
-  if (merchantName === 'CanadaPetCare') return 'cj';
-  if (merchantName.toLowerCase().includes('amazon')) return 'amazon';
+  const n = merchantName.toLowerCase();
+  if (n === 'canadapetcare' || n.includes('entirelypets')) return 'cj';
+  if (n.includes('amazon')) return 'amazon';
   return 'awin';
 }
 
@@ -484,6 +486,59 @@ export async function runCatalogSyncForCategory(
         const chatsCleanup = await cleanupStaleOffersForCategory(supabase, 'chats', 'cj', syncTime, 'CanadaPetCare');
         cleanupStats.deletedOffers += chatsCleanup.deletedOffers;
         cleanupStats.hiddenProducts += chatsCleanup.hiddenProducts;
+      } catch { /* non bloquant */ }
+    }
+  } else if (category === 'entirelypets') {
+    // EntirelyPets (CJ advertiser 1475632) : flux produits CJ propre via l'API GraphQL.
+    const token = process.env.CJ_API_TOKEN;
+    const companyId = process.env.CJ_CID;
+    const advertiserId = process.env.CJ_ADVERTISER_ENTIRELYPETS;
+
+    if (!token || !companyId || !advertiserId) {
+      await supabase.from('activity_logs').insert({
+        agent_id: 'thomas', agent_name: 'Thomas',
+        action: `[Catalog sync:entirelypets] ECHEC - cles CJ manquantes (CJ_API_TOKEN / CJ_CID / CJ_ADVERTISER_ENTIRELYPETS)`,
+        details: {}, status: 'error',
+      });
+      return NextResponse.json({ error: 'Cles CJ manquantes' }, { status: 503 });
+    }
+
+    try {
+      await fetchCJProductsForAdvertiser(companyId, token, advertiserId, async (batch) => {
+        const rows: ProductRow[] = batch.map(p => ({
+          id:           p.id,
+          name:         p.name,
+          description:  p.description || null,
+          price:        p.price,
+          currency:     p.currency,
+          image_url:    p.image_url,
+          affiliate_url: p.affiliate_url,
+          merchant_name: p.merchant_name,
+          category:     p.category,
+          categories:   p.categories,
+          product_type: null, // type laissé à classify-products (catalogue généraliste, pas que santé)
+          ean:          null,
+          isbn:         null,
+          brand:        null,
+        }));
+        const { inserted, updated } = await processBatch(supabase, rows, syncTime);
+        totalInserted += inserted;
+        totalUpdated += updated;
+      });
+    } catch (e) {
+      lastError = e instanceof Error ? e.message : 'Erreur sync EntirelyPets';
+      console.error('[catalog-sync:entirelypets]', lastError);
+    }
+
+    // Nettoyage offres disparues du flux — UNIQUEMENT si le sync a abouti sans erreur
+    // (sinon un sync partiel masquerait à tort la moitié du catalogue).
+    if (!lastError && totalInserted + totalUpdated >= 100) {
+      try {
+        for (const cat of ['chiens', 'chats']) {
+          const r = await cleanupStaleOffersForCategory(supabase, cat, 'cj', syncTime, 'EntirelyPets');
+          cleanupStats.deletedOffers += r.deletedOffers;
+          cleanupStats.hiddenProducts += r.hiddenProducts;
+        }
       } catch { /* non bloquant */ }
     }
   } else {
