@@ -89,8 +89,11 @@ async function queryCJ<T>(token: string, query: string, variables: Record<string
 function detectCategories(title: string, desc: string): string[] {
   const text = `${title} ${desc}`.toLowerCase();
   const cats: string[] = [];
-  if (/\b(dog|chien|hond|hunde)\b/.test(text)) cats.push('chiens');
-  if (/\b(cat|chat|kat|katze)\b/.test(text)) cats.push('chats');
+  if (/\b(dog|dogs|puppy|puppies|canine|k9|chien|hond|hunde)\b/.test(text)) cats.push('chiens');
+  if (/\b(cat|cats|kitten|kittens|feline|chat|kat|katze)\b/.test(text)) cats.push('chats');
+  if (/\b(bird|birds|avian|parrot|cockatiel|canary|pigeon|oiseau)\b/.test(text)) cats.push('oiseaux');
+  if (/\b(rabbit|hamster|guinea pig|ferret|gerbil|rodent|chinchilla|small (animal|pet)|rongeur|lapin)\b/.test(text)) cats.push('rongeurs');
+  if (/\b(reptile|turtle|tortoise|snake|lizard|gecko|terrarium)\b/.test(text)) cats.push('reptiles');
   return cats.length > 0 ? cats : ['chiens', 'chats'];
 }
 
