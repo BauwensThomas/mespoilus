@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.100.1",
+    "@anthropic-ai/sdk": "^0.102.0",
     "@sentry/nextjs": "^10.56.0",
     "@sentry/profiling-node": "^10.56.0",
     "@stripe/stripe-js": "^9.7.0",
@@ -41,7 +41,7 @@
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/canvas-confetti": "^1.9.0",
-    "@types/google.maps": "^3.65.0",
+    "@types/google.maps": "^3.65.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
