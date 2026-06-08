@@ -9,6 +9,7 @@ import PinterestTag from '@/components/analytics/PinterestTag';
 import ExternalLinks from '@/components/ExternalLinks';
 import { Analytics } from '@vercel/analytics/next';
 import { createAdminClient } from '@/lib/supabase/server';
+import ScrollAnimations from '@/components/animations/ScrollAnimations';
 
 async function getPendingCount(): Promise<number> {
   try {
@@ -87,6 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <PinterestTag />
         <ExternalLinks />
         <Analytics />
+        <ScrollAnimations />
       </body>
     </html>
   );

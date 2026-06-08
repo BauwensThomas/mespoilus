@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Dog, Cat, Rabbit, Bird, Rat, RotateCcw } from 'lucide-react';
 import AdBanner from '@/components/ui/AdBanner';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 type AnimalKey = 'chien' | 'chat' | 'lapin' | 'oiseau' | 'rongeur';
 
@@ -177,13 +178,13 @@ export default function QuizPage() {
     return (
       <div className="min-h-screen px-6 md:px-8 py-10">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Quiz - Résultat</h1>
+          <div className="mb-8 fade-up">
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1 glow-text">Quiz - Résultat</h1>
           </div>
 
-          <div className={`${r.bg} border border-gray-200 rounded-2xl p-8 text-center shadow-sm mb-6`}>
+          <div className={`${r.bg} border border-gray-200 rounded-2xl p-8 text-center shadow-sm mb-6 fade-up hover:scale-[1.02] transition-transform duration-300`}>
             <div className="flex justify-center mb-4">
-              <div className="w-20 h-20 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center shadow-sm">
+              <div className="w-20 h-20 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center shadow-sm animate-pulse">
                 <IconComponent size={40} strokeWidth={1.5} />
               </div>
             </div>
@@ -192,11 +193,11 @@ export default function QuizPage() {
             <p className="text-gray-700 leading-relaxed text-base">{r.description}</p>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm mb-6">
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm mb-6 fade-up">
             <p className="text-sm font-semibold text-gray-700 mb-3">À savoir</p>
-            <div className="space-y-2">
+            <div className="space-y-2 stagger-container">
               {r.tips.map((tip, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                <div key={i} className="stagger-child flex items-center gap-2 text-sm text-gray-600">
                   <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0" />
                   {tip}
                 </div>
@@ -206,14 +207,15 @@ export default function QuizPage() {
 
           <button
             onClick={restart}
-            className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-300 hover:scale-105 fade-up"
           >
             <RotateCcw size={16} strokeWidth={1.5} />
             Recommencer le quiz
           </button>
 
-          <AdBanner slot="2276363485" className="mt-8" />
+          <AdBanner slot="2276363485" className="mt-8 fade-up" />
         </div>
+        <ClientWrapper />
       </div>
     );
   }
@@ -222,37 +224,38 @@ export default function QuizPage() {
     <div className="min-h-screen px-6 md:px-8 py-10">
       <div className="max-w-6xl mx-auto">
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Quel animal est fait pour toi ?</h1>
+        {/* Header avec animation */}
+        <div className="mb-8 fade-up">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1 glow-text">Quel animal est fait pour toi ?</h1>
           <p className="text-gray-500 text-sm">6 questions pour trouver votre compagnon idéal</p>
         </div>
 
-        {/* Barre de progression */}
-        <div className="mb-6">
+        {/* Barre de progression avec animation */}
+        <div className="mb-6 fade-up">
           <div className="flex justify-between text-xs text-gray-500 mb-2">
             <span>Question {currentQ + 1} sur {QUESTIONS.length}</span>
             <span>{Math.round((currentQ / QUESTIONS.length) * 100)}%</span>
           </div>
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-orange-600 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
-        {/* Question */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+        {/* Question avec animation */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm reveal-color fade-up">
           <h2 className="text-lg font-semibold text-gray-900 mb-5">{q.question}</h2>
-          <div className="space-y-3">
+          <div className="space-y-3 stagger-container">
             {q.options.map((opt, i) => (
               <button
                 key={i}
                 onClick={() => answer(q.id, i)}
-                className={`w-full text-left px-4 py-3.5 rounded-xl border text-sm font-medium transition-all ${
+                className={`stagger-child w-full text-left px-4 py-3.5 rounded-xl border text-sm font-medium transition-all duration-300 ${
                   answers[q.id] === i
-                    ? 'bg-orange-600 text-white border-orange-600'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700'
+                    ? 'bg-orange-600 text-white border-orange-600 shadow-md scale-[1.01]'
+                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 hover:scale-[1.01]'
                 }`}
               >
                 {opt.label}
@@ -261,8 +264,9 @@ export default function QuizPage() {
           </div>
         </div>
 
-        <AdBanner slot="2276363485" className="mt-8" />
+        <AdBanner slot="2276363485" className="mt-8 fade-up" />
       </div>
+      <ClientWrapper />
     </div>
   );
 }

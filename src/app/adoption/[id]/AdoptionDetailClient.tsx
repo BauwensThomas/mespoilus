@@ -112,8 +112,8 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 space-y-6">
 
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        {/* Breadcrumb avec animation */}
+        <div className="flex items-center gap-2 text-sm text-gray-500 fade-up">
           <Link href="/adoption" className="flex items-center gap-1.5 hover:text-orange-600 transition-colors font-medium">
             <ArrowLeft size={15} strokeWidth={2} />
             Retour aux annonces
@@ -126,17 +126,17 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          {/* Galerie photos */}
-          <div className="space-y-3">
+          {/* Galerie photos avec animations */}
+          <div className="space-y-3 fade-up">
             {photos.length > 0 ? (
               <>
-                <div className="relative rounded-2xl overflow-hidden bg-gray-100 aspect-[4/3]">
+                <div className="relative rounded-2xl overflow-hidden bg-gray-100 aspect-[4/3] group">
                   <Image
                     src={photos[photoIndex]}
                     alt={`${typeInfo?.label ?? post.animal_type} à adopter${post.breed ? ` - ${post.breed}` : ''}${post.region ? ` à ${post.region}` : ''}`}
                     fill
                     unoptimized
-                    className="object-cover"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, 50vw"
                     priority
                   />
@@ -145,14 +145,14 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
                       <button
                         onClick={() => setPhotoIndex(i => (i - 1 + photos.length) % photos.length)}
                         aria-label="Photo précédente"
-                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-white"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-all duration-300 hover:scale-110"
                       >
                         <ChevronLeft size={18} aria-hidden="true" />
                       </button>
                       <button
                         onClick={() => setPhotoIndex(i => (i + 1) % photos.length)}
                         aria-label="Photo suivante"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-all duration-300 hover:scale-110"
                       >
                         <ChevronRight size={18} aria-hidden="true" />
                       </button>
@@ -168,7 +168,7 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
                       <button
                         key={i}
                         onClick={() => setPhotoIndex(i)}
-                        className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${i === photoIndex ? 'border-orange-500' : 'border-transparent'}`}
+                        className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-300 hover:scale-105 ${i === photoIndex ? 'border-orange-500' : 'border-transparent'}`}
                       >
                         <Image src={url} alt="" fill unoptimized className="object-cover" sizes="64px" />
                       </button>
@@ -183,8 +183,8 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
             )}
           </div>
 
-          {/* Infos */}
-          <div className="space-y-4">
+          {/* Infos avec animations */}
+          <div className="space-y-4 fade-up">
             <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
               {post.breed && (
                 <div className="flex gap-3 px-4 py-3">
@@ -228,7 +228,7 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
               <span>{date}</span>
             </div>
 
-            {/* Contact */}
+            {/* Contact avec animations */}
             <div className={`rounded-xl border ${colors.border} ${colors.bg} p-4 space-y-3`}>
               <p className={`text-xs font-semibold uppercase tracking-wider ${colors.badge}`}>Contacter le déposant</p>
               {contactSent ? (
@@ -238,45 +238,40 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
                 </div>
               ) : contactOpen ? (
                 <form onSubmit={handleContact} className="space-y-2.5">
-                  <label htmlFor="contact-name" className="sr-only">Votre prénom</label>
                   <input
                     id="contact-name" name="name"
                     type="text" required value={contactName} onChange={e => setContactName(e.target.value)}
                     placeholder="Votre prénom…"
-                    autoComplete="given-name"
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-300"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-300 transition-all duration-300"
                   />
-                  <label htmlFor="contact-email" className="sr-only">Votre email</label>
                   <input
                     id="contact-email" name="email"
                     type="email" required value={contactEmail} onChange={e => setContactEmail(e.target.value)}
                     placeholder="Votre email…"
-                    autoComplete="email" spellCheck={false}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-300"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-300 transition-all duration-300"
                   />
-                  <label htmlFor="contact-message" className="sr-only">Votre message</label>
                   <textarea
                     id="contact-message" name="message"
                     required rows={3} value={contactMsg} onChange={e => setContactMsg(e.target.value)}
                     placeholder="Votre message… (présentez-vous, posez vos questions)"
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-300 resize-none"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-300 resize-none transition-all duration-300"
                   />
                   {contactError && <p className="text-xs text-red-500">{contactError}</p>}
                   <div className="flex gap-2">
                     <button type="submit" disabled={contactLoading}
-                      className="flex-1 py-2.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
+                      className="flex-1 py-2.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2">
                       <Send size={14} strokeWidth={1.5} />
                       {contactLoading ? 'Envoi…' : 'Envoyer'}
                     </button>
                     <button type="button" onClick={() => setContactOpen(false)}
-                      className="px-3 py-2.5 bg-white border border-gray-300 text-gray-500 hover:text-gray-700 text-sm rounded-lg transition-colors">
+                      className="px-3 py-2.5 bg-white border border-gray-300 text-gray-500 hover:text-gray-700 text-sm rounded-lg transition-all duration-300 hover:scale-105">
                       Annuler
                     </button>
                   </div>
                 </form>
               ) : (
                 <button onClick={() => setContactOpen(true)}
-                  className="w-full py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                  className="w-full py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2">
                   <Mail size={15} strokeWidth={1.5} />
                   Contacter le déposant
                 </button>
@@ -293,7 +288,7 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
                 <div className="flex justify-end">
                   <button
                     onClick={() => setDeleteOpen(o => !o)}
-                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-colors"
+                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-all duration-300"
                   >
                     <Trash2 size={13} strokeWidth={1.5} />
                     {deleteOpen ? 'Annuler' : 'Supprimer mon annonce'}
@@ -304,12 +299,12 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
                     <p className="text-xs text-gray-500 font-medium">Pourquoi retirez-vous cette annonce ?</p>
                     <div className="grid grid-cols-2 gap-2">
                       <button type="button" onClick={() => setDeleteReason('adopted')}
-                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${deleteReason === 'adopted' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-300 text-gray-500 hover:border-emerald-400'}`}>
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all duration-300 ${deleteReason === 'adopted' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-300 text-gray-500 hover:border-emerald-400'}`}>
                         <Heart size={12} strokeWidth={1.5} />
                         Animal adopté
                       </button>
                       <button type="button" onClick={() => setDeleteReason('error')}
-                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${deleteReason === 'error' ? 'border-gray-500 bg-gray-100 text-gray-700' : 'border-gray-300 text-gray-500 hover:border-gray-400'}`}>
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all duration-300 ${deleteReason === 'error' ? 'border-gray-500 bg-gray-100 text-gray-700' : 'border-gray-300 text-gray-500 hover:border-gray-400'}`}>
                         <AlertCircle size={12} strokeWidth={1.5} />
                         Erreur / Autre
                       </button>
@@ -322,10 +317,10 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
                         placeholder="Code reçu par email"
                         maxLength={8}
                         required
-                        className="flex-1 min-w-0 bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-mono tracking-widest uppercase text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-300 focus:ring-1 focus:ring-red-200"
+                        className="flex-1 min-w-0 bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-mono tracking-widest uppercase text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-300 focus:ring-1 focus:ring-red-200 transition-all duration-300"
                       />
                       <button type="submit" disabled={deleteLoading || !deleteReason}
-                        className="px-3 py-1.5 bg-red-500 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors">
+                        className="px-3 py-1.5 bg-red-500 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-all duration-300 hover:scale-105">
                         {deleteLoading ? '…' : 'Supprimer'}
                       </button>
                     </form>
@@ -334,7 +329,7 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
                       <p className="text-xs text-emerald-600">Email envoyé ! Vérifiez votre boîte.</p>
                     ) : (
                       <button type="button" onClick={handleForgot} disabled={forgotLoading}
-                        className="text-xs text-gray-400 hover:text-orange-500 transition-colors disabled:opacity-50">
+                        className="text-xs text-gray-400 hover:text-orange-500 transition-all duration-300 disabled:opacity-50">
                         {forgotLoading ? 'Envoi…' : 'Code oublié ? Recevoir par email →'}
                       </button>
                     )}
@@ -345,15 +340,15 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
           </div>
         </div>
 
-        {/* CTA déposer */}
-        <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* CTA déposer avec animation */}
+        <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 fade-up hover:shadow-md transition-all duration-300">
           <div>
             <p className="font-semibold text-gray-900">Vous avez un animal à donner ?</p>
             <p className="text-sm text-gray-600 mt-0.5">Déposez une annonce gratuitement et trouvez un foyer aimant.</p>
           </div>
           <Link
             href="/adoption/deposer"
-            className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold rounded-xl transition-colors"
+            className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold rounded-xl transition-all duration-300 hover:scale-105"
           >
             <Heart size={15} strokeWidth={1.5} />
             Déposer une annonce

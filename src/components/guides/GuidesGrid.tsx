@@ -16,19 +16,20 @@ export default function GuidesGrid({ guides }: GuidesGridProps) {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {guides.map((guide) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-container">
+        {guides.map((guide, idx) => {
           const cfg = CATEGORY_CONFIG[guide.category] ?? CATEGORY_CONFIG['general'];
           const Icon = cfg.icon;
 
           return (
             <div
               key={guide.id}
-              className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4 hover:shadow-md hover:border-gray-300 transition-all duration-200 group"
+              className="stagger-child bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4 hover:shadow-xl hover:-translate-y-1 hover:border-orange-300 transition-all duration-300 group"
+              style={{ transitionDelay: `${idx * 0.05}s` }}
             >
               {/* Category badge */}
-              <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${cfg.badge}`}>
+              <div className="flex items-center gap-2 fade-up">
+                <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${cfg.badge} hover:scale-105 transition-transform duration-200`}>
                   <Icon size={13} strokeWidth={2} />
                   {cfg.label}
                 </span>
@@ -55,7 +56,7 @@ export default function GuidesGrid({ guides }: GuidesGridProps) {
                 </div>
                 <button
                   onClick={() => setActiveGuide(guide)}
-                  className="inline-flex items-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                  className="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-all duration-300 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 hover:scale-105 shadow-md"
                   aria-label={`Télécharger le guide : ${guide.title}`}
                 >
                   <Download size={13} strokeWidth={2} />

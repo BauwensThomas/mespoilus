@@ -27,16 +27,17 @@ export default async function GrilleSection() {
   const joueurs = new Set((achats ?? []).map(a => a.acheteur_email.toLowerCase().trim())).size;
 
   return (
-    <section className="py-20 px-6 bg-gradient-to-b from-orange-50 to-gray-50">
+    <section className="py-20 px-6 bg-gradient-to-b from-orange-50 to-gray-50 reveal-color">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 fade-up">
           <span className="text-orange-600 text-sm font-semibold uppercase tracking-widest">Jeu en cours</span>
           <h2 className="text-4xl font-bold text-gray-900 mt-2">Grille Mystère</h2>
           <p className="text-gray-600 mt-3 text-lg">Révélez l&apos;image, devinez la race, gagnez un cadeau</p>
         </div>
 
-        <div className="bg-white rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-md border border-gray-100">
-          <div className="md:w-2/5">
+        <div className="bg-white rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-md border border-gray-100 stagger-container">
+          {/* Image - zoom au scroll */}
+          <div className="md:w-2/5 zoom-image">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`/api/grille/${grille.id}/image`}
@@ -45,8 +46,10 @@ export default async function GrilleSection() {
               style={{ imageRendering: 'pixelated' }}
             />
           </div>
-          <div className="md:w-3/5 p-8 flex flex-col justify-center">
-            <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-full px-3 py-1 text-orange-600 text-xs font-medium mb-3 w-fit">
+          
+          {/* Texte - slide depuis la droite */}
+          <div className="md:w-3/5 p-8 flex flex-col justify-center slide-right stagger-child">
+            <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-full px-3 py-1 text-orange-600 text-xs font-medium mb-3 w-fit pulse-soft">
               <Lock className="w-3 h-3" /> Qui se cache derrière les pixels ?
             </div>
             <p className="text-gray-600 mb-4 leading-relaxed">
@@ -61,14 +64,14 @@ export default async function GrilleSection() {
                 )}
               </div>
               <div className="w-full bg-gray-100 rounded-full h-2">
-                <div className="bg-gradient-to-r from-amber-400 to-orange-500 h-2 rounded-full" style={{ width: `${Math.max(pct, 0.5)}%` }} />
+                <div className="bg-gradient-to-r from-amber-400 to-orange-500 h-2 rounded-full glow-on-hover" style={{ width: `${Math.max(pct, 0.5)}%` }} />
               </div>
             </div>
             <Link
               href="/grille"
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl w-full md:w-fit flex items-center justify-center gap-2 transition-colors"
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl w-full md:w-fit flex items-center justify-center gap-2 transition-colors glow-on-hover"
             >
-              <Zap className="w-4 h-4" /> Jouer maintenant
+              <Zap className="w-4 h-4 rotate-icon" /> Jouer maintenant
             </Link>
           </div>
         </div>

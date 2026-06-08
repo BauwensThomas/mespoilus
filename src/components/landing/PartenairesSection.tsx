@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getFlagUrl } from '@/lib/partenaires';
 import { ExternalLink, X } from 'lucide-react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 interface DbPartenaire {
   id: string;
@@ -110,17 +111,17 @@ function ImageCard({ p, onPick }: { p: DbPartenaire; onPick: (p: DbPartenaire) =
   );
 
   const cardEl = p.urls_by_country ? (
-    <button onClick={() => onPick(p)} className="group relative overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-shadow w-full h-60 block" aria-label={`Découvrir ${p.nom}`}>
+    <button onClick={() => onPick(p)} className="group relative overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-shadow w-full h-60 block glow-on-hover" aria-label={`Découvrir ${p.nom}`}>
       {overlay}
     </button>
   ) : (
-    <a href={p.url ?? '#'} target="_blank" rel="noopener noreferrer sponsored" aria-label={`Découvrir ${p.nom} (lien externe)`} className="group relative overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-shadow w-full h-60 block">
+    <a href={p.url ?? '#'} target="_blank" rel="noopener noreferrer sponsored" aria-label={`Découvrir ${p.nom} (lien externe)`} className="group relative overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-shadow w-full h-60 block glow-on-hover">
       {overlay}
     </a>
   );
 
   return (
-    <div>
+    <div className="zoom-image">
       {cardEl}
       {images.length > 1 && (
         <div className="flex justify-center gap-1.5 mt-2">
@@ -141,88 +142,105 @@ function ImageCard({ p, onPick }: { p: DbPartenaire; onPick: (p: DbPartenaire) =
 export default function PartenairesSection() {
   const [partenaires, setPartenaires] = useState<DbPartenaire[]>([]);
   const [pickerPartenaire, setPickerPartenaire] = useState<DbPartenaire | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    fetch('/api/partenaires').then(r => r.json()).then(setPartenaires).catch(() => {});
+    fetch('/api/partenaires')
+      .then(r => r.json())
+      .then(data => {
+        setPartenaires(data);
+        setLoaded(true);
+        // Rafraîchir ScrollTrigger après l'ajout des cartes
+        setTimeout(() => {
+          ScrollTrigger.refresh();
+        }, 100);
+      })
+      .catch(() => setLoaded(true));
   }, []);
 
   const visible = partenaires.filter(p => p.recommend !== false);
-  if (visible.length === 0) return null;
+  if (visible.length === 0 && loaded) return null;
 
   return (
-    <section className="py-20 px-6 bg-white">
+    <section className="py-20 px-6 bg-white reveal-color">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 fade-up">
           <span className="text-orange-700 text-sm font-semibold uppercase tracking-widest">Partenaires</span>
-          <h2 className="text-4xl font-bold text-gray-900 mt-2">Nos recommandations</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mt-2 glow-text">Nos recommandations</h2>
           <p className="text-gray-600 mt-3 text-base">Des marques sélectionnées pour la qualité de leurs produits et services.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {visible.map((p) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-container">
+          {visible.map((p, index) => {
             if (p.display_mode === 'image' && (p.logo_url || p.logo_urls?.length)) {
-              return <ImageCard key={p.id} p={p} onPick={setPickerPartenaire} />;
+              return (
+                <div key={p.id} className="stagger-child">
+                  <ImageCard p={p} onPick={setPickerPartenaire} />
+                </div>
+              );
             }
             return (
-            <div key={p.id} className="group bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4 hover:shadow-lg hover:border-orange-200 transition-all shadow-md">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0">
-                    {p.logo_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.logo_url} alt={p.nom} className="h-10 max-w-[120px] object-contain" />
-                    ) : (
-                      <div className="text-3xl">{p.emoji}</div>
+              <div key={p.id} className="stagger-child">
+                <div className="group bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4 hover:shadow-lg hover:border-orange-200 transition-all shadow-md glow-on-hover">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 rotate-icon">
+                        {p.logo_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={p.logo_url} alt={p.nom} className="h-10 max-w-[120px] object-contain" />
+                        ) : (
+                          <div className="text-3xl">{p.emoji}</div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-gray-900 text-base">{p.nom}</p>
+                          {(p.pays ?? []).map(code => (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img key={code} src={getFlagUrl(code)} alt={`Drapeau de ${code}`} style={{ width: '18px', height: '13px', objectFit: 'cover' }} className="rounded-[2px] border border-gray-200 inline-block" />
+                          ))}
+                        </div>
+                        {p.pour && <p className="text-xs text-gray-500">{p.pour}</p>}
+                      </div>
+                    </div>
+                    {p.tag && (
+                      <span className="text-[11px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap pulse-soft" style={{ backgroundColor: p.tag_bg, color: p.tag_text }}>
+                        {p.tag}
+                      </span>
                     )}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-bold text-gray-900 text-base">{p.nom}</p>
-                      {(p.pays ?? []).map(code => (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img key={code} src={getFlagUrl(code)} alt={`Drapeau de ${code}`} style={{ width: '18px', height: '13px', objectFit: 'cover' }} className="rounded-[2px] border border-gray-200 inline-block" />
-                      ))}
-                    </div>
-                    {p.pour && <p className="text-xs text-gray-500">{p.pour}</p>}
-                  </div>
+
+                  {p.description && (
+                    <p className="text-sm text-gray-600 leading-relaxed flex-1">{p.description}</p>
+                  )}
+
+                  {p.urls_by_country ? (
+                    <button
+                      onClick={() => setPickerPartenaire(p)}
+                      className="mt-auto inline-flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 glow-on-hover"
+                    >
+                      Découvrir {p.nom}
+                      <ExternalLink size={16} strokeWidth={1.5} className="rotate-icon" />
+                    </button>
+                  ) : (
+                    <a
+                      href={p.url ?? '#'}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                      className="mt-auto inline-flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 glow-on-hover"
+                      aria-label={`Découvrir ${p.nom} (lien externe)`}
+                    >
+                      Découvrir {p.nom}
+                      <ExternalLink size={16} strokeWidth={1.5} className="rotate-icon" />
+                    </a>
+                  )}
                 </div>
-                {p.tag && (
-                  <span className="text-[11px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap" style={{ backgroundColor: p.tag_bg, color: p.tag_text }}>
-                    {p.tag}
-                  </span>
-                )}
               </div>
-
-              {p.description && (
-                <p className="text-sm text-gray-600 leading-relaxed flex-1">{p.description}</p>
-              )}
-
-              {p.urls_by_country ? (
-                <button
-                  onClick={() => setPickerPartenaire(p)}
-                  className="mt-auto inline-flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
-                >
-                  Découvrir {p.nom}
-                  <ExternalLink size={16} strokeWidth={1.5} />
-                </button>
-              ) : (
-                <a
-                  href={p.url ?? '#'}
-                  target="_blank"
-                  rel="noopener noreferrer sponsored"
-                  className="mt-auto inline-flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2"
-                  aria-label={`Découvrir ${p.nom} (lien externe)`}
-                >
-                  Découvrir {p.nom}
-                  <ExternalLink size={16} strokeWidth={1.5} />
-                </a>
-              )}
-            </div>
             );
           })}
         </div>
 
-        <p className="text-xs text-gray-500 text-center mt-10">
+        <p className="text-xs text-gray-500 text-center mt-10 fade-up">
           Liens affiliés. Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
         </p>
       </div>

@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Dog, Cat, Rat, Bird, Shell, FileText, ChevronRight, CheckCircle2 } from 'lucide-react';
 import GuideDownloadButton from '@/components/guides/GuideDownloadButton';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -67,7 +68,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-/** Extract 3 benefit sentences from the description */
 function extractBenefits(description: string): string[] {
   const parts = description
     .split(/[:;,]/)
@@ -76,7 +76,6 @@ function extractBenefits(description: string): string[] {
 
   if (parts.length >= 3) return parts.slice(0, 3);
 
-  // Fallback: split into roughly 3 chunks
   const words = description.split(' ');
   const chunk = Math.ceil(words.length / 3);
   return [
@@ -99,8 +98,8 @@ export default async function GuidePage({ params }: Props) {
     <div className="min-h-screen px-6 md:px-8 py-6">
       <div className="max-w-6xl mx-auto">
 
-        {/* Breadcrumb */}
-        <nav aria-label="Fil d'Ariane" className="flex items-center gap-1 text-sm text-gray-500 mb-6">
+        {/* Breadcrumb avec animation */}
+        <nav aria-label="Fil d'Ariane" className="flex items-center gap-1 text-sm text-gray-500 mb-6 fade-up">
           <Link href="/" className="hover:text-orange-600 transition-colors">Accueil</Link>
           <ChevronRight size={14} strokeWidth={2} className="text-gray-300" />
           <Link href="/guides" className="hover:text-orange-600 transition-colors">Guides</Link>
@@ -108,15 +107,15 @@ export default async function GuidePage({ params }: Props) {
           <span className="text-gray-900 font-medium truncate max-w-[200px]">{guide.title}</span>
         </nav>
 
-        {/* Hero section */}
-        <div className={`bg-gradient-to-br ${cfg.gradient} rounded-2xl overflow-hidden`}>
+        {/* Hero section avec animation */}
+        <div className={`bg-gradient-to-br ${cfg.gradient} rounded-2xl overflow-hidden fade-up hover:shadow-xl transition-all duration-300`}>
           <div className="px-8 py-8 md:py-10">
             <div className="flex items-center gap-2 mb-4">
-              <span className="inline-flex items-center gap-1.5 bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30">
+              <span className="inline-flex items-center gap-1.5 bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30 hover:scale-105 transition-transform duration-300">
                 <Icon size={13} strokeWidth={2} />
                 {cfg.label}
               </span>
-              <span className="bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30">
+              <span className="bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30 pulse-soft">
                 Guide PDF gratuit
               </span>
             </div>
@@ -131,7 +130,7 @@ export default async function GuidePage({ params }: Props) {
             <div className="flex items-center gap-4 flex-wrap">
               <GuideDownloadButton
                 guide={{ id: guide.id, title: guide.title, slug: guide.slug }}
-                className="inline-flex items-center gap-2 bg-white text-orange-600 hover:bg-orange-50 font-semibold px-6 py-3 rounded-xl transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-600 shadow-lg"
+                className="inline-flex items-center gap-2 bg-white text-orange-600 hover:bg-orange-50 hover:scale-105 font-semibold px-6 py-3 rounded-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-orange-600 shadow-lg"
                 label="Télécharger gratuitement"
               />
               <span className="bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30">
@@ -141,14 +140,15 @@ export default async function GuidePage({ params }: Props) {
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content avec animations */}
         <div className="py-10 space-y-10">
+          
           {/* Benefits */}
-          <div className="max-w-2xl">
-            <h2 className="text-xl font-bold text-gray-900 mb-5">Ce que vous trouverez dans ce guide</h2>
-            <ul className="space-y-3">
+          <div className="max-w-2xl fade-up">
+            <h2 className="text-xl font-bold text-gray-900 mb-5 glow-text">Ce que vous trouverez dans ce guide</h2>
+            <ul className="space-y-3 stagger-container">
               {benefits.map((benefit, i) => (
-                <li key={i} className="flex items-start gap-3">
+                <li key={i} className="stagger-child flex items-start gap-3">
                   <CheckCircle2 size={20} strokeWidth={1.5} className="text-orange-600 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-700 leading-relaxed">{benefit}</span>
                 </li>
@@ -156,8 +156,8 @@ export default async function GuidePage({ params }: Props) {
             </ul>
           </div>
 
-          {/* CTA card */}
-          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          {/* CTA card avec animation */}
+          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 fade-up hover:shadow-md transition-all duration-300">
             <div className="flex-1">
               <p className="font-semibold text-gray-900 mb-1">Prêt à télécharger ?</p>
               <p className="text-sm text-gray-500">
@@ -170,11 +170,11 @@ export default async function GuidePage({ params }: Props) {
             />
           </div>
 
-          {/* Back link */}
-          <div className="pt-2 border-t border-gray-200">
+          {/* Back link avec animation */}
+          <div className="pt-2 border-t border-gray-200 fade-up">
             <Link
               href="/guides"
-              className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-orange-600 transition-colors font-medium"
+              className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-orange-600 transition-all duration-300 font-medium hover:gap-2"
             >
               ← Voir tous les guides
             </Link>
@@ -182,6 +182,7 @@ export default async function GuidePage({ params }: Props) {
         </div>
 
       </div>
+      <ClientWrapper />
     </div>
   );
 }

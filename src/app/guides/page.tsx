@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import type { Metadata } from 'next';
 import GuidesGrid from '@/components/guides/GuidesGrid';
 import type { PdfGuide } from '@/lib/guides';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const revalidate = 3600;
 
@@ -42,12 +43,13 @@ export default async function GuidesPage() {
   return (
     <div className="min-h-screen px-6 md:px-8 py-10">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-10 text-center">
-          <span className="inline-block text-xs text-orange-600 font-semibold uppercase tracking-widest mb-3 bg-orange-50 px-3 py-1 rounded-full border border-orange-200">
+        
+        {/* Header avec animations */}
+        <div className="mb-10 text-center fade-up">
+          <span className="inline-block text-xs text-orange-600 font-semibold uppercase tracking-widest mb-3 bg-orange-50 px-3 py-1 rounded-full border border-orange-200 animate-pulse">
             Ressources gratuites
           </span>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-3">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-3 glow-text">
             Guides &amp; Checklists gratuits
           </h1>
           <p className="text-gray-500 text-base max-w-xl mx-auto">
@@ -56,7 +58,7 @@ export default async function GuidesPage() {
         </div>
 
         {guides.length === 0 ? (
-          <div className="text-center py-20 bg-orange-50 rounded-3xl border border-orange-100">
+          <div className="text-center py-20 bg-orange-50 rounded-3xl border border-orange-100 fade-up">
             <p className="text-gray-600 font-medium text-lg">
               Les premiers guides arrivent bientôt !
             </p>
@@ -64,6 +66,8 @@ export default async function GuidesPage() {
         ) : (
           <GuidesGrid guides={guides} />
         )}
+        
+        <ClientWrapper />
       </div>
     </div>
   );

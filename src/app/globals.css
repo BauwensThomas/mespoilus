@@ -467,3 +467,177 @@
     animation-delay: 0s !important;
   }
 }
+
+/* =============================================
+   ANIMATIONS AU SCROLL - MES POILUS
+   ============================================= */
+
+/* Classes pour GSAP ScrollTrigger */
+.fade-up, .slide-left, .slide-right, .glow-text, .zoom-image, .flip-card, .bounce-in, .reveal-color {
+  will-change: transform, opacity;
+}
+
+/* Effet de survol sur les cartes */
+.stagger-child {
+  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), box-shadow 0.3s ease;
+}
+
+.stagger-child:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Animation fluide pour le scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Effet de parallaxe doux */
+.parallax {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Effet de brillance au survol */
+.glow-on-hover {
+  transition: all 0.3s ease;
+}
+
+.glow-on-hover:hover {
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+  transform: scale(1.02);
+}
+
+/* Animation de pulse pour les éléments importants */
+@keyframes soft-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.pulse-soft {
+  animation: soft-pulse 2s ease-in-out infinite;
+}
+
+/* Animation de shimmer pour les cartes */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Rotation douce pour les icônes au survol */
+.rotate-icon {
+  transition: transform 0.3s ease;
+}
+
+.rotate-icon:hover {
+  transform: rotate(10deg) scale(1.1);
+}
+
+/* Animation d'entrée des sections */
+@keyframes sectionReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.section-reveal {
+  animation: sectionReveal 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+}
+
+/* Texte avec dégradé animé */
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animated-gradient-text {
+  background: linear-gradient(90deg, #F97316, #2563EB, #F97316);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: gradientShift 3s ease infinite;
+}
+
+/* Image qui se révèle avec un scale */
+.image-reveal {
+  overflow: hidden;
+}
+
+.image-reveal img {
+  transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+
+.image-reveal:hover img {
+  transform: scale(1.08);
+}
+
+/* Badge animé */
+@keyframes badgePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(249, 115, 22, 0);
+  }
+}
+
+.badge-animated {
+  animation: badgePulse 2s ease infinite;
+}
+
+/* Scroll progress bar (optionnel) */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #F97316, #2563EB);
+  width: 0%;
+  z-index: 1000;
+  transition: width 0.1s ease;
+}
+
+/* Cache le scroll progress si l'utilisateur préfère réduire les animations */
+@media (prefers-reduced-motion: reduce) {
+  .stagger-child,
+  .fade-up,
+  .slide-left,
+  .slide-right,
+  .glow-text,
+  .zoom-image,
+  .flip-card,
+  .bounce-in,
+  .reveal-color {
+    transform: none !important;
+    opacity: 1 !important;
+    animation: none !important;
+  }
+  
+  .stagger-child:hover {
+    transform: none !important;
+  }
+}

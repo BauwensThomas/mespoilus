@@ -41,25 +41,25 @@ export default async function AdoptionPreviewSection() {
   if (posts.length === 0) return null;
 
   return (
-    <section className="py-20 px-6 bg-gray-50">
+    <section className="py-20 px-6 bg-gray-50 reveal-color">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 fade-up">
           <span className="text-sm font-semibold text-orange-600 uppercase tracking-widest">Adoption</span>
-          <h2 className="text-4xl font-bold text-gray-900 mt-2">Des animaux cherchent un foyer</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mt-2 glow-text">Des animaux cherchent un foyer</h2>
           <p className="text-gray-500 mt-3 max-w-xl mx-auto">Chaque semaine, des animaux attendent une nouvelle famille. Peut-être le vôtre ?</p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-4">
-          {posts.map(post => {
+        <div className="flex flex-wrap justify-center gap-4 stagger-container">
+          {posts.map((post, index) => {
             const colors = TYPE_COLOR[post.animal_type] ?? TYPE_COLOR.chien;
             const photo = post.photo_urls?.[0];
             return (
               <Link
                 key={post.id}
                 href={`/adoption/${post.id}`}
-                className={`bg-white rounded-2xl border ${colors.border} overflow-hidden hover:shadow-lg transition-all duration-300 group flex flex-col w-full sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] xl:w-52`}
+                className={`bg-white rounded-2xl border ${colors.border} overflow-hidden hover:shadow-lg transition-all duration-300 group flex flex-col w-full sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] xl:w-52 stagger-child glow-on-hover`}
               >
-                <div className="relative h-40 overflow-hidden bg-gray-100">
+                <div className="relative h-40 overflow-hidden bg-gray-100 image-reveal">
                   {photo ? (
                     <Image
                       src={photo}
@@ -71,7 +71,7 @@ export default async function AdoptionPreviewSection() {
                     />
                   ) : (
                     <div className={`w-full h-full ${colors.bg} flex items-center justify-center`}>
-                      <Heart size={32} strokeWidth={1} className={`${colors.badge} opacity-30`} />
+                      <Heart size={32} strokeWidth={1} className={`${colors.badge} opacity-30 rotate-icon`} />
                     </div>
                   )}
                 </div>
@@ -90,18 +90,18 @@ export default async function AdoptionPreviewSection() {
           })}
         </div>
 
-        <div className="text-center mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="text-center mt-8 flex flex-col sm:flex-row gap-3 justify-center fade-up" style={{ transitionDelay: '0.2s' }}>
           <Link
             href="/adoption"
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold rounded-xl transition-colors glow-on-hover"
           >
             Voir toutes les annonces
           </Link>
           <Link
             href="/adoption/deposer"
-            className="inline-flex items-center gap-2 px-6 py-2.5 border border-orange-300 text-orange-700 hover:bg-orange-50 text-sm font-semibold rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-2.5 border border-orange-300 text-orange-700 hover:bg-orange-50 text-sm font-semibold rounded-xl transition-colors glow-on-hover"
           >
-            <Heart size={15} strokeWidth={1.5} />
+            <Heart size={15} strokeWidth={1.5} className="rotate-icon" />
             Déposer une annonce
           </Link>
         </div>

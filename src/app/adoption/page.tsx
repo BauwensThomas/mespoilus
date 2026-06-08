@@ -11,6 +11,7 @@ import AdoptionAlertForm from '@/components/adoption/AdoptionAlertForm';
 import { Suspense } from 'react';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart } from 'lucide-react';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const metadata: Metadata = {
   title: 'Adoption animaux',
@@ -113,22 +114,22 @@ export default async function AdoptionPage({ searchParams }: Props) {
     <DirectionalTransition>
     <div className="min-h-screen px-6 md:px-8 py-6 space-y-5">
 
-      {/* Header */}
-      <div>
+      {/* Header avec animation */}
+      <div className="fade-up">
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Animaux à adopter</h1>
         <p className="text-sm text-gray-500">Trouvez un compagnon ou aidez un animal à trouver un foyer</p>
       </div>
 
-      {/* Filtres + bouton */}
-      <div className="flex flex-wrap items-center gap-3">
-        {ANIMAL_TYPES.map(t => {
+      {/* Filtres + bouton avec stagger */}
+      <div className="flex flex-wrap items-center gap-3 stagger-container">
+        {ANIMAL_TYPES.map((t) => {
           const isActive = (t.id === 'all' && !animal) || t.id === animal;
           const IconComponent = t.icon;
           return (
             <Link
               key={t.id}
               href={t.id === 'all' ? '/adoption' : `/adoption?animal=${t.id}`}
-              className={`text-sm px-3 py-1.5 rounded-lg border transition-all duration-200 flex items-center gap-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              className={`stagger-child text-sm px-3 py-1.5 rounded-lg border transition-all duration-200 flex items-center gap-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                 isActive
                   ? 'bg-orange-600 text-white border-orange-600 focus:ring-orange-300'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 hover:shadow-md focus:ring-orange-300'
@@ -150,28 +151,32 @@ export default async function AdoptionPage({ searchParams }: Props) {
 
         <Link
           href="/adoption/deposer"
-          className="ml-auto text-sm px-3 py-1.5 rounded-lg border transition-all duration-200 flex items-center gap-2 font-medium bg-rose-500 hover:bg-rose-600 text-white border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:ring-offset-2"
+          className="stagger-child ml-auto text-sm px-3 py-1.5 rounded-lg border transition-all duration-200 flex items-center gap-2 font-medium bg-rose-500 hover:bg-rose-600 text-white border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:ring-offset-2"
         >
           <Heart size={16} strokeWidth={1.5} />
           Déposer une annonce
         </Link>
       </div>
 
-      {/* Recherche */}
-      <AdoptionSearchBar defaultValue={search ?? ''} />
+      {/* Recherche avec animation */}
+      <div className="fade-up" style={{ transitionDelay: '0.1s' }}>
+        <AdoptionSearchBar defaultValue={search ?? ''} />
+      </div>
 
-      {/* Banner */}
-      <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
-        <div>
-          <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Filtré par</p>
-          <p className="text-white font-bold text-lg md:text-xl capitalize">{activeType.label}</p>
+      {/* Banner avec animation */}
+      <div className="fade-up reveal-color" style={{ transitionDelay: '0.2s' }}>
+        <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
+          <div>
+            <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Filtré par</p>
+            <p className="text-white font-bold text-lg md:text-xl capitalize">{activeType.label}</p>
+          </div>
+          <p className="text-white/60 text-sm">{posts.length} annonce{posts.length !== 1 ? 's' : ''}</p>
         </div>
-        <p className="text-white/60 text-sm">{posts.length} annonce{posts.length !== 1 ? 's' : ''}</p>
       </div>
 
       {/* Grid */}
       {posts.length === 0 ? (
-        <div className="text-center py-20 bg-orange-50 rounded-3xl border border-orange-100">
+        <div className="text-center py-20 bg-orange-50 rounded-3xl border border-orange-100 fade-up">
           <p className="text-gray-700 font-medium text-lg">Aucune annonce pour le moment.</p>
           <p className="text-gray-600 text-base mt-2">Soyez le premier à déposer une annonce !</p>
         </div>
@@ -184,27 +189,27 @@ export default async function AdoptionPage({ searchParams }: Props) {
 
       {/* Banners confirmation / désinscription */}
       {sp.alert_ok && (
-        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center fade-up">
           <p className="font-semibold text-green-800">Alerte activée !</p>
           <p className="text-green-700 text-sm mt-1">Vous recevrez un email à chaque nouvelle annonce correspondant à vos critères.</p>
         </div>
       )}
       {sp.alert_off && (
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-center">
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-center fade-up">
           <p className="font-semibold text-gray-700">Alerte désactivée.</p>
           <p className="text-gray-500 text-sm mt-1">Vous ne recevrez plus de notifications pour cette alerte.</p>
         </div>
       )}
       {sp.alert_error && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-center fade-up">
           <p className="font-semibold text-red-700">Lien invalide ou expiré.</p>
         </div>
       )}
 
       <AdBanner slot="1148710530" className="mt-12" />
 
+      <ClientWrapper />
     </div>
     </DirectionalTransition>
   );
 }
-

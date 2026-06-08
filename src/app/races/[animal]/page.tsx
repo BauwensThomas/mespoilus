@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_EMOJI, ANIMAL_URL } from '@/lib/breeds-list';
 import BreedsList from '@/components/races/BreedsList';
 import BreedsSearchBar from '@/components/races/BreedsSearchBar';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const revalidate = 3600;
 
@@ -59,16 +60,17 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
   return (
     <div className="min-h-screen px-6 md:px-8 py-6 space-y-5">
 
-      <div>
+      {/* Header avec animation */}
+      <div className="fade-up">
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">
           {ANIMAL_LABEL[animalType]}
         </h1>
         <p className="text-gray-500 text-sm">Fiches races : caractère, santé, entretien</p>
       </div>
 
-      {/* Onglets filtres */}
-      <div className="flex flex-wrap gap-2">
-        <span className="px-4 py-1.5 rounded-full text-sm font-medium bg-orange-500 border border-orange-500 text-white">
+      {/* Onglets filtres avec stagger */}
+      <div className="flex flex-wrap gap-2 stagger-container">
+        <span className="stagger-child px-4 py-1.5 rounded-full text-sm font-medium bg-orange-500 border border-orange-500 text-white">
           Toutes
         </span>
         {[
@@ -78,32 +80,40 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
           { href: `/races/${animal}/seniors`,     label: 'Seniors' },
         ].map(({ href, label }) => (
           <Link key={href} href={href}
-            className="px-4 py-1.5 rounded-full text-sm font-medium border border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-600 transition-colors">
+            className="stagger-child px-4 py-1.5 rounded-full text-sm font-medium border border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-600 hover:bg-orange-50 transition-all duration-200">
             {label}
           </Link>
         ))}
       </div>
 
-      <Suspense>
-        <BreedsSearchBar defaultValue={q} />
-      </Suspense>
-
-      <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
-        <div>
-          <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Fiches races</p>
-          <p className="text-white font-bold text-lg md:text-xl">{ANIMAL_LABEL[animalType]}</p>
-        </div>
-        <p className="text-white/60 text-sm">
-          {totalCount > 0 ? `${totalCount} race${totalCount > 1 ? 's' : ''}` : 'En cours…'}
-        </p>
+      {/* Search bar avec animation */}
+      <div className="fade-up">
+        <Suspense>
+          <BreedsSearchBar defaultValue={q} />
+        </Suspense>
       </div>
 
-      <Link href="/races" className="inline-block text-sm text-orange-600 hover:underline">
+      {/* Banner avec animation */}
+      <div className="fade-up reveal-color">
+        <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
+          <div>
+            <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Fiches races</p>
+            <p className="text-white font-bold text-lg md:text-xl">{ANIMAL_LABEL[animalType]}</p>
+          </div>
+          <p className="text-white/60 text-sm">
+            {totalCount > 0 ? `${totalCount} race${totalCount > 1 ? 's' : ''}` : 'En cours…'}
+          </p>
+        </div>
+      </div>
+
+      {/* Lien retour avec animation */}
+      <Link href="/races" className="inline-block text-sm text-orange-600 hover:underline fade-up">
         &larr; Toutes les catégories
       </Link>
 
+      {/* Contenu principal */}
       {totalCount === 0 ? (
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-12 text-center">
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-12 text-center fade-up">
           <p className="text-4xl mb-3">{ANIMAL_EMOJI[animalType]}</p>
           <p className="text-gray-600 font-medium">Fiches en cours de génération</p>
           <p className="text-gray-400 text-sm mt-1">Revenez bientôt !</p>
@@ -117,6 +127,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
         />
       )}
 
+      <ClientWrapper />
     </div>
   );
 }
