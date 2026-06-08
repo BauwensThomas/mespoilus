@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Shuffle } from 'lucide-react';
 import AdBanner from '@/components/ui/AdBanner';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 // Fallback statique si la DB est vide (avant le premier cron)
 const PRENOMS_FALLBACK: Record<string, Record<string, string[]>> = {
@@ -86,28 +87,29 @@ export default function PrenomPage() {
     <div className="min-h-screen px-6 md:px-8 py-10">
       <div className="max-w-6xl mx-auto">
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Générateur de prénom</h1>
+        {/* Header avec animation */}
+        <div className="mb-8 fade-up">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1 glow-text">Générateur de prénom</h1>
           <p className="text-gray-500 text-sm">
             Trouvez le prénom parfait pour votre nouvel animal
             {fromDb && <span className="ml-2 text-xs text-orange-500 font-medium">Mis à jour ce mois-ci</span>}
           </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6">
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6 reveal-color">
 
-          {/* Animal */}
-          <div>
+          {/* Animal avec stagger */}
+          <div className="fade-up">
             <label className="block text-sm font-semibold text-gray-700 mb-3">Type d'animal</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 stagger-container">
               {Object.keys(PRENOMS_FALLBACK).map(a => (
                 <button
                   key={a}
                   onClick={() => handleAnimalChange(a)}
-                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+                  className={`stagger-child px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-300 ${
                     animal === a
-                      ? 'bg-orange-600 text-white border-orange-600'
-                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                      ? 'bg-orange-600 text-white border-orange-600 shadow-md scale-105'
+                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50 hover:scale-105'
                   }`}
                 >
                   {ANIMAL_LABELS[a]}
@@ -116,18 +118,18 @@ export default function PrenomPage() {
             </div>
           </div>
 
-          {/* Style */}
-          <div>
+          {/* Style avec stagger */}
+          <div className="fade-up">
             <label className="block text-sm font-semibold text-gray-700 mb-3">Style de prénom</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 stagger-container">
               {STYLES.map(s => (
                 <button
                   key={s}
                   onClick={() => { setStyle(s); setGenerated(false); }}
-                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+                  className={`stagger-child px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-300 ${
                     style === s
-                      ? 'bg-orange-100 text-orange-700 border-orange-300'
-                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-200'
+                      ? 'bg-orange-100 text-orange-700 border-orange-300 shadow-sm'
+                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-200 hover:bg-orange-50 hover:scale-105'
                   }`}
                 >
                   {s}
@@ -136,24 +138,24 @@ export default function PrenomPage() {
             </div>
           </div>
 
-          {/* Bouton */}
+          {/* Bouton générer */}
           <button
             onClick={generate}
-            className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-orange-600 hover:bg-orange-500 text-white font-semibold rounded-xl transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold rounded-xl transition-all duration-300 hover:scale-105 shadow-md fade-up"
           >
-            <Shuffle size={18} strokeWidth={1.5} />
+            <Shuffle size={18} strokeWidth={1.5} className="group-hover:rotate-180 transition-transform duration-500" />
             {generated ? 'Regénérer' : 'Générer des prénoms'}
           </button>
 
-          {/* Résultats */}
+          {/* Résultats avec stagger */}
           {generated && results.length > 0 && (
-            <div>
+            <div className="fade-up">
               <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold mb-3">Suggestions</p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 stagger-container">
                 {results.map((name, i) => (
                   <div
                     key={i}
-                    className="bg-orange-50 border border-orange-100 rounded-xl px-4 py-3 text-center font-semibold text-orange-800 text-base hover:bg-orange-100 transition-colors cursor-default"
+                    className="stagger-child bg-orange-50 border border-orange-100 rounded-xl px-4 py-3 text-center font-semibold text-orange-800 text-base hover:bg-orange-100 hover:scale-105 hover:shadow-md transition-all duration-300 cursor-default"
                   >
                     {name}
                   </div>
@@ -166,8 +168,9 @@ export default function PrenomPage() {
           )}
         </div>
 
-        <AdBanner slot="2276363485" className="mt-10" />
+        <AdBanner slot="2276363485" className="mt-10 fade-up" />
       </div>
+      <ClientWrapper />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import AdoptionDetailClient from './AdoptionDetailClient';
 import type { AdoptionPost } from '@/types';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com';
 
@@ -103,6 +104,7 @@ export default async function AdoptionDetailPage({ params }: { params: Promise<{
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <AdoptionDetailClient post={post} />
+      <ClientWrapper />
     </>
   );
 }

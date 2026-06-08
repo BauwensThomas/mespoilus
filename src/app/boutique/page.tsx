@@ -12,6 +12,7 @@ import CatalogSortSelect, { type CatalogSortValue } from './_components/CatalogS
 import CatalogViewToggle from './_components/CatalogViewToggle';
 import CatalogPerPage, { type PerPageValue } from './_components/CatalogPerPage';
 import MobileFiltersPanel from './_components/MobileFiltersPanel';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const metadata: Metadata = {
   title: 'Boutique animaux - Mes Poilus',
@@ -56,8 +57,6 @@ async function getCatalogItems(params: {
     const PAGE_SIZE = params.perPage;
     const offset = (params.page - 1) * PAGE_SIZE;
 
-    // Quand un filtre marchand est actif, on passe par un RPC qui fait le JOIN
-    // en SQL côté serveur (évite la limite URL du .in() avec des milliers d'IDs)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let q: any = params.merchants && params.merchants.length > 0
       ? supabase.rpc('catalog_for_merchants', { p_merchant_names: params.merchants }, { count: 'exact' })
@@ -128,8 +127,6 @@ async function getCatalogItems(params: {
 async function getMerchants(): Promise<string[]> {
   try {
     const supabase = createAdminClient();
-    // RPC dédiée (renvoie la liste distincte des marchands, ~5 lignes) au lieu de
-    // télécharger 15 000 lignes à chaque chargement → réduit fortement l'egress Supabase.
     const { data, error } = await supabase.rpc('get_all_merchants');
     if (error) return [];
     return (data ?? [])
@@ -267,7 +264,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
 
       {/* Barre admin sticky */}
       {isAdmin && (
-        <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2 bg-gray-900/95 backdrop-blur text-white text-xs flex-wrap">
+        <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2 bg-gray-900/95 backdrop-blur text-white text-xs flex-wrap fade-up">
           <Pencil size={13} strokeWidth={1.5} className="text-orange-400" />
           <span className="text-gray-400">Mode admin</span>
           <span className="text-gray-300">Bouton <strong className="text-white">Masquer</strong> sur chaque card · <strong className="text-white">Afficher</strong> pour remettre</span>
@@ -285,8 +282,8 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
 
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8 py-6">
 
-        {/* Header */}
-        <div className="mb-4 flex items-start justify-between gap-4 flex-wrap">
+        {/* Header avec animation */}
+        <div className="mb-4 flex items-start justify-between gap-4 flex-wrap fade-up">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Boutique</h1>
             <p className="text-sm text-gray-500 mt-0.5">
@@ -310,14 +307,14 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
           </Link>
         </div>
 
-        {/* Barre de controle */}
+        {/* Barre de controle avec animations - sans transitionDelay */}
         <div className="space-y-2 mb-4">
-          {/* Ligne 1 : recherche pleine largeur */}
           <Suspense fallback={<div className="h-10 w-full bg-gray-100 rounded-xl animate-pulse" />}>
-            <CatalogSearchBar defaultValue={search ?? ''} />
+            <div className="fade-up">
+              <CatalogSearchBar defaultValue={search ?? ''} />
+            </div>
           </Suspense>
-          {/* Ligne 2 : tri + filtres mobile + per-page (desktop) + toggle vue */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 fade-up">
             <Suspense fallback={<div className="h-9 w-36 bg-gray-100 rounded-lg animate-pulse" />}>
               <CatalogSortSelect defaultValue={sort} />
             </Suspense>
@@ -354,9 +351,9 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
           </div>
         </div>
 
-        {/* Categories mobiles + filtre favoris (lg: cachees par la sidebar) */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 lg:hidden scrollbar-hide">
-          {MOBILE_CATEGORIES.map(cat => {
+        {/* Categories mobiles avec stagger */}
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 lg:hidden scrollbar-hide stagger-container">
+          {MOBILE_CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             const isActive = cat.id === (category ?? 'all');
             const catParams = new URLSearchParams(baseParams.toString());
@@ -368,7 +365,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
               <Link
                 key={cat.id}
                 href={href}
-                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                className={`stagger-child shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                   isActive
                     ? 'bg-orange-600 text-white border-orange-600'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
@@ -397,7 +394,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
 
           <div className="flex-1 min-w-0">
             {items.length === 0 ? (
-              <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
+              <div className="text-center py-20 bg-white rounded-2xl border border-gray-200 fade-up">
                 <p className="text-gray-500 font-medium text-lg">Aucun produit trouve</p>
                 <p className="text-sm text-gray-400 mt-1">Essayez d&apos;ajuster vos filtres ou votre recherche</p>
                 <Link href="/boutique" className="inline-block mt-4 text-sm text-orange-600 hover:underline font-medium">
@@ -408,9 +405,9 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
               <>
                 <CatalogGrid items={items} view={view} isAdmin={isAdmin} />
 
-                {/* Pagination */}
+                {/* Pagination avec animations */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-8 flex-wrap">
+                  <div className="flex items-center justify-center gap-2 mt-8 flex-wrap fade-up">
                     {/* Précédent */}
                     {page > 1 ? (
                       <Link href={buildPageUrl(baseParams, page - 1)}
@@ -468,7 +465,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
 
         {/* Section produits masqués - admin uniquement */}
         {isAdmin && hiddenItems.length > 0 && (
-          <div id="produits-masques" className="mt-10 border-t border-dashed border-gray-300 pt-6">
+          <div id="produits-masques" className="mt-10 border-t border-dashed border-gray-300 pt-6 fade-up">
             <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
               <span className="inline-block w-2 h-2 rounded-full bg-red-400" />
               Produits masques ({hiddenItems.length}) - visibles uniquement en mode admin
@@ -484,6 +481,8 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
           Les liens présents sur cette page sont des liens affiliés. Mes Poilus peut percevoir une commission si vous effectuez un achat, sans surcoût pour vous.
         </p>
       </div>
+      
+      <ClientWrapper />
     </div>
     </DirectionalTransition>
   );

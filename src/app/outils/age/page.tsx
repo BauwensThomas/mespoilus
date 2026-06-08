@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Dog, Cat, Bird, Rat, Shell } from 'lucide-react';
 import AdBanner from '@/components/ui/AdBanner';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 type Animal = 'chien' | 'chat' | 'oiseau' | 'rongeur' | 'reptile';
 type DogSize = 'petit' | 'moyen' | 'grand' | 'geant';
@@ -73,25 +74,26 @@ export default function AgePage() {
     <div className="min-h-screen px-6 md:px-8 py-10">
       <div className="max-w-6xl mx-auto">
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Calculateur d'âge</h1>
+        {/* Header avec animation */}
+        <div className="mb-8 fade-up">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1 glow-text">Calculateur d'âge</h1>
           <p className="text-gray-500 text-sm">Convertissez l'âge de votre animal en années humaines</p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6">
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6 reveal-color">
 
-          {/* Choix animal */}
-          <div>
+          {/* Choix animal avec stagger */}
+          <div className="fade-up">
             <label className="block text-sm font-semibold text-gray-700 mb-3">Type d'animal</label>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-5 gap-2 stagger-container">
               {ANIMALS.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
                   onClick={() => handleAnimalChange(id as Animal)}
-                  className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-all ${
+                  className={`stagger-child flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-all duration-300 ${
                     animal === id
-                      ? 'bg-orange-600 text-white border-orange-600'
-                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                      ? 'bg-orange-600 text-white border-orange-600 shadow-md scale-105'
+                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50 hover:scale-105'
                   }`}
                 >
                   <Icon size={20} strokeWidth={1.5} />
@@ -101,19 +103,19 @@ export default function AgePage() {
             </div>
           </div>
 
-          {/* Taille (chien uniquement) */}
+          {/* Taille (chien uniquement) avec animation */}
           {selectedAnimal.hasSize && (
-            <div>
+            <div className="fade-up">
               <label className="block text-sm font-semibold text-gray-700 mb-3">Taille du chien</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 stagger-container">
                 {DOG_SIZES.map(s => (
                   <button
                     key={s.id}
                     onClick={() => setDogSize(s.id as DogSize)}
-                    className={`py-2.5 px-3 rounded-lg border text-sm font-medium transition-all text-left ${
+                    className={`stagger-child py-2.5 px-3 rounded-lg border text-sm font-medium transition-all duration-300 text-left ${
                       dogSize === s.id
-                        ? 'bg-orange-100 text-orange-700 border-orange-300'
-                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-200'
+                        ? 'bg-orange-100 text-orange-700 border-orange-300 shadow-sm'
+                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-200 hover:bg-orange-50'
                     }`}
                   >
                     {s.label}
@@ -123,10 +125,10 @@ export default function AgePage() {
             </div>
           )}
 
-          {/* Âge slider */}
-          <div>
+          {/* Âge slider avec animation */}
+          <div className="fade-up">
             <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Âge de votre animal : <span className="text-orange-600">{years} an{years > 1 ? 's' : ''}</span>
+              Âge de votre animal : <span className="text-orange-600 text-lg font-bold">{years} an{years > 1 ? 's' : ''}</span>
             </label>
             <input
               type="range"
@@ -134,7 +136,7 @@ export default function AgePage() {
               max={selectedAnimal.maxAge}
               value={years}
               onChange={e => setYears(Number(e.target.value))}
-              className="w-full accent-orange-600"
+              className="w-full accent-orange-600 h-2 rounded-lg appearance-none cursor-pointer"
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>1 an</span>
@@ -142,11 +144,11 @@ export default function AgePage() {
             </div>
           </div>
 
-          {/* Résultat */}
+          {/* Résultat avec animation */}
           {humanAge !== null && (
-            <div className="bg-gradient-to-r from-orange-600 to-gray-800 rounded-2xl p-6 text-center text-white">
+            <div className="bg-gradient-to-r from-orange-600 to-gray-800 rounded-2xl p-6 text-center text-white fade-up hover:scale-[1.02] transition-transform duration-300">
               <div className="flex items-center justify-center mb-3">
-                <IconComponent size={36} strokeWidth={1.5} />
+                <IconComponent size={36} strokeWidth={1.5} className="animate-pulse" />
               </div>
               <p className="text-orange-200 text-xs uppercase tracking-widest font-semibold mb-1">Équivalent humain</p>
               <p className="text-5xl font-bold mb-2">{humanAge} <span className="text-2xl font-normal">ans</span></p>
@@ -155,12 +157,15 @@ export default function AgePage() {
           )}
         </div>
 
-        <p className="text-xs text-gray-500 text-center mt-4">
+        {/* Disclaimer avec animation */}
+        <p className="text-xs text-gray-500 text-center mt-4 fade-up">
           Les conversions sont des approximations basées sur les moyennes scientifiques pour chaque espèce.
         </p>
 
-        <AdBanner slot="2276363485" className="mt-8" />
+        <AdBanner slot="2276363485" className="mt-8 fade-up" />
       </div>
+      
+      <ClientWrapper />
     </div>
   );
 }

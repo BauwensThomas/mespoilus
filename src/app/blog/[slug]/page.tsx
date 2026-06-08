@@ -11,6 +11,7 @@ import DirectionalTransition from '@/components/ui/DirectionalTransition';
 import AdBanner from '@/components/ui/AdBanner';
 import CommentForm from '@/components/blog/CommentForm';
 import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle, Pencil } from 'lucide-react';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const dynamic = 'force-dynamic';
 
@@ -135,7 +136,6 @@ export default async function ArticlePage({ params }: Props) {
     url: articleUrl,
   };
 
-  // JSON-LD FAQPage (si l'article a une FAQ) - aide Google + AI Overviews
   const faqList = Array.isArray(article.faq) ? article.faq.filter(f => f?.q && f?.a) : [];
   const faqLd = faqList.length > 0 ? {
     '@context': 'https://schema.org',
@@ -157,7 +157,7 @@ export default async function ArticlePage({ params }: Props) {
     <DirectionalTransition>
     <div className="min-h-screen animate-fade-in">
       {isAdmin && (
-        <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2 bg-gray-900/95 backdrop-blur text-white text-xs">
+        <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2 bg-gray-900/95 backdrop-blur text-white text-xs fade-up">
           <Pencil size={13} strokeWidth={1.5} className="text-orange-400" />
           <span className="text-gray-400">Mode admin</span>
           <Link href={`/blog-admin/${article.slug}/edit`}
@@ -174,66 +174,81 @@ export default async function ArticlePage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
 
-      {/* Hero image */}
-      <div className="relative w-full h-64 md:h-80 overflow-hidden bg-gray-200" style={{ viewTransitionName: `article-${slug}` }}>
-        {heroImage && (
-          <Image
-            src={heroImage}
-            alt={heroAlt}
-            fill
-            priority
-            unoptimized
-            className="object-cover"
-            sizes="100vw"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+      {/* Hero image - responsive mobile/tablette avec fond orange-50 */}
+      <div className="relative w-full bg-orange-50 overflow-hidden" style={{ viewTransitionName: `article-${slug}` }}>
+        <div className="relative max-w-6xl mx-auto">
+          {heroImage ? (
+            <div className="relative w-full aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9]">
+              <Image
+                src={heroImage}
+                alt={heroAlt}
+                fill
+                priority
+                unoptimized
+                className="object-cover sm:object-contain md:object-cover"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 100vw"
+              />
+            </div>
+          ) : (
+            <div className="w-full h-48 sm:h-64 md:h-80 bg-orange-50 flex items-center justify-center">
+              <PawPrint size={48} className="text-orange-200 sm:text-orange-300" strokeWidth={1} />
+            </div>
+          )}
+          
+          {/* Dégradé en bas - plus léger sur mobile */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
 
-        {article.image_credit && (
-          <a
-            href={article.image_credit_url ?? '#'}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-            className="absolute bottom-3 right-4 text-[10px] text-white/60 hover:text-white/90 transition-colors bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm"
-          >
-            © {article.image_credit} / Pexels
-          </a>
-        )}
+          {/* Crédit image - plus petit sur mobile */}
+          {article.image_credit && (
+            <a
+              href={article.image_credit_url ?? '#'}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="absolute bottom-2 right-2 sm:bottom-3 sm:right-4 text-[8px] sm:text-[10px] text-white/50 hover:text-white/80 transition-colors bg-black/30 px-1.5 py-0.5 rounded backdrop-blur-sm z-10"
+            >
+              © {article.image_credit} / Pexels
+            </a>
+          )}
 
-        <div className="absolute bottom-4 left-6 flex items-center gap-2">
-          <CategoryIcon size={18} strokeWidth={1.5} className="text-white" />
-          <span className="text-xs text-white bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
-            {CATEGORY_LABELS[article.category] ?? article.category}
-          </span>
+          {/* Catégorie badge - adapté mobile */}
+          <div className="absolute bottom-2 left-3 sm:bottom-4 sm:left-6 flex items-center gap-1.5 sm:gap-2 z-10">
+            <CategoryIcon size={14} strokeWidth={1.5} className="text-white sm:text-white drop-shadow-sm" />
+            <span className="text-[10px] sm:text-xs text-white bg-black/40 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full backdrop-blur-sm">
+              {CATEGORY_LABELS[article.category] ?? article.category}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Contenu */}
       <div className="px-6 py-10">
-        <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-sm p-8" style={{ color: '#111827' }}>
+        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm p-6 md:p-8" style={{ color: '#111827' }}>
 
+          {/* Retour au blog */}
           <Link
             href="/blog"
-            className="inline-flex items-center gap-1.5 text-gray-500 hover:text-orange-600 text-sm font-medium transition-colors mb-8"
+            className="inline-flex items-center gap-1.5 text-gray-500 hover:text-orange-600 text-sm font-medium transition-colors mb-8 fade-up"
           >
             ← Retour au blog
           </Link>
 
-          {/* Header */}
-          <header className="mb-8">
-            <h1 className="text-3xl font-bold leading-tight mb-4" style={{ color: '#111827' }}>{article.title}</h1>
+          {/* Header avec animations */}
+          <header className="mb-8 fade-up">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-4" style={{ color: '#111827' }}>
+              {article.title}
+            </h1>
 
             {article.excerpt && (
-              <p className="text-base leading-relaxed mb-6" style={{ color: '#4b5563' }}>{article.excerpt}</p>
+              <p className="text-base leading-relaxed mb-6 text-gray-600">{article.excerpt}</p>
             )}
 
-            <div className="flex items-center gap-4 py-4 border-t border-b border-gray-200">
+            <div className="flex flex-wrap items-center gap-4 py-4 border-t border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center text-sm">
                   <PenTool size={16} strokeWidth={1.5} className="text-orange-600" />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold" style={{ color: '#1f2937' }}>Marie</div>
+                  <div className="text-xs font-semibold text-gray-900">Marie</div>
                   <div className="text-[10px] text-gray-500">Rédactrice</div>
                 </div>
               </div>
@@ -248,7 +263,7 @@ export default async function ArticlePage({ params }: Props) {
 
           {/* Mots-clés */}
           {article.seo_keywords.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-8">
+            <div className="flex flex-wrap gap-2 mb-8 fade-up">
               {article.seo_keywords.map((kw) => (
                 <span key={kw} className="text-xs bg-orange-50 text-orange-600 px-2.5 py-1 rounded-full border border-orange-200">
                   #{kw}
@@ -260,7 +275,7 @@ export default async function ArticlePage({ params }: Props) {
           {/* Corps de l'article */}
           <div
             className="article-content prose prose-base max-w-none
-              prose-headings:font-semibold
+              prose-headings:font-semibold prose-headings:scroll-mt-20
               prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
               prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
               prose-h4:text-base prose-h4:mt-6 prose-h4:mb-2
@@ -272,13 +287,15 @@ export default async function ArticlePage({ params }: Props) {
               prose-hr:border-gray-200 prose-hr:my-8
               prose-blockquote:border-l-2 prose-blockquote:border-l-orange-400 prose-blockquote:bg-orange-50 prose-blockquote:rounded-r-xl prose-blockquote:py-3 prose-blockquote:px-6 prose-blockquote:my-8
               prose-code:text-orange-600 prose-code:bg-orange-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
-              prose-pre:bg-gray-100 prose-pre:border prose-pre:border-gray-200 prose-pre:rounded-xl prose-pre:my-8"
+              prose-pre:bg-gray-100 prose-pre:border prose-pre:border-gray-200 prose-pre:rounded-xl prose-pre:my-8
+              prose-img:rounded-xl prose-img:shadow-md"
             style={{ color: '#1f2937' }}
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
 
+          {/* FAQ Section */}
           {faqList.length > 0 && (
-            <section className="mt-12">
+            <section className="mt-12 fade-up">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Questions fréquentes</h2>
               <div className="space-y-3">
                 {faqList.map((f, i) => (
@@ -315,6 +332,8 @@ export default async function ArticlePage({ params }: Props) {
 
         </div>
       </div>
+      
+      <ClientWrapper />
     </div>
     </DirectionalTransition>
   );
@@ -332,14 +351,14 @@ async function CommentsSection({ slug }: { slug: string }) {
   if (!comments || comments.length === 0) return null;
 
   return (
-    <div>
+    <div className="fade-up">
       <div className="flex items-center gap-2 mb-4">
         <MessageCircle size={17} strokeWidth={1.5} className="text-orange-600" />
         <h2 className="font-bold text-gray-900">{comments.length} commentaire{comments.length > 1 ? 's' : ''}</h2>
       </div>
       <div className="space-y-3">
-        {comments.map((c) => (
-          <div key={c.id} className="bg-white border border-gray-200 rounded-xl p-4">
+        {comments.map((c, idx) => (
+          <div key={c.id} className="bg-white border border-gray-200 rounded-xl p-4 stagger-child" style={{ animationDelay: `${idx * 0.05}s` }}>
             <div className="flex items-center justify-between mb-2">
               <span className="font-semibold text-sm text-gray-900">{c.author_name}</span>
               <span className="text-xs text-gray-600">

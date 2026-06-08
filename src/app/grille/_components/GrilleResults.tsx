@@ -42,41 +42,45 @@ export default function GrilleResults({ grilleId, raceSecrete, winners, nextStar
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
 
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-3 py-1 text-green-700 text-xs font-medium mb-3">
+        {/* Header avec animations */}
+        <div className="text-center mb-6 fade-up">
+          <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-3 py-1 text-green-700 text-xs font-medium mb-3 pulse-soft">
             <PartyPopper className="w-3.5 h-3.5" /> Grille terminée
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1.5">L&apos;image est révélée !</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1.5 glow-text">L&apos;image est révélée !</h1>
           <p className="text-gray-600 text-sm">
             La race cachée était <span className="font-bold text-orange-600">{raceSecrete}</span>.
           </p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-5 items-start">
-          {/* Image complète */}
-          <div className="w-full lg:max-w-[480px] shrink-0">
-            <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-white">
+
+          {/* Image complète avec animation */}
+          <div className="w-full lg:max-w-[480px] shrink-0 fade-up">
+            <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-white hover:shadow-lg transition-all duration-300">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`/api/grille/${grilleId}/image?v=final`}
                 alt={`Grille révélée - ${raceSecrete}`}
-                className="w-full aspect-square object-cover"
+                className="w-full aspect-square object-cover transition-transform duration-500 hover:scale-105"
               />
             </div>
           </div>
 
           {/* Gagnants + prochaine grille */}
           <div className="flex-1 min-w-0 space-y-4">
-            <div className="bg-white border border-gray-200 rounded-2xl p-5">
+
+            {/* Section gagnants avec animations */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 fade-up hover:shadow-md transition-all duration-300">
               <h2 className="font-semibold text-gray-900 text-sm mb-4 flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-amber-500" /> Les gagnants
               </h2>
               {winners.length === 0 ? (
                 <p className="text-gray-500 text-sm">Aucun participant sur cette grille.</p>
               ) : (
-                <ul className="space-y-3">
-                  {winners.map(w => (
-                    <li key={w.rang} className="flex items-center gap-3">
+                <ul className="space-y-3 stagger-container">
+                  {winners.map((w, idx) => (
+                    <li key={w.rang} className="stagger-child flex items-center gap-3">
                       <span className="text-xl w-7">{RANK_EMOJI[w.rang - 1]}</span>
                       <div>
                         <p className="font-semibold text-gray-900 text-sm">{w.prenom}</p>
@@ -88,8 +92,9 @@ export default function GrilleResults({ grilleId, raceSecrete, winners, nextStar
               )}
             </div>
 
+            {/* Prochaine grille avec animation */}
             {dateProchaine && (
-              <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 text-center">
+              <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-5 text-center fade-up hover:shadow-md transition-all duration-300">
                 <p className="text-sm text-gray-600 mb-1">Prochaine grille mystère</p>
                 <p className="text-lg font-bold text-orange-600">{dateProchaine}</p>
                 {(left.jours > 0 || left.heures > 0 || left.minutes > 0) && (

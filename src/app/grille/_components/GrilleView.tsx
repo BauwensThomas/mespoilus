@@ -73,7 +73,6 @@ export default function GrilleView({
     ? pourcentageExact.toFixed(2).replace('.', ',')
     : String(pourcentage);
 
-  // Source unique de vérité : ends_at de la base (fallback env si absent)
   const endTime = endsAt
     ? new Date(endsAt)
     : (() => { const d = new Date(process.env.NEXT_PUBLIC_GRILLE_START_DATE ?? Date.now()); d.setMonth(d.getMonth() + 3); return d; })();
@@ -83,7 +82,6 @@ export default function GrilleView({
 
   useEffect(() => {
     const end = endTime;
-
     const tick = () => {
       const diff = end.getTime() - Date.now();
       if (diff <= 0) { setTimeLeft({ jours: 0, heures: 0, minutes: 0, secondes: 0 }); return; }
@@ -97,20 +95,18 @@ export default function GrilleView({
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endsAt]);
 
   useEffect(() => {
     const session = localStorage.getItem('grille_pending_session');
     if (!session) return;
-    // Vérifie que la session est encore valide (achat existant + devinette non soumise)
     fetch(`/api/grille/confirmation?session_id=${session}`)
       .then(r => r.json())
       .then(d => {
         if (d.achat && !d.achat.devinette) {
           setPendingSession(session);
         } else {
-          localStorage.removeItem('grille_pending_session'); // session périmée
+          localStorage.removeItem('grille_pending_session');
         }
       })
       .catch(() => {});
@@ -134,7 +130,6 @@ export default function GrilleView({
     }
   };
 
-  // Références pour ne recharger l'image / déclencher les effets QUE si l'état change
   const lastPixelsRef = useRef(initialPixelsVendus);
   const lastGagnantRef = useRef(initialGagnantTrouve);
   const lastAchatAtRef = useRef<string | null>(null);
@@ -152,14 +147,12 @@ export default function GrilleView({
       setPixelsVendus(newVendus);
       setGagnantTrouve(newGagnant);
       setGagnantPrenom(data.grille.gagnant_prenom ?? null);
-      // Recharge l'image uniquement si de nouveaux pixels OU race trouvée
       if (newVendus !== lastPixelsRef.current || (newGagnant && !lastGagnantRef.current)) {
         setImageVersion(Date.now());
       }
       lastPixelsRef.current = newVendus;
       lastGagnantRef.current = newGagnant;
 
-      // Confettis au franchissement d'un palier 25/50/75 %
       const pct = (newVendus / data.grille.total_pixels) * 100;
       const palier = [75, 50, 25].find(m => pct >= m) ?? 0;
       if (palier > lastMilestoneRef.current) {
@@ -169,8 +162,6 @@ export default function GrilleView({
       }
     }
     if (data.top3) setTop3(data.top3);
-
-    // Toast "X vient d'acheter" sur nouvel achat (pas au tout premier chargement)
     if (data.dernier_achat) {
       const at: string = data.dernier_achat.at;
       if (lastAchatAtRef.current && at !== lastAchatAtRef.current) {
@@ -179,21 +170,15 @@ export default function GrilleView({
       }
       lastAchatAtRef.current = at;
     }
-   } catch {
-     // Rafraîchissement en arrière-plan : on ignore les erreurs réseau
-     // (onglet fermé, navigation, micro-coupure) pour ne pas polluer Sentry.
-   }
+   } catch { }
   }, [totalPixels]);
 
-  // Auto-masquage du toast après 5s
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(t);
   }, [toast]);
 
-  // Mise à jour live par polling de l'endpoint serveur sécurisé (toutes les 12s).
-  // (On n'utilise plus Supabase Realtime : RLS verrouille pixel_achats côté anon.)
   useEffect(() => {
     const id = setInterval(refreshData, 12000);
     return () => clearInterval(id);
@@ -218,7 +203,7 @@ export default function GrilleView({
 
   return (
     <div className="min-h-screen">
-      {/* Toast temps réel */}
+      {/* Toast temps réel avec animation */}
       {toast && (
         <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm font-medium px-5 py-3 rounded-full shadow-lg animate-fade-in">
           {toast}
@@ -227,13 +212,13 @@ export default function GrilleView({
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
 
-        {/* Header */}
-        <div className="text-center mb-5">
-          <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-full px-3 py-1 text-orange-600 text-xs font-medium mb-3">
+        {/* Header avec animations */}
+        <div className="text-center mb-5 fade-up">
+          <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-full px-3 py-1 text-orange-600 text-xs font-medium mb-3 pulse-soft">
             <Lock className="w-3 h-3" />
             Mystère en cours
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1.5">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1.5 glow-text">
             Qui se cache derrière les pixels ?
           </h1>
           <p className="text-gray-500 text-sm mx-auto max-w-lg">
@@ -247,11 +232,11 @@ export default function GrilleView({
             Une partie des recettes est reversée à un refuge animalier ou à une association.
           </p>
 
-          {/* Partage */}
-          <div className="flex items-center justify-center gap-2 mt-4">
+          {/* Boutons de partage avec stagger */}
+          <div className="flex items-center justify-center gap-2 mt-4 stagger-container">
             <button
               onClick={handleShare}
-              className="inline-flex items-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-colors"
+              className="stagger-child inline-flex items-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-all duration-300 hover:scale-105"
             >
               {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
               {copied ? 'Lien copié !' : 'Partager'}
@@ -259,25 +244,24 @@ export default function GrilleView({
             <a
               href={`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`}
               target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 bg-[#25D366] hover:brightness-95 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-all"
+              className="stagger-child inline-flex items-center gap-1.5 bg-[#25D366] hover:brightness-95 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-all duration-300 hover:scale-105"
             >
               WhatsApp
             </a>
             <a
               href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
               target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 bg-[#1877F2] hover:brightness-95 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-all"
+              className="stagger-child inline-flex items-center gap-1.5 bg-[#1877F2] hover:brightness-95 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-all duration-300 hover:scale-105"
             >
               Facebook
             </a>
           </div>
         </div>
 
-        {/* Barre : compte à rebours | progression | bouton */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5 items-stretch">
-
+        {/* Barre : compte à rebours | progression | bouton avec stagger */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5 items-stretch stagger-container">
           {/* Compte à rebours */}
-          <div className={`rounded-2xl px-5 py-4 flex flex-col justify-center shadow-sm border ${gagnantTrouve ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'}`}>
+          <div className={`stagger-child rounded-2xl px-5 py-4 flex flex-col justify-center shadow-sm border transition-all duration-300 hover:shadow-md ${gagnantTrouve ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'}`}>
             <p className="text-[10px] uppercase tracking-wider font-medium mb-2 flex items-center gap-1.5 text-gray-400">
               <Timer className="w-3 h-3 text-orange-400" /> {gagnantTrouve ? 'Race trouvée !' : 'Temps restant'}
             </p>
@@ -310,7 +294,7 @@ export default function GrilleView({
           </div>
 
           {/* Progression */}
-          <div className="bg-white border border-gray-200 rounded-2xl px-5 py-4 flex flex-col justify-center shadow-sm">
+          <div className="stagger-child bg-white border border-gray-200 rounded-2xl px-5 py-4 flex flex-col justify-center shadow-sm transition-all duration-300 hover:shadow-md">
             <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium mb-2">Progression</p>
             <div className="flex items-baseline gap-1 mb-2">
               <span className="text-2xl font-bold text-gray-900 tabular-nums leading-none">{pourcentageLabel}</span>
@@ -327,24 +311,24 @@ export default function GrilleView({
 
           {/* Bouton */}
           {gagnantTrouve ? (
-            <div className="bg-green-50 border border-green-200 rounded-2xl px-5 py-4 flex items-center justify-center gap-2 text-green-700 font-semibold">
+            <div className="stagger-child bg-green-50 border border-green-200 rounded-2xl px-5 py-4 flex items-center justify-center gap-2 text-green-700 font-semibold">
               <Trophy className="w-5 h-5 shrink-0" />
               <span className="text-base">La race a été trouvée !</span>
             </div>
           ) : (
             <button
               onClick={() => setShowModal(true)}
-              className="bg-orange-500 hover:bg-orange-600 active:scale-[0.98] text-white font-semibold rounded-2xl text-sm transition-all duration-150 flex items-center justify-center gap-2 shadow-sm px-5 py-4"
+              className="stagger-child bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 active:scale-[0.98] text-white font-semibold rounded-2xl text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-sm px-5 py-4 hover:shadow-md hover:scale-[1.02]"
             >
               <Zap className="w-5 h-5 shrink-0" />
-              <span className="text-xl font-bold">Révéler des pixels<br /><span className="font-normal opacity-90 text-base"></span></span>
+              <span className="text-xl font-bold">Révéler des pixels</span>
             </button>
           )}
         </div>
 
-        {/* Bannière devinette en attente */}
+        {/* Bannière devinette en attente avec animation */}
         {pendingSession && !pendingResult && (
-          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 mb-5">
+          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 mb-5 fade-up">
             <p className="font-semibold text-gray-900 text-sm mb-3">Tu n&apos;as pas encore soumis ta devinette !</p>
             {pendingResult === null && (
               <form onSubmit={handlePendingGuess} className="flex flex-col sm:flex-row gap-2">
@@ -363,7 +347,7 @@ export default function GrilleView({
                 <button
                   type="submit"
                   disabled={pendingSubmitting || !pendingDevinette.trim()}
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50 shrink-0"
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-all duration-300 disabled:opacity-50 shrink-0 hover:scale-105"
                 >
                   {pendingSubmitting ? '…' : 'Valider'}
                 </button>
@@ -372,17 +356,16 @@ export default function GrilleView({
           </div>
         )}
         {pendingResult && (
-          <div className={`rounded-2xl p-4 mb-5 text-sm font-medium ${pendingResult.correct ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-600'}`}>
+          <div className={`rounded-2xl p-4 mb-5 text-sm font-medium fade-up ${pendingResult.correct ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-600'}`}>
             {pendingResult.correct ? `Bravo ! C'était bien un(e) ${pendingResult.race}.` : 'Mauvaise réponse. Continue à acheter des pixels !'}
           </div>
         )}
 
         <div className="flex flex-col lg:flex-row gap-5 items-start">
 
-          {/* Image */}
-          <div className="w-full lg:max-w-[480px] shrink-0">
+          {/* Image avec animation */}
+          <div className="w-full lg:max-w-[480px] shrink-0 fade-up">
             <div className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-gray-100 aspect-square">
-              {/* Spinner en fond - l'image opaque le recouvre une fois chargée */}
               <div className="absolute inset-0 flex items-center justify-center z-0">
                 <div className="w-8 h-8 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
               </div>
@@ -391,7 +374,7 @@ export default function GrilleView({
                 key={imageVersion}
                 src={`/api/grille/${grilleId}/image?v=${imageVersion}`}
                 alt={`Grille mystère - ${animal}`}
-                className="relative z-[1] w-full aspect-square object-cover"
+                className="relative z-[1] w-full aspect-square object-cover transition-all duration-500"
                 style={{ imageRendering: 'pixelated' }}
               />
               {gagnantTrouve && (
@@ -403,23 +386,21 @@ export default function GrilleView({
                 </div>
               )}
             </div>
-
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar avec animations */}
           <div className="flex-1 min-w-0 space-y-4">
 
             {/* Top 3 / Gagnants */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-5">
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 fade-up hover:shadow-md transition-all duration-300">
               <h2 className="font-semibold text-gray-900 text-sm mb-4 flex items-center gap-2">
                 {gagnantTrouve ? <Trophy className="w-4 h-4 text-amber-500" /> : <Users className="w-4 h-4 text-orange-500" />}
                 {gagnantTrouve ? 'Gagnants' : 'Top investisseurs'}
               </h2>
 
               {gagnantTrouve ? (
-                <ul className="space-y-3">
-                  {/* Gagnant 1 : devineur */}
-                  <li className="flex items-center justify-between">
+                <ul className="space-y-3 stagger-container">
+                  <li className="stagger-child flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-lg w-6">🥇</span>
                       <div>
@@ -429,9 +410,8 @@ export default function GrilleView({
                     </div>
                     <span className="text-amber-500 font-bold text-sm shrink-0">Prix #1</span>
                   </li>
-                  {/* Gagnants 2 et 3 : top investisseurs */}
                   {top3.slice(0, 2).map((item, i) => (
-                    <li key={`${item.prenom}-${i}`} className="flex items-center justify-between">
+                    <li key={`${item.prenom}-${i}`} className="stagger-child flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-lg w-6">{RANK_EMOJI[i + 1]}</span>
                         <div>
@@ -448,15 +428,15 @@ export default function GrilleView({
                   {top3.length === 0 ? (
                     <p className="text-gray-400 text-sm">Sois le premier à acheter des pixels !</p>
                   ) : (
-                    <ul className="space-y-3">
+                    <ul className="space-y-3 stagger-container">
                       {top3.map((item, i) => (
-                        <li key={`${item.prenom}-${i}`} className="flex items-center gap-2">
+                        <li key={`${item.prenom}-${i}`} className="stagger-child flex items-center gap-2">
                           <span className="text-lg w-6">{RANK_EMOJI[i]}</span>
                           <span className="font-medium text-gray-900 text-sm truncate">{item.prenom}</span>
                         </li>
                       ))}
                       {[...Array(3 - top3.length)].map((_, i) => (
-                        <li key={`empty-${i}`} className="flex items-center gap-2 opacity-30">
+                        <li key={`empty-${i}`} className="stagger-child flex items-center gap-2 opacity-30">
                           <span className="text-lg w-6">{RANK_EMOJI[top3.length + i]}</span>
                           <span className="text-gray-400 text-sm">disponible</span>
                         </li>
@@ -468,9 +448,9 @@ export default function GrilleView({
             </div>
 
             {/* Règles */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-5">
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 fade-up hover:shadow-md transition-all duration-300">
               <h2 className="font-semibold text-gray-900 text-sm mb-4">Comment ça marche ?</h2>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 stagger-container">
                 {[
                   'Achète des pixels qui s\'affichent aléatoirement et révèlent progressivement l\'image cachée.',
                   'Chaque achat te permet de soumettre une devinette sur la race de l\'animal.',
@@ -481,7 +461,7 @@ export default function GrilleView({
                   '2e et 3e cadeaux : les deux plus gros acheteurs de pixels.',
                   'Une partie des recettes est reversée à un refuge animalier ou une association.',
                 ].map((text, i) => (
-                  <div key={text} className="flex items-center gap-3 text-sm text-gray-500 bg-gray-100 border border-orange-200 rounded-xl p-3">
+                  <div key={text} className="stagger-child flex items-center gap-3 text-sm text-gray-500 bg-gray-100 border border-orange-200 rounded-xl p-3 hover:bg-orange-50 transition-all duration-300">
                     <span className="shrink-0 font-bold text-gray-900 w-4 text-center">{i + 1}</span>
                     <span>{text}</span>
                   </div>
@@ -491,10 +471,10 @@ export default function GrilleView({
           </div>
         </div>
 
-        {/* FAQ */}
-        <div className="mt-8">
-          <h2 className="text-xl font-bold text-gray-900 text-center mb-5">Questions fréquentes</h2>
-          <div className="space-y-2">
+        {/* FAQ avec animations */}
+        <div className="mt-8 fade-up">
+          <h2 className="text-xl font-bold text-gray-900 text-center mb-5 glow-text">Questions fréquentes</h2>
+          <div className="space-y-2 stagger-container">
             {[
               { q: 'Que gagne-t-on exactement ?', r: 'Des cadeaux surprises. Leur valeur dépend du montant collecté : plus la grille se remplit, plus les cadeaux sont généreux. Aucune valeur n\'est garantie à l\'avance.' },
               { q: 'Comment saurai-je si j\'ai gagné ?', r: 'Les gagnants sont contactés directement par email à l\'adresse renseignée lors de l\'achat, à la fin de la grille. Pense à utiliser un email valide.' },
@@ -503,16 +483,16 @@ export default function GrilleView({
               { q: 'Est-ce une loterie ou une tombola ?', r: 'Non. Les gains reposent sur une devinette (concours de connaissance) et sur le nombre de pixels achetés, jamais sur un tirage au sort.' },
               { q: 'Où va l\'argent reversé ?', r: 'Une partie des recettes de chaque grille est reversée à un refuge animalier ou une association. Jouer, c\'est aussi soutenir une bonne cause.' },
             ].map((item, i) => (
-              <div key={i} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div key={i} className="stagger-child bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-300">
                 <button
                   onClick={() => setFaqOpen(faqOpen === i ? null : i)}
                   className="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-gray-50 transition-colors"
                 >
                   {item.q}
-                  <span className="text-orange-500 text-lg shrink-0 ml-3">{faqOpen === i ? '−' : '+'}</span>
+                  <span className="text-orange-500 text-lg shrink-0 ml-3 transition-transform duration-300">{faqOpen === i ? '−' : '+'}</span>
                 </button>
                 {faqOpen === i && (
-                  <p className="px-4 pb-4 text-sm text-gray-600 leading-relaxed">{item.r}</p>
+                  <p className="px-4 pb-4 text-sm text-gray-600 leading-relaxed animate-fade-in">{item.r}</p>
                 )}
               </div>
             ))}
@@ -520,31 +500,31 @@ export default function GrilleView({
         </div>
 
         {/* Lien historique */}
-        <div className="mt-8 text-center">
-          <a href="/grilles" className="text-sm text-orange-600 hover:text-orange-700 font-medium">
+        <div className="mt-8 text-center fade-up">
+          <a href="/grilles" className="text-sm text-orange-600 hover:text-orange-700 font-medium hover:underline transition-all duration-300">
             Voir les grilles passées et leurs gagnants →
           </a>
         </div>
 
-        {/* Mentions légales courtes */}
-        <div className="mt-6 pt-6 border-t border-gray-200 text-xs text-gray-500 text-center">
+        {/* Mentions légales */}
+        <div className="mt-6 pt-6 border-t border-gray-200 text-xs text-gray-500 text-center fade-up">
           L&apos;achat est définitif. Les pixels sont attribués aléatoirement. Une partie des recettes est reversée à un refuge animalier ou une association.
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal avec animations */}
       {showModal && (
         <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
           onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}
         >
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-gray-200">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-gray-200 animate-slide-up">
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Acheter des pixels</h2>
                 <p className="text-gray-500 text-sm mt-0.5">Tes pixels seront placés aléatoirement.</p>
               </div>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors hover:rotate-90 duration-300">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -558,7 +538,7 @@ export default function GrilleView({
                   onChange={e => setPrenom(e.target.value)}
                   required
                   maxLength={50}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400 transition-colors text-sm"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400 transition-all duration-300"
                   placeholder="Ton prénom"
                 />
               </div>
@@ -570,23 +550,23 @@ export default function GrilleView({
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400 transition-colors text-sm"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400 transition-all duration-300"
                   placeholder="ton@email.com"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Nombre de pixels</label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-2 stagger-container">
                   {PIXEL_OPTIONS.map(n => (
                     <button
                       key={n}
                       type="button"
                       onClick={() => setNbPixels(n)}
-                      className={`py-2.5 rounded-xl font-semibold text-sm transition-colors border ${
+                      className={`stagger-child py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 border ${
                         nbPixels === n
-                          ? 'bg-orange-500 text-white border-orange-500'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300'
+                          ? 'bg-orange-500 text-white border-orange-500 shadow-md scale-105'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:scale-105'
                       }`}
                     >
                       {n} px
@@ -601,7 +581,7 @@ export default function GrilleView({
                   type="checkbox"
                   checked={newsletter}
                   onChange={e => setNewsletter(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-400 cursor-pointer"
+                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-400 cursor-pointer transition-all duration-300"
                 />
                 <span className="text-xs text-gray-500 leading-relaxed">
                   Je souhaite recevoir la newsletter Mes Poilus (conseils, nouvelles grilles, gagnants). Désinscription en un clic à tout moment.
@@ -612,14 +592,14 @@ export default function GrilleView({
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium py-3 rounded-xl transition-colors text-sm"
+                  className="flex-1 border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium py-3 rounded-xl transition-all duration-300 text-sm hover:scale-[1.02]"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm hover:scale-[1.02] shadow-md"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">

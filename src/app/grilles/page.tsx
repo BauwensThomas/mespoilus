@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/server';
 import { computeGrilleResults } from '@/lib/grille-finish';
 import { Trophy, ArrowRight } from 'lucide-react';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const metadata: Metadata = {
   title: 'Grilles passées - Grille Mystère | Mes Poilus',
@@ -37,33 +38,35 @@ export default async function GrillesHistoriquePage() {
   return (
     <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-        <div className="text-center mb-10">
+        
+        {/* Header avec animations */}
+        <div className="text-center mb-10 fade-up">
           <span className="text-orange-600 text-sm font-semibold uppercase tracking-widest">Historique</span>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">Les grilles passées</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 glow-text">Les grilles passées</h1>
           <p className="text-gray-600 mt-3">Les animaux révélés et leurs gagnants. Merci à tous les participants !</p>
           {totalReverseCents > 0 && (
-            <p className="inline-block mt-4 bg-green-50 border border-green-200 text-green-700 text-sm font-semibold rounded-full px-4 py-1.5">
+            <p className="inline-block mt-4 bg-green-50 border border-green-200 text-green-700 text-sm font-semibold rounded-full px-4 py-1.5 pulse-soft">
               ❤️ {(totalReverseCents / 100).toLocaleString('fr-BE', { style: 'currency', currency: 'EUR' })} reversés aux refuges
             </p>
           )}
         </div>
 
         {items.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="text-center py-16 fade-up">
             <p className="text-gray-500 mb-4">Aucune grille terminée pour le moment.</p>
-            <Link href="/grille" className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors">
+            <Link href="/grille" className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105">
               Jouer à la grille en cours <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {items.map(({ grille, winners }) => (
-              <div key={grille.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 stagger-container">
+            {items.map(({ grille, winners }, idx) => (
+              <div key={grille.id} className="stagger-child bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`/api/grille/${grille.id}/image`}
                   alt={`Grille révélée - ${grille.race_secrete}`}
-                  className="w-full aspect-square object-cover"
+                  className="w-full aspect-square object-cover transition-transform duration-500 hover:scale-105"
                 />
                 <div className="p-5">
                   <p className="text-xs text-gray-400 mb-1">
@@ -73,9 +76,9 @@ export default async function GrillesHistoriquePage() {
                   {winners.length === 0 ? (
                     <p className="text-sm text-gray-400">Aucun participant.</p>
                   ) : (
-                    <ul className="space-y-1.5">
-                      {winners.map((w) => (
-                        <li key={w.rang} className="flex items-center gap-2 text-sm">
+                    <ul className="space-y-1.5 stagger-container">
+                      {winners.map((w, i) => (
+                        <li key={w.rang} className="stagger-child flex items-center gap-2 text-sm">
                           <span>{RANK_EMOJI[w.rang - 1]}</span>
                           <span className="font-medium text-gray-900">{w.prenom}</span>
                           <span className="text-gray-400 text-xs">· {w.raison}</span>
@@ -91,7 +94,7 @@ export default async function GrillesHistoriquePage() {
                         </span>
                       )}
                       {grille.preuve_don_url && (
-                        <a href={grille.preuve_don_url} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline ml-2">
+                        <a href={grille.preuve_don_url} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline ml-2 hover:text-orange-700 transition-colors">
                           voir la preuve
                         </a>
                       )}
@@ -103,12 +106,15 @@ export default async function GrillesHistoriquePage() {
           </div>
         )}
 
-        <div className="text-center mt-10">
-          <Link href="/grille" className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl transition-colors">
+        {/* Bouton avec animation */}
+        <div className="text-center mt-10 fade-up">
+          <Link href="/grille" className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105 shadow-md">
             <Trophy className="w-4 h-4" /> Voir la grille en cours
           </Link>
         </div>
+        
       </div>
+      <ClientWrapper />
     </div>
   );
 }

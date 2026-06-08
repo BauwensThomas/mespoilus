@@ -8,6 +8,7 @@ import AdBanner from '@/components/ui/AdBanner';
 import BlogSearchBar from '@/components/blog/BlogSearchBar';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Globe } from 'lucide-react';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 const CATEGORY_SLUGS = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles', 'general'];
 
@@ -80,21 +81,22 @@ export default async function BlogPage({ searchParams }: Props) {
   return (
     <DirectionalTransition>
     <div className="min-h-screen px-6 md:px-8 py-6 space-y-5">
-      {/* Header */}
-      <div>
+      
+      {/* Header avec animation */}
+      <div className="fade-up">
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Blog</h1>
         <p className="text-sm text-gray-500">Conseils, guides et actualités sur les animaux de compagnie</p>
       </div>
 
-      {/* Filtres catégories */}
-      <div className="flex flex-wrap gap-3">
+      {/* Filtres catégories avec stagger */}
+      <div className="flex flex-wrap gap-3 stagger-container">
         {CATEGORIES.map(({ id, label, icon: IconComponent, href }) => {
           const isActive = (id === 'all' && !activeCategory) || id === activeCategory;
           return (
             <Link
               key={id}
               href={href}
-              className={`text-sm px-3 py-1.5 rounded-lg border transition-all duration-200 flex items-center gap-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              className={`stagger-child text-sm px-3 py-1.5 rounded-lg border transition-all duration-200 flex items-center gap-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                 isActive
                   ? 'bg-orange-600 text-white border-orange-600 focus:ring-orange-300'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 hover:shadow-md focus:ring-orange-300'
@@ -107,23 +109,28 @@ export default async function BlogPage({ searchParams }: Props) {
         })}
       </div>
 
-      {/* Recherche */}
-      <BlogSearchBar defaultValue={search ?? ''} />
-
-      {/* Bannière */}
-      <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
-        <div>
-          <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Catégorie</p>
-          <p className="text-white font-bold text-lg md:text-xl capitalize">{activeCat?.label ?? 'Tous'}</p>
-        </div>
-        <p className="text-white/60 text-sm">
-          {articles.length} article{articles.length !== 1 ? 's' : ''}
-          {search ? ` · "${search}"` : ''}
-        </p>
+      {/* Recherche avec animation */}
+      <div className="fade-up">
+        <BlogSearchBar defaultValue={search ?? ''} />
       </div>
 
+      {/* Bannière avec animation */}
+      <div className="fade-up reveal-color">
+        <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
+          <div>
+            <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Catégorie</p>
+            <p className="text-white font-bold text-lg md:text-xl capitalize">{activeCat?.label ?? 'Tous'}</p>
+          </div>
+          <p className="text-white/60 text-sm">
+            {articles.length} article{articles.length !== 1 ? 's' : ''}
+            {search ? ` · "${search}"` : ''}
+          </p>
+        </div>
+      </div>
+
+      {/* Grille d'articles ou message vide */}
       {articles.length === 0 ? (
-        <div className="text-center py-20 bg-orange-50 rounded-3xl border border-orange-100">
+        <div className="text-center py-20 bg-orange-50 rounded-3xl border border-orange-100 fade-up">
           <p className="text-gray-600 font-medium text-lg">Les premiers articles arrivent bientôt !</p>
         </div>
       ) : (
@@ -136,6 +143,8 @@ export default async function BlogPage({ searchParams }: Props) {
       )}
 
       <AdBanner slot="1266534148" variant="in-article" className="mt-6" />
+      
+      <ClientWrapper />
     </div>
     </DirectionalTransition>
   );

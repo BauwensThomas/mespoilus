@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_EMOJI, ANIMAL_GRADIENT, ANIMAL_URL, type Breed } from '@/lib/breeds-list';
 import type { Article } from '@/types';
 import AdBanner from '@/components/ui/AdBanner';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const revalidate = 3600;
 
@@ -154,8 +155,8 @@ export default async function BreedPage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
-      {/* Fil d'ariane + titre */}
-      <div>
+      {/* Fil d'ariane + titre avec animations */}
+      <div className="fade-up">
         <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-1">
           <Link href="/races" className="hover:text-orange-600 transition-colors">Races</Link>
           <span>/</span>
@@ -165,30 +166,33 @@ export default async function BreedPage({ params }: Props) {
         {c.excerpt && <p className="text-gray-500 text-sm mt-1">{c.excerpt}</p>}
       </div>
 
-      {/* Bannière orange */}
-      <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
-        <div>
-          <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Fiche race</p>
-          <p className="text-white font-bold text-lg md:text-xl">{breed.name}</p>
+      {/* Bannière orange avec animation */}
+      <div className="fade-up reveal-color">
+        <div className="h-16 md:h-20 rounded-2xl bg-gradient-to-r from-orange-600 to-gray-900 shadow flex items-center px-6 md:px-8 justify-between">
+          <div>
+            <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Fiche race</p>
+            <p className="text-white font-bold text-lg md:text-xl">{breed.name}</p>
+          </div>
+          <p className="text-white/60 text-sm">{ANIMAL_LABEL[animalType]}</p>
         </div>
-        <p className="text-white/60 text-sm">{ANIMAL_LABEL[animalType]}</p>
       </div>
 
-      <Link href={`/races/${animal}`} className="inline-block text-sm text-orange-600 hover:underline">
+      {/* Lien retour avec animation */}
+      <Link href={`/races/${animal}`} className="inline-block text-sm text-orange-600 hover:underline fade-up">
         &larr; {ANIMAL_LABEL[animalType]}
       </Link>
 
-      <div className="max-w-6xl mx-auto space-y-4">
+      <div className="max-w-6xl mx-auto space-y-6">
 
-        {/* Photo centrée */}
-        <div className="max-w-xs mx-auto relative aspect-[3/4] rounded-2xl overflow-hidden">
+        {/* Photo centrée avec animation */}
+        <div className="max-w-xs mx-auto relative aspect-[3/4] rounded-2xl overflow-hidden fade-up">
           {photo ? (
             <Image
               src={photo}
               alt={`${breed.name} - ${ANIMAL_LABEL[animalType]}`}
               fill
               unoptimized
-              className="object-cover"
+              className="object-cover transition-transform duration-500 hover:scale-105"
               sizes="(max-width: 768px) 100vw, 672px"
             />
           ) : (
@@ -198,30 +202,30 @@ export default async function BreedPage({ params }: Props) {
           )}
         </div>
 
-        {/* Stats clés */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Stats clés avec stagger */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger-container">
           {[
             { icon: MapPin,   label: 'Origine',          value: c.origine },
             { icon: Scale,    label: 'Poids',             value: c.poids },
             { icon: Heart,    label: 'Espérance de vie',  value: c.esperance_vie },
             { icon: Activity, label: 'Taille',            value: c.taille },
-          ].map(({ icon: Icon, label, value }) => (
-            <div key={label} className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+          ].map(({ icon: Icon, label, value }, idx) => (
+            <div key={label} className="stagger-child bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-shadow duration-300">
               <Icon size={18} strokeWidth={1.5} className="text-orange-500 mx-auto mb-1.5" />
               <p className="text-xs text-gray-500 mb-0.5">{label}</p>
-              <p className="font-semibold text-gray-900 text-base capitalize">{value}</p>
+              <p className="font-semibold text-gray-900 text-base capitalize">{value || '-'}</p>
             </div>
           ))}
         </div>
 
-        {/* Caractère + Niveau d'activité */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4">
+        {/* Caractère + Niveau d'activité avec animation */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4 fade-up">
           {c.caractere && c.caractere.length > 0 && (
             <div>
               <h2 className="font-semibold text-gray-900 mb-3">Caractère</h2>
               <div className="flex flex-wrap gap-2">
                 {c.caractere.map((trait: string) => (
-                  <span key={trait} className="bg-orange-50 text-orange-600 border border-orange-200 px-3 py-1 rounded-full text-sm font-medium capitalize">
+                  <span key={trait} className="bg-orange-50 text-orange-600 border border-orange-200 px-3 py-1 rounded-full text-sm font-medium capitalize hover:bg-orange-100 transition-colors">
                     {trait}
                   </span>
                 ))}
@@ -238,13 +242,13 @@ export default async function BreedPage({ params }: Props) {
           )}
         </div>
 
-        {/* Convient pour */}
+        {/* Convient pour avec stagger */}
         {c.convient_pour && (
-          <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 fade-up">
             <h2 className="font-semibold text-gray-900 mb-4">Convient pour</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Object.entries(c.convient_pour).map(([key, value]) => (
-                <div key={key} className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border ${value ? 'border-green-200 bg-green-50' : 'border-red-100 bg-red-50'}`}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 stagger-container">
+              {Object.entries(c.convient_pour).map(([key, value], idx) => (
+                <div key={key} className={`stagger-child flex items-center gap-2.5 px-4 py-2.5 rounded-xl border ${value ? 'border-green-200 bg-green-50' : 'border-red-100 bg-red-50'} hover:shadow-sm transition-all duration-300`}>
                   {value
                     ? <CheckCircle2 size={16} strokeWidth={1.5} className="text-green-600 shrink-0" />
                     : <XCircle     size={16} strokeWidth={1.5} className="text-red-400 shrink-0" />}
@@ -257,9 +261,9 @@ export default async function BreedPage({ params }: Props) {
           </div>
         )}
 
-        {/* Description */}
+        {/* Description avec animation */}
         {c.description && (
-          <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 fade-up">
             <h2 className="font-semibold text-gray-900 mb-4">À propos du {breed.name}</h2>
             <div
               className="prose prose-sm max-w-none text-gray-700 leading-relaxed [&_p]:mb-3 [&_p:last-child]:mb-0"
@@ -268,42 +272,43 @@ export default async function BreedPage({ params }: Props) {
           </div>
         )}
 
-        {/* Soins */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Soins avec stagger */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-container">
           {[
             { title: 'Entretien',    text: c.entretien    },
             { title: 'Alimentation', text: c.alimentation },
             { title: 'Santé',        text: c.sante        },
-          ].filter(s => s.text).map(({ title, text }) => (
-            <div key={title} className="bg-white border border-gray-200 rounded-2xl p-5">
+          ].filter(s => s.text).map(({ title, text }, idx) => (
+            <div key={title} className="stagger-child bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-md transition-all duration-300">
               <h3 className="font-semibold text-gray-900 mb-2 text-sm uppercase tracking-wide">{title}</h3>
               <p className="text-gray-600 text-sm leading-relaxed">{text}</p>
             </div>
           ))}
         </div>
 
-        <p className="text-xs text-gray-500 text-center">
+        {/* Disclaimer avec animation */}
+        <p className="text-xs text-gray-500 text-center fade-up">
           Les informations sont des moyennes indicatives. Chaque animal est unique.
         </p>
 
-        {/* Publicité in-article (après le contenu, avant l'adoption - non intrusif) */}
-        <AdBanner slot="1266534148" variant="in-article" className="my-2" />
+        {/* Publicité in-article */}
+        <AdBanner slot="1266534148" variant="in-article" className="my-2 fade-up" />
 
-        {/* Annonces d'adoption */}
+        {/* Annonces d'adoption avec animation */}
         {adoptionPosts.length > 0 && (
-          <div className="space-y-3">
+          <div className="space-y-3 fade-up">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900">{ANIMAL_LABEL[animalType]} à adopter</h2>
               <Link href={`/adoption?animal=${animalType}`} className="text-sm text-orange-600 hover:underline">
                 Voir tout &rarr;
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {adoptionPosts.map(post => (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 stagger-container">
+              {adoptionPosts.map((post, idx) => (
                 <Link
                   key={post.id}
                   href={`/adoption?animal=${animalType}`}
-                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-sm transition-shadow"
+                  className="stagger-child bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300"
                 >
                   <div className="relative h-32">
                     {post.photo_urls?.[0] ? (
@@ -311,7 +316,7 @@ export default async function BreedPage({ params }: Props) {
                         src={post.photo_urls[0]}
                         alt={post.breed ?? ANIMAL_LABEL[animalType]}
                         fill unoptimized
-                        className="object-cover"
+                        className="object-cover transition-transform duration-500 hover:scale-105"
                         sizes="300px"
                       />
                     ) : (
@@ -336,23 +341,23 @@ export default async function BreedPage({ params }: Props) {
           </div>
         )}
 
-        {/* Produits recommandés */}
+        {/* Produits recommandés avec animation */}
         {products.length > 0 && (
-          <div className="space-y-3">
+          <div className="space-y-3 fade-up">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900">Produits pour {ANIMAL_LABEL[animalType].toLowerCase()}</h2>
               <Link href={`/boutique?category=${category}`} className="text-sm text-orange-600 hover:underline">
                 Voir tout &rarr;
               </Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {products.map(p => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger-container">
+              {products.map((p, idx) => (
                 <a
                   key={p.catalog_id}
                   href={p.affiliate_url}
                   target="_blank"
                   rel="noopener noreferrer sponsored"
-                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-sm transition-shadow flex flex-col"
+                  className="stagger-child bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col"
                 >
                   <div className="relative h-28 bg-gray-50">
                     {p.image_url ? (
@@ -360,7 +365,7 @@ export default async function BreedPage({ params }: Props) {
                         src={p.image_url}
                         alt={p.name}
                         fill unoptimized
-                        className="object-contain p-2"
+                        className="object-contain p-2 transition-transform duration-500 hover:scale-105"
                         sizes="200px"
                       />
                     ) : (
@@ -380,30 +385,30 @@ export default async function BreedPage({ params }: Props) {
           </div>
         )}
 
-        {/* Articles & conseils */}
+        {/* Articles & conseils avec animation - hauteur augmentée */}
         {articles.length > 0 && (
-          <div className="space-y-3 pb-4">
+          <div className="space-y-3 pb-4 fade-up">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900">Articles & conseils</h2>
               <Link href={`/blog/${category}`} className="text-sm text-orange-600 hover:underline">
                 Voir tout &rarr;
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {articles.map(a => (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 stagger-container">
+              {articles.map((a, idx) => (
                 <Link
                   key={a.id}
                   href={`/blog/${a.slug}`}
-                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-sm transition-shadow flex flex-col"
+                  className="stagger-child bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col"
                 >
-                  <div className="relative h-32">
+                  <div className="relative h-48 sm:h-52">
                     {a.image_url ? (
                       <Image
                         src={a.image_url}
                         alt={a.title}
                         fill unoptimized
-                        className="object-cover"
-                        sizes="300px"
+                        className="object-cover transition-transform duration-500 hover:scale-105"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                     ) : (
                       <div className={`absolute inset-0 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
@@ -423,8 +428,9 @@ export default async function BreedPage({ params }: Props) {
             </div>
           </div>
         )}
-
       </div>
+      
+      <ClientWrapper />
     </div>
   );
 }

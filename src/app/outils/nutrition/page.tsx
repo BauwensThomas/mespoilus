@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Dog, Cat, UtensilsCrossed, Info } from 'lucide-react';
 import AdBanner from '@/components/ui/AdBanner';
+import ClientWrapper from '@/components/animations/ClientWrapper';
 
 type Animal   = 'chien' | 'chat';
 type Stage    = 'chiot' | 'adulte' | 'senior';
@@ -79,20 +80,21 @@ export default function NutritionPage() {
     <div className="min-h-screen px-6 md:px-8 py-10">
       <div className="max-w-6xl mx-auto">
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Calculateur de ration journalière</h1>
+        {/* Header avec animation */}
+        <div className="mb-8 fade-up">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1 glow-text">Calculateur de ration journalière</h1>
           <p className="text-gray-500 text-sm">Estimez la quantité de nourriture quotidienne pour votre animal selon les standards vétérinaires</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
           {/* Formulaire */}
-          <div className="lg:col-span-3 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6">
+          <div className="lg:col-span-3 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6 reveal-color">
 
-            {/* Animal */}
-            <div>
+            {/* Animal avec stagger */}
+            <div className="fade-up">
               <label className="block text-sm font-semibold text-gray-700 mb-3">Type d'animal</label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 stagger-container">
                 {([
                   { id: 'chien', label: 'Chien', icon: Dog },
                   { id: 'chat',  label: 'Chat',  icon: Cat },
@@ -100,10 +102,10 @@ export default function NutritionPage() {
                   <button
                     key={id}
                     onClick={() => handleAnimal(id)}
-                    className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium transition-all ${
+                    className={`stagger-child flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium transition-all duration-300 ${
                       animal === id
-                        ? 'bg-orange-600 text-white border-orange-600'
-                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-300'
+                        ? 'bg-orange-600 text-white border-orange-600 shadow-md scale-105'
+                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-300 hover:bg-orange-50 hover:scale-105'
                     }`}
                   >
                     <Icon size={18} strokeWidth={1.5} />
@@ -113,10 +115,10 @@ export default function NutritionPage() {
               </div>
             </div>
 
-            {/* Poids */}
-            <div>
+            {/* Poids avec animation */}
+            <div className="fade-up">
               <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Poids actuel : <span className="text-orange-600">{weight || '–'} kg</span>
+                Poids actuel : <span className="text-orange-600 text-lg font-bold">{weight || '–'} kg</span>
               </label>
               <input
                 type="number"
@@ -126,14 +128,14 @@ export default function NutritionPage() {
                 value={weight}
                 onChange={e => setWeight(e.target.value)}
                 placeholder="Ex : 12"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-all duration-300"
               />
             </div>
 
-            {/* Stade de vie */}
-            <div>
+            {/* Stade de vie avec stagger */}
+            <div className="fade-up">
               <label className="block text-sm font-semibold text-gray-700 mb-3">Stade de vie</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 stagger-container">
                 {([
                   { id: 'chiot',  label: animal === 'chien' ? 'Chiot' : 'Chaton', sub: '< 1 an' },
                   { id: 'adulte', label: 'Adulte', sub: animal === 'chien' ? '1–7 ans' : '1–10 ans' },
@@ -142,10 +144,10 @@ export default function NutritionPage() {
                   <button
                     key={id}
                     onClick={() => setStage(id)}
-                    className={`py-2.5 px-3 rounded-xl border text-sm font-medium transition-all text-center ${
+                    className={`stagger-child py-2.5 px-3 rounded-xl border text-sm font-medium transition-all duration-300 text-center ${
                       stage === id
-                        ? 'bg-orange-100 text-orange-700 border-orange-300'
-                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-200'
+                        ? 'bg-orange-100 text-orange-700 border-orange-300 shadow-sm'
+                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-200 hover:bg-orange-50'
                     }`}
                   >
                     <div>{label}</div>
@@ -157,17 +159,17 @@ export default function NutritionPage() {
 
             {/* Stérilisé */}
             {showSterilise && (
-              <div>
+              <div className="fade-up">
                 <label className="block text-sm font-semibold text-gray-700 mb-3">Stérilisé(e) ?</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 stagger-container">
                   {[{ v: false, label: 'Non' }, { v: true, label: 'Oui' }].map(({ v, label }) => (
                     <button
                       key={String(v)}
                       onClick={() => setSterilise(v)}
-                      className={`py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                      className={`stagger-child py-2.5 rounded-xl border text-sm font-medium transition-all duration-300 ${
                         sterilise === v
-                          ? 'bg-orange-100 text-orange-700 border-orange-300'
-                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-200'
+                          ? 'bg-orange-100 text-orange-700 border-orange-300 shadow-sm'
+                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-200 hover:bg-orange-50'
                       }`}
                     >
                       {label}
@@ -179,9 +181,9 @@ export default function NutritionPage() {
 
             {/* Activité */}
             {showActivity && (
-              <div>
+              <div className="fade-up">
                 <label className="block text-sm font-semibold text-gray-700 mb-3">Niveau d'activité</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2 stagger-container">
                   {([
                     { id: 'sedentaire', label: 'Sédentaire', sub: 'Peu de sorties' },
                     { id: 'normal',     label: 'Normal',     sub: '1–2 sorties/j' },
@@ -190,10 +192,10 @@ export default function NutritionPage() {
                     <button
                       key={id}
                       onClick={() => setActivity(id)}
-                      className={`py-2.5 px-2 rounded-xl border text-sm font-medium transition-all text-center ${
+                      className={`stagger-child py-2.5 px-2 rounded-xl border text-sm font-medium transition-all duration-300 text-center ${
                         activity === id
-                          ? 'bg-orange-100 text-orange-700 border-orange-300'
-                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-200'
+                          ? 'bg-orange-100 text-orange-700 border-orange-300 shadow-sm'
+                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-200 hover:bg-orange-50'
                       }`}
                     >
                       <div>{label}</div>
@@ -204,10 +206,10 @@ export default function NutritionPage() {
               </div>
             )}
 
-            {/* Type d'alimentation */}
-            <div>
+            {/* Type d'alimentation avec stagger */}
+            <div className="fade-up">
               <label className="block text-sm font-semibold text-gray-700 mb-3">Type d'alimentation</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 stagger-container">
                 {([
                   { id: 'croquettes', label: 'Croquettes', sub: 'Aliment sec' },
                   { id: 'patee',      label: 'Pâtée',      sub: 'Aliment humide' },
@@ -216,10 +218,10 @@ export default function NutritionPage() {
                   <button
                     key={id}
                     onClick={() => setFoodType(id)}
-                    className={`py-2.5 px-2 rounded-xl border text-sm font-medium transition-all text-center ${
+                    className={`stagger-child py-2.5 px-2 rounded-xl border text-sm font-medium transition-all duration-300 text-center ${
                       foodType === id
-                        ? 'bg-orange-100 text-orange-700 border-orange-300'
-                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-200'
+                        ? 'bg-orange-100 text-orange-700 border-orange-300 shadow-sm'
+                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-orange-200 hover:bg-orange-50'
                     }`}
                   >
                     <div>{label}</div>
@@ -230,7 +232,7 @@ export default function NutritionPage() {
             </div>
 
             {/* Densité calorique */}
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3 fade-up">
               <div className="flex items-center gap-2">
                 <Info size={14} strokeWidth={1.5} className="text-gray-500 flex-shrink-0" />
                 <p className="text-xs text-gray-600">Valeurs pré-remplies avec les moyennes standard. Vérifiez sur l'emballage de votre marque pour plus de précision.</p>
@@ -244,7 +246,7 @@ export default function NutritionPage() {
                     max={600}
                     value={kcalCroq}
                     onChange={e => setKcalCroq(e.target.value)}
-                    className="w-24 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    className="w-24 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 transition-all duration-300"
                   />
                 </div>
               )}
@@ -257,7 +259,7 @@ export default function NutritionPage() {
                     max={200}
                     value={kcalPat}
                     onChange={e => setKcalPat(e.target.value)}
-                    className="w-24 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    className="w-24 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 transition-all duration-300"
                   />
                 </div>
               )}
@@ -268,7 +270,7 @@ export default function NutritionPage() {
           <div className="lg:col-span-2 space-y-4">
             {result ? (
               <>
-                <div className="bg-orange-600 rounded-2xl p-6 text-white text-center shadow-sm">
+                <div className="bg-gradient-to-r from-orange-600 to-orange-500 rounded-2xl p-6 text-white text-center shadow-sm fade-up hover:scale-[1.02] transition-transform duration-300">
                   <UtensilsCrossed size={28} strokeWidth={1.5} className="mx-auto mb-3 opacity-80" />
                   <div className="text-4xl font-bold mb-1">{result.kcalJour} kcal</div>
                   <div className="text-orange-200 text-sm mb-4">par jour</div>
@@ -278,7 +280,7 @@ export default function NutritionPage() {
                   </div>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3 text-sm">
+                <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3 text-sm fade-up">
                   <p className="font-semibold text-gray-900 text-sm">Comment utiliser ce résultat</p>
                   <ul className="space-y-2 text-gray-600 text-xs">
                     <li className="flex gap-2"><span className="text-orange-500 font-bold mt-0.5">•</span>Divisez la ration en 2 repas par jour (matin et soir)</li>
@@ -288,21 +290,23 @@ export default function NutritionPage() {
                   </ul>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 fade-up">
                   <p className="text-xs text-blue-700">Ce calcul est basé sur les formules RER/MER utilisées en médecine vétérinaire. Il s'agit d'une estimation. Consultez votre vétérinaire pour un suivi personnalisé.</p>
                 </div>
               </>
             ) : (
-              <div className="bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-8 text-center text-gray-400">
+              <div className="bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-8 text-center text-gray-400 fade-up">
                 <UtensilsCrossed size={32} strokeWidth={1} className="mx-auto mb-3" />
                 <p className="text-sm">Renseignez le poids de votre animal pour obtenir le résultat</p>
               </div>
             )}
 
-            <AdBanner slot="1266534148" variant="in-article" className="mt-2" />
+            <AdBanner slot="1266534148" variant="in-article" className="mt-2 fade-up" />
           </div>
         </div>
       </div>
+      
+      <ClientWrapper />
     </div>
   );
 }
