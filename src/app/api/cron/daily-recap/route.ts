@@ -34,8 +34,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 // Crons attendus selon le jour - pattern de detection dans action log
 
-// Crons catalogue : tournent TOUS LES 3 JOURS (vercel.json `*/3 * *` = jours 1,4,7,10...).
-// → attendus uniquement ces jours-là (sinon faux "manquants" 2 jours sur 3).
+// Crons catalogue : tournent 1×/SEMAINE le LUNDI (vercel.json `* * 1`) pour réduire le CPU Fluid.
+// → attendus uniquement le lundi (sinon faux "manquants" 6 jours sur 7).
 const CATALOG_CRONS = [
   { label: 'Catalog sync chiens',          pattern: '[Catalog sync:chiens]',          hour: '02h', agent: 'Thomas' },
   { label: 'Catalog sync chats',           pattern: '[Catalog sync:chats]',           hour: '02h', agent: 'Thomas' },
@@ -59,8 +59,8 @@ const DAILY_CRONS = [
   { label: 'Adoption cleanup',             pattern: '[Adoption cleanup]',             hour: '03h', agent: 'Thomas' },
 ];
 
-// Un cron catalogue tourne ce jour-là si le jour du mois suit le pas `*/3` (1,4,7,10...)
-const isCatalogDay = (dom: number) => (dom - 1) % 3 === 0;
+// Le catalogue tourne le lundi (dow === 1)
+const isCatalogDay = (dow: number) => dow === 1;
 
 const WEEKDAY_CRONS: Record<number, Array<{ label: string; pattern: string; hour: string; agent: string }>> = {
   1: [ // Lundi
@@ -96,7 +96,7 @@ function getExpectedCrons(now: Date) {
   const dow = now.getUTCDay();
   const dom = now.getUTCDate();
   const expected = [...DAILY_CRONS];
-  if (isCatalogDay(dom)) expected.push(...CATALOG_CRONS); // catalogue : tous les 3 jours
+  if (isCatalogDay(dow)) expected.push(...CATALOG_CRONS); // catalogue : 1×/semaine (lundi)
   if (WEEKDAY_CRONS[dow]) expected.push(...WEEKDAY_CRONS[dow]);
   if (dom === 1) {
     expected.push({ label: 'Finance (Antoine)',   pattern: 'Cron finance',   hour: '08h', agent: 'Antoine'  });
