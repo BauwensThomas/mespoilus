@@ -97,17 +97,16 @@ export default async function ArticlePage({ params }: Props) {
   if (!article) notFound();
 
   let htmlContent = await marked(article.content, { gfm: true });
-  // Le lecteur doit GARDER son article ouvert quand il clique vers de l'achat :
-  // 1. Liens EXTERNES (affiliés, sources) → nouvel onglet + rel affiliation.
+  // TOUS les liens d'un article s'ouvrent dans un NOUVEL ONGLET → le lecteur ne quitte jamais son article.
+  // 1. Liens EXTERNES (affiliés, sources, hors mespoilus.com) → rel d'affiliation.
   htmlContent = htmlContent.replace(
     /<a href="(https?:\/\/(?!(?:www\.)?mespoilus\.com)[^"]+)"/gi,
     '<a href="$1" target="_blank" rel="noopener noreferrer sponsored"'
   );
-  // 2. Liens INTERNES vers la boutique/produits → nouvel onglet aussi (intention d'achat).
-  //    Les liens internes éditoriaux (autres articles /blog) restent en navigation normale.
+  // 2. Tous les autres liens (internes : boutique, autres articles, adoption…) → nouvel onglet aussi.
   htmlContent = htmlContent.replace(
-    /<a href="((?:https?:\/\/(?:www\.)?mespoilus\.com)?\/boutique[^"]*)"/gi,
-    '<a href="$1" target="_blank" rel="noopener"'
+    /<a href="([^"]+)">/gi,
+    '<a href="$1" target="_blank" rel="noopener">'
   );
   const publishedDate = article.published_at
     ? format(new Date(article.published_at), 'd MMMM yyyy', { locale: fr })
