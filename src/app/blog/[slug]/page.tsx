@@ -233,7 +233,7 @@ export default async function ArticlePage({ params }: Props) {
 
       {/* Contenu */}
       <div className="px-6 py-10">
-        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm p-6 md:p-8" style={{ color: '#111827' }}>
+        <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-sm p-6 md:p-8" style={{ color: '#111827' }}>
 
           {/* Retour au blog */}
           <Link
