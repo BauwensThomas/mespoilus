@@ -686,6 +686,32 @@ CONSIGNES :
       } catch (e) { console.warn('[Cron1] FAQ erreur:', e instanceof Error ? e.message : e); }
     }
 
+    // Maillage interne ARRIÈRE (Option B) : ajoute un lien vers le NOUVEL article dans 1-2 anciens
+    // articles de la même catégorie → Google découvre + transmet de l'autorité au nouvel article.
+    // Append-only (ne touche jamais au corps existant), idempotent, plafonné. Non bloquant.
+    if (articleSlug) {
+      try {
+        const newUrl = `https://www.mespoilus.com/blog/${articleSlug}`;
+        const { data: candidates } = await supabase
+          .from('articles')
+          .select('id, content')
+          .eq('status', 'published')
+          .neq('slug', articleSlug)
+          .or(`category.eq.${animal},categories.cs.{${animal}}`)
+          .order('published_at', { ascending: false })
+          .limit(8);
+        const targets = (candidates ?? []).filter((a: { content: string | null }) => {
+          if (!a.content || a.content.includes(newUrl)) return false;          // déjà lié
+          return (a.content.match(/À lire aussi/g) ?? []).length < 3;          // pas surchargé
+        }).slice(0, 2);
+        for (const t of targets as { id: string; content: string }[]) {
+          const block = `\n\n> 📖 **À lire aussi :** [${articleTitle}](${newUrl})\n`;
+          await supabase.from('articles').update({ content: t.content + block }).eq('id', t.id);
+        }
+        if (targets.length) console.log(`[Cron1] Maillage arrière: lien ajouté dans ${targets.length} article(s)`);
+      } catch (e) { console.warn('[Cron1] Maillage arrière erreur:', e instanceof Error ? e.message : e); }
+    }
+
     // Supersede les anciens article_ready non consommés (évite que le social poste un vieux sujet)
     await supabase.from('cron_state').update({ status: 'superseded' }).eq('status', 'article_ready');
 
