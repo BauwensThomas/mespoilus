@@ -96,7 +96,19 @@ export default async function ArticlePage({ params }: Props) {
   const article = await getArticle(slug);
   if (!article) notFound();
 
-  const htmlContent = await marked(article.content, { gfm: true });
+  let htmlContent = await marked(article.content, { gfm: true });
+  // Le lecteur doit GARDER son article ouvert quand il clique vers de l'achat :
+  // 1. Liens EXTERNES (affiliés, sources) → nouvel onglet + rel affiliation.
+  htmlContent = htmlContent.replace(
+    /<a href="(https?:\/\/(?!(?:www\.)?mespoilus\.com)[^"]+)"/gi,
+    '<a href="$1" target="_blank" rel="noopener noreferrer sponsored"'
+  );
+  // 2. Liens INTERNES vers la boutique/produits → nouvel onglet aussi (intention d'achat).
+  //    Les liens internes éditoriaux (autres articles /blog) restent en navigation normale.
+  htmlContent = htmlContent.replace(
+    /<a href="((?:https?:\/\/(?:www\.)?mespoilus\.com)?\/boutique[^"]*)"/gi,
+    '<a href="$1" target="_blank" rel="noopener"'
+  );
   const publishedDate = article.published_at
     ? format(new Date(article.published_at), 'd MMMM yyyy', { locale: fr })
     : '';
