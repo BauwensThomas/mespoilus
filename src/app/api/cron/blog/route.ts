@@ -532,7 +532,7 @@ CONSIGNES :
     const fmEnd = marieResult.content.indexOf('---', 3);
     const bodyForCount = fmEnd > -1 ? marieResult.content.slice(fmEnd + 3) : marieResult.content;
     const wordCount = bodyForCount.trim().split(/\s+/).filter(Boolean).length;
-    if (wordCount < 800) console.warn(`[Cron1] Article court: ${wordCount} mots (cible: 1000-1200)`);
+    if (wordCount < 1000) console.warn(`[Cron1] Article court: ${wordCount} mots (cible: 1100-1400)`);
     else console.log(`[Cron1] Article: ~${wordCount} mots ✓`);
 
     const slugMatch = marieResult.content.match(/^slug:\s*(.+)/m);
@@ -560,6 +560,25 @@ CONSIGNES :
     }
 
     console.log(`[Cron1] Marie : slug=${articleSlug}`);
+
+    // Nettoyage GARANTI du contenu publié : retire tout emoji et remplace les tirets longs (— –)
+    // par une ponctuation classique, même si Marie en a glissé malgré le prompt. Non bloquant.
+    if (articleSlug) {
+      try {
+        const { data: art } = await supabase.from('articles').select('content').eq('slug', articleSlug).maybeSingle();
+        if (art?.content) {
+          const cleaned = art.content
+            .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{1F1E6}-\u{1F1FF}\u{FE0F}]/gu, '')
+            .replace(/\s*[—–]\s*/g, ', ')
+            .replace(/,\s*,/g, ',')
+            .replace(/ {2,}/g, ' ');
+          if (cleaned !== art.content) {
+            await supabase.from('articles').update({ content: cleaned }).eq('slug', articleSlug);
+            console.log('[Cron1] Contenu nettoye (emoji / tiret long retires)');
+          }
+        }
+      } catch { /* non bloquant */ }
+    }
 
     // Sauvegarder le partenaire mis en avant (requiert migration_featured_partner.sql)
     if (articleSlug && (nomProduit || urlPromo || urlPartner)) {
