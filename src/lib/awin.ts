@@ -319,6 +319,11 @@ export async function getJoinedFeeds(publisherId: string, feedToken: string): Pr
 
   let joined = all.filter(f => f['Membership Status'] === 'active');
 
+  // Exclure les feeds "CSS" (Comparison Shopping Service, destinés à Google Shopping) : ils
+  // dupliquent à l'identique le feed normal du marchand (ex: "Zooplus BE CSS") et n'ont pas
+  // leur place dans la boutique -> evite de traiter chaque produit deux fois.
+  joined = joined.filter(f => !/\bcss\b/i.test(f['Feed Name'] ?? ''));
+
   const seenUrls = new Set<string>();
   joined = joined.filter(f => {
     const u = f['URL'];
