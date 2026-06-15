@@ -575,6 +575,12 @@ export async function runCatalogSyncForCategory(
 
     const BATCH_SIZE = 50;
 
+    // Budget temps : maxDuration Vercel = 300s. On stoppe proprement à 250s pour laisser
+    // le temps de finir le batch en cours et de répondre. Au-delà, Vercel tuerait la fonction.
+    const SYNC_DEADLINE_MS = 250_000;
+    const syncStart = Date.now();
+    const shouldStop = () => Date.now() - syncStart > SYNC_DEADLINE_MS;
+
     await fetchAwinProductsByCategory(
       publisherId,
       feedToken,
@@ -600,16 +606,22 @@ export async function runCatalogSyncForCategory(
       (merchantName, errMsg) => {
         lastError = errMsg;
         console.error(`[catalog-sync:${category}] feed ${merchantName}:`, errMsg);
-      }
+      },
+      shouldStop
     );
 
-    // Nettoyage offres Awin disparues du feed
-    // Garde de sécurité : ne nettoyer que si le feed a retourné au moins 100 produits
-    // (évite de tout masquer si le feed Awin est temporairement vide/partiel/en erreur)
-    if (totalInserted + totalUpdated >= 100) {
+    const timedOut = shouldStop();
+
+    // Nettoyage offres Awin disparues du feed.
+    // Gardes de sécurité : (1) feed a retourné ≥100 produits, (2) sync NON interrompu par le budget temps.
+    // Sur un sync partiel, le cleanup masquerait à tort les produits pas encore re-synchronisés.
+    if (!timedOut && totalInserted + totalUpdated >= 100) {
       try {
         cleanupStats = await cleanupStaleOffersForCategory(supabase, category, 'awin', syncTime);
       } catch { /* non bloquant */ }
+    } else if (timedOut) {
+      lastError = (lastError ? lastError + ' | ' : '') + 'sync interrompu (budget temps 250s) — cleanup ignoré, reprise au prochain run';
+      console.warn(`[catalog-sync:${category}] budget temps atteint — cleanup ignoré`);
     }
   }
 
