@@ -84,7 +84,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${data.name} - Mes Poilus`,
     description: `Comparez les prix pour ${data.name}${data.brand ? ` de ${data.brand}` : ''}. Trouvez la meilleure offre chez nos marchands partenaires.`,
-    robots: { index: true, follow: true },
+    // noindex : descriptions copiées des flux affiliés (Awin/CJ) = contenu dupliqué/fin.
+    // On retire ces ~6000 fiches de l'index (qualité globale du site + AdSense) ; les liens
+    // restent suivis et l'affiliation fonctionne (les visiteurs y accèdent via /boutique).
+    robots: { index: false, follow: true },
   };
 }
 

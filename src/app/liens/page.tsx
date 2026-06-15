@@ -3,7 +3,6 @@ import { Article } from '@/types';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BookOpen, ArrowRight, Mail, Puzzle } from 'lucide-react';
-import AdBanner from '@/components/ui/AdBanner';
 
 const INSTA = 'https://www.instagram.com/mespoilusofficiel';
 const FB = 'https://www.facebook.com/profile.php?id=61589487954538';
@@ -140,9 +139,8 @@ export default async function LiensPage() {
         </a>
       </div>
 
-      {/* Pub AdSense en bas - bloc dédié "Mes Poilus - Liens - bas de page"
-          (s'affiche seulement si AdSense activé + cookies acceptés) */}
-      <AdBanner slot="6028658236" variant="display" className="mt-10 max-w-3xl mx-auto" />
+      {/* Pas de pub AdSense ici : /liens est une page de navigation (link-in-bio) → les annonces
+          y sont interdites par le règlement Google. La monétisation se fait dans les articles. */}
     </div>
   );
 }

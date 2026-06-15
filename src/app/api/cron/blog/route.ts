@@ -506,14 +506,19 @@ ${contextLines ? `\nContexte :\n${contextLines}\n` : ''}${metaDesc ? `Meta descr
 ${produitSection}
 ${promoSection}${breedPageSection}${relatedArticles.length ? `Articles récents ${animal} -intègre 1-2 liens internes si pertinent :\n${relatedArticles.map(a => `- [${a.title}](https://www.mespoilus.com/blog/${a.slug})`).join('\n')}\n` : ''}
 STRUCTURE OBLIGATOIRE :
-1. Introduction accrocheuse (2-3 phrases qui parlent directement au propriétaire)
-2. 3 à 4 sections avec titres H2 clairs et informatifs
-3. Conclusion avec un appel à l'action vers www.mespoilus.com/boutique ou www.mespoilus.com/adoption selon le sujet
+1. Introduction accrocheuse (2-3 phrases qui parlent directement au propriétaire, posent le problème et rassurent)
+2. 5 à 6 sections avec titres H2 clairs et informatifs, dont AU MOINS UNE qui apporte un angle original (ce que les autres articles ne disent pas : un vrai danger méconnu, une erreur fréquente, une nuance importante)
+3. Au moins une liste d'étapes pratiques numérotées (que faire concrètement)
+4. Une section "En résumé" + une phrase d'engagement finale (question au lecteur)
 
 CONSIGNES :
-- Entre 1000 et 1200 mots au total. IMPORTANT : la longueur doit venir de contenu RÉELLEMENT utile (sous-sections détaillées, exemples concrets, étapes pratiques, cas particuliers) - JAMAIS de remplissage ou de répétitions. Termine toujours tes phrases et l'article, ne coupe jamais au milieu.
-- Ton chaleureux, bienveillant, comme un ami expert
+- INTERDIT : aucun emoji dans l'article. INTERDIT : aucun tiret long (— ou –) ; utilise une ponctuation classique (virgule, deux-points, parenthèses) ou coupe la phrase.
+- Entre 1100 et 1400 mots au total. IMPORTANT : la longueur doit venir de contenu RÉELLEMENT utile (sous-sections détaillées, exemples concrets, étapes pratiques, cas particuliers) - JAMAIS de remplissage ou de répétitions. Termine toujours tes phrases et l'article, ne coupe jamais au milieu.
+- Ton chaleureux, bienveillant et PERSONNEL, comme un passionné d'animaux qui partage son expérience à un ami (utilise "je"/"nous" avec parcimonie, des observations concrètes, un point de vue)
 - Public : propriétaires francophones (Belgique, France, Suisse, Canada)
+- ORIGINALITÉ (crucial pour la qualité) : apporte un angle concret et spécifique (étapes détaillées, exemples vécus, cas particuliers, erreurs fréquentes à éviter) plutôt que des généralités qu'on lit partout. Le lecteur doit apprendre quelque chose de précis et actionnable.
+- EXPERTISE & SOURCES : sur les sujets santé/comportement, appuie-toi sur des références fiables (recommandations vétérinaires, associations reconnues) et rappelle de consulter un vétérinaire pour tout cas sérieux. N'invente JAMAIS de diplôme, de titre professionnel ni de fausse expérience clinique.
+- Glisse 1-2 exemples concrets ou mises en situation réelles pour rendre l'article vivant et unique.
 - Intègre au moins un lien interne : [notre boutique](https://www.mespoilus.com/boutique) ou [nos annonces d'adoption](https://www.mespoilus.com/adoption)
 - Ne jamais inventer de faits médicaux ou vétérinaires sans nuance
 - TITRE optimisé pour le CLIC : commence par le mot-clé principal, sois spécifique et promets un bénéfice clair (ex: "Mon chien tousse : 5 causes et quoi faire en urgence"). Évite les titres vagues.
