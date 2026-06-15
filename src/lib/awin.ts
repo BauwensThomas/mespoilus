@@ -195,7 +195,8 @@ async function parseCSVStreamingWithFlush(
   seenIds: Set<string>,
   batchSize: number,
   onFlush: (batch: AwinProduct[]) => Promise<void>,
-  onProgress?: (parsed: number) => void
+  onProgress?: (parsed: number) => void,
+  shouldStop?: () => boolean
 ): Promise<number> {
   const lines = text.split('\n');
   if (lines.length < 2) return 0;
@@ -211,6 +212,12 @@ async function parseCSVStreamingWithFlush(
     parsedLines++;
 
     if (onProgress && parsedLines % 500 === 0) onProgress(parsedLines);
+    // Garde de temps : si on approche du maxDuration, on flush le batch en cours et on stoppe.
+    if (shouldStop && parsedLines % 500 === 0 && shouldStop()) {
+      if (batch.length > 0) { await onFlush(batch); batch = []; }
+      console.warn(`[awin] arr\u00EAt anticip\u00E9 (budget temps) sur ${merchantName} apr\u00E8s ${parsedLines} lignes`);
+      return totalFromFeed;
+    }
 
     const vals = parseCSVLine(line);
     const p: Record<string, string> = {};
@@ -434,7 +441,8 @@ export async function fetchAwinProductsByCategory(
   targetCategory: AwinSyncCategory,
   onBatch: (products: AwinProduct[]) => Promise<void>,
   onProgress?: (synced: number, currentFeed: string) => Promise<void>,
-  onFeedError?: (merchantName: string, error: string) => void
+  onFeedError?: (merchantName: string, error: string) => void,
+  shouldStop?: () => boolean
 ): Promise<number> {
   const feeds = await getJoinedFeeds(publisherId, feedToken);
   if (!feeds.length) {
@@ -446,6 +454,12 @@ export async function fetchAwinProductsByCategory(
   let grandTotal = 0;
 
   for (const feed of feeds) {
+    // Garde de temps : ne pas démarrer un nouveau feed si le budget est épuisé (évite le timeout 300s Vercel).
+    if (shouldStop && shouldStop()) {
+      console.warn(`[awin:${targetCategory}] arrêt anticipé (budget temps) avant le feed ${feed['Advertiser Name']}`);
+      break;
+    }
+
     const feedUrl = feed['URL'];
     const merchantName = feed['Advertiser Name'];
     if (!feedUrl) continue;
@@ -467,7 +481,9 @@ export async function fetchAwinProductsByCategory(
           await onBatch(batch);
           grandTotal += batch.length;
           if (onProgress) await onProgress(grandTotal, merchantName);
-        }
+        },
+        undefined,
+        shouldStop
       );
 
       console.log(`[awin:${targetCategory}] ${merchantName}: ${count} produits matchés`);

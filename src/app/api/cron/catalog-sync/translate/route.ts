@@ -7,8 +7,23 @@ const BATCH_SIZE_NAMES = 30;
 const BATCH_SIZE_DESC = 5;
 const MAX_RETRIES = 4;
 
-// Marchands anglophones : leurs produits sont TOUJOURS traduits, jamais marqués "déjà FR"
+// Marchands anglophones : leurs produits sont TOUJOURS traduits (Pass 0), jamais marqués "déjà FR"
 const FORCE_MERCHANTS = ['CanadaPetCare', 'Puft', 'Tuft & Paw', 'EntirelyPets'];
+
+// Les marchands francophones (Amazon FR, Maxi Zoo FR/BE, Zooplus BE) ne sont JAMAIS traduits en bloc :
+// on ne traduit QUE les rares produits dont le nom contient du néerlandais (feed BE mixte FR/NL).
+// Tokens NL haute précision (quasi aucune collision avec le français).
+const NL_TOKENS = [
+  'kip', 'kattenbakvulling', 'klontvormende', 'hondenvoer', 'kattenvoer', 'natvoer', 'droogvoer',
+  'graanvrij', 'kalkoen', 'zalm', 'voor honden', 'voor katten', 'met kip', 'rijk aan', 'gevogelte',
+  'brokjes', 'brokken', 'snoepjes', 'lamsvlees', 'eend', 'konijn', 'hondenriem', 'kattensnacks',
+  'hondensnacks', 'gedroogd',
+];
+function isDutch(text: string | null | undefined): boolean {
+  if (!text) return false;
+  const n = text.toLowerCase();
+  return NL_TOKENS.some(t => n.includes(t));
+}
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -190,8 +205,9 @@ export async function GET(req: Request) {
     }
   }
 
-  // ─── Pass 1 : noms ────────────────────────────────────────────────────────
-  // Tous les produits sans name_fr (Claude détecte la langue et traduit si besoin)
+  // ─── Pass 1 : noms (marchands non-étrangers) ──────────────────────────────
+  // On ne traduit QUE les produits dont le nom contient du néerlandais.
+  // Tous les autres (français) gardent leur nom original : name_fr = name (aucun appel Claude).
 
   const { data: nameRows, error: nameError } = await supabase
     .from('products_catalog')
@@ -202,20 +218,23 @@ export async function GET(req: Request) {
 
   if (nameError) return NextResponse.json({ error: nameError.message }, { status: 500 });
 
-  for (let i = 0; i < (nameRows ?? []).length; i += BATCH_SIZE_NAMES) {
-    const batch = nameRows!.slice(i, i + BATCH_SIZE_NAMES);
+  const frenchNames = (nameRows ?? []).filter(r => !isDutch(r.name));
+  const dutchNames = (nameRows ?? []).filter(r => isDutch(r.name));
+
+  // Français : copie directe du nom original (jamais traduit)
+  for (const r of frenchNames) {
+    await supabase.from('products_catalog').update({ name_fr: r.name }).eq('id', r.id);
+  }
+
+  // Néerlandais : traduction Claude par batch
+  for (let i = 0; i < dutchNames.length; i += BATCH_SIZE_NAMES) {
+    const batch = dutchNames.slice(i, i + BATCH_SIZE_NAMES);
     try {
       const translations = await translateBatch(batch.map(r => r.name));
       for (let j = 0; j < batch.length; j++) {
-        // Ne met à jour que si Claude a réellement modifié le nom
-        const nameFr = translations[j] !== batch[j].name ? translations[j] : null;
-        if (nameFr) {
-          await supabase.from('products_catalog').update({ name_fr: nameFr }).eq('id', batch[j].id);
-          translatedNames++;
-        } else {
-          // Marque comme "déjà FR" pour ne plus y revenir
-          await supabase.from('products_catalog').update({ name_fr: batch[j].name }).eq('id', batch[j].id);
-        }
+        const nameFr = translations[j] && translations[j] !== batch[j].name ? translations[j] : batch[j].name;
+        await supabase.from('products_catalog').update({ name_fr: nameFr }).eq('id', batch[j].id);
+        translatedNames++;
       }
     } catch (e) {
       lastError = e instanceof Error ? e.message : 'Erreur inconnue';
@@ -232,14 +251,23 @@ export async function GET(req: Request) {
 
   const { data: descRawRows, error: descError } = await supabase
     .from('products_catalog')
-    .select('id, description')
+    .select('id, description, name')
     .not('description', 'is', null)
     .is('description_fr', null)
     .limit(200);
 
   if (descError) lastError = descError.message;
 
-  const descRows = descRawRows ?? [];
+  const allDescRows = descRawRows ?? [];
+
+  // Français (nom non-NL) : copie directe de la description originale
+  const frenchDescRows = allDescRows.filter(r => !isDutch(r.name));
+  for (const r of frenchDescRows) {
+    await supabase.from('products_catalog').update({ description_fr: r.description }).eq('id', r.id);
+  }
+
+  // Néerlandais : groupement + traduction
+  const descRows = allDescRows.filter(r => isDutch(r.name));
 
   // Grouper les produits par texte de description identique
   const groupsByDesc = new Map<string, string[]>(); // description → ids[]
