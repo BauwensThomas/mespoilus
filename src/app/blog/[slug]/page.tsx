@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale: 'fr_FR',
       publishedTime: article.published_at ?? undefined,
       modifiedTime: article.updated_at ?? undefined,
-      authors: ['Marie - Mes Poilus'],
+      authors: ['Marie & l\'équipe Mes Poilus'],
       tags: article.seo_keywords,
       images: ogImages,
     },
@@ -98,12 +98,17 @@ export default async function ArticlePage({ params }: Props) {
 
   let htmlContent = await marked(article.content, { gfm: true });
   // TOUS les liens d'un article s'ouvrent dans un NOUVEL ONGLET → le lecteur ne quitte jamais son article.
-  // 1. Liens EXTERNES (affiliés, sources, hors mespoilus.com) → rel d'affiliation.
+  // 1. Liens AFFILIÉS (marchands) → nouvel onglet + rel affiliation (sponsored nofollow).
   htmlContent = htmlContent.replace(
-    /<a href="(https?:\/\/(?!(?:www\.)?mespoilus\.com)[^"]+)"/gi,
-    '<a href="$1" target="_blank" rel="noopener noreferrer sponsored"'
+    /<a href="(https?:\/\/[^"]*(?:jdoqocy\.com|dpbolvw\.net|anrdoezrs\.net|tkqlhce\.com|kqzyfj\.com|awin1\.com|shareasale\.com|amazon\.|amzn\.to)[^"]*)"/gi,
+    '<a href="$1" target="_blank" rel="noopener noreferrer sponsored nofollow"'
   );
-  // 2. Tous les autres liens (internes : boutique, autres articles, adoption…) → nouvel onglet aussi.
+  // 2. Autres liens EXTERNES (sources/références citées par Marie) → nouvel onglet, citation propre.
+  htmlContent = htmlContent.replace(
+    /<a href="(https?:\/\/(?!(?:www\.)?mespoilus\.com)[^"]+)">/gi,
+    '<a href="$1" target="_blank" rel="noopener noreferrer">'
+  );
+  // 3. Liens INTERNES (boutique, autres articles, adoption…) → nouvel onglet aussi.
   htmlContent = htmlContent.replace(
     /<a href="([^"]+)">/gi,
     '<a href="$1" target="_blank" rel="noopener">'
@@ -140,7 +145,7 @@ export default async function ArticlePage({ params }: Props) {
     keywords: article.seo_keywords?.join(', '),
     datePublished: article.published_at ?? undefined,
     dateModified: article.updated_at ?? article.published_at ?? undefined,
-    author: { '@type': 'Person', name: 'Marie', url: `${appUrl}/agents/marie` },
+    author: { '@type': 'Organization', name: 'Marie & l\'équipe Mes Poilus', url: appUrl },
     publisher: { '@type': 'Organization', name: 'Mes Poilus', url: appUrl, logo: { '@type': 'ImageObject', url: `${appUrl}/icon.svg` } },
     mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl },
     inLanguage: 'fr',
@@ -259,8 +264,8 @@ export default async function ArticlePage({ params }: Props) {
                   <PenTool size={16} strokeWidth={1.5} className="text-orange-600" />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-gray-900">Marie</div>
-                  <div className="text-[10px] text-gray-500">Rédactrice</div>
+                  <div className="text-xs font-semibold text-gray-900">Marie &amp; l&apos;équipe Mes Poilus</div>
+                  <div className="text-[10px] text-gray-500">Rédaction</div>
                 </div>
               </div>
               {publishedDate && (
