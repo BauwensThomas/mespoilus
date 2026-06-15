@@ -74,6 +74,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(newUrl, { status: 301 });
   }
 
+  // 0b. Redirections 301 SEO : consolidation d'articles fins/dupliqués vers leur page de référence
+  // (évite la cannibalisation de mots-clés + transmet le jus SEO). Articles "chaleur" fusionnés
+  // vers canicule ; articles purement promotionnels redirigés vers la boutique.
+  const ARTICLE_REDIRECTS: Record<string, string> = {
+    '/blog/proteger-chien-chaleur-printemps': '/blog/canicule-chaleur-protection-chiens-chats',
+    '/blog/proteger-animaux-chaleur-30-degres': '/blog/canicule-chaleur-protection-chiens-chats',
+    '/blog/ouverture-boutique-ligne-mes-poilus': '/boutique',
+    '/blog/boutique-mes-poilus-6500-articles': '/boutique',
+  };
+  if (ARTICLE_REDIRECTS[pathname]) {
+    return NextResponse.redirect(new URL(ARTICLE_REDIRECTS[pathname], request.url), { status: 301 });
+  }
+
   // 1. Headers de sécurité sur toutes les réponses
   const response = NextResponse.next({ request });
   response.headers.set('X-Frame-Options', 'SAMEORIGIN');
