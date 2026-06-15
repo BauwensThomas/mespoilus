@@ -137,10 +137,17 @@ export async function GET(req: Request) {
 
     const { data: articles } = await supabase
       .from('articles')
-      .select('title')
+      .select('title, category, published_at')
       .order('published_at', { ascending: false })
-      .limit(30);
+      .limit(60);
     const recentTitles = (articles ?? []).map((a: { title: string }) => a.title);
+
+    // Thèmes déjà couverts pour CET animal sur les 30 derniers jours → interdits à Lucas.
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const animalRecentTitles = (articles ?? [])
+      .filter((a: { category: string; published_at: string | null }) =>
+        a.category === animal && !!a.published_at && a.published_at >= thirtyDaysAgo)
+      .map((a: { title: string }) => a.title);
 
     // Partenaires déjà mis en avant (colonne featured_partner -requiert migration_featured_partner.sql)
     let recentlyFeaturedPartners: string[] = [];
@@ -193,6 +200,10 @@ export async function GET(req: Request) {
     const recentContext = recentTitles.length
       ? recentTitles.map(t => `- ${t}`).join('\n')
       : 'Aucun article récent.';
+    // Bloc d'interdiction ciblé : thèmes déjà traités pour cet animal ces 30 derniers jours.
+    const animalThemesBlock = animalRecentTitles.length
+      ? `\nARTICLES DÉJÀ PUBLIÉS SUR LES ${animal.toUpperCase()} CES 30 DERNIERS JOURS (INTERDICTION ABSOLUE d'en reprendre le thème ou un angle proche) :\n${animalRecentTitles.map(t => `- ${t}`).join('\n')}\nTon sujet doit traiter un BESOIN DIFFÉRENT de tous ceux ci-dessus, et être un thème ACTUELLEMENT RECHERCHÉ sur Google (appuie-toi sur les données SEO/GSC/tendances ci-dessous).\n`
+      : '';
     const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
     // Rotation du type par animal : chaque animal cycle indépendamment à travers les 5 types
     let animalArticleCount = 0;
@@ -349,10 +360,19 @@ RACE_SLUG : AUCUN`,
         ].filter(Boolean).join('\n') + '\n\n'
       : '';
 
-    // Garde-fou anti-doublon : compare le sujet aux titres récents (Jaccard sur mots significatifs)
+    // Garde-fou anti-doublon : compare le sujet aux titres récents.
+    // Jaccard seul est trop faible pour "même sujet, formulation différente" (ex: deux articles
+    // "chien tousse ..."). On retire d'abord les mots génériques (animaux, mots-outils) puis on
+    // déclenche si Jaccard >= 0.34 OU si >= 2 mots-sujets significatifs (>= 5 lettres) sont communs.
+    const GENERIC_WORDS = new Set([
+      'chien', 'chiens', 'chiot', 'chiots', 'chat', 'chats', 'chaton', 'chatons', 'lapin', 'lapins',
+      'oiseau', 'oiseaux', 'rongeur', 'rongeurs', 'reptile', 'reptiles', 'animal', 'animaux',
+      'comment', 'pourquoi', 'quand', 'faire', 'votre', 'pour', 'avec', 'sans', 'tout', 'tous',
+      'meilleur', 'meilleurs', 'meilleure', 'meilleures', 'guide', 'conseils', 'astuces', 'choisir', 'vraiment',
+    ]);
     const subjectTooSimilar = (candidate: string, titles: string[]): string | null => {
       const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-        .replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 3);
+        .replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 3 && !GENERIC_WORDS.has(w));
       const cand = new Set(norm(candidate));
       if (cand.size === 0) return null;
       for (const t of titles) {
@@ -361,7 +381,8 @@ RACE_SLUG : AUCUN`,
         let inter = 0;
         for (const w of cand) if (tw.has(w)) inter++;
         const jaccard = inter / (cand.size + tw.size - inter);
-        if (jaccard >= 0.5) return t;
+        const sharedTopical = [...cand].filter(w => tw.has(w) && w.length >= 5).length;
+        if (jaccard >= 0.34 || sharedTopical >= 2) return t;
       }
       return null;
     };
@@ -373,7 +394,7 @@ RACE_SLUG : AUCUN`,
 
 ${typeInstructions[forcedType]}
 ${suggestionsContext ? `\n${suggestionsContext}\nCe sont les vraies recherches Google en ce moment sur les ${animal}. Utilise l'une d'elles comme sujet ou angle d'article.\n` : ''}${trendsContext && forcedType === 'trending' ? `\n${trendsContext}\nTendances générales du jour - si l'une peut être reliée aux ${animal}, c'est un excellent angle. Sinon, ignore-les.\n` : ''}${gscContext ? `\n${gscContext}\nUtilise ces données GSC pour orienter ton choix : privilégie les requêtes à fort potentiel (impressions élevées, mauvaise position ou CTR faible) en lien avec les ${animal}.\n` : ''}
-Articles déjà publiés (à ne pas dupliquer) :
+${animalThemesBlock}Autres articles déjà publiés (à ne pas dupliquer) :
 ${recentContext}${dupWarning}
 
 Retourne UNIQUEMENT :
