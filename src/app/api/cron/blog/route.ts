@@ -519,7 +519,11 @@ CONSIGNES :
 - ORIGINALITÉ (crucial pour la qualité) : apporte un angle concret et spécifique (étapes détaillées, exemples vécus, cas particuliers, erreurs fréquentes à éviter) plutôt que des généralités qu'on lit partout. Le lecteur doit apprendre quelque chose de précis et actionnable.
 - EXPERTISE & SOURCES : sur les sujets santé/comportement, appuie-toi sur des références fiables (recommandations vétérinaires, associations reconnues) et rappelle de consulter un vétérinaire pour tout cas sérieux. N'invente JAMAIS de diplôme, de titre professionnel ni de fausse expérience clinique.
 - Glisse 1-2 exemples concrets ou mises en situation réelles pour rendre l'article vivant et unique.
-- Intègre au moins un lien interne : [notre boutique](https://www.mespoilus.com/boutique) ou [nos annonces d'adoption](https://www.mespoilus.com/adoption)
+- LIENS OBLIGATOIRES dans le corps du texte, insérés NATURELLEMENT (jamais en bloc artificiel, sans alourdir la lecture) :
+  - un lien vers la boutique : [notre boutique](https://www.mespoilus.com/boutique) (ou la catégorie concernée, ex: /boutique?category=chats) ;
+  - un lien vers l'adoption, amené avec tact et seulement si c'est pertinent dans le contexte : [nos annonces d'adoption](https://www.mespoilus.com/adoption) ;
+  - 1 à 2 liens vers d'autres articles du blog quand c'est pertinent (utilise la liste "Articles récents" fournie plus haut, format [titre](lien)).
+  Ces liens doivent s'intégrer dans des phrases du texte, pas être collés à la fin.
 - Ne jamais inventer de faits médicaux ou vétérinaires sans nuance
 - TITRE optimisé pour le CLIC : commence par le mot-clé principal, sois spécifique et promets un bénéfice clair (ex: "Mon chien tousse : 5 causes et quoi faire en urgence"). Évite les titres vagues.
 - META DESCRIPTION : 150-155 caractères, donne envie de cliquer (bénéfice concret + légère curiosité), inclut le mot-clé principal.`;

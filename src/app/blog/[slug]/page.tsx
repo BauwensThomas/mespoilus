@@ -406,6 +406,15 @@ export default async function ArticlePage({ params }: Props) {
             </section>
           )}
 
+          {/* CTA adoption discret (présent sur tous les articles, sans alourdir le texte) */}
+          <Link href="/adoption" className="mt-10 flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-100 border border-orange-200 p-5 hover:shadow-md transition-shadow fade-up">
+            <div>
+              <p className="text-sm font-bold text-gray-900">Et si votre prochain compagnon vous attendait en refuge ?</p>
+              <p className="text-xs text-gray-600 mt-0.5">Découvrez nos animaux à adopter près de chez vous.</p>
+            </div>
+            <span className="shrink-0 text-sm font-semibold text-orange-700 whitespace-nowrap">Voir les adoptions &rarr;</span>
+          </Link>
+
           <footer className="mt-10 pt-6 border-t border-gray-200 flex items-center justify-between flex-wrap gap-4">
             <div className="text-xs text-gray-600">
               Article rédigé par Marie &amp; l&apos;équipe Mes Poilus

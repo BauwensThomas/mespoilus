@@ -82,7 +82,7 @@ export async function middleware(request: NextRequest) {
     '/blog/proteger-animaux-chaleur-30-degres': '/blog/canicule-chaleur-protection-chiens-chats',
     '/blog/ouverture-boutique-ligne-mes-poilus': '/boutique',
     '/blog/boutique-mes-poilus-6500-articles': '/boutique',
-    '/blog/alimentation-perruche-ondule-erreurs': '/blog/alimentation-perruche-ondule-guide-complet',
+    '/blog/alimentation-perruche-ondule-erreurs-a-eviter': '/blog/alimentation-perruche-ondule-guide-complet',
   };
   if (ARTICLE_REDIRECTS[pathname]) {
     return NextResponse.redirect(new URL(ARTICLE_REDIRECTS[pathname], request.url), { status: 301 });
