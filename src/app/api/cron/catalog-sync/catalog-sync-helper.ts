@@ -365,6 +365,25 @@ function extractCPCProductId(url: string): string | null {
   return m ? m[1] : null;
 }
 
+// Nettoie le bruit SEO des titres CanadaPetCare (og:title = titre de page).
+// Ex : "Advantage for Dogs : Buy Advantage for Dogs Online at lowest Price in US | CanadaPetCare.com" → "Advantage for Dogs"
+function cleanCPCTitle(raw: string): string {
+  if (!raw) return raw;
+  let s = raw.replace(/&amp;/g, '&').trim();
+  // Si " : " est suivi d'un segment marketing → garder la partie avant
+  const colon = s.search(/\s+:\s+/);
+  if (colon > 0 && /buy|acheter|canadapetcare|price|prix|online|en ligne/i.test(s.slice(colon))) {
+    s = s.slice(0, colon);
+  }
+  s = s.replace(/^(buy|acheter)\s+/i, '');
+  s = s.replace(/\s*[-|]\s*(fast delivery|livraison rapide).*$/i, '');
+  s = s.replace(/\s+(online\s+)?(at|chez)\s+canadapetcare\.com.*$/i, '');
+  s = s.replace(/\s*[-|]\s*canadapetcare\.com.*$/i, '');
+  s = s.replace(/\s+online\s+at\s+lowest\s+price.*$/i, '');
+  s = s.replace(/\s+(online|en ligne)\s*$/i, '');
+  return s.replace(/\s{2,}/g, ' ').replace(/\s*[-|]\s*$/, '').trim();
+}
+
 async function scrapeCPCProduct(url: string) {
   try {
     const res = await fetch(url, {
@@ -431,7 +450,7 @@ async function runCPCCatalogSync(
       const categories = detectCPCCategories(data.title);
       rows.push({
         id: `cj_${CPC_ADVERTISER_ID}_${productId}`,
-        name: data.title,
+        name: cleanCPCTitle(data.title),
         description: data.description || null,
         price: data.price,
         currency: 'USD',

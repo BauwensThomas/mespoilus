@@ -4,7 +4,9 @@ import { NextResponse } from 'next/server';
 export const maxDuration = 300;
 
 const BATCH_SIZE_NAMES = 30;
-const BATCH_SIZE_DESC = 5;
+// 1 description par appel : évite la troncature et le désalignement du tableau JSON
+// (les descriptions à traduire sont rares — seulement NL et marchands anglophones).
+const BATCH_SIZE_DESC = 1;
 const MAX_RETRIES = 4;
 
 // Marchands anglophones : leurs produits sont TOUJOURS traduits (Pass 0), jamais marqués "déjà FR"
@@ -13,16 +15,37 @@ const FORCE_MERCHANTS = ['CanadaPetCare', 'Puft', 'Tuft & Paw', 'EntirelyPets'];
 // Les marchands francophones (Amazon FR, Maxi Zoo FR/BE, Zooplus BE) ne sont JAMAIS traduits en bloc :
 // on ne traduit QUE les rares produits dont le nom contient du néerlandais (feed BE mixte FR/NL).
 // Tokens NL haute précision (quasi aucune collision avec le français).
+// Important : le feed BE fournit souvent un NOM néerlandais mais une DESCRIPTION déjà française.
+// On détecte donc la langue sur chaque champ séparément (nom en Pass 1, description en Pass 2).
 const NL_TOKENS = [
+  // marqueurs niveau NOM (mots produits)
   'kip', 'kattenbakvulling', 'klontvormende', 'hondenvoer', 'kattenvoer', 'natvoer', 'droogvoer',
   'graanvrij', 'kalkoen', 'zalm', 'voor honden', 'voor katten', 'met kip', 'rijk aan', 'gevogelte',
   'brokjes', 'brokken', 'snoepjes', 'lamsvlees', 'eend', 'konijn', 'hondenriem', 'kattensnacks',
   'hondensnacks', 'gedroogd',
+  // marqueurs niveau DESCRIPTION (fragments de phrases néerlandaises)
+  'het recept', 'bevat geen', 'diervoeder', 'zonder toegevoegde', 'vers vlees', 'geschikt voor',
+  'de voordelen', 'kunstmatige', 'smaakstoffen', 'op een rij', 'spiervlees', 'zorgen voor',
 ];
 function isDutch(text: string | null | undefined): boolean {
   if (!text) return false;
   const n = text.toLowerCase();
   return NL_TOKENS.some(t => n.includes(t));
+}
+
+// Détecteur NL pour les DESCRIPTIONS (texte long) : compte les mots-outils néerlandais
+// fréquents et absents du français. Un texte français ne dépasse jamais ce seuil.
+const NL_WORDS = [
+  ' het ', ' een ', ' zijn ', ' wordt ', ' worden ', ' deze ', ' ook ', ' naar ', ' bevat ',
+  ' maar ', ' uit ', ' hij ', ' werd ', ' heeft ', ' kan ', ' niet ', ' geen ', ' veel ',
+  ' meer ', ' met ', ' voor ', ' van ', ' aan ', ' zonder ', ' wij ', ' onze ', ' bij ',
+];
+function isDutchDescription(text: string | null | undefined): boolean {
+  if (!text) return false;
+  const n = ' ' + text.toLowerCase() + ' ';
+  let score = 0;
+  for (const w of NL_WORDS) if (n.includes(w)) score++;
+  return score >= 4;
 }
 
 async function sleep(ms: number) {
@@ -260,14 +283,16 @@ export async function GET(req: Request) {
 
   const allDescRows = descRawRows ?? [];
 
-  // Français (nom non-NL) : copie directe de la description originale
-  const frenchDescRows = allDescRows.filter(r => !isDutch(r.name));
+  // La langue de la DESCRIPTION est indépendante de celle du nom (le feed BE fournit
+  // souvent une description déjà française sur un produit au nom néerlandais).
+  // Français : copie directe de la description originale (aucun appel Claude, pas de troncature).
+  const frenchDescRows = allDescRows.filter(r => !isDutchDescription(r.description));
   for (const r of frenchDescRows) {
     await supabase.from('products_catalog').update({ description_fr: r.description }).eq('id', r.id);
   }
 
   // Néerlandais : groupement + traduction
-  const descRows = allDescRows.filter(r => isDutch(r.name));
+  const descRows = allDescRows.filter(r => isDutchDescription(r.description));
 
   // Grouper les produits par texte de description identique
   const groupsByDesc = new Map<string, string[]>(); // description → ids[]
