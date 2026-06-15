@@ -96,6 +96,29 @@ export default async function ArticlePage({ params }: Props) {
   const article = await getArticle(slug);
   if (!article) notFound();
 
+  // Produits + articles liés (même logique que les fiches races) : maillage interne + monétisation.
+  let relProducts: { catalog_id: string; name: string; image_url: string | null; price: number; currency: string | null; merchant_name: string; affiliate_url: string }[] = [];
+  let relArticles: { id: string; title: string; slug: string; image_url: string | null }[] = [];
+  try {
+    const supRel = createAdminClient();
+    const [{ data: p }, { data: a }] = await Promise.all([
+      supRel.from('catalog_best_offer')
+        .select('catalog_id, name, image_url, price, currency, merchant_name, affiliate_url')
+        .or(`category.eq.${article.category},categories.cs.{${article.category}}`)
+        .order('price', { ascending: true })
+        .limit(4),
+      supRel.from('articles')
+        .select('id, title, slug, image_url')
+        .eq('status', 'published')
+        .eq('category', article.category)
+        .neq('slug', slug)
+        .order('published_at', { ascending: false })
+        .limit(3),
+    ]);
+    relProducts = (p ?? []) as typeof relProducts;
+    relArticles = (a ?? []) as typeof relArticles;
+  } catch { /* le contenu principal reste visible */ }
+
   let htmlContent = await marked(article.content, { gfm: true });
   // TOUS les liens d'un article s'ouvrent dans un NOUVEL ONGLET → le lecteur ne quitte jamais son article.
   // 1. Liens AFFILIÉS (marchands) → nouvel onglet + rel affiliation (sponsored nofollow).
@@ -329,9 +352,63 @@ export default async function ArticlePage({ params }: Props) {
 
           <AdBanner slot="1266534148" variant="in-article" className="my-10" />
 
+          {/* Produits recommandés (catégorie de l'article) */}
+          {relProducts.length > 0 && (
+            <section className="mt-12 space-y-3 fade-up">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Produits pour {(CATEGORY_LABELS[article.category] ?? 'vos animaux').toLowerCase()}</h2>
+                <Link href={`/boutique?category=${article.category}`} className="text-sm text-orange-600 hover:underline">Voir tout &rarr;</Link>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger-container">
+                {relProducts.map((p) => (
+                  <a key={p.catalog_id} href={p.affiliate_url} target="_blank" rel="noopener noreferrer sponsored nofollow" className="stagger-child bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                    <div className="relative h-28 bg-gray-50">
+                      {p.image_url ? (
+                        <Image src={p.image_url} alt={p.name} fill unoptimized className="object-contain p-2" sizes="200px" />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center"><PawPrint className="text-gray-300" size={28} /></div>
+                      )}
+                    </div>
+                    <div className="p-2.5 flex flex-col flex-1">
+                      <p className="text-xs text-gray-700 font-medium line-clamp-2 flex-1">{p.name}</p>
+                      <p className="text-sm font-bold text-gray-900 mt-1">{p.price.toFixed(2)} {p.currency || '€'}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5 truncate">{p.merchant_name}</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Articles liés (maillage interne) */}
+          {relArticles.length > 0 && (
+            <section className="mt-10 space-y-3 fade-up">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">À lire aussi</h2>
+                <Link href={`/blog/${article.category}`} className="text-sm text-orange-600 hover:underline">Voir tout &rarr;</Link>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-container">
+                {relArticles.map((ra) => (
+                  <Link key={ra.id} href={`/blog/${ra.slug}`} className="stagger-child bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                    <div className="relative h-40">
+                      {ra.image_url ? (
+                        <Image src={ra.image_url} alt={ra.title} fill unoptimized className="object-cover" sizes="(max-width:640px) 100vw, 33vw" />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center"><PawPrint className="text-orange-300" size={32} /></div>
+                      )}
+                    </div>
+                    <div className="p-3 flex-1">
+                      <p className="text-sm font-semibold text-gray-900 line-clamp-3">{ra.title}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
           <footer className="mt-10 pt-6 border-t border-gray-200 flex items-center justify-between flex-wrap gap-4">
             <div className="text-xs text-gray-600">
-              Article rédigé par Marie
+              Article rédigé par Marie &amp; l&apos;équipe Mes Poilus
             </div>
             <Link href="/blog" className="text-sm text-orange-600 hover:text-orange-500 font-medium transition-colors">
               ← Retour au blog
