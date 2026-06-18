@@ -7,6 +7,7 @@ import { PARTENAIRES } from '@/lib/partenaires';
 import { getGscInsights, formatGscForLucas } from '@/lib/gsc';
 import { getDailyTrends, formatTrendsForLucas, getAnimalSuggestions, formatSuggestionsForLucas, type TrendingItem } from '@/lib/trends';
 import { generateFaq } from '@/lib/generate-faq';
+import { pingIndexNow } from '@/lib/indexnow';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -541,7 +542,7 @@ CONSIGNES :
 - EXPERTISE & SOURCES : sur les sujets santé/comportement, appuie-toi sur des références fiables (recommandations vétérinaires, associations reconnues) et rappelle de consulter un vétérinaire pour tout cas sérieux. N'invente JAMAIS de diplôme, de titre professionnel ni de fausse expérience clinique.
 - Glisse 1-2 exemples concrets ou mises en situation réelles pour rendre l'article vivant et unique.
 - LIENS OBLIGATOIRES dans le corps du texte, insérés NATURELLEMENT (jamais en bloc artificiel, sans alourdir la lecture) :
-  - un lien vers la boutique : [notre boutique](https://www.mespoilus.com/boutique) (ou la catégorie concernée, ex: /boutique?category=chats) ;
+  - OBLIGATOIRE (vérifié automatiquement) : au moins un lien vers la boutique ou un produit. Lien boutique : [notre boutique](https://www.mespoilus.com/boutique) ou la catégorie concernée (ex: /boutique?category=${animal}). Un article SANS lien boutique/produit est invalide ;
   - un lien vers l'adoption, amené avec tact et seulement si c'est pertinent dans le contexte : [nos annonces d'adoption](https://www.mespoilus.com/adoption) ;
   - 1 à 2 liens vers d'autres articles du blog quand c'est pertinent (utilise la liste "Articles récents" fournie plus haut, format [titre](lien)).
   Ces liens doivent s'intégrer dans des phrases du texte, pas être collés à la fin.
@@ -603,6 +604,32 @@ CONSIGNES :
           }
         }
       } catch { /* non bloquant */ }
+    }
+
+    // Garde-fou maillage boutique : tout article DOIT contenir au moins un lien boutique ou produit.
+    // Si Marie l'a oublié malgré le prompt, on injecte un lien vers la boutique de la catégorie
+    // juste avant le dernier paragraphe. Non bloquant.
+    if (articleSlug) {
+      try {
+        const { data: art } = await supabase.from('articles').select('content').eq('slug', articleSlug).maybeSingle();
+        const content = art?.content ?? '';
+        const hasShopLink = /\]\([^)]*(\/boutique|awin1\.com|amazon\.|dpbolvw|jdoqocy|kqzyfj)/i.test(content);
+        if (content && !hasShopLink) {
+          const boutiqueUrl = `https://www.mespoilus.com/boutique?category=${animal}`;
+          const sentence = `Pour trouver le matériel et les produits adaptés, jetez un oeil à [notre boutique ${animal}](${boutiqueUrl}).`;
+          const lines = content.split('\n');
+          let idx = lines.length - 1;
+          while (idx > 0 && !lines[idx].trim()) idx--; // dernier paragraphe non vide
+          lines.splice(idx, 0, '', sentence);
+          await supabase.from('articles').update({ content: lines.join('\n') }).eq('slug', articleSlug);
+          console.log('[Cron1] Lien boutique injecte (garde-fou maillage)');
+        }
+      } catch { /* non bloquant */ }
+    }
+
+    // IndexNow : notifie Bing/Yandex de la nouvelle URL pour une indexation quasi instantanée.
+    if (articleSlug) {
+      await pingIndexNow(`https://www.mespoilus.com/blog/${articleSlug}`);
     }
 
     // Sauvegarder le partenaire mis en avant (requiert migration_featured_partner.sql)
