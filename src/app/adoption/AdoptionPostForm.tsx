@@ -257,7 +257,6 @@ export default function AdoptionPostForm() {
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError]   = useState('');
-  const [uploadProgress, setUploadProgress] = useState(0);
   const inputRef    = useRef<HTMLInputElement>(null);
   const phoneDropRef = useRef<HTMLDivElement>(null);
   const [phoneOpen, setPhoneOpen]     = useState(false);
@@ -300,31 +299,27 @@ export default function AdoptionPostForm() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (photos.length < 2) { setError("Veuillez ajouter au moins 2 photos de l'animal."); return; }
-    setStatus('loading'); setError(''); setUploadProgress(0);
+    setStatus('loading'); setError('');
     try {
-      const photoUrls: string[] = [];
-      for (let i = 0; i < photos.length; i++) {
-        const fd = new FormData();
-        fd.append('file', photos[i].file);
-        const res  = await fetch('/api/adoption/upload', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? 'Erreur upload photo');
-        photoUrls.push(data.url);
-        setUploadProgress(i + 1);
-      }
       const { country, customCountry, region, indicatif, contact_phone, age_number, age_unit, ...rest } = form;
       const resolvedCountry = country === 'Autre' ? (customCountry.trim() || 'Autre') : country;
-      const res = await fetch('/api/adoption/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...rest,
-          age: `${age_number} ${age_unit}`,
-          region: region ? `${region}, ${resolvedCountry}` : resolvedCountry,
-          contact_phone: `${indicatif} ${contact_phone.trim().replace(/^0+/, '')}`,
-          photo_urls: photoUrls,
-        }),
-      });
+
+      // Un seul envoi multipart : les photos ne sont uploadées côté serveur QUE si
+      // l'annonce est valide et créée (upload atomique → zéro photo orpheline).
+      const fd = new FormData();
+      fd.append('poster_name', rest.poster_name);
+      fd.append('email', rest.email);
+      fd.append('animal_type', rest.animal_type);
+      fd.append('breed', rest.breed);
+      fd.append('gender', rest.gender);
+      fd.append('description', rest.description);
+      fd.append('reason', rest.reason);
+      fd.append('age', `${age_number} ${age_unit}`);
+      fd.append('region', region ? `${region}, ${resolvedCountry}` : resolvedCountry);
+      fd.append('contact_phone', `${indicatif} ${contact_phone.trim().replace(/^0+/, '')}`);
+      photos.forEach(p => fd.append('photos', p.file));
+
+      const res = await fetch('/api/adoption/submit', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? 'Erreur'); setStatus('error'); return; }
       setStatus('success'); setForm(EMPTY); setPhotos([]);
@@ -547,9 +542,7 @@ export default function AdoptionPostForm() {
       <button type="submit" disabled={status === 'loading'}
         className="bg-amber-500 hover:bg-amber-400 text-black font-semibold px-6 py-2.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
         {status === 'loading' && <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />}
-        {status === 'loading'
-          ? uploadProgress < photos.length ? `Upload photo ${uploadProgress + 1} / ${photos.length}…` : 'Envoi…'
-          : "Soumettre l'annonce"}
+        {status === 'loading' ? 'Envoi…' : "Soumettre l'annonce"}
       </button>
     </form>
   );
