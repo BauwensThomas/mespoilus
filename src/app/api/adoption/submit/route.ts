@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import sharp from 'sharp';
+import { randomUUID } from 'crypto';
 import { createAdminClient } from '@/lib/supabase/server';
 import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 import { sendEmail } from '@/lib/resend';
 import { emailWrapper } from '@/lib/cron-email';
+
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5 Mo
 
 export async function POST(req: NextRequest) {
   const ip = getClientIP(req);
@@ -13,9 +20,21 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { poster_name, email, animal_type, breed, age, gender, region, description, reason, contact_phone, photo_urls } =
-      await req.json();
+    const formData = await req.formData();
+    const get = (k: string) => (formData.get(k) as string | null) ?? '';
+    const poster_name = get('poster_name');
+    const email = get('email');
+    const animal_type = get('animal_type');
+    const breed = get('breed');
+    const age = get('age');
+    const gender = get('gender');
+    const region = get('region');
+    const description = get('description');
+    const reason = get('reason');
+    const contact_phone = get('contact_phone');
+    const photos = formData.getAll('photos').filter((p): p is File => p instanceof File);
 
+    // ── Validation des champs texte (AVANT tout upload) ───────────────────────
     if (!poster_name?.trim())
       return NextResponse.json({ error: 'Prénom requis' }, { status: 400 });
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
@@ -32,12 +51,62 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Raison du don requise (min. 10 caractères)' }, { status: 400 });
     if (!contact_phone?.trim())
       return NextResponse.json({ error: 'Numéro de téléphone requis' }, { status: 400 });
-    if (!Array.isArray(photo_urls) || photo_urls.length < 2)
+
+    // ── Validation des photos (AVANT upload) ──────────────────────────────────
+    if (photos.length < 2)
       return NextResponse.json({ error: 'Minimum 2 photos requises' }, { status: 400 });
-    if (photo_urls.length > 5)
+    if (photos.length > 5)
       return NextResponse.json({ error: '5 photos maximum' }, { status: 400 });
+    for (const file of photos) {
+      if (!file.type.startsWith('image/'))
+        return NextResponse.json({ error: 'Seules les images sont acceptées' }, { status: 400 });
+      if (file.size > MAX_PHOTO_SIZE)
+        return NextResponse.json({ error: 'Une photo dépasse 5 Mo' }, { status: 400 });
+    }
 
     const supabase = createAdminClient();
+
+    // ── Upload des photos UNIQUEMENT après validation complète ────────────────
+    // (conversion JPEG + auto-rotation EXIF + redimensionnement). Si quoi que ce
+    // soit échoue ensuite, on supprime les fichiers déjà uploadés (rollback) →
+    // plus aucune photo orpheline possible.
+    const uploadedPaths: string[] = [];
+    const photoUrls: string[] = [];
+    try {
+      for (const file of photos) {
+        const original = Buffer.from(await file.arrayBuffer());
+        let buffer: Buffer = original;
+        let contentType = file.type;
+        let ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase();
+        try {
+          buffer = await sharp(original)
+            .rotate()
+            .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+            .jpeg({ quality: 82, progressive: true })
+            .toBuffer();
+          contentType = 'image/jpeg';
+          ext = 'jpg';
+        } catch {
+          // format exotique non décodable par sharp : on garde l'original
+        }
+
+        const path = `${randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('adoption-photos')
+          .upload(path, buffer, { contentType, upsert: false });
+        if (upErr) throw upErr;
+
+        uploadedPaths.push(path);
+        const { data: { publicUrl } } = supabase.storage.from('adoption-photos').getPublicUrl(path);
+        photoUrls.push(publicUrl);
+      }
+    } catch (upErr) {
+      if (uploadedPaths.length) await supabase.storage.from('adoption-photos').remove(uploadedPaths);
+      console.error('[adoption:submit] upload error:', upErr);
+      return NextResponse.json({ error: "Erreur lors de l'upload des photos" }, { status: 500 });
+    }
+
+    // ── Insertion de l'annonce ────────────────────────────────────────────────
     const { error } = await supabase.from('adoption_posts').insert({
       poster_name: poster_name.trim(),
       email: email.toLowerCase().trim(),
@@ -49,10 +118,12 @@ export async function POST(req: NextRequest) {
       description: description.trim(),
       reason: reason.trim(),
       contact_info: contact_phone?.trim() || null,
-      photo_urls,
+      photo_urls: photoUrls,
     });
 
     if (error) {
+      // Rollback : l'annonce n'a pas été créée → on retire les photos uploadées
+      await supabase.storage.from('adoption-photos').remove(uploadedPaths);
       console.error('[adoption:submit]', error);
       return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
     }
