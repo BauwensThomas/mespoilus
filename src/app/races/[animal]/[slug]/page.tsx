@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!data) return {};
   return {
     title: `${data.name} - Caractère, Santé, Entretien | Mes Poilus`,
-    description: data.content?.excerpt ?? `Tout sur le ${data.name} : caractère, santé, entretien et conseils.`,
+    description: data.content?.excerpt ?? `Fiche complète du ${data.name} : caractère, tempérament, santé, alimentation, toilettage et conseils pratiques. Tout ce qu'il faut savoir avant l'adoption.`,
   };
 }
 
