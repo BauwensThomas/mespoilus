@@ -296,6 +296,34 @@ export async function GET(req: Request) {
       .map(p => p.affiliate_url ? `- ${p.name} | lien : ${p.affiliate_url}${p.image_url ? ` | image : ${p.image_url}` : ''}${ratingStr(p)}` : `- ${p.name}`)
       .join('\n');
 
+    // ─── Diversité des espèces (TOUS les types) ──────────────────────────────
+    // Empêche Lucas de retomber toujours sur la même espèce (ex: gecko pour les reptiles).
+    // On liste les espèces déjà traitées récemment (à éviter) + des espèces encore peu couvertes.
+    let speciesDiversityBlock = '';
+    try {
+      const animalSingularDiv: Record<string, string> = {
+        chiens: 'chien', chats: 'chat', oiseaux: 'oiseau', rongeurs: 'rongeur', reptiles: 'reptile',
+      };
+      const { data: speciesRows } = await supabase
+        .from('breeds')
+        .select('name')
+        .eq('animal', animalSingularDiv[animal] ?? animal)
+        .eq('status', 'published')
+        .limit(200);
+      const speciesNames = (speciesRows ?? []).map((r: { name: string }) => r.name).filter(Boolean);
+      if (speciesNames.length > 0) {
+        const titlesLc = animalRecentTitles.map(t => t.toLowerCase());
+        const isCovered = (name: string) => {
+          const n = name.toLowerCase();
+          const head = n.split(/[\s(]/)[0]; // 1er mot (ex: "gecko")
+          return titlesLc.some(t => t.includes(n) || (head.length >= 5 && t.includes(head)));
+        };
+        const covered = speciesNames.filter(isCovered);
+        const uncovered = speciesNames.filter(n => !isCovered(n));
+        speciesDiversityBlock = `\nDIVERSITÉ DES ESPÈCES (important) : varie les espèces de ${animal}, n'écris pas sans cesse sur la même.${covered.length ? ` Espèces DÉJÀ traitées récemment, à NE PAS reprendre : ${covered.join(', ')}.` : ''}${uncovered.length ? ` Privilégie une espèce encore peu/pas couverte, par exemple : ${uncovered.slice(0, 15).join(', ')}.` : ''}\n`;
+      }
+    } catch { /* non bloquant */ }
+
     const typeInstructions: Record<ArticleType, string> = {
       trending: `TYPE IMPOSÉ : TRENDING
 Trouve un sujet que les propriétaires de ${animal} recherchent ACTIVEMENT sur Google EN CE MOMENT.
@@ -395,7 +423,7 @@ RACE_SLUG : AUCUN`,
 
 ${typeInstructions[forcedType]}
 ${suggestionsContext ? `\n${suggestionsContext}\nCe sont les vraies recherches Google en ce moment sur les ${animal}. Utilise l'une d'elles comme sujet ou angle d'article.\n` : ''}${trendsContext && forcedType === 'trending' ? `\n${trendsContext}\nTendances générales du jour - si l'une peut être reliée aux ${animal}, c'est un excellent angle. Sinon, ignore-les.\n` : ''}${gscContext ? `\n${gscContext}\nUtilise ces données GSC pour orienter ton choix : privilégie les requêtes à fort potentiel (impressions élevées, mauvaise position ou CTR faible) en lien avec les ${animal}.\n` : ''}
-${animalThemesBlock}Autres articles déjà publiés (à ne pas dupliquer) :
+${animalThemesBlock}${speciesDiversityBlock}Autres articles déjà publiés (à ne pas dupliquer) :
 ${recentContext}${dupWarning}
 
 Retourne UNIQUEMENT :
