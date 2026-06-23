@@ -43,7 +43,7 @@ export default function FavorisPage() {
 
         {/* Header avec animation */}
         <div className="flex items-center gap-3 mb-4 fade-up">
-          <Link href="/boutique" className="text-gray-400 hover:text-orange-600 transition-colors">
+          <Link href="/boutique" aria-label="Retour à la boutique" className="text-gray-400 hover:text-orange-600 transition-colors">
             <ArrowLeft size={20} strokeWidth={1.5} />
           </Link>
           <div className="flex items-center gap-2">

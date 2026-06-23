@@ -4,7 +4,7 @@ import CookieResetButton from '@/components/ui/CookieResetButton';
 
 export const metadata: Metadata = {
   title: 'Politique de cookies',
-  description: 'Politique d\'utilisation des cookies de Mes Poilus, conforme au RGPD.',
+  description: 'Politique d\'utilisation des cookies de Mes Poilus : cookies analytiques, publicitaires et de session. Gestion de vos préférences conforme au RGPD.',
   robots: { index: true, follow: false },
   alternates: { canonical: 'https://www.mespoilus.com/cookies' },
 };

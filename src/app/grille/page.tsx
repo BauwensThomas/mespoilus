@@ -5,7 +5,7 @@ import GrilleResults from './_components/GrilleResults';
 import { computeGrilleResults } from '@/lib/grille-finish';
 import ClientWrapper from '@/components/animations/ClientWrapper';
 
-const DESCRIPTION = 'Achète des pixels pour révéler une photo mystère, devine la race de l\'animal en premier et gagne un cadeau. Une partie des recettes est reversée à un refuge animalier ou une association.';
+const DESCRIPTION = 'Achète des pixels, révèle la photo mystère et devine la race de l\'animal. Une partie des recettes est reversée à un refuge animalier partenaire.';
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = createAdminClient();
