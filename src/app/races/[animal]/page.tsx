@@ -64,7 +64,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
       {/* Header avec animation */}
       <div className="fade-up">
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">
-          {ANIMAL_LABEL[animalType]}
+          Races de {ANIMAL_LABEL[animalType].toLowerCase()}
         </h1>
         <p className="text-gray-500 text-sm">Fiches races : caractère, santé, entretien</p>
       </div>

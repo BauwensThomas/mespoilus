@@ -393,6 +393,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
           </Suspense>
 
           <div className="flex-1 min-w-0">
+            <h2 className="sr-only">Produits disponibles</h2>
             {items.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-2xl border border-gray-200 fade-up">
                 <p className="text-gray-500 font-medium text-lg">Aucun produit trouve</p>
