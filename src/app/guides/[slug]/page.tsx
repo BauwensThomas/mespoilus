@@ -172,7 +172,7 @@ export default async function GuidePage({ params }: Props) {
 
           {/* Section informationnelle */}
           <div className="fade-up space-y-4 text-sm text-gray-600 leading-relaxed text-center">
-            <h2 className="text-lg font-bold text-gray-900">Comment utiliser ce guide ?</h2>
+            <p className="text-base font-bold text-gray-900">Comment utiliser ce guide ?</p>
             <p>
               Ce guide PDF gratuit est conçu pour être téléchargé, imprimé ou consulté sur smartphone. Il rassemble les informations essentielles sous forme de checklist ou de fiche pratique, pour que vous n&apos;ayez pas à chercher sur plusieurs sites différents. Entrez simplement votre adresse email et vous recevez le lien de téléchargement directement dans votre boite de réception.
             </p>

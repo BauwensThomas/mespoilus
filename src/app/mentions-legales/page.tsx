@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Mentions légales du site',
-  description: 'Mentions légales de Mes Poilus conformes au droit belge.',
+  description: 'Mentions légales de Mes Poilus, site belge de conseils animaux : éditeur, hébergeur, propriété intellectuelle et responsabilité.',
   robots: { index: true, follow: false },
   alternates: { canonical: 'https://www.mespoilus.com/mentions-legales' },
 };

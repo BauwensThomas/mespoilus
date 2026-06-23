@@ -44,12 +44,18 @@ export default async function GrillesHistoriquePage() {
           <span className="text-orange-600 text-sm font-semibold uppercase tracking-widest">Historique</span>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 glow-text">Les grilles passées</h1>
           <p className="text-gray-600 mt-3">Les animaux révélés et leurs gagnants. Merci à tous les participants !</p>
-          <div className="mt-6 text-center space-y-3 text-sm text-gray-600 leading-relaxed">
+          <div className="mt-6 text-center space-y-3 text-sm text-gray-600 leading-relaxed max-w-2xl mx-auto">
             <p>
-              Chaque Grille Mystère cache un animal secret derrière une grille de pixels. Les participants révèlent des cases et tentent de deviner l&apos;espèce et la race avant la fin. A chaque partie terminée, une partie des participations est reversée à un refuge partenaire : jouer, c&apos;est soutenir concrètement les animaux dans le besoin.
+              Chaque Grille Mystère cache un animal secret derrière une grille de pixels. Les participants révèlent des cases une par une et tentent de deviner l&apos;espèce et la race avant que la grille soit complètement dévoilée. Plus vous révélez tôt, plus votre score est élevé. A chaque partie terminée, une partie des participations est reversée à un refuge partenaire : jouer, c&apos;est soutenir concrètement les animaux dans le besoin.
             </p>
             <p>
-              Cette page rassemble l&apos;historique de toutes les grilles terminées : l&apos;animal révélé, les gagnants du jeu de devinette, et le montant reversé au refuge. Vous pouvez participer à la grille en cours sur <Link href="/grille" className="text-orange-600 hover:underline">la page Grille Mystère</Link>.
+              Cette page rassemble l&apos;historique de toutes les grilles terminées : l&apos;animal révélé, les gagnants du jeu de devinette, et le montant reversé au refuge. Chaque grille met en scène une espèce différente : chien, chat, lapin, perroquet, reptile ou rongeur. Les races les plus rares et les moins connues font souvent les meilleures surprises.
+            </p>
+            <p>
+              Vous pouvez participer à la grille en cours sur <Link href="/grille" className="text-orange-600 hover:underline">la page Grille Mystère</Link>. Une nouvelle grille est lancée régulièrement. Si vous avez manqué les dernières éditions, consultez cet historique pour voir les animaux révélés et les scores des participants. Les refuges partenaires sont sélectionnés pour leur sérieux et leur transparence sur l&apos;utilisation des fonds.
+            </p>
+            <p>
+              Chaque euro reversé contribue directement aux soins vétérinaires, à l&apos;alimentation et à la stérilisation des animaux en attente d&apos;adoption. Jouer à la Grille Mystère, c&apos;est une façon ludique et gratuite de participer à cette chaine de solidarité.
             </p>
           </div>
           {totalReverseCents > 0 && (
