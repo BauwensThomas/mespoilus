@@ -59,6 +59,26 @@ const DAILY_CRONS = [
   { label: 'Adoption cleanup',             pattern: '[Adoption cleanup]',             hour: '03h', agent: 'Thomas' },
 ];
 
+// Crons RELANÇABLES en cas d'erreur/absence : uniquement les crons IDEMPOTENTS (upsert/dedup).
+// On EXCLUT volontairement blog / social / newsletter / races / finance / securite / prenoms /
+// adoption-social : les relancer générerait des doublons d'articles/posts ou serait inutile.
+const RETRYABLE_ROUTES: Record<string, string> = {
+  'Catalog sync chiens':          '/api/cron/catalog-sync/chiens',
+  'Catalog sync chats':           '/api/cron/catalog-sync/chats',
+  'Catalog sync oiseaux':         '/api/cron/catalog-sync/oiseaux',
+  'Catalog sync rongeurs':        '/api/cron/catalog-sync/rongeurs',
+  'Catalog sync reptiles':        '/api/cron/catalog-sync/reptiles',
+  'Catalog sync livres':          '/api/cron/catalog-sync/livres',
+  'Catalog sync general':         '/api/cron/catalog-sync/general',
+  'Catalog sync canada-pet-care': '/api/cron/catalog-sync/canada-pet-care',
+  'Dedup EAN':                    '/api/cron/catalog-sync/dedup-ean',
+  'Dedup image':                  '/api/cron/catalog-sync/dedup-image',
+  'Dedup titre':                  '/api/cron/catalog-sync/dedup-title',
+  'Traduction pass 1':            '/api/cron/catalog-sync/translate',
+  'Classify products':            '/api/cron/classify-products',
+  'Adoption cleanup':             '/api/cron/adoption-cleanup',
+};
+
 // Le catalogue tourne le lundi (dow === 1)
 const isCatalogDay = (dow: number) => dow === 1;
 
@@ -366,5 +386,40 @@ export async function GET(req: Request) {
     status: 'success',
   });
 
-  return NextResponse.json({ ok: true, total: entries.length, missing: missingList.map(m => m.label) });
+  // ─── Relance auto des crons idempotents en erreur ou manquants ────────────
+  // 2e chance le soir même aux crons attendus aujourd'hui qui ont échoué ou n'ont
+  // pas tourné (sync/dedup/traduction/classify/adoption-cleanup). Chaque relance
+  // tourne dans sa propre invocation Vercel ; on n'attend pas sa fin.
+  const retryRoutes = [...new Set(
+    expectedCrons
+      .filter(ec => {
+        const match = entries.find(l => cronMatches(l.action, ec.pattern));
+        const failed = !match || match.status === 'error';
+        return failed && RETRYABLE_ROUTES[ec.label];
+      })
+      .map(ec => RETRYABLE_ROUTES[ec.label])
+  )];
+
+  if (retryRoutes.length > 0) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.startsWith('http://localhost')
+      ? process.env.NEXT_PUBLIC_APP_URL
+      : process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
+    if (appUrl) {
+      const headers = { Authorization: `Bearer ${process.env.CRON_SECRET}` };
+      await Promise.allSettled(
+        retryRoutes.map(route =>
+          fetch(`${appUrl}${route}`, { headers, signal: AbortSignal.timeout(8000) }).catch(() => {})
+        )
+      );
+      await supabase.from('activity_logs').insert({
+        agent_id: 'thomas', agent_name: 'Thomas',
+        action: `[Récap quotidien] Relance auto de ${retryRoutes.length} cron(s) en erreur/manquant`,
+        details: { retried: retryRoutes },
+        status: 'success',
+      });
+      console.log('[daily-recap] relance auto:', retryRoutes.join(', '));
+    }
+  }
+
+  return NextResponse.json({ ok: true, total: entries.length, missing: missingList.map(m => m.label), retried: retryRoutes });
 }
