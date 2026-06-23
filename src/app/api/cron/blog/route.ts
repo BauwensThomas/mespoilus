@@ -300,6 +300,8 @@ export async function GET(req: Request) {
     // Empêche Lucas de retomber toujours sur la même espèce (ex: gecko pour les reptiles).
     // On liste les espèces déjà traitées récemment (à éviter) + des espèces encore peu couvertes.
     let speciesDiversityBlock = '';
+    let coveredSpecies: string[] = [];
+    let uncoveredSpecies: string[] = [];
     try {
       const animalSingularDiv: Record<string, string> = {
         chiens: 'chien', chats: 'chat', oiseaux: 'oiseau', rongeurs: 'rongeur', reptiles: 'reptile',
@@ -318,11 +320,22 @@ export async function GET(req: Request) {
           const head = n.split(/[\s(]/)[0]; // 1er mot (ex: "gecko")
           return titlesLc.some(t => t.includes(n) || (head.length >= 5 && t.includes(head)));
         };
-        const covered = speciesNames.filter(isCovered);
-        const uncovered = speciesNames.filter(n => !isCovered(n));
-        speciesDiversityBlock = `\nDIVERSITÉ DES ESPÈCES (important) : varie les espèces de ${animal}, n'écris pas sans cesse sur la même.${covered.length ? ` Espèces DÉJÀ traitées récemment, à NE PAS reprendre : ${covered.join(', ')}.` : ''}${uncovered.length ? ` Privilégie une espèce encore peu/pas couverte, par exemple : ${uncovered.slice(0, 15).join(', ')}.` : ''}\n`;
+        coveredSpecies = speciesNames.filter(isCovered);
+        uncoveredSpecies = speciesNames.filter(n => !isCovered(n));
+        speciesDiversityBlock = `\nDIVERSITÉ DES ESPÈCES (important) : varie les espèces de ${animal}, n'écris pas sans cesse sur la même.${coveredSpecies.length ? ` Espèces DÉJÀ traitées récemment, à NE PAS reprendre : ${coveredSpecies.join(', ')}.` : ''}${uncoveredSpecies.length ? ` Privilégie une espèce encore peu/pas couverte, par exemple : ${uncoveredSpecies.slice(0, 15).join(', ')}.` : ''}\n`;
       }
     } catch { /* non bloquant */ }
+
+    // Garde-fou DUR : repère si un sujet reprend une espèce déjà traitée récemment.
+    const subjectRepeatsSpecies = (subject: string): string | null => {
+      const s = subject.toLowerCase();
+      for (const sp of coveredSpecies) {
+        const n = sp.toLowerCase();
+        const head = n.split(/[\s(]/)[0];
+        if (s.includes(n) || (head.length >= 5 && s.includes(head))) return sp;
+      }
+      return null;
+    };
 
     const typeInstructions: Record<ArticleType, string> = {
       trending: `TYPE IMPOSÉ : TRENDING
@@ -486,11 +499,18 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
         }
       }
 
-      // Si le sujet ressemble trop à un article récent → relancer Lucas une fois
+      // Relance Lucas une fois si : sujet trop proche d'un article récent (hors affiliation),
+      // OU si le sujet reprend une espèce déjà traitée récemment (TOUS types, y compris affiliation).
       const dupTitle = forcedType === 'affiliation' ? null : subjectTooSimilar(sujet, recentTitles);
-      if (dupTitle && lucasAttempt === 0) {
-        console.log(`[Cron1] Sujet "${sujet}" trop proche de "${dupTitle}" → relance Lucas`);
-        dupWarning = `\n\n🚫 INTERDICTION : ton sujet précédent ressemblait trop à l'article existant "${dupTitle}". Choisis un sujet RADICALEMENT différent (autre thème, autre angle, autre intention). Ne propose PAS une variation du même sujet.`;
+      const repeatedSpecies = subjectRepeatsSpecies(sujet);
+      if ((dupTitle || repeatedSpecies) && lucasAttempt === 0) {
+        if (repeatedSpecies) {
+          console.log(`[Cron1] Sujet reprend l'espèce déjà traitée "${repeatedSpecies}" → relance Lucas`);
+          dupWarning = `\n\nINTERDICTION : l'espèce "${repeatedSpecies}" a déjà été traitée récemment. Choisis IMPÉRATIVEMENT une AUTRE espèce de ${animal}${uncoveredSpecies.length ? `, par exemple : ${uncoveredSpecies.slice(0, 12).join(', ')}` : ''}. Ne reprends pas une espèce déjà couverte.`;
+        } else {
+          console.log(`[Cron1] Sujet "${sujet}" trop proche de "${dupTitle}" → relance Lucas`);
+          dupWarning = `\n\nINTERDICTION : ton sujet précédent ressemblait trop à l'article existant "${dupTitle}". Choisis un sujet RADICALEMENT différent (autre thème, autre angle, autre intention). Ne propose PAS une variation du même sujet.`;
+        }
         continue;
       }
 
