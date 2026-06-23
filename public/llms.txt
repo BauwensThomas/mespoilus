@@ -1,0 +1,67 @@
+# Mes Poilus
+
+> Mes Poilus (https://www.mespoilus.com) est un site francophone dédié aux propriétaires et amoureux des animaux de compagnie : chiens, chats, oiseaux, rongeurs et reptiles. Il réunit un blog de conseils vétérinaires et guides pratiques, un comparateur de prix d'accessoires et d'alimentation, des fiches races détaillées, des annonces d'adoption gratuites entre particuliers, des outils interactifs gratuits, des guides téléchargeables et un jeu solidaire (la Grille Mystère) au profit des refuges. Le site informe et met en relation : il ne vend pas directement mais oriente vers des marchands partenaires. Audience francophone (Belgique, France, Suisse, Luxembourg, Canada).
+
+## Blog (conseils et guides)
+Articles pratiques sur la santé, le comportement, l'alimentation, l'éducation et le bien-être animal, organisés par espèce.
+- [Blog (tous les articles)](https://www.mespoilus.com/blog)
+- [Conseils chiens](https://www.mespoilus.com/blog/chiens)
+- [Conseils chats](https://www.mespoilus.com/blog/chats)
+- [Conseils oiseaux](https://www.mespoilus.com/blog/oiseaux)
+- [Conseils rongeurs](https://www.mespoilus.com/blog/rongeurs)
+- [Conseils reptiles](https://www.mespoilus.com/blog/reptiles)
+- [Conseils généraux](https://www.mespoilus.com/blog/general)
+
+## Boutique (comparateur de prix)
+Catalogue d'accessoires, d'alimentation et de matériel pour animaux. Chaque fiche compare les offres de plusieurs marchands partenaires (Maxi Zoo, Zooplus, Amazon, CanadaPetCare, etc.). Le client réserve et achète toujours en direct chez le marchand.
+- [Boutique](https://www.mespoilus.com/boutique)
+- Catégories : chiens, chats, oiseaux, rongeurs, reptiles, livres, général. Filtre par catégorie via `?category=` (ex. https://www.mespoilus.com/boutique?category=chiens).
+
+## Fiches races
+Fiches détaillées par race et espèce : caractère, tempérament, santé, alimentation, toilettage, entretien et conseils avant l'adoption.
+- [Toutes les fiches races](https://www.mespoilus.com/races)
+- [Races de chiens](https://www.mespoilus.com/races/chiens)
+- [Races de chats](https://www.mespoilus.com/races/chats)
+- [Espèces d'oiseaux](https://www.mespoilus.com/races/oiseaux)
+- [Espèces de rongeurs](https://www.mespoilus.com/races/rongeurs)
+- [Espèces de reptiles](https://www.mespoilus.com/races/reptiles)
+- Sélections thématiques par espèce : races pour appartement, pour débutants, pour enfants, pour seniors (ex. https://www.mespoilus.com/races/chiens/appartement).
+- Fiche d'une race précise : `/races/{espèce}/{race}` (ex. https://www.mespoilus.com/races/oiseaux/perruche-ondulee).
+
+## Outils gratuits
+Outils interactifs pour les propriétaires d'animaux.
+- [Tous les outils](https://www.mespoilus.com/outils)
+- [Calculateur d'âge](https://www.mespoilus.com/outils/age) : convertit l'âge de l'animal en âge humain selon l'espèce.
+- [Calculateur de nutrition](https://www.mespoilus.com/outils/nutrition) : aide à estimer la ration alimentaire adaptée.
+- [Générateur de prénoms](https://www.mespoilus.com/outils/prenom) : idées de noms par espèce et critères.
+- [Quiz](https://www.mespoilus.com/outils/quiz) : aide à trouver l'animal ou la race qui correspond au mode de vie.
+
+## Adoption
+Petites annonces d'adoption gratuites entre particuliers. Les coordonnées du déposant restent privées : les intéressés le contactent via un formulaire. Annonces vérifiées avant publication, suppression automatique après 60 jours.
+- [Annonces d'adoption](https://www.mespoilus.com/adoption)
+- [Déposer une annonce](https://www.mespoilus.com/adoption/deposer)
+
+## Grille Mystère et solidarité
+Jeu solidaire : en participant, l'utilisateur tente sa chance et soutient les animaux dans le besoin (refuges).
+- [Grille Mystère](https://www.mespoilus.com/grille)
+- [Toutes les grilles](https://www.mespoilus.com/grilles)
+- [Soutenir Mes Poilus](https://www.mespoilus.com/soutenir)
+
+## Guides et ressources
+- [Guides téléchargeables](https://www.mespoilus.com/guides) : guides PDF gratuits pour bien s'occuper de son animal.
+- [Favoris](https://www.mespoilus.com/favoris) : produits et contenus enregistrés par l'utilisateur.
+- [Liens utiles](https://www.mespoilus.com/liens) : page de liens (hub réseaux sociaux et raccourcis).
+- [Newsletter](https://www.mespoilus.com/#newsletter) : inscription gratuite aux conseils et bons plans.
+
+## À propos et presse
+- [À propos](https://www.mespoilus.com/a-propos) : présentation du projet Mes Poilus.
+- [Espace presse](https://www.mespoilus.com/presse) : informations pour les médias.
+- Réseaux sociaux : Instagram et Facebook @mespoilusofficiel.
+- Contact : contact@mespoilus.com
+
+## Optional (pages légales)
+- [Mentions légales](https://www.mespoilus.com/mentions-legales)
+- [CGU](https://www.mespoilus.com/cgu)
+- [CGV](https://www.mespoilus.com/cgv)
+- [Politique de confidentialité](https://www.mespoilus.com/politique-confidentialite)
+- [Cookies](https://www.mespoilus.com/cookies)
