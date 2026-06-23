@@ -286,7 +286,7 @@ export default function RefugeFinderPanel() {
         <div className="flex items-center justify-between px-4 py-2 bg-pink-500 text-white shrink-0">
           <div className="flex items-center gap-2">
             <Heart size={15} strokeWidth={1.5} />
-            <h2 className="text-sm font-bold">Trouver un refuge</h2>
+            <span className="text-sm font-bold">Trouver un refuge</span>
           </div>
           <button onClick={() => setOpen(false)} aria-label="Fermer le panneau refuge" className="p-1 rounded-lg hover:bg-pink-600 transition-colors">
             <X size={16} strokeWidth={2} />

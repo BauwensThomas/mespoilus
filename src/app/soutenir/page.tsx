@@ -37,7 +37,7 @@ export default function SoutenirPage() {
 
         {/* Comment ça marche avec stagger */}
         <div className="mt-12 fade-up">
-          <h2 className="text-lg font-semibold text-gray-900 mb-5 text-center glow-text">Comment ça marche&nbsp;?</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-5 text-center glow-text">Comment fonctionne la Grille Mystère&nbsp;?</h2>
           <div className="grid sm:grid-cols-3 gap-4 stagger-container">
             {[
               { icon: Search, title: '1. Trouvez le produit', desc: 'Sur Amazon, Maxi Zoo, CanadaPetCare ou Tuft & Paw.' },

@@ -277,7 +277,7 @@ export default function VetFinderPanel() {
         <div className="flex items-center justify-between px-4 py-2 bg-blue-600 text-white shrink-0">
           <div className="flex items-center gap-2">
             <Stethoscope size={15} strokeWidth={1.5} />
-            <h2 className="text-sm font-bold">Trouver un veterinaire</h2>
+            <span className="text-sm font-bold">Trouver un veterinaire</span>
           </div>
           <button onClick={() => setOpen(false)} aria-label="Fermer le panneau veterinaire" className="p-1 rounded-lg hover:bg-blue-700 transition-colors">
             <X size={16} strokeWidth={2} />
