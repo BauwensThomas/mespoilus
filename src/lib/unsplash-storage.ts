@@ -50,7 +50,7 @@ export async function downloadAndStorePhoto(
       const supabase = createAdminClient();
       const { data, error } = await supabase.storage
         .from('blog-images')
-        .upload(filename, buffer, { contentType: 'image/jpeg', upsert: true });
+        .upload(filename, buffer, { contentType: 'image/jpeg', upsert: true, cacheControl: '31536000' });
       if (error || !data) {
         console.error(`[storage] upload Supabase erreur (tentative ${attempt}/${maxAttempts}):`, error?.message ?? 'pas de data');
         continue;
