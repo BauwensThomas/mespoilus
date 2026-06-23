@@ -449,7 +449,7 @@ export default function GrilleView({
 
             {/* Règles */}
             <div className="bg-white border border-gray-200 rounded-2xl p-5 fade-up hover:shadow-md transition-all duration-300">
-              <h2 className="font-semibold text-gray-900 text-sm mb-4">Comment ça marche ?</h2>
+              <p className="font-semibold text-gray-900 text-sm mb-4">Comment ça marche ?</p>
               <div className="flex flex-col gap-2 stagger-container">
                 {[
                   'Achète des pixels qui s\'affichent aléatoirement et révèlent progressivement l\'image cachée.',
