@@ -5,7 +5,7 @@ import AffiliateLinkTool from './_components/AffiliateLinkTool';
 import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const metadata: Metadata = {
-  title: 'Soutenir Mes Poilus - transformez vos achats en soutien',
+  title: { absolute: 'Soutenir Mes Poilus - vos achats aident les animaux' },
   description: 'Un produit absent de notre boutique ? Collez son lien et obtenez un lien partenaire : en achetant via celui-ci, vous soutenez gratuitement Mes Poilus.',
   robots: { index: true, follow: true },
   alternates: { canonical: '/soutenir' },

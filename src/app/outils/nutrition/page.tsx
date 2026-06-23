@@ -77,7 +77,7 @@ export default function NutritionPage() {
   const showSterilise = stage !== 'chiot';
 
   return (
-    <div className="min-h-screen px-6 md:px-8 py-10">
+    <div className="px-6 md:px-8 py-10">
       <div className="max-w-6xl mx-auto">
 
         {/* Header avec animation */}

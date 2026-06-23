@@ -21,8 +21,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const animalType = ANIMAL_URL_MAP[animal];
   if (!animalType) return {};
   return {
-    title: `Races de ${ANIMAL_LABEL[animalType].toLowerCase()} - Fiches complètes | Mes Poilus`,
+    title: `Races de ${ANIMAL_LABEL[animalType].toLowerCase()} - fiches complètes`,
     description: `Toutes nos fiches races ${ANIMAL_LABEL[animalType].toLowerCase()} : caractère, santé, entretien. Trouvez la race qui vous correspond.`,
+    alternates: { canonical: `https://www.mespoilus.com/races/${animal}` },
   };
 }
 

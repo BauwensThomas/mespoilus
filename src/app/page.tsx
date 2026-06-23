@@ -12,6 +12,11 @@ import GrilleSection from '@/components/landing/GrilleSection';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronRight, UtensilsCrossed, Calculator, HelpCircle, Sparkles, BookOpen, ClipboardList } from 'lucide-react';
 import ClientWrapper from '@/components/animations/ClientWrapper';
 import ScrollIndicator from '@/components/ui/ScrollIndicator';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  alternates: { canonical: 'https://www.mespoilus.com' },
+};
 
 export const revalidate = 3600;
 
@@ -239,12 +244,12 @@ export default async function LandingPage() {
                 </span>
                 <span className="text-sm font-medium text-orange-700">Blog & boutique animaux</span>
               </div>
-              <h1 className="text-5xl 2xl:text-6xl font-bold tracking-tight text-gray-900 mb-6">
+              <p className="text-5xl 2xl:text-6xl font-bold tracking-tight text-gray-900 mb-6" aria-hidden="true">
                 Le compagnon digital des
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600">
                   amoureux des animaux
                 </span>
-              </h1>
+              </p>
               <p className="text-lg text-gray-600 max-w-xl mx-auto xl:mx-0 mb-8 leading-relaxed">
                 Conseils vétérinaires, guides pratiques et produits sélectionnés pour chiens, chats, oiseaux, rongeurs, reptiles et bien plus.
               </p>

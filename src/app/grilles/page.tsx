@@ -36,7 +36,7 @@ export default async function GrillesHistoriquePage() {
   );
 
   return (
-    <div className="min-h-screen">
+    <div>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         
         {/* Header avec animations */}
@@ -44,6 +44,14 @@ export default async function GrillesHistoriquePage() {
           <span className="text-orange-600 text-sm font-semibold uppercase tracking-widest">Historique</span>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 glow-text">Les grilles passées</h1>
           <p className="text-gray-600 mt-3">Les animaux révélés et leurs gagnants. Merci à tous les participants !</p>
+          <div className="mt-6 text-center space-y-3 text-sm text-gray-600 leading-relaxed">
+            <p>
+              Chaque Grille Mystère cache un animal secret derrière une grille de pixels. Les participants révèlent des cases et tentent de deviner l&apos;espèce et la race avant la fin. A chaque partie terminée, une partie des participations est reversée à un refuge partenaire : jouer, c&apos;est soutenir concrètement les animaux dans le besoin.
+            </p>
+            <p>
+              Cette page rassemble l&apos;historique de toutes les grilles terminées : l&apos;animal révélé, les gagnants du jeu de devinette, et le montant reversé au refuge. Vous pouvez participer à la grille en cours sur <Link href="/grille" className="text-orange-600 hover:underline">la page Grille Mystère</Link>.
+            </p>
+          </div>
           {totalReverseCents > 0 && (
             <p className="inline-block mt-4 bg-green-50 border border-green-200 text-green-700 text-sm font-semibold rounded-full px-4 py-1.5 pulse-soft">
               ❤️ {(totalReverseCents / 100).toLocaleString('fr-BE', { style: 'currency', currency: 'EUR' })} reversés aux refuges

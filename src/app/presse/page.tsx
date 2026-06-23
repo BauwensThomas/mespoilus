@@ -4,9 +4,10 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { Mail, ExternalLink, PawPrint } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Espace presse & partenaires | Mes Poilus',
+  title: 'Espace presse & partenaires',
   description: 'Kit presse, description du site et contact pour les journalistes, blogueurs et partenaires souhaitant parler de Mes Poilus.',
   robots: { index: true, follow: true },
+  alternates: { canonical: 'https://www.mespoilus.com/presse' },
 };
 
 async function getStats() {

@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Mentions légales',
+  title: 'Mentions légales du site',
   description: 'Mentions légales de Mes Poilus conformes au droit belge.',
   robots: { index: true, follow: false },
+  alternates: { canonical: 'https://www.mespoilus.com/mentions-legales' },
 };
 
 export default function MentionsLegalesPage() {

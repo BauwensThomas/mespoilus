@@ -176,7 +176,7 @@ export default function QuizPage() {
     const r = RESULTS[result];
     const IconComponent = r.icon;
     return (
-      <div className="min-h-screen px-6 md:px-8 py-10">
+      <div className="px-6 md:px-8 py-10">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8 fade-up">
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1 glow-text">Quiz - Résultat</h1>
@@ -221,7 +221,7 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="min-h-screen px-6 md:px-8 py-10">
+    <div className="px-6 md:px-8 py-10">
       <div className="max-w-6xl mx-auto">
 
         {/* Header avec animation */}

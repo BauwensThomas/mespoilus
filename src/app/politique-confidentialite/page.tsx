@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: 'Politique de confidentialité',
   description: 'Politique de confidentialité et de protection des données personnelles de Mes Poilus, conforme au RGPD.',
   robots: { index: true, follow: false },
+  alternates: { canonical: 'https://www.mespoilus.com/politique-confidentialite' },
 };
 
 export default function PolitiqueConfidentialitePage() {

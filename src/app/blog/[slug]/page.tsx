@@ -120,6 +120,8 @@ export default async function ArticlePage({ params }: Props) {
   } catch { /* le contenu principal reste visible */ }
 
   let htmlContent = await marked(article.content, { gfm: true });
+  // Le titre H1 est déjà rendu par le template — on descend les headings du contenu d'un niveau.
+  htmlContent = htmlContent.replace(/<h1>/gi, '<h2>').replace(/<\/h1>/gi, '</h2>');
   // TOUS les liens d'un article s'ouvrent dans un NOUVEL ONGLET → le lecteur ne quitte jamais son article.
   // 1. Liens AFFILIÉS (marchands) → nouvel onglet + rel affiliation (sponsored nofollow).
   htmlContent = htmlContent.replace(

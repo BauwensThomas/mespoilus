@@ -14,7 +14,7 @@ import DirectionalTransition from '@/components/ui/DirectionalTransition';
 import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const metadata: Metadata = {
-  title: 'Adoption animaux',
+  title: 'Adopter un animal de compagnie',
   description: 'Trouvez un animal à adopter ou déposez une annonce pour donner un animal. Chiens, chats, oiseaux et plus.',
   robots: { index: true, follow: true },
   alternates: { canonical: '/adoption' },
@@ -112,7 +112,7 @@ export default async function AdoptionPage({ searchParams }: Props) {
 
   return (
     <DirectionalTransition>
-    <div className="min-h-screen px-6 md:px-8 py-6 space-y-5">
+    <div className="px-6 md:px-8 py-6 space-y-5">
 
       {/* Header avec animation */}
       <div className="fade-up">
@@ -207,6 +207,25 @@ export default async function AdoptionPage({ searchParams }: Props) {
       )}
 
       <AdBanner slot="1148710530" className="mt-12" />
+
+      {/* Section descriptive */}
+      <section className="max-w-4xl mx-auto border-t border-gray-100 pt-8 pb-4 fade-up text-center">
+        <h2 className="text-lg font-bold text-gray-900 mb-4">Comment fonctionne l&apos;adoption sur Mes Poilus ?</h2>
+        <div className="space-y-3 text-sm text-gray-600 leading-relaxed">
+          <p>
+            Mes Poilus met en relation les particuliers qui souhaitent donner un animal avec ceux qui souhaitent en accueillir un. Le service est entièrement gratuit, sans inscription et sans commission. Les annonces sont vérifiées avant publication pour éviter les arnaques et les situations suspectes.
+          </p>
+          <p>
+            Pour <strong>déposer une annonce</strong>, rendez-vous sur la page de dépôt, remplissez le formulaire avec les informations sur l&apos;animal (espèce, race, âge, sexe, région) et ajoutez une ou plusieurs photos. Votre coordonnées restent privées : les personnes intéressées vous contactent via un formulaire sécurisé, et c&apos;est vous qui décidez de leur répondre ou non. Les annonces restent actives 60 jours et sont supprimées automatiquement passé ce délai.
+          </p>
+          <p>
+            Pour <strong>adopter un animal</strong>, parcourez les annonces disponibles, filtrez par espèce, région ou critères, et contactez le déposant via le bouton de contact. L&apos;adoption entre particuliers permet souvent de connaître l&apos;histoire de l&apos;animal et ses habitudes, ce qui facilite l&apos;intégration dans un nouveau foyer.
+          </p>
+          <p>
+            Si vous cherchez un animal issu d&apos;un refuge, consultez également nos <a href="/blog/refuges-adopter-chien-chat-belgique-france-suisse-quebec" className="text-orange-600 hover:underline">sélections de refuges en Belgique, France, Suisse et Québec</a>. Adopter en refuge, c&apos;est donner une seconde chance à un animal qui a souvent traversé des épreuves difficiles.
+          </p>
+        </div>
+      </section>
 
       <ClientWrapper />
     </div>

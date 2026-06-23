@@ -9,7 +9,8 @@ import ClientWrapper from '@/components/animations/ClientWrapper';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Fiches races animaux - Caractère, Santé, Entretien | Mes Poilus',
+  title: 'Fiches races animaux de compagnie',
+  alternates: { canonical: 'https://www.mespoilus.com/races' },
   description: 'Découvrez nos fiches races détaillées : chiens, chats, oiseaux, rongeurs et reptiles. Caractère, santé, entretien - tout ce qu\'il faut savoir avant d\'adopter.',
 };
 
@@ -75,7 +76,7 @@ export default async function RacesPage() {
 
   return (
     <DirectionalTransition>
-    <div className="min-h-screen px-6 md:px-8 py-6 space-y-5">
+    <div className="px-6 md:px-8 py-6 space-y-5">
 
       {/* Header avec animation */}
       <div className="fade-up">
@@ -137,7 +138,26 @@ export default async function RacesPage() {
       <p className="text-xs text-gray-500 text-center fade-up">
         Nouvelles fiches ajoutées régulièrement. Les informations sont des moyennes indicatives.
       </p>
-      
+
+      {/* Section descriptive */}
+      <section className="max-w-4xl mx-auto mt-8 pb-10 border-t border-gray-100 pt-8 fade-up text-center">
+        <h2 className="text-lg font-bold text-gray-900 mb-4">A quoi servent les fiches races ?</h2>
+        <div className="space-y-3 text-sm text-gray-600 leading-relaxed">
+          <p>
+            Chaque fiche race de Mes Poilus détaille le caractère, le tempérament, les besoins en exercice, les prédispositions santé, les soins d&apos;entretien et les conseils d&apos;alimentation spécifiques à une race ou une espèce. L&apos;objectif est d&apos;aider les futurs propriétaires à choisir un animal adapté à leur mode de vie, et les propriétaires actuels à mieux comprendre leur compagnon.
+          </p>
+          <p>
+            Nos fiches couvrent cinq catégories : <strong>chiens</strong> (races de toutes tailles, du Chihuahua au Berger Allemand), <strong>chats</strong> (races à poil court, à poil long, hypoallergéniques), <strong>oiseaux</strong> (perruches, perroquets, canaris, pinsons), <strong>rongeurs</strong> (lapins, cochons d&apos;Inde, hamsters, rats, chinchillas) et <strong>reptiles</strong> (geckos, pogonas, serpents des blés, tortues).
+          </p>
+          <p>
+            Avant d&apos;adopter, comparez plusieurs fiches races pour évaluer les exigences réelles de chaque animal en termes de temps, d&apos;espace et de budget. Certaines races de chiens demandent deux heures d&apos;exercice par jour et mal tolèrent la solitude. Certains perroquets vivent 50 ans et nécessitent une stimulation intellectuelle quotidienne. Ces réalités doivent être connues avant l&apos;adoption pour éviter les abandons.
+          </p>
+          <p>
+            Nos fiches s&apos;appuient sur des sources vétérinaires et des éleveurs reconnus. Les informations fournies (espérance de vie, taille adulte, niveau d&apos;entretien) sont des moyennes indicatives : chaque individu est unique, et un suivi régulier chez le vétérinaire reste indispensable.
+          </p>
+        </div>
+      </section>
+
       <ClientWrapper />
     </div>
     </DirectionalTransition>

@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!guide) return { title: 'Guide introuvable' };
 
   return {
-    title: `${guide.title} - Guide PDF gratuit - Mes Poilus`,
+    title: guide.title,
     description: guide.description,
     robots: { index: true, follow: true },
     alternates: { canonical: `/guides/${guide.slug}` },
@@ -95,7 +95,7 @@ export default async function GuidePage({ params }: Props) {
   const benefits = extractBenefits(guide.description);
 
   return (
-    <div className="min-h-screen px-6 md:px-8 py-6">
+    <div className="px-6 md:px-8 py-6">
       <div className="max-w-6xl mx-auto">
 
         {/* Breadcrumb avec animation */}
@@ -168,6 +168,20 @@ export default async function GuidePage({ params }: Props) {
               guide={{ id: guide.id, title: guide.title, slug: guide.slug }}
               label="Télécharger gratuitement"
             />
+          </div>
+
+          {/* Section informationnelle */}
+          <div className="fade-up space-y-4 text-sm text-gray-600 leading-relaxed text-center">
+            <h2 className="text-lg font-bold text-gray-900">Comment utiliser ce guide ?</h2>
+            <p>
+              Ce guide PDF gratuit est conçu pour être téléchargé, imprimé ou consulté sur smartphone. Il rassemble les informations essentielles sous forme de checklist ou de fiche pratique, pour que vous n&apos;ayez pas à chercher sur plusieurs sites différents. Entrez simplement votre adresse email et vous recevez le lien de téléchargement directement dans votre boite de réception.
+            </p>
+            <p>
+              Nos guides sont rédigés en français et adaptés aux propriétaires francophones de Belgique, France, Suisse et Canada. Ils tiennent compte des spécificités locales : réglementations, produits disponibles, ressources vétérinaires. Le contenu est mis à jour régulièrement pour rester en phase avec les recommandations actuelles.
+            </p>
+            <p>
+              Ce guide fait partie d&apos;une collection plus large disponible sur <a href="/guides" className="text-orange-600 hover:underline">la page Guides</a>. Vous y trouverez des ressources sur l&apos;adoption, la nutrition, l&apos;aménagement du foyer et les premiers soins pour chiens, chats, rongeurs, oiseaux et reptiles. Tous sont gratuits et sans abonnement payant.
+            </p>
           </div>
 
           {/* Back link avec animation */}
