@@ -16,7 +16,7 @@ const BLOG_URL = '/blog';
 
 export const metadata: Metadata = {
   title: 'Blog - Conseils & guides animaux de compagnie',
-  description: 'Articles, guides et conseils pratiques sur les animaux de compagnie.',
+  description: 'Articles, guides et conseils pratiques pour chiens, chats, rongeurs, oiseaux et reptiles. Santé, alimentation, comportement et adoption.',
   robots: { index: true, follow: true },
   alternates: { canonical: BLOG_URL },
   openGraph: {

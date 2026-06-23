@@ -38,7 +38,7 @@ export const CATEGORY_META: Record<string, {
   reptiles: {
     label: 'Reptiles',
     title: 'Conseils et guides pour reptiles',
-    description: 'Guides pratiques pour tortues, lézards, serpents et autres reptiles.',
+    description: 'Guides pratiques pour tortues, lézards, serpents et autres reptiles : habitat, alimentation, soins et comportement.',
     intro: 'Conseils sur l\'habitat, l\'alimentation et les soins pour vos reptiles.',
   },
   general: {
