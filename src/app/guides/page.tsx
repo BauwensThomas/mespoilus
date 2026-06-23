@@ -55,6 +55,7 @@ export default async function GuidesPage() {
           <p className="text-gray-500 text-base max-w-xl mx-auto">
             Téléchargez nos guides PDF gratuits - entrez simplement votre email
           </p>
+          <h2 className="sr-only">Tous nos guides par catégorie</h2>
         </div>
 
         {guides.length === 0 ? (

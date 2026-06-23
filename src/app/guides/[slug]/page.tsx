@@ -145,7 +145,7 @@ export default async function GuidePage({ params }: Props) {
           
           {/* Benefits */}
           <div className="max-w-2xl fade-up">
-            <p className="text-xl font-bold text-gray-900 mb-5 glow-text">Ce que vous trouverez dans ce guide</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-5 glow-text">Ce que vous trouverez dans ce guide</h2>
             <ul className="space-y-3 stagger-container">
               {benefits.map((benefit, i) => (
                 <li key={i} className="stagger-child flex items-start gap-3">

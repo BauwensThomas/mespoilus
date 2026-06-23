@@ -116,7 +116,7 @@ export default function BlogPostsGrid({ articles, activeCategory, search, label,
       {displayArticles.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-6">
-            <p className="text-2xl font-bold text-gray-900">{label}</p>
+            <h2 className="text-2xl font-bold text-gray-900">{label}</h2>
             <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
               <button onClick={() => toggle('grid')}
                 className={`p-1.5 rounded-md transition-colors ${view === 'grid' ? 'bg-white shadow text-orange-600' : 'text-gray-400 hover:text-gray-700'}`}
