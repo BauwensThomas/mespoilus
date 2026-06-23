@@ -154,9 +154,9 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
           <div className="flex flex-col justify-between flex-1">
             {/* Haut */}
             <div className="flex flex-col gap-3">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors leading-snug">
+              <p className="text-xl md:text-2xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors leading-snug">
                 {article.title}
-              </h2>
+              </p>
               {article.excerpt && (
                 <p className="text-sm md:text-base text-gray-600 leading-relaxed">
                   {article.excerpt}
@@ -190,9 +190,9 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
           </div>
         ) : (
           <div className="flex flex-col gap-3 p-5 flex-1 bg-white">
-            <h2 className="text-base font-bold text-gray-900 group-hover:text-orange-600 transition-colors leading-snug line-clamp-2">
+            <p className="text-base font-bold text-gray-900 group-hover:text-orange-600 transition-colors leading-snug line-clamp-2">
               {article.title}
-            </h2>
+            </p>
             {article.excerpt && (
               <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 flex-1">
                 {article.excerpt}
