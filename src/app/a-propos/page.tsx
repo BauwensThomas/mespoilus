@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'À propos de Mes Poilus',
   description: 'Découvrez Mes Poilus : un média belge spécialisé dans les animaux de compagnie, avec blog de conseils, boutique affiliée et service d\'adoption gratuit.',
   robots: { index: true, follow: true },
+  alternates: { canonical: 'https://www.mespoilus.com/a-propos' },
 };
 
 export default function AProposPage() {

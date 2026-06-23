@@ -4,7 +4,7 @@ import { Calculator, UtensilsCrossed, HelpCircle, Sparkles, BookOpen, Wrench } f
 import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const metadata: Metadata = {
-  title: 'Outils gratuits pour propriétaires d\'animaux - Mes Poilus',
+  title: 'Outils gratuits pour animaux de compagnie',
   description: 'Calculateur d\'âge, ration journalière, quiz « quel animal pour moi ? », générateur de prénom et guides PDF gratuits pour chiens, chats et NAC.',
   robots: { index: true, follow: true },
   alternates: { canonical: '/outils' },
@@ -55,7 +55,31 @@ export default function OutilsPage() {
         </div>
 
       </div>
-      
+
+      {/* Section descriptive */}
+      <div className="max-w-6xl mx-auto px-6 pb-16">
+        <section className="mt-12 border-t border-gray-100 pt-10 text-center">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Des outils conçus pour les propriétaires d&apos;animaux</h2>
+          <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
+            <p>
+              Prendre soin d&apos;un animal de compagnie demande des connaissances précises : quelle quantité de croquettes donner, à quel âge entre-t-il en phase senior, quel compagnon correspond vraiment à votre mode de vie ? Nos outils gratuits répondent à ces questions en quelques secondes, sans inscription ni compte à créer.
+            </p>
+            <p>
+              Le <strong>calculateur d&apos;âge</strong> convertit l&apos;âge réel de votre animal en âge humain équivalent, en tenant compte de l&apos;espèce et de la taille. Un chien de grande race vieillit plus vite qu&apos;un petit chien, et un perroquet gris du Gabon peut dépasser 50 ans en bonne santé. Ce repère aide à anticiper les bilans vétérinaires et à adapter les soins à chaque étape de vie.
+            </p>
+            <p>
+              La <strong>ration journalière</strong> calcule la quantité d&apos;aliments adaptée au poids, à l&apos;âge et au niveau d&apos;activité. Surpoids et sous-alimentation sont deux risques fréquents chez les animaux de compagnie : un calcul précis permet d&apos;éviter ces erreurs courantes qui impactent la santé sur le long terme.
+            </p>
+            <p>
+              Le <strong>quiz &laquo;&nbsp;Quel animal pour moi&nbsp;?&nbsp;&raquo;</strong> pose 6 questions sur votre logement, votre rythme de vie et votre expérience pour vous orienter vers l&apos;espèce et la race la plus compatible. Un bon choix dès le départ, c&apos;est une adoption réussie pour de nombreuses années.
+            </p>
+            <p>
+              Le <strong>générateur de prénoms</strong> propose des centaines d&apos;idées classées par espèce et par thème. Trouver le bon prénom pour un nouvel arrivant prend parfois plus de temps qu&apos;on ne le croit : cet outil simplifie la décision. Nos <strong>guides PDF gratuits</strong> complètent ces outils avec des checklists pratiques à télécharger et à conserver.
+            </p>
+          </div>
+        </section>
+      </div>
+
       <ClientWrapper />
     </div>
   );

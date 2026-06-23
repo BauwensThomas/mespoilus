@@ -595,7 +595,7 @@ CONSIGNES :
   - 1 à 2 liens vers d'autres articles du blog quand c'est pertinent (utilise la liste "Articles récents" fournie plus haut, format [titre](lien)).
   Ces liens doivent s'intégrer dans des phrases du texte, pas être collés à la fin.
 - Ne jamais inventer de faits médicaux ou vétérinaires sans nuance
-- TITRE optimisé pour le CLIC : commence par le mot-clé principal, sois spécifique et promets un bénéfice clair (ex: "Mon chien tousse : 5 causes et quoi faire en urgence"). Évite les titres vagues.
+- TITRE optimisé pour le CLIC : 47 caractères MAXIMUM (c'est une contrainte technique stricte). Commence par le mot-clé principal, sois spécifique (ex: "Mon chien tousse : causes et solutions"). Évite les titres vagues et les listes longues.
 - META DESCRIPTION : 150-155 caractères, donne envie de cliquer (bénéfice concret + légère curiosité), inclut le mot-clé principal.`;
 
     const marieResult = await executeAgentTask('marie', mariePrompt);
@@ -614,6 +614,11 @@ CONSIGNES :
     const excerptMatch = marieResult.content.match(/^excerpt:\s*(.+)/m);
     articleSlug = slugMatch?.[1]?.trim() ?? '';
     articleTitle = titleMatch?.[1]?.trim() ?? sujet;
+    // Garde-fou SEO : titre ≤ 47 chars (total "titre | Mes Poilus" ≤ 60 chars)
+    if (articleTitle.length > 47) {
+      const cut = articleTitle.lastIndexOf(' ', 45);
+      articleTitle = articleTitle.slice(0, cut > 20 ? cut : 45);
+    }
     articleExcerpt = excerptMatch?.[1]?.trim() ?? '';
 
     // Fallback : fetch depuis Supabase si slug non parsé du frontmatter

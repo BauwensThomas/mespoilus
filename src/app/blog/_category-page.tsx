@@ -13,37 +13,37 @@ export const CATEGORY_META: Record<string, {
 }> = {
   chiens: {
     label: 'Chiens',
-    title: 'Conseils et guides pour chiens -Mes Poilus',
+    title: 'Conseils et guides pour chiens',
     description: 'Guides pratiques, conseils santé et bien-être pour votre chien. Alimentation, éducation, soins vétérinaires pour les propriétaires de chiens francophones.',
     intro: 'Guides pratiques sur l\'alimentation, l\'éducation, la santé et les soins pour votre chien.',
   },
   chats: {
     label: 'Chats',
-    title: 'Conseils et guides pour chats -Mes Poilus',
+    title: 'Conseils et guides pour chats',
     description: 'Tout savoir sur les soins, l\'alimentation et le comportement de votre chat. Guides pratiques pour les propriétaires de chats francophones.',
     intro: 'Guides sur l\'alimentation, le comportement, la santé et le bien-être de votre félin.',
   },
   oiseaux: {
     label: 'Oiseaux',
-    title: 'Conseils et guides pour oiseaux -Mes Poilus',
+    title: 'Conseils et guides pour oiseaux',
     description: 'Guides pratiques sur les soins, l\'alimentation et le bien-être de vos oiseaux de compagnie.',
     intro: 'Guides pour offrir à vos oiseaux un environnement épanouissant et des soins adaptés.',
   },
   rongeurs: {
     label: 'Rongeurs',
-    title: 'Conseils et guides pour rongeurs -Mes Poilus',
+    title: 'Conseils et guides pour rongeurs',
     description: 'Guides pratiques pour lapins, cochons d\'Inde, hamsters et autres rongeurs.',
     intro: 'Guides pour lapins, cochons d\'Inde, hamsters et autres petits compagnons.',
   },
   reptiles: {
     label: 'Reptiles',
-    title: 'Conseils et guides pour reptiles -Mes Poilus',
+    title: 'Conseils et guides pour reptiles',
     description: 'Guides pratiques pour tortues, lézards, serpents et autres reptiles.',
     intro: 'Conseils sur l\'habitat, l\'alimentation et les soins pour vos reptiles.',
   },
   general: {
     label: 'Général',
-    title: 'Conseils généraux animaux de compagnie -Mes Poilus',
+    title: 'Conseils généraux pour tous les animaux',
     description: 'Actualités, conseils et guides généraux pour tous les propriétaires d\'animaux de compagnie.',
     intro: 'Actualités, bons plans et conseils pour tous les propriétaires d\'animaux.',
   },

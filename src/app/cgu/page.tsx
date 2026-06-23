@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "Conditions Générales d'Utilisation",
   description: "Conditions Générales d'Utilisation de Mes Poilus, site de contenu et d'affiliation animalier.",
   robots: { index: true, follow: false },
+  alternates: { canonical: 'https://www.mespoilus.com/cgu' },
 };
 
 export default function CGUPage() {

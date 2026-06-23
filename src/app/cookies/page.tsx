@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'Politique de cookies',
   description: 'Politique d\'utilisation des cookies de Mes Poilus, conforme au RGPD.',
   robots: { index: true, follow: false },
+  alternates: { canonical: 'https://www.mespoilus.com/cookies' },
 };
 
 export default function CookiesPage() {
