@@ -14,8 +14,8 @@ import DirectionalTransition from '@/components/ui/DirectionalTransition';
 import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const metadata: Metadata = {
-  title: 'Adopter un animal de compagnie',
-  description: 'Trouvez un animal à adopter ou déposez une annonce pour donner un animal. Chiens, chats, oiseaux et plus.',
+  title: 'Adoption animaux gratuite - Chiens, chats et plus',
+  description: 'Trouvez un animal à adopter près de chez vous ou déposez une annonce pour donner le vôtre. Adoption gratuite entre particuliers, annonces vérifiées.',
   robots: { index: true, follow: true },
   alternates: { canonical: '/adoption' },
 };

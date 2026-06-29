@@ -15,6 +15,8 @@ import ScrollIndicator from '@/components/ui/ScrollIndicator';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
+  title: 'Mes Poilus - Conseils animaux, adoption et boutique en ligne',
+  description: 'Conseils pratiques pour chiens, chats, oiseaux, rongeurs et reptiles. Trouvez un animal à adopter, explorez la boutique et téléchargez nos guides PDF gratuits.',
   alternates: { canonical: 'https://www.mespoilus.com' },
 };
 
