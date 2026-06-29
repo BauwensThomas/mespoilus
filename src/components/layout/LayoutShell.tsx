@@ -9,6 +9,7 @@ import RefugeFinderPanel from '@/components/refuge/RefugeFinderPanel';
 import { getFlagUrl } from '@/lib/partenaires';
 import clsx from 'clsx';
 import AnimalDayPopup from '@/components/ui/AnimalDayPopup';
+import Link from 'next/link';
 
 interface DbPartenaire {
   id: string; nom: string; description: string | null; logo_url: string | null;
@@ -146,6 +147,7 @@ export default function LayoutShell({ children, pendingCount = 0 }: { children: 
 
   const isBoutique = pathname.startsWith('/boutique');
   const isHome = pathname === '/';
+  const hasOwnFooter = ['/a-propos', '/mentions-legales', '/politique-confidentialite', '/cgu', '/cgv', '/cookies', '/presse'].includes(pathname);
 
   return (
     <>
@@ -158,6 +160,23 @@ export default function LayoutShell({ children, pendingCount = 0 }: { children: 
       {!isBoutique && <RefugeFinderPanel />}
       {!isBoutique && <VetFinderPanel />}
       <AnimalDayPopup />
+      {!isHome && !hasOwnFooter && (
+        <footer className="mt-16 border-t border-gray-100 bg-white">
+          <div className="max-w-screen-2xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+            <p>&copy; {new Date().getFullYear()} Mes Poilus, média animalier francophone, Belgique</p>
+            <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2">
+              <Link href="/a-propos" className="hover:text-orange-600 transition-colors">À propos</Link>
+              <Link href="/blog" className="hover:text-orange-600 transition-colors">Blog</Link>
+              <Link href="/adoption" className="hover:text-orange-600 transition-colors">Adoption</Link>
+              <Link href="/politique-confidentialite" className="hover:text-orange-600 transition-colors">Confidentialité</Link>
+              <Link href="/mentions-legales" className="hover:text-orange-600 transition-colors">Mentions légales</Link>
+              <Link href="/cgu" className="hover:text-orange-600 transition-colors">CGU</Link>
+              <Link href="/cookies" className="hover:text-orange-600 transition-colors">Cookies</Link>
+              <a href="mailto:contact@mespoilus.com" className="hover:text-orange-600 transition-colors">Contact</a>
+            </nav>
+          </div>
+        </footer>
+      )}
     </>
   );
 }
