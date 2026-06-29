@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'À propos de Mes Poilus',
-  description: 'Marie, fondatrice de Mes Poilus, partage ses conseils sur les animaux de compagnie depuis la Belgique. Un média francophone dédié aux chiens, chats, oiseaux, rongeurs et reptiles.',
+  description: 'Découvrez l\'équipe derrière Mes Poilus : Thomas, fondateur, et Marie, rédactrice. Un média animalier francophone basé en Belgique, dédié aux chiens, chats, oiseaux, rongeurs et reptiles.',
   robots: { index: true, follow: true },
   alternates: { canonical: 'https://www.mespoilus.com/a-propos' },
 };

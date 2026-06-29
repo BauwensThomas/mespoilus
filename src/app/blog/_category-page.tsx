@@ -13,32 +13,32 @@ export const CATEGORY_META: Record<string, {
 }> = {
   chiens: {
     label: 'Chiens',
-    title: 'Conseils et guides pour chiens',
-    description: 'Guides pratiques, conseils santé et bien-être pour votre chien. Alimentation, éducation, soins vétérinaires pour les propriétaires de chiens francophones.',
+    title: 'Conseils chiens : alimentation, éducation, santé',
+    description: 'Tout ce qu\'il faut savoir pour bien s\'occuper de son chien : alimentation, éducation, races, comportement et santé. Guides pratiques en français.',
     intro: 'Guides pratiques sur l\'alimentation, l\'éducation, la santé et les soins pour votre chien.',
   },
   chats: {
     label: 'Chats',
-    title: 'Conseils et guides pour chats',
-    description: 'Tout savoir sur les soins, l\'alimentation et le comportement de votre chat. Guides pratiques pour les propriétaires de chats francophones.',
+    title: 'Conseils chats : comportement, soins et alimentation',
+    description: 'Mieux comprendre votre chat : comportement, alimentation, soins, races et bien-être. Guides pratiques pour propriétaires de chats en français.',
     intro: 'Guides sur l\'alimentation, le comportement, la santé et le bien-être de votre félin.',
   },
   oiseaux: {
     label: 'Oiseaux',
-    title: 'Conseils et guides pour oiseaux',
-    description: 'Guides pratiques sur les soins, l\'alimentation et le bien-être de vos oiseaux de compagnie.',
+    title: 'Conseils oiseaux de compagnie : soins, alimentation, habitat',
+    description: 'Perruche, perroquet, canari ou pie grièche : apprenez à bien soigner vos oiseaux de compagnie. Alimentation, cage, apprivoisement et santé.',
     intro: 'Guides pour offrir à vos oiseaux un environnement épanouissant et des soins adaptés.',
   },
   rongeurs: {
     label: 'Rongeurs',
-    title: 'Conseils et guides pour rongeurs',
-    description: 'Guides pratiques pour lapins, cochons d\'Inde, hamsters et autres rongeurs.',
+    title: 'Conseils rongeurs : lapin, hamster, cobaye et plus',
+    description: 'Lapin, hamster, cochon d\'Inde, rat ou gerbille : tout sur l\'alimentation, le logement et la santé de vos petits compagnons.',
     intro: 'Guides pour lapins, cochons d\'Inde, hamsters et autres petits compagnons.',
   },
   reptiles: {
     label: 'Reptiles',
-    title: 'Conseils et guides pour reptiles',
-    description: 'Guides pratiques pour tortues, lézards, serpents et autres reptiles : habitat, alimentation, soins et comportement.',
+    title: 'Conseils reptiles : tortue, lézard, serpent et terrarium',
+    description: 'Tortues, lézards, serpents, geckos : guides sur le terrarium, l\'alimentation et les soins pour bien s\'occuper de vos reptiles.',
     intro: 'Conseils sur l\'habitat, l\'alimentation et les soins pour vos reptiles.',
   },
   general: {

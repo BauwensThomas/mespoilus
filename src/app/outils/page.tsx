@@ -4,8 +4,8 @@ import { Calculator, UtensilsCrossed, HelpCircle, Sparkles, BookOpen, Wrench } f
 import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const metadata: Metadata = {
-  title: 'Outils gratuits pour animaux de compagnie',
-  description: 'Calculateur d\'âge, ration journalière, quiz « quel animal pour moi ? », générateur de prénom et guides PDF gratuits pour chiens, chats et NAC.',
+  title: 'Outils gratuits pour animaux : calculateur, quiz, générateur',
+  description: 'Calculez l\'âge de votre animal, trouvez la ration idéale, testez quel animal vous correspond et générez un prénom original. 100 % gratuit, sans inscription.',
   robots: { index: true, follow: true },
   alternates: { canonical: '/outils' },
 };
