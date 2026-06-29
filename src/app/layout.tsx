@@ -8,6 +8,7 @@ import AdSense from '@/components/analytics/AdSense';
 import PinterestTag from '@/components/analytics/PinterestTag';
 import ExternalLinks from '@/components/ExternalLinks';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { createAdminClient } from '@/lib/supabase/server';
 
 async function getPendingCount(): Promise<number> {
@@ -87,6 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <PinterestTag />
         <ExternalLinks />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
