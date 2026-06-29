@@ -22,6 +22,8 @@
 password.txt
 note.txt
 images/
+!public/images/
+!public/images/**
 
 
 # Debug
