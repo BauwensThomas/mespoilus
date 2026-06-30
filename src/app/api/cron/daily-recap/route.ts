@@ -57,6 +57,7 @@ const CATALOG_CRONS = [
 // Crons réellement quotidiens
 const DAILY_CRONS = [
   { label: 'Adoption cleanup',             pattern: '[Adoption cleanup]',             hour: '03h', agent: 'Thomas' },
+  { label: 'Morning retry',                pattern: '[Morning retry]',                hour: '03h', agent: 'Thomas' },
 ];
 
 // Crons RELANÇABLES en cas d'erreur/absence : uniquement les crons IDEMPOTENTS (upsert/dedup).
@@ -406,11 +407,10 @@ export async function GET(req: Request) {
       : process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
     if (appUrl) {
       const headers = { Authorization: `Bearer ${process.env.CRON_SECRET}` };
-      await Promise.allSettled(
-        retryRoutes.map(route =>
-          fetch(`${appUrl}${route}`, { headers, signal: AbortSignal.timeout(8000) }).catch(() => {})
-        )
-      );
+      // Fire-and-forget : pas d'AbortSignal, les crons longs (300s) continuent après la réponse
+      for (const route of retryRoutes) {
+        fetch(`${appUrl}${route}`, { headers }).catch(() => {});
+      }
       await supabase.from('activity_logs').insert({
         agent_id: 'thomas', agent_name: 'Thomas',
         action: `[Récap quotidien] Relance auto de ${retryRoutes.length} cron(s) en erreur/manquant`,
