@@ -122,7 +122,7 @@ Mesures de sécurité déjà en place (NE PAS les signaler comme manquantes) :
 - Budget cap API Anthropic fixé à 20 €/mois
 - Blocage IP global : toutes les routes du site rejettent les IPs bloquées en 403 (via Redis cache + Supabase)
 - Secrets dans Vercel Environment Variables uniquement (pas dans le repo) — .gitignore inclut .env.local et .env*.local
-- CSRF : `generateCSRFToken()` disponible dans src/lib/security.ts — les mutations API sont protégées par Supabase Auth (session cookie httpOnly) et par les headers x-internal-secret/CRON_SECRET selon la route
+- CSRF : 'generateCSRFToken()' disponible dans src/lib/security.ts — les mutations API sont protégées par Supabase Auth (session cookie httpOnly) et par les headers x-internal-secret/CRON_SECRET selon la route
 - Les entrées "Security Analysis" dans security_logs sont LES PROPRES RAPPORTS DE NATHALIE des crons précédents, pas de vraies attaques — elles sont filtrées automatiquement dans le contexte (AUDIT_ARTIFACTS). NE PAS les signaler comme un bug de logging.
 
 Concentre-toi uniquement sur ce qui manque réellement. Ne répète pas ce qui est déjà en place ci-dessus.`;
