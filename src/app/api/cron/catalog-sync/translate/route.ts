@@ -159,6 +159,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'ANTHROPIC_API_KEY manquant' }, { status: 500 });
   }
 
+  const startTime = Date.now();
   const supabase = createAdminClient();
 
   let translatedNames = 0;
@@ -356,6 +357,7 @@ export async function GET(req: Request) {
     action: `[Catalog translate] ${translatedNames} noms + ${translatedDescs} desc. traduites + ${copiedDescs} copiées groupe + ${alreadyFrDesc} déjà FR`,
     details: lastError ? { error: lastError } : {},
     status: lastError ? 'error' : 'success',
+    duration_ms: Date.now() - startTime,
   });
 
   return NextResponse.json({

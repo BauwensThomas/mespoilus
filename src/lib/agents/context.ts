@@ -111,16 +111,20 @@ Base tes analyses et recommandations sur ces chiffres réels mois par mois.`;
 ${recentStr}
 
 Mesures de sécurité déjà en place (NE PAS les signaler comme manquantes) :
-- Middleware Edge actif : rate limiting (60 req/min global, 10/min par agent), détection SQLi/XSS/path traversal, blocage IP automatique (mémoire + table blocked_ips)
+- Stack : Next.js 15.5 (14 CVE résolus lors de l'upgrade mai 2026) — NE PAS mentionner "Next.js 14"
+- Middleware Edge actif : rate limiting (60 req/min global, 10/min par agent), détection SQLi/XSS/path traversal, blocage IP automatique (mémoire 5min + Redis 24h/30j + table blocked_ips)
 - Toutes les routes /api/cron/* protégées par Bearer CRON_SECRET
 - Toutes les routes /api/internal/* protégées par header x-internal-secret
-- RLS activé sur les 25 tables Supabase (articles et products avec policies publiques, toutes les autres bloquées pour anon)
+- RLS activé sur les 29 tables Supabase (articles et products avec policies publiques, toutes les autres bloquées pour anon)
 - Headers HTTP de sécurité configurés dans next.config.mjs : CSP, X-Frame-Options (SAMEORIGIN), X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 - X-Powered-By supprimé (poweredByHeader: false)
-- Monitoring erreurs Sentry actif (toutes erreurs client + serveur + edge capturées)
+- Monitoring erreurs Sentry actif (toutes erreurs client + serveur + edge capturées, alertes email sur nouvelles issues)
 - Budget cap API Anthropic fixé à 20 €/mois
+- Blocage IP global : toutes les routes du site rejettent les IPs bloquées en 403 (via Redis cache + Supabase)
+- Secrets dans Vercel Environment Variables uniquement (pas dans le repo) — .gitignore inclut .env.local et .env*.local
+- CSRF : `generateCSRFToken()` disponible dans src/lib/security.ts — les mutations API sont protégées par Supabase Auth (session cookie httpOnly) et par les headers x-internal-secret/CRON_SECRET selon la route
+- Les entrées "Security Analysis" dans security_logs sont LES PROPRES RAPPORTS DE NATHALIE des crons précédents, pas de vraies attaques — elles sont filtrées automatiquement dans le contexte (AUDIT_ARTIFACTS). NE PAS les signaler comme un bug de logging.
 
-Stack à auditer : Next.js 14, Supabase, API Anthropic, Vercel.
 Concentre-toi uniquement sur ce qui manque réellement. Ne répète pas ce qui est déjà en place ci-dessus.`;
     }
 
@@ -214,13 +218,16 @@ Génère la newsletter en te basant sur ces articles. Format JSON requis : { "su
 - Dernières erreurs :
 ${errorsStr}
 
-Architecture et mesures déjà en place (NE PAS les signaler comme manquantes) :
-- Stack : Next.js 14 App Router, TypeScript, Tailwind CSS, Supabase (PostgreSQL), API Anthropic, Vercel Hobby
+Architecture et mesures déjà en place (NE PAS les signaler comme manquantes ou à corriger) :
+- Stack : Next.js 15.5 App Router, TypeScript, Tailwind CSS, Supabase (PostgreSQL), API Anthropic, Vercel Hobby
 - Agents IA en streaming via /api/internal/save-agent-data (timeout propre, évite les limites Vercel)
 - maxDuration configurés par route : 60s (routes simples), 120s (blog/newsletter), 300s (security, prenoms, breeds)
 - Vercel Hobby : 1-300s de maxDuration autorisé (confirmé dans Project Settings)
 - Monitoring erreurs Sentry actif (traces, profiling, logs console capturés)
-- maxTokens Maxime : 8000 (mis à jour mai 2026)
+- maxTokens Nathalie : 8000, maxTokens Maxime : 8000 (configurés dans config.ts — NE PAS signaler comme trop bas)
+- Timeout SDK Anthropic : 270 000ms explicite dans src/lib/anthropic.ts (NE PAS signaler les timeouts 74s comme un bug à corriger — c'est le temps normal des gros audits)
+- Route catalog-sync/translate : duration_ms enregistré dans activity_logs (corrigé 01/07/2026)
+- Il n'existe PAS de route /api/agents/security/legitimacy-check — les temps longs (>50s) sur "vérifier légitimité" sont des tâches manuelles via la page agent Nathalie, durée normale pour Sonnet 4.6
 
 Concentre-toi uniquement sur les vraies erreurs dans les logs et les problèmes de performance réels. Ne propose pas de refactoring ou d'architectures déjà en place.`;
     }
