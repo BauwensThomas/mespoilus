@@ -311,7 +311,7 @@ export default async function LandingPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 stagger-container">
               {(articles as Article[]).map((article) => (
-                <div key={article.id} className="stagger-child">
+                <div key={article.id} className="stagger-child h-full">
                   <ArticleCard article={article} />
                 </div>
               ))}
@@ -536,7 +536,7 @@ function ArticleCard({ article }: { article: Article }) {
   return (
     <Link
       href={`/blog/${article.slug}`}
-      className="group block bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-gray-200 transition-smooth focus-ring glow-on-hover"
+      className="group flex flex-col h-full bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-gray-200 transition-smooth focus-ring glow-on-hover"
       aria-label={`Lire l'article: ${article.title}`}
     >
       <div className="relative h-52 overflow-hidden bg-gradient-to-br from-orange-100 to-orange-200 image-reveal">
@@ -556,7 +556,7 @@ function ArticleCard({ article }: { article: Article }) {
           </span>
         </div>
       </div>
-      <div className="p-5">
+      <div className="p-5 flex flex-col flex-1">
         <h3 className="font-bold text-gray-900 text-base leading-snug mb-2 group-hover:text-orange-600 transition-colors line-clamp-2">
           {article.title}
         </h3>
@@ -565,7 +565,7 @@ function ArticleCard({ article }: { article: Article }) {
             {article.excerpt}
           </p>
         )}
-        <div className="flex items-center justify-between text-xs text-gray-500">
+        <div className="flex items-center justify-between text-xs text-gray-500 mt-auto">
           <time dateTime={article.published_at ?? ''}>{date}</time>
           {article.reading_time && <span>{article.reading_time} min de lecture</span>}
         </div>
