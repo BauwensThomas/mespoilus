@@ -5,6 +5,7 @@ const nextConfig = {
   staticPageGenerationTimeout: 120,
   serverExternalPackages: ['@anthropic-ai/sdk'],
   experimental: { viewTransition: true },
+  productionBrowserSourceMaps: true,
   images: {
     // Optimisation Vercel désactivée → 0 transformation (plan gratuit limité à 5000/mois).
     // Sûr car les images sont déjà compressées en amont : Pexels servi en 'large' (940px),
@@ -68,8 +69,9 @@ export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: false,
+  sourcemaps: {
+    filesToDeleteAfterUpload: ['.next/static/**/*.js.map'],
+  },
 
   // Uncomment to route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   // This can increase your server load as well as your hosting bill.
