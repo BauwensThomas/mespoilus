@@ -5,7 +5,6 @@ const nextConfig = {
   staticPageGenerationTimeout: 120,
   serverExternalPackages: ['@anthropic-ai/sdk'],
   experimental: { viewTransition: true },
-  productionBrowserSourceMaps: true,
   images: {
     // Optimisation Vercel désactivée → 0 transformation (plan gratuit limité à 5000/mois).
     // Sûr car les images sont déjà compressées en amont : Pexels servi en 'large' (940px),
