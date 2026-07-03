@@ -19,6 +19,11 @@ const nextConfig = {
       { protocol: 'https', hostname: 'flagcdn.com' },
     ],
   },
+  async redirects() {
+    return [
+      { source: '/favicon.ico', destination: '/favicon.svg', permanent: true },
+    ];
+  },
   async headers() {
     return [
       {
