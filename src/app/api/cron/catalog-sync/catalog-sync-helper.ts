@@ -499,6 +499,10 @@ export async function runCatalogSyncForCategory(
   let lastError: string | null = null;
 
   let cleanupStats = { deletedOffers: 0, hiddenProducts: 0 };
+  // Timeout Awin planifié vs vraie erreur : séparés pour ne pas marquer le sync en 'error'
+  // quand seul le budget temps est dépassé (comportement attendu sur Vercel Hobby).
+  let timedOut = false;
+  let hadRealError = false;
 
   if (category === 'canada-pet-care') {
     ({ totalInserted, totalUpdated, lastError } = await runCPCCatalogSync(supabase, syncTime));
@@ -617,6 +621,7 @@ export async function runCatalogSyncForCategory(
             totalUpdated += updated;
           } catch (e) {
             lastError = e instanceof Error ? e.message : 'Erreur inconnue';
+            hadRealError = true;
             console.error(`[catalog-sync:${category}] batch erreur:`, lastError);
           }
         }
@@ -624,12 +629,13 @@ export async function runCatalogSyncForCategory(
       undefined,
       (merchantName, errMsg) => {
         lastError = errMsg;
+        hadRealError = true;
         console.error(`[catalog-sync:${category}] feed ${merchantName}:`, errMsg);
       },
       shouldStop
     );
 
-    const timedOut = shouldStop();
+    timedOut = shouldStop();
 
     // Nettoyage offres Awin disparues du feed.
     // Gardes de sécurité : (1) feed a retourné ≥100 produits, (2) sync NON interrompu par le budget temps.
@@ -648,11 +654,14 @@ export async function runCatalogSyncForCategory(
     ? `, ${cleanupStats.deletedOffers} offres périmées supprimées, ${cleanupStats.hiddenProducts} fiches masquées`
     : '';
 
+  // Timeout seul (Vercel Hobby) = comportement planifié → success. Vraie erreur de feed/batch → error.
+  const isError = timedOut && !hadRealError ? false : !!lastError;
+
   await supabase.from('activity_logs').insert({
     agent_id: 'thomas', agent_name: 'Thomas',
     action: `[Catalog sync:${category}] ${totalInserted} nouvelles fiches, ${totalUpdated} offres mises à jour${cleanupMsg}`,
-    details: lastError ? { error: lastError } : {},
-    status: lastError ? 'error' : 'success',
+    details: lastError ? { warning: lastError } : {},
+    status: isError ? 'error' : 'success',
   });
 
   if (totalInserted > 0) {
@@ -670,13 +679,13 @@ export async function runCatalogSyncForCategory(
   }
 
   return NextResponse.json({
-    success: !lastError,
+    success: !isError,
     category,
     inserted: totalInserted,
     updated: totalUpdated,
     total: totalInserted + totalUpdated,
     deletedOffers: cleanupStats.deletedOffers,
     hiddenProducts: cleanupStats.hiddenProducts,
-    ...(lastError ? { error: lastError } : {}),
+    ...(lastError ? { warning: lastError } : {}),
   });
 }
