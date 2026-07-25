@@ -23,8 +23,12 @@ export default function AnimalDayPopup() {
     const d = today.getDate();
     const todayStr = `${today.getFullYear()}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
-    const seen = localStorage.getItem(STORAGE_KEY);
-    if (seen === todayStr) return;
+    try {
+      const seen = localStorage.getItem(STORAGE_KEY);
+      if (seen === todayStr) return;
+    } catch {
+      // localStorage indisponible (Firefox strict, navigation privée, iframe sandboxé)
+    }
 
     const match = ANIMAL_DAYS.find(e => e.month === m && e.day === d);
     if (!match) return;
@@ -38,7 +42,7 @@ export default function AnimalDayPopup() {
     const m = today.getMonth() + 1;
     const d = today.getDate();
     const todayStr = `${today.getFullYear()}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    localStorage.setItem(STORAGE_KEY, todayStr);
+    try { localStorage.setItem(STORAGE_KEY, todayStr); } catch { /* ignore */ }
     setEvent(null);
   }
 
