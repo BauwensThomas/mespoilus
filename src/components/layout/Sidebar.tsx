@@ -32,6 +32,7 @@ const navItems = [
   { href: '/boutique-v2-admin', label: 'Boutique',         icon: ShoppingBag,   isPublic: false },
   { href: '/produits-admin', label: 'Produits affiliés',icon: Package,       isPublic: false },
   { href: '/races-admin',    label: 'Fiches races',     icon: ClipboardList, isPublic: false },
+  { href: '/avis-admin',     label: 'Avis',             icon: Star,          isPublic: false },
   { href: '/guides-admin',     label: 'Guides PDF',       icon: FileText,      isPublic: false },
   { href: '/partenaires-admin', label: 'Partenaires',     icon: Star,          isPublic: false },
   { href: '/outreach-admin',   label: 'Prospection',      icon: Send,          isPublic: false },
@@ -49,6 +50,7 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
   const pathname = usePathname();
   const [pendingCount, setPendingCount] = useState(initialPendingCount);
   const [commentCount, setCommentCount] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
   const [noPhotoCount, setNoPhotoCount] = useState(0);
 
   useEffect(() => {
@@ -58,6 +60,7 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
         .then(d => {
           setPendingCount(d.count ?? 0);
           setCommentCount(d.commentCount ?? 0);
+          setReviewCount(d.reviewCount ?? 0);
         })
         .catch(() => {});
 
@@ -153,6 +156,11 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
                 {href === '/blog-admin' && commentCount > 0 && (
                   <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white min-w-[18px] text-center">
                     {commentCount > 99 ? '99+' : commentCount}
+                  </span>
+                )}
+                {href === '/avis-admin' && reviewCount > 0 && (
+                  <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white min-w-[18px] text-center">
+                    {reviewCount > 99 ? '99+' : reviewCount}
                   </span>
                 )}
               </Link>

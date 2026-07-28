@@ -12,7 +12,14 @@ import GrilleSection from '@/components/landing/GrilleSection';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronRight, UtensilsCrossed, Calculator, HelpCircle, Sparkles, BookOpen, ClipboardList } from 'lucide-react';
 import ClientWrapper from '@/components/animations/ClientWrapper';
 import ScrollIndicator from '@/components/ui/ScrollIndicator';
+import ReviewsSummary from '@/components/reviews/ReviewsSummary';
+import StarRatingDisplay from '@/components/reviews/StarRatingDisplay';
+import ReviewThanksBanner from '@/components/reviews/ReviewThanksBanner';
+import { formatReviewDate } from '@/lib/formatReviewDate';
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
+
+type Review = { id: string; name: string; rating: number; comment: string | null; created_at: string };
 
 export const metadata: Metadata = {
   title: 'Mes Poilus - Conseils animaux, adoption et boutique en ligne',
@@ -142,8 +149,25 @@ async function getCategoryPhotosFromDB(): Promise<Record<string, string>> {
   }
 }
 
+async function getReviewsForHome() {
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from('reviews')
+      .select('id, name, rating, comment, created_at')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false });
+    const reviews = (data as Review[]) ?? [];
+    const total = reviews.length;
+    const average = total > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / total : 0;
+    return { latest: reviews.slice(0, 4), total, average };
+  } catch {
+    return { latest: [] as Review[], total: 0, average: 0 };
+  }
+}
+
 async function getLandingData() {
-  const [heroPhotos, catPhotos, articles] = await Promise.all([
+  const [heroPhotos, catPhotos, articles, reviews] = await Promise.all([
     getHeroPhotosFromDB(),
     getCategoryPhotosFromDB(),
     (async () => {
@@ -160,13 +184,14 @@ async function getLandingData() {
         return [] as Article[];
       }
     })(),
+    getReviewsForHome(),
   ]);
 
-  return { heroPhotos, catPhotos, articles };
+  return { heroPhotos, catPhotos, articles, reviews };
 }
 
 export default async function LandingPage() {
-  const { heroPhotos, catPhotos, articles } = await getLandingData();
+  const { heroPhotos, catPhotos, articles, reviews } = await getLandingData();
 
   return (
     <div className="bg-orange-50 text-gray-900 min-h-screen">
@@ -292,7 +317,43 @@ export default async function LandingPage() {
         </div>
 
       </section>
-      
+
+      <Suspense>
+        <ReviewThanksBanner />
+      </Suspense>
+
+      {/* ── AVIS ──────────────────────────────────────────────────────────── */}
+      {reviews.total > 0 && (
+        <section className="py-16 px-6 bg-gradient-to-b from-gray-50 to-orange-50 reveal-color">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-10 fade-up">
+              <span className="text-orange-600 text-sm font-semibold uppercase tracking-widest">Avis</span>
+              <h2 className="text-3xl font-bold text-gray-900 mt-2 mb-3">Ce qu'ils en pensent</h2>
+              <ReviewsSummary average={reviews.average} total={reviews.total} />
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-4 stagger-container">
+              {reviews.latest.map(r => (
+                <div key={r.id} className="stagger-child bg-white border border-gray-200 rounded-2xl p-4 w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex flex-col">
+                  <StarRatingDisplay rating={r.rating} size={14} />
+                  {r.comment && <p className="text-sm text-gray-600 mt-2 leading-relaxed line-clamp-4">{r.comment}</p>}
+                  <div className="flex items-center justify-between gap-2 mt-auto pt-3">
+                    <p className="text-sm font-semibold text-gray-900">{r.name}</p>
+                    <p className="text-xs text-gray-400 shrink-0">{formatReviewDate(r.created_at)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center mt-8 fade-up">
+              <Link href="/avis" className="inline-flex items-center gap-2 text-orange-600 font-semibold hover:text-orange-500 focus-ring">
+                Voir tous les avis <ChevronRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── DERNIERS ARTICLES ─────────────────────────────────────────────── */}
       <section className="py-20 px-6 bg-white reveal-color">
         <div className="max-w-6xl mx-auto">
@@ -477,6 +538,7 @@ export default async function LandingPage() {
                   { href: '/grille', label: 'Grille Mystère' },
                   { href: '/soutenir', label: 'Soutenir Mes Poilus' },
                   { href: '/adoption', label: 'Adoption' },
+                  { href: '/avis', label: 'Avis' },
                 ].map(({ href, label }) => (
                   <li key={href}><Link href={href} className="text-sm hover:text-orange-400 transition-colors">{label}</Link></li>
                 ))}
