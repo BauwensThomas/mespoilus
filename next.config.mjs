@@ -52,6 +52,14 @@ const nextConfig = {
       },
     ];
   },
+  // Cache disque webpack desactive en dev : evite la corruption recurrente
+  // "__webpack_modules__[moduleId] is not a function" (race d'ecriture des
+  // .pack.gz sur Windows, frequente lors de sessions avec beaucoup de hot-reload).
+  // N'affecte pas le build de production.
+  webpack: (config, { dev }) => {
+    if (dev) config.cache = false;
+    return config;
+  },
 };
 
 export default withSentryConfig(nextConfig, {
