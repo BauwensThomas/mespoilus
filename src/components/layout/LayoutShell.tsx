@@ -18,7 +18,7 @@ interface DbPartenaire {
   display_mode?: string;
 }
 
-const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/adoption-admin', '/produits-admin', '/guides-admin', '/races-admin', '/blog-admin', '/boutique-v2-admin', '/partenaires-admin', '/outreach-admin', '/grille-admin', '/abonnes-admin'];
+const ADMIN_PREFIXES = ['/dashboard', '/agents', '/orchestrate', '/adoption-admin', '/produits-admin', '/guides-admin', '/races-admin', '/blog-admin', '/boutique-v2-admin', '/partenaires-admin', '/outreach-admin', '/grille-admin', '/abonnes-admin', '/avis-admin'];
 
 function PartenairesBandeau() {
   const [partenaires, setPartenaires] = useState<DbPartenaire[]>([]);
@@ -168,6 +168,7 @@ export default function LayoutShell({ children, pendingCount = 0 }: { children: 
               <Link href="/a-propos" className="hover:text-orange-600 transition-colors">À propos</Link>
               <Link href="/blog" className="hover:text-orange-600 transition-colors">Blog</Link>
               <Link href="/adoption" className="hover:text-orange-600 transition-colors">Adoption</Link>
+              <Link href="/avis" className="hover:text-orange-600 transition-colors">Avis</Link>
               <Link href="/politique-confidentialite" className="hover:text-orange-600 transition-colors">Confidentialité</Link>
               <Link href="/mentions-legales" className="hover:text-orange-600 transition-colors">Mentions légales</Link>
               <Link href="/cgu" className="hover:text-orange-600 transition-colors">CGU</Link>

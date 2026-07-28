@@ -87,6 +87,13 @@ export function buildNewsletterHtml(opts: {
         <p style="margin:0;color:rgba(255,255,255,.92);font-size:14px">Tes conseils animaux de la semaine</p>
       </td></tr>
 
+      <!-- Demande d'avis -->
+      <tr><td style="padding:14px 32px;background:#fff7ed;text-align:center;border-bottom:1px solid #fed7aa">
+        <p style="margin:0;font-size:13px;color:${MUTED}">
+          Tu apprécies nos conseils ? <a href="https://www.mespoilus.com/avis" style="color:${ORANGE};font-weight:700;text-decoration:none">Laisse-nous un avis en 30 secondes</a>
+        </p>
+      </td></tr>
+
       <!-- Corps -->
       <tr><td class="nl-bd" style="padding:28px 32px">
         ${textToHtml(intro)}
