@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/dashboard/', '/agents/', '/orchestrate/', '/adoption-admin/', '/blog-admin/', '/races-admin/', '/produits-admin/', '/boutique-v2-admin/', '/guides-admin/', '/grille-admin/', '/api/', '/login'],
+        disallow: ['/dashboard/', '/agents/', '/orchestrate/', '/adoption-admin/', '/blog-admin/', '/races-admin/', '/produits-admin/', '/boutique-v2-admin/', '/guides-admin/', '/grille-admin/', '/partenaires-admin/', '/outreach-admin/', '/abonnes-admin/', '/avis-admin/', '/qrcode-admin/', '/api/', '/login'],
       },
     ],
     sitemap: `${APP_URL}/sitemap.xml`,
