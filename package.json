@@ -9,11 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.100.1",
-    "@sentry/nextjs": "^10.56.0",
-    "@sentry/profiling-node": "^10.56.0",
-    "@stripe/stripe-js": "^9.7.0",
-    "@supabase/ssr": "^0.10.2",
+    "@anthropic-ai/sdk": "^0.115.0",
+    "@sentry/nextjs": "^10.69.0",
+    "@sentry/profiling-node": "^10.69.0",
+    "@stripe/stripe-js": "^9.12.1",
+    "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.107.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
@@ -26,14 +26,14 @@
     "locomotive-scroll": "^5.0.1",
     "lucide-react": "^0.577.0",
     "marked": "^12.0.0",
-    "next": "^15.5.19",
+    "next": "^15.5.22",
     "next-themes": "^0.4.6",
     "react": "^18",
     "react-dom": "^18",
     "recharts": "^2.12.7",
-    "sharp": "^0.34.5",
-    "stripe": "^22.2.0",
-    "uuid": "^14.0.0"
+    "sharp": "^0.35.3",
+    "stripe": "^22.3.2",
+    "uuid": "^14.0.1"
   },
   "browserslist": [
     "chrome >= 93",
@@ -42,14 +42,14 @@
     "edge >= 93"
   ],
   "devDependencies": {
-    "@playwright/test": "^1.60.0",
+    "@playwright/test": "^1.62.0",
     "@types/canvas-confetti": "^1.9.0",
-    "@types/google.maps": "^3.65.0",
+    "@types/google.maps": "^3.65.3",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/uuid": "^10.0.0",
-    "autoprefixer": "^10.0.1",
+    "autoprefixer": "^10.5.4",
     "eslint": "^10.8.0",
     "eslint-config-next": "^16.2.12",
     "postcss": "^8",
