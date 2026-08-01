@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AGENTS } from '@/lib/agents/config';
 import { logout } from '@/app/actions/auth';
-import { Zap, Target, Shield, BookOpen, ShoppingBag, Package, PawPrint, LogOut, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Mail, Home, ChevronLeft, Menu, FileText, ClipboardList, Star, Send, Grid3x3, Users } from 'lucide-react';
+import { Zap, Target, Shield, BookOpen, ShoppingBag, Package, PawPrint, LogOut, Briefcase, PenTool, Search, Smartphone, Code, MessageCircle, BarChart3, Mail, Home, ChevronLeft, Menu, FileText, ClipboardList, Star, Send, Grid3x3, Users, QrCode, Bot, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 
 function getAgentIcon(iconId: string) {
@@ -38,6 +38,7 @@ const navItems = [
   { href: '/outreach-admin',   label: 'Prospection',      icon: Send,          isPublic: false },
   { href: '/abonnes-admin',    label: 'Abonnés',          icon: Users,         isPublic: false },
   { href: '/grille-admin',     label: 'Grille mystère',   icon: Grid3x3,       isPublic: false },
+  { href: '/qrcode-admin',     label: 'Stats QR Code',    icon: QrCode,        isPublic: false },
 ];
 
 interface SidebarProps {
@@ -52,6 +53,21 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
   const [commentCount, setCommentCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [noPhotoCount, setNoPhotoCount] = useState(0);
+  const [agentsOpen, setAgentsOpen] = useState(false);
+  const agentsPanelRef = useRef<HTMLDivElement>(null);
+  const isOnAgentPage = pathname.startsWith('/agents/');
+
+  // Ferme le panneau agents au clic en dehors (bouton + panneau lui-même)
+  useEffect(() => {
+    if (!agentsOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (agentsPanelRef.current && !agentsPanelRef.current.contains(e.target as Node)) {
+        setAgentsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [agentsOpen]);
 
   useEffect(() => {
     const refresh = () =>
@@ -166,42 +182,22 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
               </Link>
             );
           })}
-        </nav>
 
-        {/* Séparateur agents */}
-        <div className="px-5 py-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Agents</p>
-        </div>
-
-        {/* Liste agents */}
-        <nav className="px-3 flex-1 overflow-y-auto scrollbar-thin">
-          {Object.values(AGENTS).map((agent) => {
-            const isActive = pathname === `/agents/${agent.id}`;
-            const IconComponent = getAgentIcon(agent.icon);
-            return (
-              <Link
-                key={agent.id}
-                href={`/agents/${agent.id}`}
-                className={clsx(
-                  'flex items-center gap-2.5 px-3 py-2 rounded-lg mb-0.5 transition-all duration-150',
-                  isActive
-                    ? 'bg-orange-100 text-orange-700 font-medium'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                )}
-              >
-                <IconComponent size={17} strokeWidth={1.5} className={clsx('flex-shrink-0', agent.disabled && 'opacity-50')} />
-                <div className={clsx('min-w-0 flex-1', agent.disabled && 'opacity-50')}>
-                  <div className={clsx('font-medium text-sm truncate', isActive ? 'text-orange-700' : 'text-gray-700')}>
-                    {agent.name}
-                  </div>
-                  <div className="text-xs text-gray-500 truncate leading-tight">{agent.disabled ? 'Désactivé' : agent.role}</div>
-                </div>
-                <div className="ml-auto flex-shrink-0">
-                  <div className={clsx('w-1.5 h-1.5 rounded-full', agent.disabled ? 'bg-gray-300' : 'bg-emerald-400 opacity-70')} />
-                </div>
-              </Link>
-            );
-          })}
+          {/* Onglet Agents : ouvre le second panneau, ne navigue pas directement */}
+          <button
+            type="button"
+            onClick={() => setAgentsOpen(v => !v)}
+            className={clsx(
+              'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-0.5 transition-all duration-150',
+              isOnAgentPage || agentsOpen
+                ? 'bg-orange-100 text-orange-700 font-medium border-orange-200'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            )}
+          >
+            <Bot size={17} strokeWidth={1.5} />
+            <span className="flex-1 text-left">Agents</span>
+            <ChevronRight size={14} strokeWidth={1.5} className={clsx('transition-transform duration-150', agentsOpen && 'rotate-90')} />
+          </button>
         </nav>
 
         {/* Footer */}
@@ -219,6 +215,47 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
           </form>
         </div>
       </aside>
+
+      {/* Second panneau : liste des agents, ouvert via l'onglet "Agents" */}
+      {isOpen && agentsOpen && (
+        <div
+          ref={agentsPanelRef}
+          className="fixed left-64 top-0 h-full w-72 bg-white border-r border-gray-200 shadow-xl z-30 flex flex-col animate-fade-in"
+        >
+          <div className="px-4 py-4 border-b border-gray-200">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Agents</p>
+          </div>
+          <nav className="px-3 py-3 flex-1 overflow-y-auto scrollbar-thin">
+            {Object.values(AGENTS).map((agent) => {
+              const isActive = pathname === `/agents/${agent.id}`;
+              const IconComponent = getAgentIcon(agent.icon);
+              return (
+                <Link
+                  key={agent.id}
+                  href={`/agents/${agent.id}`}
+                  className={clsx(
+                    'flex items-center gap-2.5 px-3 py-2 rounded-lg mb-0.5 transition-all duration-150',
+                    isActive
+                      ? 'bg-orange-100 text-orange-700 font-medium'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  )}
+                >
+                  <IconComponent size={17} strokeWidth={1.5} className={clsx('flex-shrink-0', agent.disabled && 'opacity-50')} />
+                  <div className={clsx('min-w-0 flex-1', agent.disabled && 'opacity-50')}>
+                    <div className={clsx('font-medium text-sm truncate', isActive ? 'text-orange-700' : 'text-gray-700')}>
+                      {agent.name}
+                    </div>
+                    <div className="text-xs text-gray-500 truncate leading-tight">{agent.disabled ? 'Désactivé' : agent.role}</div>
+                  </div>
+                  <div className="ml-auto flex-shrink-0">
+                    <div className={clsx('w-1.5 h-1.5 rounded-full', agent.disabled ? 'bg-gray-300' : 'bg-emerald-400 opacity-70')} />
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      )}
     </>
   );
 }
