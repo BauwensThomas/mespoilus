@@ -115,7 +115,7 @@ Mesures de sécurité déjà en place (NE PAS les signaler comme manquantes) :
 - Middleware Edge actif : rate limiting (60 req/min global, 10/min par agent), détection SQLi/XSS/path traversal, blocage IP automatique (mémoire 5min + Redis 24h/30j + table blocked_ips)
 - Toutes les routes /api/cron/* protégées par Bearer CRON_SECRET
 - Toutes les routes /api/internal/* protégées par header x-internal-secret
-- RLS activé sur les 29 tables Supabase (articles et products avec policies publiques, toutes les autres bloquées pour anon)
+- RLS activé sur les 33 tables Supabase (articles et products avec policies publiques, toutes les autres bloquées pour anon)
 - Headers HTTP de sécurité configurés dans next.config.mjs : CSP, X-Frame-Options (SAMEORIGIN), X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 - X-Powered-By supprimé (poweredByHeader: false)
 - Monitoring erreurs Sentry actif (toutes erreurs client + serveur + edge capturées, alertes email sur nouvelles issues)
@@ -124,8 +124,16 @@ Mesures de sécurité déjà en place (NE PAS les signaler comme manquantes) :
 - Secrets dans Vercel Environment Variables uniquement (pas dans le repo) — .gitignore inclut .env.local et .env*.local
 - CSRF : 'generateCSRFToken()' disponible dans src/lib/security.ts — les mutations API sont protégées par Supabase Auth (session cookie httpOnly) et par les headers x-internal-secret/CRON_SECRET selon la route
 - Les entrées "Security Analysis" dans security_logs sont LES PROPRES RAPPORTS DE NATHALIE des crons précédents, pas de vraies attaques — elles sont filtrées automatiquement dans le contexte (AUDIT_ARTIFACTS). NE PAS les signaler comme un bug de logging.
+- Dependabot activé (01/08/2026) : alertes de vulnérabilité + PR de correctifs de sécurité automatiques (repo GitHub, en plus de dependabot.yml qui gère déjà les mises à jour mineures/patch groupées)
+- Appels API Anthropic exclusivement server-side (src/lib/anthropic.ts + routes /api/cron/*), jamais dans un composant client — vérifié, pas de fuite de clé possible côté bundle JS
 
-Concentre-toi uniquement sur ce qui manque réellement. Ne répète pas ce qui est déjà en place ci-dessus.`;
+Décisions déjà prises, à ne PAS re-proposer chaque mois (projet solo, faible trafic) :
+- Rotation planifiée des secrets (registre, cadence 90j) : non pertinent pour un projet solo sans turnover d'équipe ni accès partagé
+- Endpoint de rapport CSP (report-to) : décidé non prioritaire tant que le trafic reste quasi nul
+- Fichier security.txt (RFC 9116) : décidé non prioritaire, site à faible visibilité, peu de chances qu'un chercheur en sécurité le consulte
+Si l'un de ces éléments redevient pertinent (trafic significatif, ajout d'un collaborateur), le signaler comme "à reconsidérer", pas comme un manque.
+
+Concentre-toi uniquement sur ce qui manque réellement et n'a jamais été évalué. Ne répète pas ce qui est déjà en place ou déjà écarté ci-dessus.`;
     }
 
     if (agentId === 'lucas') {
@@ -208,7 +216,7 @@ Génère la newsletter en te basant sur ces articles. Format JSON requis : { "su
       const errorCount = errorRes.count ?? 0;
       const errors = (activityRes.data ?? []) as Array<{ agent_id: string; action: string; duration_ms: number }>;
       const errorsStr = errors.length
-        ? errors.map((e) => `- [${e.agent_id}] ${e.action.slice(0, 80)} (${e.duration_ms}ms)`).join('\n')
+        ? errors.map((e) => `- [${e.agent_id}] ${e.action.slice(0, 80)}${e.duration_ms != null ? ` (${e.duration_ms}ms)` : ''}`).join('\n')
         : '- Aucune erreur récente';
 
       return `${baseTask}
@@ -228,6 +236,7 @@ Architecture et mesures déjà en place (NE PAS les signaler comme manquantes ou
 - Timeout SDK Anthropic : 270 000ms explicite dans src/lib/anthropic.ts (NE PAS signaler les timeouts 74s comme un bug à corriger — c'est le temps normal des gros audits)
 - Route catalog-sync/translate : duration_ms enregistré dans activity_logs (corrigé 01/07/2026)
 - Il n'existe PAS de route /api/agents/security/legitimacy-check — les temps longs (>50s) sur "vérifier légitimité" sont des tâches manuelles via la page agent Nathalie, durée normale pour Sonnet 4.6
+- Le sync catalogue (chats/chiens/etc.) est dans src/app/api/cron/catalog-sync/catalog-sync-helper.ts (PAS catalog-sync/[species]/route.ts, ce fichier n'existe pas). Son insert dans activity_logs n'a jamais inclus duration_ms — un "(nullms)" pouvant apparaître dans les erreurs ci-dessus vient du template de CE prompt (interpolation de duration_ms), pas d'un console.log applicatif. Corrigé le 01/08/2026 (l'absence de durée est maintenant omise plutôt qu'affichée "null"). NE PLUS proposer performance.now()/finally dans ce fichier pour ce motif.
 
 Concentre-toi uniquement sur les vraies erreurs dans les logs et les problèmes de performance réels. Ne propose pas de refactoring ou d'architectures déjà en place.`;
     }
