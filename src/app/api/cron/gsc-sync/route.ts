@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import { fetchAllPageQueryRows, classifyPageType } from '@/lib/gsc';
+import { fetchAllPageQueryRows, classifyPageType, toPagePath } from '@/lib/gsc';
 
 export const maxDuration = 300;
 
@@ -53,7 +53,7 @@ export async function GET(req: Request) {
 
       const payload = rows.map(r => ({
         week_start: fmt(weekStart),
-        page: r.page,
+        page: toPagePath(r.page),
         query: r.query,
         page_type: classifyPageType(r.page),
         clicks: r.clicks,

@@ -41,9 +41,14 @@ export async function querySearchConsole(accessToken: string, body: object) {
 
 export type GscPageType = 'blog' | 'produit' | 'race' | 'statique' | 'racine';
 
+/** Convertit une URL absolue renvoyée par GSC en chemin relatif ('/blog/xyz'). */
+export function toPagePath(pageUrl: string): string {
+  return pageUrl.replace(GSC_SITE_ORIGIN, '') || '/';
+}
+
 /** Classe une URL/chemin GSC par type de page pour segmenter les rapports SEO. */
 export function classifyPageType(pageUrl: string): GscPageType {
-  const path = pageUrl.replace(GSC_SITE_ORIGIN, '') || '/';
+  const path = toPagePath(pageUrl);
   if (path === '/') return 'racine';
   if (path.startsWith('/blog/')) return 'blog';
   if (path.startsWith('/boutique/') || path === '/boutique') return 'produit';
