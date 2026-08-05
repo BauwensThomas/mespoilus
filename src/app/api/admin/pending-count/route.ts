@@ -8,7 +8,7 @@ export async function GET() {
 
   try {
     const supabase = createAdminClient();
-    const [adoptionRes, commentsRes, reviewsRes] = await Promise.all([
+    const [adoptionRes, commentsRes, reviewsRes, seoSuggestionsRes] = await Promise.all([
       supabase
         .from('adoption_posts')
         .select('id', { count: 'exact', head: true })
@@ -21,13 +21,18 @@ export async function GET() {
         .from('reviews')
         .select('id', { count: 'exact', head: true })
         .eq('status', 'pending'),
+      supabase
+        .from('seo_suggestions')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending'),
     ]);
     return NextResponse.json({
       count: adoptionRes.count ?? 0,
       commentCount: commentsRes.count ?? 0,
       reviewCount: reviewsRes.count ?? 0,
+      seoSuggestionsCount: seoSuggestionsRes.count ?? 0,
     });
   } catch {
-    return NextResponse.json({ count: 0, commentCount: 0, reviewCount: 0 });
+    return NextResponse.json({ count: 0, commentCount: 0, reviewCount: 0, seoSuggestionsCount: 0 });
   }
 }

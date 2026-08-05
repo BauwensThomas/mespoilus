@@ -13,13 +13,22 @@ import CatalogViewToggle from './_components/CatalogViewToggle';
 import CatalogPerPage, { type PerPageValue } from './_components/CatalogPerPage';
 import MobileFiltersPanel from './_components/MobileFiltersPanel';
 import ClientWrapper from '@/components/animations/ClientWrapper';
+import { getMetaOverride } from '@/lib/seo-overrides';
 
-export const metadata: Metadata = {
-  title: 'Boutique animaux - Mes Poilus',
-  description: 'Trouvez les meilleurs produits pour vos animaux de compagnie. Comparez les prix entre tous nos marchands partenaires.',
-  robots: { index: true, follow: true },
-  alternates: { canonical: '/boutique' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const base: Metadata = {
+    title: 'Boutique animaux - Mes Poilus',
+    description: 'Trouvez les meilleurs produits pour vos animaux de compagnie. Comparez les prix entre tous nos marchands partenaires.',
+    robots: { index: true, follow: true },
+    alternates: { canonical: '/boutique' },
+  };
+  const override = await getMetaOverride('/boutique');
+  return {
+    ...base,
+    ...(override?.title ? { title: override.title } : {}),
+    ...(override?.description ? { description: override.description } : {}),
+  };
+}
 
 export const revalidate = 3600;
 

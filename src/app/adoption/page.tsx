@@ -12,13 +12,22 @@ import { Suspense } from 'react';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart } from 'lucide-react';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
 import ClientWrapper from '@/components/animations/ClientWrapper';
+import { getMetaOverride } from '@/lib/seo-overrides';
 
-export const metadata: Metadata = {
-  title: 'Adoption animaux gratuite - Chiens, chats et plus',
-  description: 'Trouvez un animal à adopter près de chez vous ou déposez une annonce pour donner le vôtre. Adoption gratuite entre particuliers, annonces vérifiées.',
-  robots: { index: true, follow: true },
-  alternates: { canonical: '/adoption' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const base: Metadata = {
+    title: 'Adoption animaux gratuite - Chiens, chats et plus',
+    description: 'Trouvez un animal à adopter près de chez vous ou déposez une annonce pour donner le vôtre. Adoption gratuite entre particuliers, annonces vérifiées.',
+    robots: { index: true, follow: true },
+    alternates: { canonical: '/adoption' },
+  };
+  const override = await getMetaOverride('/adoption');
+  return {
+    ...base,
+    ...(override?.title ? { title: override.title } : {}),
+    ...(override?.description ? { description: override.description } : {}),
+  };
+}
 
 export const revalidate = 60;
 

@@ -1,16 +1,25 @@
 import type { Metadata } from 'next';
+import { getMetaOverride } from '@/lib/seo-overrides';
 
-export const metadata: Metadata = {
-  title: "Générateur de prénoms pour animaux",
-  description: "Trouvez le prénom parfait pour votre animal. Des centaines d'idées de noms pour chiens, chats, lapins, oiseaux et rongeurs.",
-  openGraph: {
-    title: "Générateur de prénoms pour animaux | Mes Poilus",
-    description: "Des centaines d'idées de noms pour chiens, chats, lapins, oiseaux et rongeurs.",
-    url: 'https://www.mespoilus.com/outils/prenom',
-    siteName: 'Mes Poilus',
-  },
-  alternates: { canonical: 'https://www.mespoilus.com/outils/prenom' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const base: Metadata = {
+    title: "Générateur de prénoms pour animaux",
+    description: "Trouvez le prénom parfait pour votre animal. Des centaines d'idées de noms pour chiens, chats, lapins, oiseaux et rongeurs.",
+    openGraph: {
+      title: "Générateur de prénoms pour animaux | Mes Poilus",
+      description: "Des centaines d'idées de noms pour chiens, chats, lapins, oiseaux et rongeurs.",
+      url: 'https://www.mespoilus.com/outils/prenom',
+      siteName: 'Mes Poilus',
+    },
+    alternates: { canonical: 'https://www.mespoilus.com/outils/prenom' },
+  };
+  const override = await getMetaOverride('/outils/prenom');
+  return {
+    ...base,
+    ...(override?.title ? { title: override.title } : {}),
+    ...(override?.description ? { description: override.description } : {}),
+  };
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

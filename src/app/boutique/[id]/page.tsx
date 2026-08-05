@@ -7,6 +7,7 @@ import { ExternalLink, Package, Star, Tag, Weight, Heart, EyeOff } from 'lucide-
 import BackBreadcrumb from './_components/BackBreadcrumb';
 import FavoriteButton from '../_components/FavoriteButton';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
+import { getMetaOverride } from '@/lib/seo-overrides';
 
 export const revalidate = 3600;
 
@@ -81,9 +82,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!data) return { title: 'Produit - Mes Poilus' };
 
+  const override = await getMetaOverride(`/boutique/${id}`);
+
   return {
-    title: `${data.name} - Mes Poilus`,
-    description: `Comparez les prix pour ${data.name}${data.brand ? ` de ${data.brand}` : ''}. Trouvez la meilleure offre chez nos marchands partenaires.`,
+    title: override?.title ?? `${data.name} - Mes Poilus`,
+    description: override?.description ?? `Comparez les prix pour ${data.name}${data.brand ? ` de ${data.brand}` : ''}. Trouvez la meilleure offre chez nos marchands partenaires.`,
     // noindex : descriptions copiées des flux affiliés (Awin/CJ) = contenu dupliqué/fin.
     // On retire ces ~6000 fiches de l'index (qualité globale du site + AdSense) ; les liens
     // restent suivis et l'affiliation fonctionne (les visiteurs y accèdent via /boutique).

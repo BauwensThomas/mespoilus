@@ -3,25 +3,34 @@ import type { Metadata } from 'next';
 import GuidesGrid from '@/components/guides/GuidesGrid';
 import type { PdfGuide } from '@/lib/guides';
 import ClientWrapper from '@/components/animations/ClientWrapper';
+import { getMetaOverride } from '@/lib/seo-overrides';
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: 'Guides PDF gratuits pour animaux - À télécharger maintenant',
-  description:
-    'Chien, chat, rongeur, oiseau ou reptile : téléchargez gratuitement nos guides pratiques en PDF. Alimentation, soins, éducation — tout ce qu\'il faut savoir en un fichier.',
-  robots: { index: true, follow: true },
-  alternates: { canonical: '/guides' },
-  openGraph: {
+export async function generateMetadata(): Promise<Metadata> {
+  const base: Metadata = {
     title: 'Guides PDF gratuits pour animaux - À télécharger maintenant',
     description:
-      'Chien, chat, rongeur, oiseau ou reptile : téléchargez gratuitement nos guides pratiques en PDF. Alimentation, soins, éducation.',
-    type: 'website',
-    url: '/guides',
-    siteName: 'Mes Poilus',
-    locale: 'fr_FR',
-  },
-};
+      'Chien, chat, rongeur, oiseau ou reptile : téléchargez gratuitement nos guides pratiques en PDF. Alimentation, soins, éducation — tout ce qu\'il faut savoir en un fichier.',
+    robots: { index: true, follow: true },
+    alternates: { canonical: '/guides' },
+    openGraph: {
+      title: 'Guides PDF gratuits pour animaux - À télécharger maintenant',
+      description:
+        'Chien, chat, rongeur, oiseau ou reptile : téléchargez gratuitement nos guides pratiques en PDF. Alimentation, soins, éducation.',
+      type: 'website',
+      url: '/guides',
+      siteName: 'Mes Poilus',
+      locale: 'fr_FR',
+    },
+  };
+  const override = await getMetaOverride('/guides');
+  return {
+    ...base,
+    ...(override?.title ? { title: override.title } : {}),
+    ...(override?.description ? { description: override.description } : {}),
+  };
+}
 
 async function getGuides(): Promise<PdfGuide[]> {
   try {

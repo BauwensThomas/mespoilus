@@ -33,6 +33,7 @@ const navItems = [
   { href: '/produits-admin', label: 'Produits affiliés',icon: Package,       isPublic: false },
   { href: '/races-admin',    label: 'Fiches races',     icon: ClipboardList, isPublic: false },
   { href: '/avis-admin',     label: 'Avis',             icon: Star,          isPublic: false },
+  { href: '/seo-admin',      label: 'Suggestions SEO',  icon: Search,        isPublic: false },
   { href: '/guides-admin',     label: 'Guides PDF',       icon: FileText,      isPublic: false },
   { href: '/partenaires-admin', label: 'Partenaires',     icon: Star,          isPublic: false },
   { href: '/outreach-admin',   label: 'Prospection',      icon: Send,          isPublic: false },
@@ -52,6 +53,7 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
   const [pendingCount, setPendingCount] = useState(initialPendingCount);
   const [commentCount, setCommentCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
+  const [seoSuggestionsCount, setSeoSuggestionsCount] = useState(0);
   const [noPhotoCount, setNoPhotoCount] = useState(0);
   const [agentsOpen, setAgentsOpen] = useState(false);
   const agentsPanelRef = useRef<HTMLDivElement>(null);
@@ -77,6 +79,7 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
           setPendingCount(d.count ?? 0);
           setCommentCount(d.commentCount ?? 0);
           setReviewCount(d.reviewCount ?? 0);
+          setSeoSuggestionsCount(d.seoSuggestionsCount ?? 0);
         })
         .catch(() => {});
 
@@ -177,6 +180,11 @@ export default function Sidebar({ isOpen, onToggle, initialPendingCount = 0 }: S
                 {href === '/avis-admin' && reviewCount > 0 && (
                   <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white min-w-[18px] text-center">
                     {reviewCount > 99 ? '99+' : reviewCount}
+                  </span>
+                )}
+                {href === '/seo-admin' && seoSuggestionsCount > 0 && (
+                  <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white min-w-[18px] text-center">
+                    {seoSuggestionsCount > 99 ? '99+' : seoSuggestionsCount}
                   </span>
                 )}
               </Link>
