@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { runAgent } from '@/lib/anthropic';
 import { AGENTS } from '@/lib/agents/config';
 import { GSC_SITE_ORIGIN } from '@/lib/gsc';
+import { sendEmail } from '@/lib/resend';
+import { cronEmailWrapper, statsRow } from '@/lib/cron-email';
 
 export const maxDuration = 300;
 
@@ -141,11 +143,14 @@ export async function GET(req: Request) {
       const dominantType = candidate.opportunities[0].opportunity_type;
       const rows: Record<string, unknown>[] = [];
 
+      // Le layout racine ajoute déjà " | Mes Poilus" au <title> — évite un doublon si Lucas l'a quand même inclus.
+      const cleanTitle = parsed.title?.replace(/\s*[|\-–]\s*Mes Poilus\s*$/i, '').trim();
+
       // Le titre des fiches races est un gabarit fixe ("<nom> - Caractère, Santé, Entretien"), non réécrivable.
-      if (parsed.title && parsed.title !== current.title && candidate.page_type !== 'race') {
+      if (cleanTitle && cleanTitle !== current.title && candidate.page_type !== 'race') {
         rows.push({
           page: candidate.page, page_type: candidate.page_type, suggestion_type: 'title',
-          current_value: current.title ?? null, proposed_value: parsed.title,
+          current_value: current.title ?? null, proposed_value: cleanTitle,
           reasoning: parsed.reasoning ?? '', opportunity_type: dominantType,
         });
       }
@@ -183,7 +188,35 @@ export async function GET(req: Request) {
     status: 'success',
   });
 
-  return NextResponse.json({ success: true, pagesAnalyzed: candidates.length, suggestionsCreated, pagesSkippedParseError });
+  const { count: pendingCount } = await supabase
+    .from('seo_suggestions')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'pending');
+
+  if (pendingCount && pendingCount > 0) {
+    try {
+      await sendEmail({
+        to: 'contact@mespoilus.com',
+        subject: `${pendingCount} suggestion${pendingCount > 1 ? 's' : ''} SEO à valider`,
+        html: cronEmailWrapper(
+          `${pendingCount} suggestion${pendingCount > 1 ? 's' : ''} SEO en attente`,
+          'Automatisation SEO',
+          `${statsRow([
+            { label: 'En attente', value: pendingCount },
+            { label: 'Nouvelles ce run', value: suggestionsCreated },
+          ])}
+          <p style="font-size:13px;line-height:1.6;color:#374151">Lucas a analysé les opportunités détectées cette semaine sur Google Search Console (positions page 2, CTR faible, régressions). Va valider ou rejeter les propositions :</p>
+          <div style="text-align:center;margin:20px 0">
+            <a href="https://www.mespoilus.com/seo-admin" style="display:inline-block;background:#ea580c;color:#fff;font-weight:600;font-size:14px;padding:11px 24px;border-radius:10px;text-decoration:none">Voir les suggestions</a>
+          </div>`
+        ),
+      });
+    } catch (mailErr) {
+      console.error('[seo-suggestions] échec email notification:', mailErr);
+    }
+  }
+
+  return NextResponse.json({ success: true, pagesAnalyzed: candidates.length, suggestionsCreated, pagesSkippedParseError, pendingCount: pendingCount ?? 0 });
 }
 
 function isSafeInternalUrl(target: string): boolean {
@@ -233,9 +266,11 @@ TITRE ACTUEL : ${current.title ?? '(aucun, page sans titre spécifique connu)'}
 META DESCRIPTION ACTUELLE : ${current.meta ?? '(aucune)'}
 ${current.content ? `EXTRAIT DU CONTENU (pour repérer une ancre de lien interne pertinente) :\n${current.content}` : ''}
 
+Important : le site ajoute automatiquement " | Mes Poilus" à la fin de chaque titre (balise <title>). Ne mets JAMAIS "Mes Poilus" ou un nom de marque dans le titre que tu proposes, sous peine de doublon.
+
 Réponds UNIQUEMENT avec un objet JSON strict (rien avant, rien après, pas de balises markdown), au format exact :
 {
-  "title": "nouveau titre SEO (60 caractères max) ou null si pas de changement pertinent",
+  "title": "nouveau titre SEO SANS le nom du site (60 caractères max) ou null si pas de changement pertinent",
   "meta_description": "nouvelle meta description (150-155 caractères) ou null si pas de changement pertinent",
   "internal_link": { "anchor_text": "texte EXACT présent dans l'extrait du contenu ci-dessus", "target_url": "/chemin/vers/une/autre/page/du/site" } ou null si aucune opportunité de lien interne pertinente,
   "reasoning": "1-2 phrases expliquant le raisonnement, en français"
