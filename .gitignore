@@ -45,8 +45,7 @@ Thumbs.db
 # Claude Code
 .claude/
 *.jsonl
-CONTEXT.md
-BOUTIQUE.md
+/MD/
 .agents/
 skills-lock.json
 /.claude/
