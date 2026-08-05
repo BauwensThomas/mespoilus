@@ -56,7 +56,7 @@ const ADMIN_PAGE_PREFIXES = [
   '/dashboard', '/agents', '/orchestrate', '/guides-admin', '/races-admin',
   '/blog-admin', '/adoption-admin', '/produits-admin',
   '/boutique-v2-admin', '/partenaires-admin', '/outreach-admin', '/grille-admin', '/abonnes-admin',
-  '/avis-admin', '/qrcode-admin',
+  '/avis-admin', '/qrcode-admin', '/seo-admin',
 ];
 const ADMIN_API_PREFIXES = [
   '/api/agents', '/api/orchestrate', '/api/stats', '/api/security', '/api/admin',

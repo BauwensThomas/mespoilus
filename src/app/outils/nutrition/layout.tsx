@@ -1,16 +1,25 @@
 import type { Metadata } from 'next';
+import { getMetaOverride } from '@/lib/seo-overrides';
 
-export const metadata: Metadata = {
-  title: "Calculateur de nutrition pour animaux",
-  description: "Calculez les besoins alimentaires de votre animal. Conseils nutrition personnalisés pour chiens, chats et petits animaux.",
-  openGraph: {
-    title: "Calculateur de nutrition pour animaux | Mes Poilus",
-    description: "Calculez les besoins alimentaires et obtenez des conseils nutrition pour votre animal.",
-    url: 'https://www.mespoilus.com/outils/nutrition',
-    siteName: 'Mes Poilus',
-  },
-  alternates: { canonical: 'https://www.mespoilus.com/outils/nutrition' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const base: Metadata = {
+    title: "Calculateur de nutrition pour animaux",
+    description: "Calculez les besoins alimentaires de votre animal. Conseils nutrition personnalisés pour chiens, chats et petits animaux.",
+    openGraph: {
+      title: "Calculateur de nutrition pour animaux | Mes Poilus",
+      description: "Calculez les besoins alimentaires et obtenez des conseils nutrition pour votre animal.",
+      url: 'https://www.mespoilus.com/outils/nutrition',
+      siteName: 'Mes Poilus',
+    },
+    alternates: { canonical: 'https://www.mespoilus.com/outils/nutrition' },
+  };
+  const override = await getMetaOverride('/outils/nutrition');
+  return {
+    ...base,
+    ...(override?.title ? { title: override.title } : {}),
+    ...(override?.description ? { description: override.description } : {}),
+  };
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

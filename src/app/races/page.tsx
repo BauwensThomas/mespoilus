@@ -5,14 +5,23 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_LABEL, ANIMAL_URL, ANIMAL_EMOJI, ANIMAL_GRADIENT, type AnimalType } from '@/lib/breeds-list';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
 import ClientWrapper from '@/components/animations/ClientWrapper';
+import { getMetaOverride } from '@/lib/seo-overrides';
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: 'Fiches races animaux de compagnie',
-  alternates: { canonical: 'https://www.mespoilus.com/races' },
-  description: 'Fiches races pour chiens, chats, oiseaux, rongeurs et reptiles. Caractère, santé et entretien pour bien choisir votre animal.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const base: Metadata = {
+    title: 'Fiches races animaux de compagnie',
+    alternates: { canonical: 'https://www.mespoilus.com/races' },
+    description: 'Fiches races pour chiens, chats, oiseaux, rongeurs et reptiles. Caractère, santé et entretien pour bien choisir votre animal.',
+  };
+  const override = await getMetaOverride('/races');
+  return {
+    ...base,
+    ...(override?.title ? { title: override.title } : {}),
+    ...(override?.description ? { description: override.description } : {}),
+  };
+}
 
 const ANIMALS: AnimalType[] = ['chien', 'chat', 'oiseau', 'rongeur', 'reptile'];
 

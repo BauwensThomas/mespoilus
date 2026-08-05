@@ -18,14 +18,23 @@ import ReviewThanksBanner from '@/components/reviews/ReviewThanksBanner';
 import { formatReviewDate } from '@/lib/formatReviewDate';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { getMetaOverride } from '@/lib/seo-overrides';
 
 type Review = { id: string; name: string; rating: number; comment: string | null; created_at: string };
 
-export const metadata: Metadata = {
-  title: 'Mes Poilus - Conseils animaux, adoption et boutique en ligne',
-  description: 'Conseils pratiques pour chiens, chats, oiseaux, rongeurs et reptiles. Trouvez un animal à adopter, explorez la boutique et téléchargez nos guides PDF gratuits.',
-  alternates: { canonical: 'https://www.mespoilus.com' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const base: Metadata = {
+    title: 'Mes Poilus - Conseils animaux, adoption et boutique en ligne',
+    description: 'Conseils pratiques pour chiens, chats, oiseaux, rongeurs et reptiles. Trouvez un animal à adopter, explorez la boutique et téléchargez nos guides PDF gratuits.',
+    alternates: { canonical: 'https://www.mespoilus.com' },
+  };
+  const override = await getMetaOverride('/');
+  return {
+    ...base,
+    ...(override?.title ? { title: override.title } : {}),
+    ...(override?.description ? { description: override.description } : {}),
+  };
+}
 
 export const revalidate = 3600;
 

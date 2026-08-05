@@ -1,8 +1,9 @@
 const CLIENT_ID = process.env.GSC_CLIENT_ID!;
 const CLIENT_SECRET = process.env.GSC_CLIENT_SECRET!;
 const SITE_URL = 'https://www.mespoilus.com/';
+export const GSC_SITE_ORIGIN = 'https://www.mespoilus.com';
 
-async function getAccessToken(): Promise<string> {
+export async function getAccessToken(): Promise<string> {
   const refreshToken = process.env.GSC_REFRESH_TOKEN;
   if (!refreshToken) throw new Error('GSC_REFRESH_TOKEN manquant');
 
@@ -22,7 +23,7 @@ async function getAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-async function querySearchConsole(accessToken: string, body: object) {
+export async function querySearchConsole(accessToken: string, body: object) {
   const res = await fetch(
     `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(SITE_URL)}/searchAnalytics/query`,
     {
@@ -36,6 +37,63 @@ async function querySearchConsole(accessToken: string, body: object) {
   );
   if (!res.ok) throw new Error(`GSC API erreur ${res.status}: ${await res.text()}`);
   return res.json();
+}
+
+export type GscPageType = 'blog' | 'produit' | 'race' | 'statique' | 'racine';
+
+/** Classe une URL/chemin GSC par type de page pour segmenter les rapports SEO. */
+export function classifyPageType(pageUrl: string): GscPageType {
+  const path = pageUrl.replace(GSC_SITE_ORIGIN, '') || '/';
+  if (path === '/') return 'racine';
+  if (path.startsWith('/blog/')) return 'blog';
+  if (path.startsWith('/boutique/') || path === '/boutique') return 'produit';
+  if (path.startsWith('/races/')) return 'race';
+  return 'statique';
+}
+
+export interface GscRow {
+  page: string;
+  query: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+/**
+ * Récupère toutes les lignes (page x query) pour une plage de dates donnée, avec pagination.
+ * Utilisé par le cron gsc-sync pour historiser au-delà des 16 mois gardés par l'UI GSC.
+ */
+export async function fetchAllPageQueryRows(startDate: string, endDate: string): Promise<GscRow[]> {
+  const accessToken = await getAccessToken();
+  const rows: GscRow[] = [];
+  const PAGE_SIZE = 25000;
+  let startRow = 0;
+
+  for (;;) {
+    const data = await querySearchConsole(accessToken, {
+      startDate,
+      endDate,
+      dimensions: ['page', 'query'],
+      rowLimit: PAGE_SIZE,
+      startRow,
+    });
+    const batch = (data.rows ?? []) as { keys: string[]; clicks: number; impressions: number; ctr: number; position: number }[];
+    for (const r of batch) {
+      rows.push({
+        page: r.keys[0],
+        query: r.keys[1],
+        clicks: r.clicks,
+        impressions: r.impressions,
+        ctr: Math.round(r.ctr * 1000) / 10,
+        position: Math.round(r.position * 10) / 10,
+      });
+    }
+    if (batch.length < PAGE_SIZE) break;
+    startRow += PAGE_SIZE;
+  }
+
+  return rows;
 }
 
 export interface GscQuery {

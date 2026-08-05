@@ -1,16 +1,25 @@
 import type { Metadata } from 'next';
+import { getMetaOverride } from '@/lib/seo-overrides';
 
-export const metadata: Metadata = {
-  title: "Quiz : quel animal me correspond ?",
-  description: "Répondez à notre quiz pour découvrir quel animal de compagnie correspond le mieux à votre mode de vie : chien, chat, lapin, oiseau ou rongeur.",
-  openGraph: {
-    title: "Quiz : quel animal me correspond ? | Mes Poilus",
-    description: "Découvrez quel animal correspond à votre mode de vie en quelques questions.",
-    url: 'https://www.mespoilus.com/outils/quiz',
-    siteName: 'Mes Poilus',
-  },
-  alternates: { canonical: 'https://www.mespoilus.com/outils/quiz' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const base: Metadata = {
+    title: "Quiz : quel animal me correspond ?",
+    description: "Répondez à notre quiz pour découvrir quel animal de compagnie correspond le mieux à votre mode de vie : chien, chat, lapin, oiseau ou rongeur.",
+    openGraph: {
+      title: "Quiz : quel animal me correspond ? | Mes Poilus",
+      description: "Découvrez quel animal correspond à votre mode de vie en quelques questions.",
+      url: 'https://www.mespoilus.com/outils/quiz',
+      siteName: 'Mes Poilus',
+    },
+    alternates: { canonical: 'https://www.mespoilus.com/outils/quiz' },
+  };
+  const override = await getMetaOverride('/outils/quiz');
+  return {
+    ...base,
+    ...(override?.title ? { title: override.title } : {}),
+    ...(override?.description ? { description: override.description } : {}),
+  };
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
