@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { getMetaOverride } from '@/lib/seo-overrides';
 
+export const revalidate = 3600;
+
 export async function generateMetadata(): Promise<Metadata> {
   const base: Metadata = {
     title: "Calculateur de nutrition pour animaux",
