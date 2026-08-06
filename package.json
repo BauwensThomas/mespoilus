@@ -26,7 +26,7 @@
     "locomotive-scroll": "^5.0.1",
     "lucide-react": "^0.577.0",
     "marked": "^12.0.0",
-    "next": "^15.5.22",
+    "next": "^16.3.0",
     "next-themes": "^0.4.6",
     "qrcode": "^1.5.4",
     "react": "^18",
