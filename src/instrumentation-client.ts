@@ -14,6 +14,12 @@ Sentry.init({
     Sentry.browserProfilingIntegration(),
     Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
   ],
+  // Bruit connu du navigateur intégré Instagram/Android WebView (pont natif détruit
+  // pendant la navigation) - ne vient jamais de notre code, aucune action possible.
+  ignoreErrors: [
+    /Java object is gone/,
+    /Java bridge method invoked after JavaScript context destroyed/,
+  ],
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
