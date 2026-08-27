@@ -39,7 +39,7 @@ export function generateMetadata(): Metadata {
     other: {
       'google-adsense-account': 'ca-pub-3549294158319032',
       'google-site-verification': 'RjHr4b1Sf6FfVs0bvOXjkteGNw7xDIHyqxKJZSb0dJ8',
-      'msvalidate.01': '8ABCB6EDE93FF1A2E1C99FA1281F33E7',
+      'msvalidate.01': '83EE57CB502C7BC5F3A83EBA319E856B',
       ...Sentry.getTraceData(),
     },
   };
