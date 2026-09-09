@@ -3,8 +3,10 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/resend';
 import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 import { emailWrapper } from '@/lib/cron-email';
+import { isSameOriginRequest } from '@/lib/security';
 
 export async function POST(req: NextRequest) {
+  if (!isSameOriginRequest(req)) return NextResponse.json({ error: 'Origine invalide' }, { status: 403 });
   const ip = getClientIP(req);
   const { allowed } = await checkRateLimit(`adoption-contact:${ip}`, 3_600_000, 5);
   if (!allowed) return NextResponse.json({ error: 'Trop de messages. Réessayez dans 1h.' }, { status: 429 });

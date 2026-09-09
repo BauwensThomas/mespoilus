@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/resend';
 import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 import { emailWrapper } from '@/lib/cron-email';
+import { isSameOriginRequest } from '@/lib/security';
 
 const ANIMAL_LABELS: Record<string, string> = {
   tous:    'Tous les animaux',
@@ -14,6 +15,7 @@ const ANIMAL_LABELS: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  if (!isSameOriginRequest(req)) return NextResponse.json({ error: 'Origine invalide' }, { status: 403 });
   const ip = getClientIP(req);
   const { allowed } = await checkRateLimit(`alert-sub:${ip}`, 3_600_000, 5);
   if (!allowed) return NextResponse.json({ error: 'Trop de tentatives, réessayez dans 1h.' }, { status: 429 });

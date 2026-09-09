@@ -120,6 +120,22 @@ export function generateCSRFToken(): string {
   return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+export function isSameOriginRequest(req: Request): boolean {
+  const origin = req.headers.get('origin');
+  const referer = req.headers.get('referer');
+  const expectedOrigin = new URL(req.url).origin;
+
+  if (origin) return origin === expectedOrigin;
+  if (referer) {
+    try {
+      return new URL(referer).origin === expectedOrigin;
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
 export function sanitizeInput(input: string): string {
   return input
     .replace(/[<>]/g, '')
