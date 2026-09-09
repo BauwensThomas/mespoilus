@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 import { sendEmail } from '@/lib/resend';
+import { isSameOriginRequest } from '@/lib/security';
 
 export async function POST(req: NextRequest) {
+  if (!isSameOriginRequest(req)) return NextResponse.json({ error: 'Origine invalide' }, { status: 403 });
   const ip = getClientIP(req);
   const { allowed } = await checkRateLimit(`review:${ip}`, 86_400_000, 1);
   if (!allowed) return NextResponse.json({ error: 'Vous avez déjà laissé un avis récemment, merci !' }, { status: 429 });

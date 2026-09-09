@@ -113,8 +113,13 @@ export async function GET(req: Request) {
   const generated: string[] = [];
   const errors: string[] = [];
 
-  for (const breed of toGenerate) {
-    try {
+  const queue = [...toGenerate];
+  const worker = async () => {
+    while (queue.length > 0) {
+      const breed = queue.shift();
+      if (!breed) return;
+
+      try {
       const response = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 4096,
@@ -194,12 +199,16 @@ Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans commentaires) :
 
       generated.push(`${breed.animal}/${breed.slug}`);
       console.log(`[Cron Races] OK ${breed.name}`);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      errors.push(`${breed.name}: ${msg}`);
-      console.error(`[Cron Races] ERREUR ${breed.name}:`, msg);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`${breed.name}: ${msg}`);
+        console.error(`[Cron Races] ERREUR ${breed.name}:`, msg);
+      }
     }
-  }
+  };
+
+  const workerCount = Math.min(3, toGenerate.length);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
 
   const duration = Date.now() - globalStart;
   const remaining = BREEDS_SEED.filter(b => b.animal === targetAnimal).length

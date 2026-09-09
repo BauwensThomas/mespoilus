@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/resend';
 import { emailWrapper } from '@/lib/cron-email';
+import { isSameOriginRequest } from '@/lib/security';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com';
 
 export async function POST(req: NextRequest) {
+  if (!isSameOriginRequest(req)) return NextResponse.json({ error: 'Origine invalide' }, { status: 403 });
   try {
     const { email, guide_id, newsletter_consent } = await req.json();
 

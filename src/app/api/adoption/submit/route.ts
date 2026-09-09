@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 import { sendEmail } from '@/lib/resend';
 import { emailWrapper } from '@/lib/cron-email';
+import { isSameOriginRequest } from '@/lib/security';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -12,6 +13,7 @@ export const maxDuration = 60;
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5 Mo
 
 export async function POST(req: NextRequest) {
+  if (!isSameOriginRequest(req)) return NextResponse.json({ error: 'Origine invalide' }, { status: 403 });
   const ip = getClientIP(req);
   const { allowed } = await checkRateLimit(`adoption:${ip}`, 3_600_000, 5);
 
