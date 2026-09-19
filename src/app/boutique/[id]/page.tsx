@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
-import { notFound, redirect } from 'next/navigation';
+import { redirect, permanentRedirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ExternalLink, Package, Star, Tag, Weight, Heart, EyeOff } from 'lucide-react';
@@ -102,7 +102,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   ]);
   const isAdmin = !!user;
 
-  if (!result) notFound();
+  // Produit supprime du catalogue : redirection 308 (permanente) plutot qu'un 404 sec,
+  // pour recuperer le jus SEO des anciens backlinks/liens indexes vers ces fiches.
+  if (!result) permanentRedirect('/boutique');
   if (result.catalog.status === 'hidden' && !isAdmin) redirect('/boutique');
 
   const { catalog, offers } = result;
