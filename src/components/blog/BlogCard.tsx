@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Dog, Cat, Bird, Mouse, Zap, PawPrint } from 'lucide-react';
 import clsx from 'clsx';
+import { toHashtag } from '@/lib/hashtag';
 
 const CATEGORY_COLORS: Record<string, string> = {
   chiens: 'text-orange-600 bg-orange-100 border-orange-200',
@@ -171,7 +172,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
                 <div className="flex flex-wrap gap-1.5 mt-6">
                   {article.seo_keywords.slice(0, 5).map((kw) => (
                     <span key={kw} className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full border border-gray-200">
-                      #{kw}
+                      #{toHashtag(kw)}
                     </span>
                   ))}
                 </div>
@@ -202,7 +203,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
               <div className="flex flex-wrap gap-1.5">
                 {article.seo_keywords.slice(0, 2).map((kw) => (
                   <span key={kw} className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full border border-gray-200">
-                    #{kw}
+                    #{toHashtag(kw)}
                   </span>
                 ))}
               </div>
