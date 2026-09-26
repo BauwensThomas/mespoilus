@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { redirect, permanentRedirect } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Package, Star, Tag, Weight, Heart, EyeOff } from 'lucide-react';
+import { ExternalLink, Star, Tag, Weight, Heart, EyeOff } from 'lucide-react';
 import BackBreadcrumb from './_components/BackBreadcrumb';
 import FavoriteButton from '../_components/FavoriteButton';
+import ProductImage from '@/components/boutique/ProductImage';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
 import { getMetaOverride } from '@/lib/seo-overrides';
 
@@ -147,20 +147,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
             {/* Image */}
             <div className="relative w-full md:w-96 shrink-0 h-80 md:h-auto bg-gradient-to-br from-orange-50 to-gray-50" style={{ viewTransitionName: `product-${id}` }}>
-              {catalog.image_url ? (
-                <Image
-                  src={catalog.image_url}
-                  alt={catalog.name}
-                  fill
-                  unoptimized
-                  className="object-contain p-4"
-                  sizes="(max-width: 768px) 100vw, 384px"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Package size={64} className="text-gray-200" strokeWidth={1} />
-                </div>
-              )}
+              <ProductImage
+                src={catalog.image_url}
+                alt={catalog.name}
+                className="object-contain p-4"
+                sizes="(max-width: 768px) 100vw, 384px"
+                iconSize={64}
+              />
               <span className="absolute top-3 left-3 z-10">
                 <FavoriteButton catalogId={catalog.id} size={22} />
               </span>

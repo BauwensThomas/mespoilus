@@ -1,10 +1,10 @@
 ﻿'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Package, Star } from 'lucide-react';
+import { ExternalLink, Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import FavoriteButton from './FavoriteButton';
+import ProductImage from '@/components/boutique/ProductImage';
 
 const COUNTRY_FLAGS: Record<string, string> = {
   fr: 'fr', be: 'be', ca: 'ca', us: 'us', gb: 'gb', de: 'de', nl: 'nl',
@@ -70,20 +70,13 @@ export default function CatalogListItem({
     }`}>
       <Link href={`/boutique/${catalogId}`} className="absolute inset-0 z-0" aria-label={`Voir le produit : ${nameFr ?? name}`} />
       <div className="pointer-events-none relative w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-orange-50 to-gray-50">
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={name}
-            fill
-            unoptimized
-            className="object-contain p-1.5"
-            sizes="96px"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Package size={28} className="text-gray-200" strokeWidth={1} />
-          </div>
-        )}
+        <ProductImage
+          src={imageUrl}
+          alt={name}
+          className="object-contain p-1.5"
+          sizes="96px"
+          iconSize={28}
+        />
       </div>
 
       <div className="pointer-events-none flex-1 min-w-0">

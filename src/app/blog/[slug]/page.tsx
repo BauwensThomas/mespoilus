@@ -13,6 +13,7 @@ import CommentForm from '@/components/blog/CommentForm';
 import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle, Pencil } from 'lucide-react';
 import ClientWrapper from '@/components/animations/ClientWrapper';
 import { toHashtag } from '@/lib/hashtag';
+import ProductImage from '@/components/boutique/ProductImage';
 
 export const dynamic = 'force-dynamic';
 
@@ -366,11 +367,7 @@ export default async function ArticlePage({ params }: Props) {
                 {relProducts.map((p) => (
                   <a key={p.catalog_id} href={p.affiliate_url} target="_blank" rel="noopener noreferrer sponsored nofollow" className="stagger-child bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col">
                     <div className="relative h-28 bg-gray-50">
-                      {p.image_url ? (
-                        <Image src={p.image_url} alt={p.name} fill unoptimized className="object-contain p-2" sizes="200px" />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center"><PawPrint className="text-gray-300" size={28} /></div>
-                      )}
+                      <ProductImage src={p.image_url} alt={p.name} className="object-contain p-2" sizes="200px" icon={PawPrint} iconSize={28} iconClassName="text-gray-300" />
                     </div>
                     <div className="p-2.5 flex flex-col flex-1">
                       <p className="text-xs text-gray-700 font-medium line-clamp-2 flex-1">{p.name}</p>
