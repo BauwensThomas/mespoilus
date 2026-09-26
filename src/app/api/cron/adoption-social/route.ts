@@ -49,8 +49,12 @@ export async function GET(req: Request) {
     return lines.join('\n');
   }).join('\n\n');
 
-  // Image = première photo du premier animal (Supabase Storage → acceptée par Instagram)
-  const imageUrl: string | null = posts[0].photo_urls?.[0] ?? null;
+  // Image = première photo du premier animal (Supabase Storage), recadrée au ratio
+  // accepté par Instagram (4:5 - 1.91:1) via /api/social-image : les photos uploadées
+  // par les particuliers ont un ratio arbitraire (erreur Instagram 36003 sinon).
+  const rawImageUrl: string | null = posts[0].photo_urls?.[0] ?? null;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mespoilus.com';
+  const imageUrl = rawImageUrl ? `${baseUrl}/api/social-image?src=${encodeURIComponent(rawImageUrl)}` : null;
 
   const emma = getAgent('emma');
   const prompt = `Crée un post Facebook et Instagram chaleureux et émouvant pour promouvoir les adoptions d'animaux de la semaine sur Mes Poilus.
