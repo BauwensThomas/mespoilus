@@ -307,7 +307,7 @@ export default async function ArticlePage({ params }: Props) {
             <div className="flex flex-wrap gap-2 mb-8 fade-up">
               {article.seo_keywords.map((kw) => (
                 <span key={kw} className="text-xs bg-orange-50 text-orange-600 px-2.5 py-1 rounded-full border border-orange-200">
-                  #{kw}
+                  #{kw.split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join('')}
                 </span>
               ))}
             </div>
