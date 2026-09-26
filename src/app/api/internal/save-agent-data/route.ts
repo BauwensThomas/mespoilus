@@ -88,6 +88,11 @@ async function saveEmma(content: string) {
     console.log(`[save-agent] Emma social_posts ${platform}:`, r.ok ? 'OK' : `erreur ${r.status}`);
   }
 
+  // Recadrage vers un ratio accepté par Instagram (4:5 - 1.91:1) : l'image de l'article
+  // (Pexels) a un ratio arbitraire, non garanti compatible (erreur Instagram 36003).
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mespoilus.com';
+  const socialImageUrl = imageUrl ? `${baseUrl}/api/social-image?src=${encodeURIComponent(imageUrl)}` : null;
+
   // Un seul webhook → Make déclenche Facebook puis Instagram en séquence
   const makeUrl = process.env.MAKE_WEBHOOK_URL;
   if (makeUrl) {
@@ -100,7 +105,7 @@ async function saveEmma(content: string) {
         body: JSON.stringify({
           content: postContent.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim(),
           hashtags: hashtags.join(' '),
-          image_url: imageUrl,
+          image_url: socialImageUrl,
         }),
         signal: ctrl.signal,
       });
