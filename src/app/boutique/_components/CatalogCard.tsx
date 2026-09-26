@@ -1,7 +1,7 @@
-﻿import Image from 'next/image';
-import Link from 'next/link';
-import { ExternalLink, Package, Star } from 'lucide-react';
+﻿import Link from 'next/link';
+import { ExternalLink, Star } from 'lucide-react';
 import FavoriteButton from './FavoriteButton';
+import ProductImage from '@/components/boutique/ProductImage';
 
 const COUNTRY_FLAGS: Record<string, string> = {
   fr: 'fr', be: 'be', ca: 'ca', us: 'us', gb: 'gb', de: 'de', nl: 'nl',
@@ -46,20 +46,12 @@ export default function CatalogCard({
       <Link href={`/boutique/${catalogId}`} className="absolute inset-0 z-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-inset rounded-2xl" aria-label={`Voir le produit : ${nameFr ?? name}`}><span className="sr-only">Voir {nameFr ?? name}</span></Link>
 
       <div className="pointer-events-none relative h-56 bg-gradient-to-br from-orange-50 to-gray-50 overflow-hidden" style={{ viewTransitionName: `product-${catalogId}` }}>
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={name}
-            fill
-            unoptimized
-            className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Package size={48} className="text-gray-200" strokeWidth={1} />
-          </div>
-        )}
+        <ProductImage
+          src={imageUrl}
+          alt={name}
+          className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+        />
         <span className="absolute top-2 left-2 z-10 pointer-events-auto">
           <FavoriteButton catalogId={catalogId} />
         </span>
