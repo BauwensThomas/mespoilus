@@ -12,6 +12,7 @@ import AdBanner from '@/components/ui/AdBanner';
 import CommentForm from '@/components/blog/CommentForm';
 import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle, Pencil } from 'lucide-react';
 import ClientWrapper from '@/components/animations/ClientWrapper';
+import { toHashtag } from '@/lib/hashtag';
 
 export const dynamic = 'force-dynamic';
 
@@ -307,7 +308,7 @@ export default async function ArticlePage({ params }: Props) {
             <div className="flex flex-wrap gap-2 mb-8 fade-up">
               {article.seo_keywords.map((kw) => (
                 <span key={kw} className="text-xs bg-orange-50 text-orange-600 px-2.5 py-1 rounded-full border border-orange-200">
-                  #{kw.split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join('')}
+                  #{toHashtag(kw)}
                 </span>
               ))}
             </div>
