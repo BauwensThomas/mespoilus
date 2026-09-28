@@ -50,19 +50,37 @@ export async function GET(req: Request) {
   const supabase = createAdminClient();
 
   // 1. Charger tous les produits actifs qui ont une image_url - pagination 1000/page
-  const allProducts: { id: string; name: string; image_url: string | null; ean: string | null; category: string | null; created_at: string; description: string | null; brand: string | null; name_fr: string | null }[] = [];
+  //    Count d'abord, puis pages en parallèle (lots de 4) au lieu de ~20 GET séquentiels.
+  //    order('id') obligatoire : sans tri stable, .range() peut sauter ou dupliquer des lignes.
+  type CatalogRow = { id: string; name: string; image_url: string | null; ean: string | null; category: string | null; created_at: string; description: string | null; brand: string | null; name_fr: string | null };
   const PAGE = 1000;
-  for (let start = 0; ; start += PAGE) {
-    const { data: page, error } = await supabase
-      .from('products_catalog')
-      .select('id, name, image_url, ean, category, created_at, description, brand, name_fr')
-      .not('image_url', 'is', null)
-      .eq('status', 'active')
-      .range(start, start + PAGE - 1);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    if (!page || page.length === 0) break;
-    allProducts.push(...page);
-    if (page.length < PAGE) break;
+  const CONCURRENCY = 4;
+
+  const { count, error: countError } = await supabase
+    .from('products_catalog')
+    .select('id', { count: 'exact', head: true })
+    .not('image_url', 'is', null)
+    .eq('status', 'active');
+  if (countError) return NextResponse.json({ error: countError.message }, { status: 500 });
+
+  const starts = Array.from({ length: Math.ceil((count ?? 0) / PAGE) }, (_, i) => i * PAGE);
+  const allProducts: CatalogRow[] = [];
+  for (let i = 0; i < starts.length; i += CONCURRENCY) {
+    const results = await Promise.all(
+      starts.slice(i, i + CONCURRENCY).map(start =>
+        supabase
+          .from('products_catalog')
+          .select('id, name, image_url, ean, category, created_at, description, brand, name_fr')
+          .not('image_url', 'is', null)
+          .eq('status', 'active')
+          .order('id')
+          .range(start, start + PAGE - 1)
+      )
+    );
+    for (const { data: page, error } of results) {
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      allProducts.push(...(page ?? []));
+    }
   }
 
   const products = allProducts;
