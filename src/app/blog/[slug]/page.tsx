@@ -1,4 +1,5 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { slugify } from '@/lib/slugify';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { Article } from '@/types';
 import { format } from 'date-fns';
@@ -95,6 +96,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params;
+  // Anciens liens accentués (ex: déjà partagés sur les réseaux) → 301 vers le slug ASCII
+  let decoded = slug;
+  try { decoded = decodeURIComponent(slug); } catch { /* slug mal encodé */ }
+  const clean = slugify(decoded);
+  if (clean && clean !== slug) permanentRedirect(`/blog/${clean}`);
   const article = await getArticle(slug);
   if (!article) notFound();
 
