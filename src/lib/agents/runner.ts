@@ -3,6 +3,7 @@ import { runAgent, streamAgent } from '@/lib/anthropic';
 import { getAgent } from './config';
 import { createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { slugify } from '@/lib/slugify';
 
 export async function executeAgentTask(
   agentId: AgentId,
@@ -279,7 +280,7 @@ async function saveMariesArticle(content: string): Promise<string | null> {
     };
 
     const title = getField('title');
-    const slug = getField('slug') || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const slug = slugify(getField('slug') || title);
     const excerpt = getField('excerpt');
     const category = getField('category') || 'general';
     const metaDescription = getField('meta_description');

@@ -8,6 +8,7 @@ import { getGscInsights, formatGscForLucas } from '@/lib/gsc';
 import { getDailyTrends, formatTrendsForLucas, getAnimalSuggestions, formatSuggestionsForLucas, type TrendingItem } from '@/lib/trends';
 import { generateFaq } from '@/lib/generate-faq';
 import { pingIndexNow } from '@/lib/indexnow';
+import { slugify } from '@/lib/slugify';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -612,7 +613,8 @@ CONSIGNES :
     const slugMatch = marieResult.content.match(/^slug:\s*(.+)/m);
     const titleMatch = marieResult.content.match(/^title:\s*(.+)/m);
     const excerptMatch = marieResult.content.match(/^excerpt:\s*(.+)/m);
-    articleSlug = slugMatch?.[1]?.trim() ?? '';
+    // Même normalisation que runner.ts (sinon le slug lu ici ne correspond pas à celui en base)
+    articleSlug = slugify(slugMatch?.[1]?.trim() ?? '');
     articleTitle = titleMatch?.[1]?.trim() ?? sujet;
     // Garde-fou SEO : titre ≤ 47 chars (total "titre | Mes Poilus" ≤ 60 chars)
     if (articleTitle.length > 47) {
