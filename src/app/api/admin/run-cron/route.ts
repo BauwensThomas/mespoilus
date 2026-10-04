@@ -23,6 +23,7 @@ const CRON_PATHS: Record<string, string> = {
   'adoption-social':         '/api/cron/adoption-social',
   'grille-social':           '/api/cron/grille-social',
   'grille-rotation':         '/api/cron/grille-rotation',
+  'db-backup':               '/api/cron/db-backup',
   'breeds':                  '/api/cron/breeds',
   'daily-recap':             '/api/cron/daily-recap',
 };

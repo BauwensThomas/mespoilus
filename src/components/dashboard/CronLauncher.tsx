@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard,
   Rocket, CheckCircle2, XCircle, BookOpen, Mail, Sparkles, Heart,
-  ChevronDown, ChevronUp, Send, Tag, ImageIcon, X, Play, RotateCcw, MessageSquare,
+  ChevronDown, ChevronUp, Send, Tag, ImageIcon, X, Play, RotateCcw, MessageSquare, DatabaseBackup,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { PARTENAIRES } from '@/lib/partenaires';
@@ -113,6 +113,17 @@ const CRONS: CronConfig[] = [
     accentColor: 'border-slate-200',
     group: 'Maintenance',
     steps: [{ key: 'grille-rotation', label: 'Rotation des grilles' }],
+  },
+  {
+    id: 'db-backup',
+    label: 'Sauvegarde base',
+    description: 'Exporte toutes les tables (JSON gzippé) dans le bucket privé db-backups, garde les 4 dernières. Tourne automatiquement le dimanche à 3h30 UTC.',
+    icon: DatabaseBackup,
+    iconBg: 'bg-slate-100',
+    iconColor: 'text-slate-600',
+    accentColor: 'border-slate-200',
+    group: 'Maintenance',
+    steps: [{ key: 'db-backup', label: 'Export des tables' }],
   },
   {
     id: 'breeds',

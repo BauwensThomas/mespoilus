@@ -105,6 +105,7 @@ const WEEKDAY_CRONS: Record<number, Array<{ label: string; pattern: string; hour
   ],
   0: [ // Dimanche
     { label: 'Fiches races (Haiku)', pattern: 'Cron races',          hour: '07h', agent: 'Thomas' },
+    { label: 'Backup base',          pattern: 'Cron backup',         hour: '03h30', agent: 'Thomas' },
   ],
 };
 
