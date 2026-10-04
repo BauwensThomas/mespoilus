@@ -24,6 +24,7 @@
     { "path": "/api/cron/adoption-cleanup",              "schedule": "0 3 * * *" },
     { "path": "/api/cron/adoption-social",               "schedule": "0 19 * * 2" },
     { "path": "/api/cron/breeds?batch=10",               "schedule": "0 7 * * 0" },
+    { "path": "/api/cron/db-backup",                     "schedule": "30 3 * * 0" },
     { "path": "/api/cron/daily-recap",                   "schedule": "0 20 * * *" },
     { "path": "/api/cron/grille-rotation",               "schedule": "0 8 * * *" },
     { "path": "/api/cron/keep-alive",                    "schedule": "0 5 * * 1,4" },
