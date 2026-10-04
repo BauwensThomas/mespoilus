@@ -104,6 +104,8 @@ Base tes analyses et recommandations sur ces chiffres réels mois par mois.`;
 
       return `${baseTask}
 
+Date du jour : ${new Date().toLocaleDateString('fr-FR')} (utilise cette date dans l'en-tête du rapport, n'en invente pas d'autre).
+
 État de sécurité actuel :
 - Incidents enregistrés total : ${totalLogs}
 - IPs bloquées : ${totalBlocked}
@@ -125,6 +127,8 @@ Mesures de sécurité déjà en place (NE PAS les signaler comme manquantes) :
 - CSRF : 'generateCSRFToken()' disponible dans src/lib/security.ts — les mutations API sont protégées par Supabase Auth (session cookie httpOnly) et par les headers x-internal-secret/CRON_SECRET selon la route
 - Les entrées "Security Analysis" dans security_logs sont LES PROPRES RAPPORTS DE NATHALIE des crons précédents, pas de vraies attaques — elles sont filtrées automatiquement dans le contexte (AUDIT_ARTIFACTS). NE PAS les signaler comme un bug de logging.
 - Dependabot activé (01/08/2026) : alertes de vulnérabilité + PR de correctifs de sécurité automatiques (repo GitHub, en plus de dependabot.yml qui gère déjà les mises à jour mineures/patch groupées)
+- Variables NEXT_PUBLIC_ auditées le 04/10/2026 : uniquement des valeurs publiques par conception (URL + anon key Supabase, clé publishable Stripe, clé + map ID Google Maps, URLs du site, flags AdSense/grille). Aucun secret préfixé NEXT_PUBLIC_.
+- Storage Supabase audité le 04/10/2026 : buckets privés = pdf-guides, pixel-grilles, grille-backups ; buckets publics volontaires (contenu destiné à être affiché sur le site) = blog-images, hero-photos, partner-logos, social, adoption-photos (photos d'annonces d'adoption, nom de fichier UUID non devinable). Aucun document personnel privé en bucket public.
 - Appels API Anthropic exclusivement server-side (src/lib/anthropic.ts + routes /api/cron/*), jamais dans un composant client — vérifié, pas de fuite de clé possible côté bundle JS
 
 Décisions déjà prises, à ne PAS re-proposer chaque mois (projet solo, faible trafic) :
@@ -204,27 +208,35 @@ Génère la newsletter en te basant sur ces articles. Format JSON requis : { "su
     }
 
     if (agentId === 'maxime') {
+      // Fenêtre de 30 jours : sans elle, l'audit mensuel ressortait des erreurs vieilles
+      // de plusieurs semaines (déjà résolues) comme si elles étaient actives.
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const [errorRes, activityRes] = await Promise.all([
-        supabase.from('activity_logs').select('id', { count: 'exact', head: true }).eq('status', 'error'),
+        supabase.from('activity_logs').select('id', { count: 'exact', head: true }).eq('status', 'error').gte('created_at', since),
         supabase
           .from('activity_logs')
           .select('agent_id, action, status, duration_ms, created_at')
           .eq('status', 'error')
+          .gte('created_at', since)
           .order('created_at', { ascending: false })
           .limit(5),
       ]);
       const errorCount = errorRes.count ?? 0;
-      const errors = (activityRes.data ?? []) as Array<{ agent_id: string; action: string; duration_ms: number }>;
+      const errors = (activityRes.data ?? []) as Array<{ agent_id: string; action: string; duration_ms: number; created_at: string }>;
       const errorsStr = errors.length
-        ? errors.map((e) => `- [${e.agent_id}] ${e.action.slice(0, 80)}${e.duration_ms != null ? ` (${e.duration_ms}ms)` : ''}`).join('\n')
-        : '- Aucune erreur récente';
+        ? errors.map((e) => `- ${new Date(e.created_at).toLocaleDateString('fr-FR')} [${e.agent_id}] ${e.action.slice(0, 80)}${e.duration_ms != null ? ` (${e.duration_ms}ms)` : ''}`).join('\n')
+        : '- Aucune erreur sur les 30 derniers jours';
 
       return `${baseTask}
 
-État technique actuel :
+Date du jour : ${new Date().toLocaleDateString('fr-FR')} (utilise cette date dans l'en-tête du rapport, n'en invente pas d'autre).
+
+État technique actuel (30 derniers jours uniquement) :
 - Erreurs dans les logs : ${errorCount}
 - Dernières erreurs :
 ${errorsStr}
+Si aucune erreur n'est listée, dis-le simplement : ne reprends pas d'erreurs d'anciens audits.
+- Les durées "Cron races : génération fiches" correspondent à un run complet (toutes les races du batch), pas à une seule fiche.
 
 Architecture et mesures déjà en place (NE PAS les signaler comme manquantes ou à corriger) :
 - Stack : Next.js 15.5 App Router, TypeScript, Tailwind CSS, Supabase (PostgreSQL), API Anthropic, Vercel Hobby
