@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   // Notification a l'admin (non bloquant)
   try {
     await sendEmail({
-      to: 'contact@mespoilus.com',
+      to: process.env.ADMIN_EMAIL ?? 'contact@mespoilus.com',
       subject: `Nouvel avis à modérer - ${ratingNum}/5 (${name.trim()})`,
       html: `
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111">

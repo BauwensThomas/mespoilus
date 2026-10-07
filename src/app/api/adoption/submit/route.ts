@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
     // Notification à l'admin
     try {
       await sendEmail({
-        to: 'contact@mespoilus.com',
+        to: process.env.ADMIN_EMAIL ?? 'contact@mespoilus.com',
         subject: `Nouvelle annonce d'adoption à vérifier -${animal_type} (${region.trim()})`,
         html: `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#111">
