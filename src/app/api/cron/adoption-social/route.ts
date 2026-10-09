@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { runAgent } from '@/lib/anthropic';
 import { getAgent } from '@/lib/agents/config';
 import { createAdminClient } from '@/lib/supabase/server';
+import { prepareSocialImage } from '@/lib/social-image';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -49,12 +50,10 @@ export async function GET(req: Request) {
     return lines.join('\n');
   }).join('\n\n');
 
-  // Image = première photo du premier animal (Supabase Storage), recadrée au ratio
-  // accepté par Instagram (4:5 - 1.91:1) via /api/social-image : les photos uploadées
-  // par les particuliers ont un ratio arbitraire (erreur Instagram 36003 sinon).
+  // Image = première photo du premier animal, recadrée au ratio Instagram (les photos
+  // uploadées par les particuliers ont un ratio arbitraire) et servie en URL statique Supabase.
   const rawImageUrl: string | null = posts[0].photo_urls?.[0] ?? null;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mespoilus.com';
-  const imageUrl = rawImageUrl ? `${baseUrl}/api/social-image?src=${encodeURIComponent(rawImageUrl)}` : null;
+  const imageUrl = rawImageUrl ? await prepareSocialImage(rawImageUrl) : null;
 
   const emma = getAgent('emma');
   const prompt = `Crée un post Facebook et Instagram chaleureux et émouvant pour promouvoir les adoptions d'animaux de la semaine sur Mes Poilus.
@@ -92,14 +91,13 @@ Consignes :
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 
-  // Sauvegarde dans social_posts avec la photo d'adoption
+  // Sauvegarde dans social_posts (la table n'a pas de colonne image_url)
   const hashtags = (emmaContent.match(/#[\wÀ-ɏ]+/g) ?? []);
   const cleanContent = emmaContent.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim();
 
   for (const platform of ['facebook', 'instagram']) {
     await supabase.from('social_posts').insert({
       content: emmaContent, platform, hashtags, status: 'draft',
-      ...(imageUrl ? { image_url: imageUrl } : {}),
     });
   }
 

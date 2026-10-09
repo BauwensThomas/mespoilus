@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { runAgent } from '@/lib/anthropic';
 import { getAgent } from '@/lib/agents/config';
 import { createAdminClient } from '@/lib/supabase/server';
+import { prepareSocialImage } from '@/lib/social-image';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -96,21 +97,22 @@ Consignes :
   const hashtags = (emmaContent.match(/#[\wÀ-ɏ]+/g) ?? []);
   const cleanContent = emmaContent.replace(/#[\wÀ-ɏ]+/g, '').replace(/\n{3,}/g, '\n\n').trim();
 
-  // Sauvegarde brouillons
+  // Sauvegarde brouillons (la table social_posts n'a pas de colonne image_url)
   for (const platform of ['facebook', 'instagram']) {
     await supabase.from('social_posts').insert({
-      content: emmaContent, platform, hashtags, status: 'draft', image_url: imageUrl,
+      content: emmaContent, platform, hashtags, status: 'draft',
     });
   }
 
-  // Envoi Make.com avec l'image actuelle de la grille (JPEG)
+  // Envoi Make.com avec l'image actuelle de la grille (JPEG, URL statique Supabase)
   const makeUrl = process.env.MAKE_WEBHOOK_URL;
   if (makeUrl) {
+    const socialImageUrl = await prepareSocialImage(imageUrl);
     try {
       await fetch(makeUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: cleanContent, hashtags: hashtags.join(' '), image_url: imageUrl }),
+        body: JSON.stringify({ content: cleanContent, hashtags: hashtags.join(' '), image_url: socialImageUrl }),
         signal: AbortSignal.timeout(5000),
       });
     } catch { /* non-bloquant */ }

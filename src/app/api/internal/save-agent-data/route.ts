@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
+import { prepareSocialImage } from '@/lib/social-image';
 import { sendBulkNewsletter } from '@/lib/resend';
 
 async function dbFetch(path: string, method: string, body?: unknown, params?: string) {
@@ -88,10 +89,8 @@ async function saveEmma(content: string) {
     console.log(`[save-agent] Emma social_posts ${platform}:`, r.ok ? 'OK' : `erreur ${r.status}`);
   }
 
-  // Recadrage vers un ratio accepté par Instagram (4:5 - 1.91:1) : l'image de l'article
-  // (Pexels) a un ratio arbitraire, non garanti compatible (erreur Instagram 36003).
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mespoilus.com';
-  const socialImageUrl = imageUrl ? `${baseUrl}/api/social-image?src=${encodeURIComponent(imageUrl)}` : null;
+  // Recadrage au ratio Instagram + URL statique Supabase (voir prepareSocialImage)
+  const socialImageUrl = imageUrl ? await prepareSocialImage(imageUrl) : null;
 
   // Un seul webhook → Make déclenche Facebook puis Instagram en séquence
   const makeUrl = process.env.MAKE_WEBHOOK_URL;

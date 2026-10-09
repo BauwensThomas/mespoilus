@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
+import { prepareSocialImage } from '@/lib/social-image';
 
 async function supabaseFetch(path: string, method: string, body?: unknown, params?: string) {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -110,12 +111,8 @@ export async function POST(req: NextRequest) {
           .trim(),
         hashtags: hashtags.join(' '),
       };
-      // Recadrage vers un ratio accepté par Instagram (4:5 - 1.91:1) : l'image de l'article
-      // (ou l'override) a un ratio arbitraire, non garanti compatible (erreur Instagram 36003).
-      if (imageUrl) {
-        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.mespoilus.com';
-        body.image_url = `${baseUrl}/api/social-image?src=${encodeURIComponent(imageUrl)}`;
-      }
+      // Recadrage au ratio Instagram + URL statique Supabase (voir prepareSocialImage)
+      if (imageUrl) body.image_url = await prepareSocialImage(imageUrl);
       if (articleLink) body.article_url = articleLink;
 
       const res = await fetch(makeUrl, {
