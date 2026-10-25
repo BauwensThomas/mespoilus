@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { normalizeSearch } from '@/lib/search';
+import { ARTICLE_CARD_COLUMNS, withFeaturedContent } from '@/lib/blog-list';
 import BlogPostsGrid from '@/components/blog/BlogPostsGrid';
 import { Article } from '@/types';
 import Link from 'next/link';
@@ -64,14 +65,13 @@ async function getArticles(category: string, search?: string): Promise<Article[]
     const supabase = createAdminClient();
     let query = supabase
       .from('articles')
-      .select('*')
+      .select(ARTICLE_CARD_COLUMNS)
       .eq('status', 'published')
       .eq('category', category)
-      .order('published_at', { ascending: false })
-      .limit(24);
+      .order('published_at', { ascending: false });
     if (search) query = query.ilike('title_search', `%${normalizeSearch(search)}%`);
     const { data } = await query;
-    return (data as Article[]) ?? [];
+    return withFeaturedContent(supabase, data);
   } catch {
     return [];
   }

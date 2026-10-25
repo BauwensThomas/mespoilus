@@ -7,7 +7,8 @@ export const runtime = 'nodejs';
 export const maxDuration = 300;
 
 const BATCH_SIZE = 10;
-const BIWEEKLY_DAYS = 14;
+// Une fiche dont le JSON renvoyé par Haiku est invalide est retentée (ex. Rat Nu, 23/08/2026)
+const MAX_ATTEMPTS = 2;
 
 // Ordre de rotation : oiseaux en premier, puis les autres categories
 const ROTATION_ORDER: AnimalType[] = ['oiseau', 'reptile', 'rongeur', 'chat', 'chien'];
@@ -55,26 +56,19 @@ export async function GET(req: Request) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const supabase = createAdminClient();
 
-  // Garde biweekly (sauf si forceAnimal specifie manuellement)
-  if (!forceAnimal) {
-    const { data: lastRun } = await supabase
-      .from('activity_logs')
-      .select('created_at, details')
-      .eq('action', 'Cron races : génération fiches')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  // Recupere les slugs deja generes
+  const { data: existing } = await supabase
+    .from('breeds')
+    .select('slug, animal')
+    .not('content', 'is', null);
 
-    if (lastRun) {
-      const daysSince = (Date.now() - new Date(lastRun.created_at).getTime()) / 86_400_000;
-      if (daysSince < BIWEEKLY_DAYS) {
-        const daysLeft = Math.ceil(BIWEEKLY_DAYS - daysSince);
-        return NextResponse.json({ success: true, message: `Prochain run dans ${daysLeft} jour(s)`, generated: 0, skipped: true });
-      }
-    }
-  }
+  const existingSet = new Set((existing ?? []).map(r => `${r.animal}:${r.slug}`));
+  const hasRemaining = (animal: AnimalType) =>
+    BREEDS_SEED.some(b => b.animal === animal && !existingSet.has(`${b.animal}:${b.slug}`));
 
-  // Rotation de categorie
+  // Rotation de categorie, chaque dimanche (plus de garde biweekly : elle sautait aussi les
+  // semaines paires, le run precedent ayant fini quelques secondes apres 7h00).
+  // On saute les categories epuisees, sinon la rotation restait bloquee dessus.
   let targetAnimal: AnimalType;
   if (forceAnimal && ROTATION_ORDER.includes(forceAnimal)) {
     targetAnimal = forceAnimal;
@@ -89,16 +83,9 @@ export async function GET(req: Request) {
 
     const lastAnimal = (lastRun?.details as Record<string, unknown> | null)?.targeted_animal as AnimalType | undefined;
     const lastIndex = lastAnimal ? ROTATION_ORDER.indexOf(lastAnimal) : -1;
-    targetAnimal = ROTATION_ORDER[(lastIndex + 1) % ROTATION_ORDER.length];
+    const candidates = ROTATION_ORDER.map((_, i) => ROTATION_ORDER[(lastIndex + 1 + i) % ROTATION_ORDER.length]);
+    targetAnimal = candidates.find(hasRemaining) ?? candidates[0];
   }
-
-  // Recupere les slugs deja generes
-  const { data: existing } = await supabase
-    .from('breeds')
-    .select('slug, animal')
-    .not('content', 'is', null);
-
-  const existingSet = new Set((existing ?? []).map(r => `${r.animal}:${r.slug}`));
 
   // Selectionne les prochaines races de la categorie cible uniquement
   const toGenerate = BREEDS_SEED
@@ -106,7 +93,9 @@ export async function GET(req: Request) {
     .slice(0, batchSize);
 
   if (toGenerate.length === 0) {
-    return NextResponse.json({ success: true, message: `Aucune race ${targetAnimal} a generer`, generated: 0, targeted_animal: targetAnimal });
+    await logActivity(supabase, 'error', Date.now() - globalStart,
+      { generated: 0, errors: ['Liste BREEDS_SEED epuisee : ajouter des races dans src/lib/breeds-list.ts'], remaining: 0, targeted_animal: targetAnimal }, 0);
+    return NextResponse.json({ success: false, message: `Aucune race ${targetAnimal} a generer`, generated: 0, targeted_animal: targetAnimal });
   }
 
   let totalTokens = 0;
@@ -119,6 +108,7 @@ export async function GET(req: Request) {
       const breed = queue.shift();
       if (!breed) return;
 
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
       const response = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
@@ -199,10 +189,12 @@ Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans commentaires) :
 
       generated.push(`${breed.animal}/${breed.slug}`);
       console.log(`[Cron Races] OK ${breed.name}`);
+      break;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        errors.push(`${breed.name}: ${msg}`);
-        console.error(`[Cron Races] ERREUR ${breed.name}:`, msg);
+        console.error(`[Cron Races] ERREUR ${breed.name} (tentative ${attempt}/${MAX_ATTEMPTS}):`, msg);
+        if (attempt === MAX_ATTEMPTS) errors.push(`${breed.name}: ${msg}`);
+      }
       }
     }
   };
