@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
-    "@sentry/nextjs": "^10.69.0",
-    "@sentry/profiling-node": "^10.69.0",
+    "@sentry/nextjs": "^10.75.2",
+    "@sentry/profiling-node": "^10.75.2",
     "@stripe/stripe-js": "^9.12.1",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.107.0",
