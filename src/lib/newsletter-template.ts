@@ -42,37 +42,49 @@ function textToHtml(s: string): string {
     .join('');
 }
 
-function articleCard(a: NlArticle): string {
-  const img = a.image_url
-    ? `<img src="${a.image_url}" alt="${esc(a.title)}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:12px;display:block">`
+// Carte commune articles + adoptions : image à gauche (200 px), texte à droite.
+// Sur mobile (< 600 px), les classes nl-side-* empilent l'image au-dessus du texte.
+const SIDE_IMG_W = 200;
+const SIDE_IMG_H = 170;
+
+function sideCard(opts: { imageUrl: string | null; alt: string; body: string; bg: string }): string {
+  const imgCell = opts.imageUrl
+    ? `<td class="nl-side-img" width="${SIDE_IMG_W}" style="padding:14px 0 14px 14px;vertical-align:top;width:${SIDE_IMG_W}px">
+          <img src="${opts.imageUrl}" alt="${esc(opts.alt)}" width="${SIDE_IMG_W}" height="${SIDE_IMG_H}" style="display:block;width:${SIDE_IMG_W}px;height:${SIDE_IMG_H}px;object-fit:cover;border-radius:8px;border:0">
+        </td>`
     : '';
   return `
-    <table class="nl-art" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px">
-      <tr><td style="padding:16px">
-        ${img}
-        <h3 style="margin:0 0 8px;font-size:17px;font-weight:700;color:${TEXT}">${esc(a.title)}</h3>
-        <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:${MUTED}">${esc(a.excerpt ?? '')}</p>
-        <a href="https://www.mespoilus.com/blog/${a.slug}" style="display:inline-block;background:${ORANGE};color:#fff;text-decoration:none;font-size:14px;font-weight:700;padding:10px 22px;border-radius:8px">Lire l'article</a>
-      </td></tr>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;background:${opts.bg};border:1px solid #fed7aa;border-radius:12px">
+      <tr>
+        ${imgCell}
+        <td class="nl-side-txt" style="padding:14px 16px;vertical-align:top">${opts.body}</td>
+      </tr>
     </table>`;
 }
 
+function articleCard(a: NlArticle): string {
+  return sideCard({
+    imageUrl: a.image_url,
+    alt: a.title,
+    bg: '#fff7ed',
+    body: `
+      <h3 style="margin:0 0 8px;font-size:17px;font-weight:700;color:${TEXT}">${esc(a.title)}</h3>
+      <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:${MUTED}">${esc(a.excerpt ?? '')}</p>
+      <a href="https://www.mespoilus.com/blog/${a.slug}" style="display:inline-block;background:${ORANGE};color:#fff;text-decoration:none;font-size:14px;font-weight:700;padding:10px 22px;border-radius:8px">Lire l'article</a>`,
+  });
+}
+
 function adoptionCard(a: NlAdoption): string {
-  const img = a.imageUrl
-    ? `<img src="${a.imageUrl}" alt="${esc(a.label)}" width="120" style="display:block;width:120px;height:120px;object-fit:cover;border-radius:8px">`
-    : '';
-  return `
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px;background:#ffffff;border:1px solid #fed7aa;border-radius:12px">
-      <tr>
-        ${img ? `<td width="120" style="padding:12px 0 12px 12px;vertical-align:top">${img}</td>` : ''}
-        <td style="padding:12px 14px;vertical-align:top">
-          <h3 style="margin:0 0 4px;font-size:16px;font-weight:700;color:${TEXT}">${esc(a.label)}</h3>
-          ${a.details ? `<p style="margin:0 0 2px;font-size:13px;color:${MUTED}">${esc(a.details)}</p>` : ''}
-          ${a.location ? `<p style="margin:0 0 10px;font-size:13px;color:${MUTED}">${esc(a.location)}</p>` : ''}
-          <a href="https://www.mespoilus.com/adoption/${a.id}" style="display:inline-block;background:${ORANGE};color:#fff;text-decoration:none;font-size:13px;font-weight:700;padding:8px 18px;border-radius:8px">Voir l'annonce</a>
-        </td>
-      </tr>
-    </table>`;
+  return sideCard({
+    imageUrl: a.imageUrl,
+    alt: a.label,
+    bg: '#ffffff',
+    body: `
+      <h3 style="margin:0 0 6px;font-size:17px;font-weight:700;color:${TEXT}">${esc(a.label)}</h3>
+      ${a.details ? `<p style="margin:0 0 2px;font-size:14px;color:${MUTED}">${esc(a.details)}</p>` : ''}
+      ${a.location ? `<p style="margin:0 0 14px;font-size:14px;color:${MUTED}">${esc(a.location)}</p>` : ''}
+      <a href="https://www.mespoilus.com/adoption/${a.id}" style="display:inline-block;background:${ORANGE};color:#fff;text-decoration:none;font-size:14px;font-weight:700;padding:10px 22px;border-radius:8px">Voir l'annonce</a>`,
+  });
 }
 
 function adoptionSection(list: NlAdoption[]): string {
@@ -106,7 +118,7 @@ export function buildNewsletterHtml(opts: {
   year: number;
 }): string {
   const { intro, conseil, articles, grille, adoptions = [], year } = opts;
-  return `<style>@media only screen and (max-width:600px){.nl-out{padding:0 1mm!important}.nl-in{border-radius:0!important}.nl-hd{padding:16px 14px!important}.nl-bd{padding:16px 14px!important}.nl-art td{padding:12px!important}.nl-ft{padding:16px 14px!important}}</style>
+  return `<style>@media only screen and (max-width:600px){.nl-out{padding:0 1mm!important}.nl-in{border-radius:0!important}.nl-hd{padding:16px 14px!important}.nl-bd{padding:16px 14px!important}.nl-side-img,.nl-side-txt{display:block!important;width:auto!important}.nl-side-img{padding:12px 12px 0!important}.nl-side-img img{width:100%!important;height:auto!important;max-height:220px}.nl-side-txt{padding:12px!important}.nl-ft{padding:16px 14px!important}}</style>
 <table class="nl-out" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f9fafb;padding:16px 0;font-family:Arial,sans-serif">
   <tr><td align="center">
     <table class="nl-in" width="860" cellpadding="0" cellspacing="0" border="0" style="max-width:860px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden">

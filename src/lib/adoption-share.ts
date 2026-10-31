@@ -18,9 +18,13 @@ export function publicLocation(region: string | null): string | null {
   if (!region) return null;
   const clean = region.replace(/\b\d{4,5}\b/g, '').replace(/\s+/g, ' ').replace(/\s+,/g, ',').trim();
   if (!clean) return null;
-  return clean === clean.toUpperCase()
-    ? clean.toLowerCase().replace(/(^|[\s,'-])(\p{L})/gu, (_, sep: string, c: string) => sep + c.toUpperCase())
-    : clean;
+  // Chaque partie (ville, pays) tapée tout en majuscules ou tout en minuscules est remise en casse titre
+  return clean.split(',').map(part => {
+    const p = part.trim();
+    return p.length > 1 && (p === p.toUpperCase() || p === p.toLowerCase())
+      ? p.toLowerCase().replace(/(^|[\s'-])(\p{L})/gu, (_, sep: string, c: string) => sep + c.toUpperCase())
+      : p;
+  }).filter(Boolean).join(', ');
 }
 
 /**
