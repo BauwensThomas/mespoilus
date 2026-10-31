@@ -133,6 +133,26 @@ export async function POST(req: NextRequest) {
     const cleanEmail  = email.toLowerCase().trim();
     const cleanName   = poster_name.trim();
 
+    // Opt-in newsletter (case décochée par défaut dans le formulaire) : même logique que la Grille
+    if (formData.get('newsletter') === 'true') {
+      try {
+        const { data: existingSub } = await supabase
+          .from('newsletter_subscribers')
+          .select('id, status')
+          .eq('email', cleanEmail)
+          .maybeSingle();
+        if (!existingSub) {
+          await supabase.from('newsletter_subscribers').insert({ email: cleanEmail, first_name: cleanName, source: 'adoption' });
+        } else if (existingSub.status !== 'active') {
+          await supabase.from('newsletter_subscribers')
+            .update({ status: 'active', unsubscribed_at: null, updated_at: new Date().toISOString() })
+            .eq('id', existingSub.id);
+        }
+      } catch (subErr) {
+        console.error('[adoption:submit] newsletter opt-in:', subErr);
+      }
+    }
+
     // Email de confirmation au déposant
     try {
       await sendEmail({

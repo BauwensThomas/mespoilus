@@ -24,7 +24,8 @@ export async function GET() {
   const [newsRes, grilleRes, adoptionRes, commentRes] = await Promise.all([
     admin.from('newsletter_subscribers').select('id, email, source, created_at').order('created_at', { ascending: false }),
     admin.from('pixel_achats').select('acheteur_email').not('acheteur_email', 'is', null),
-    admin.from('adoption_posts').select('email').not('email', 'is', null),
+    // Hors annonces supprimées : leur email est remplacé par un placeholder RGPD (supprime@mespoilus.com)
+    admin.from('adoption_posts').select('email').not('email', 'is', null).neq('status', 'deleted'),
     admin.from('article_comments').select('email').not('email', 'is', null),
   ]);
 

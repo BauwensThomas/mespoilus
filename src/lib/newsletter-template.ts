@@ -15,6 +15,14 @@ export interface NlGrille {
   jours: number | null; // null = pas encore démarrée (aucun pixel acheté) → pas de compte à rebours
 }
 
+export interface NlAdoption {
+  id: string;
+  label: string;           // "Chien - Berger australien"
+  details: string | null;  // "10 ans, mâle"
+  location: string | null; // ville + pays, jamais de code postal
+  imageUrl: string | null;
+}
+
 const ORANGE = '#ea580c';
 const TEXT = '#1f2937';
 const MUTED = '#374151';
@@ -49,6 +57,32 @@ function articleCard(a: NlArticle): string {
     </table>`;
 }
 
+function adoptionCard(a: NlAdoption): string {
+  const img = a.imageUrl
+    ? `<img src="${a.imageUrl}" alt="${esc(a.label)}" width="120" style="display:block;width:120px;height:120px;object-fit:cover;border-radius:8px">`
+    : '';
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px;background:#ffffff;border:1px solid #fed7aa;border-radius:12px">
+      <tr>
+        ${img ? `<td width="120" style="padding:12px 0 12px 12px;vertical-align:top">${img}</td>` : ''}
+        <td style="padding:12px 14px;vertical-align:top">
+          <h3 style="margin:0 0 4px;font-size:16px;font-weight:700;color:${TEXT}">${esc(a.label)}</h3>
+          ${a.details ? `<p style="margin:0 0 2px;font-size:13px;color:${MUTED}">${esc(a.details)}</p>` : ''}
+          ${a.location ? `<p style="margin:0 0 10px;font-size:13px;color:${MUTED}">${esc(a.location)}</p>` : ''}
+          <a href="https://www.mespoilus.com/adoption/${a.id}" style="display:inline-block;background:${ORANGE};color:#fff;text-decoration:none;font-size:13px;font-weight:700;padding:8px 18px;border-radius:8px">Voir l'annonce</a>
+        </td>
+      </tr>
+    </table>`;
+}
+
+function adoptionSection(list: NlAdoption[]): string {
+  return `
+    <h2 style="margin:24px 0 6px;font-size:16px;font-weight:800;color:${TEXT};text-transform:uppercase;letter-spacing:.03em">Ils cherchent une famille</h2>
+    <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:${MUTED}">Ces compagnons attendent un foyer aimant. Tu peux les aider en partageant leur annonce autour de toi.</p>
+    ${list.map(adoptionCard).join('')}
+    <p style="margin:4px 0 20px;font-size:13px;line-height:1.6;color:${MUTED}">Tu cherches une famille pour un animal ? <a href="https://www.mespoilus.com/adoption" style="color:${ORANGE};font-weight:700;text-decoration:none">Déposer une annonce sur Mes Poilus est gratuit</a>.</p>`;
+}
+
 function grilleSection(g: NlGrille): string {
   return `
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;background:#fff7ed;border:1px dashed ${ORANGE};border-radius:12px">
@@ -68,9 +102,10 @@ export function buildNewsletterHtml(opts: {
   conseil: string;
   articles: NlArticle[];
   grille: NlGrille | null;
+  adoptions?: NlAdoption[];
   year: number;
 }): string {
-  const { intro, conseil, articles, grille, year } = opts;
+  const { intro, conseil, articles, grille, adoptions = [], year } = opts;
   return `<style>@media only screen and (max-width:600px){.nl-out{padding:0 1mm!important}.nl-in{border-radius:0!important}.nl-hd{padding:16px 14px!important}.nl-bd{padding:16px 14px!important}.nl-art td{padding:12px!important}.nl-ft{padding:16px 14px!important}}</style>
 <table class="nl-out" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f9fafb;padding:16px 0;font-family:Arial,sans-serif">
   <tr><td align="center">
@@ -100,6 +135,8 @@ export function buildNewsletterHtml(opts: {
 
         <h2 style="margin:24px 0 14px;font-size:16px;font-weight:800;color:${TEXT};text-transform:uppercase;letter-spacing:.03em">Cette semaine sur Mes Poilus</h2>
         ${articles.map(articleCard).join('')}
+
+        ${adoptions.length > 0 ? adoptionSection(adoptions) : ''}
 
         ${grille ? grilleSection(grille) : ''}
 

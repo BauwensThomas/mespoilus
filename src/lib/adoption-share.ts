@@ -8,13 +8,13 @@ import { emailWrapper } from '@/lib/cron-email';
 const FACEBOOK_URL = 'https://www.facebook.com/profile.php?id=61589487954538';
 const INSTAGRAM_URL = 'https://www.instagram.com/mespoilusofficiel/';
 
-const ANIMAL_LABEL: Record<string, string> = {
+export const ANIMAL_LABEL: Record<string, string> = {
   chien: 'Chien', chat: 'Chat', oiseau: 'Oiseau',
   rongeur: 'Rongeur', reptile: 'Reptile', autre: 'Animal',
 };
 
 // "07600 VALS LES BAINS, France" -> "Vals Les Bains, France" : jamais de code postal dans un post public
-function publicLocation(region: string | null): string | null {
+export function publicLocation(region: string | null): string | null {
   if (!region) return null;
   const clean = region.replace(/\b\d{4,5}\b/g, '').replace(/\s+/g, ' ').replace(/\s+,/g, ',').trim();
   if (!clean) return null;

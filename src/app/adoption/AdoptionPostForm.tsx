@@ -255,6 +255,7 @@ export default function AdoptionPostForm() {
   const router = useRouter();
   const [form, setForm]     = useState(EMPTY);
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
+  const [newsletter, setNewsletter] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError]   = useState('');
   const inputRef    = useRef<HTMLInputElement>(null);
@@ -292,6 +293,11 @@ export default function AdoptionPostForm() {
     });
   }
 
+  // La 1re photo est celle publiée sur Facebook/Instagram à l'approbation (shareAdoptionPost)
+  function makeMainPhoto(index: number) {
+    setPhotos(prev => [prev[index], ...prev.filter((_, i) => i !== index)]);
+  }
+
   function removePhoto(index: number) {
     setPhotos(prev => prev.filter((_, i) => i !== index));
   }
@@ -318,11 +324,12 @@ export default function AdoptionPostForm() {
       fd.append('region', region ? `${region}, ${resolvedCountry}` : resolvedCountry);
       fd.append('contact_phone', `${indicatif} ${contact_phone.trim().replace(/^0+/, '')}`);
       photos.forEach(p => fd.append('photos', p.file));
+      if (newsletter) fd.append('newsletter', 'true');
 
       const res = await fetch('/api/adoption/submit', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? 'Erreur'); setStatus('error'); return; }
-      setStatus('success'); setForm(EMPTY); setPhotos([]);
+      setStatus('success'); setForm(EMPTY); setPhotos([]); setNewsletter(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inattendue');
       setStatus('error');
@@ -366,9 +373,17 @@ export default function AdoptionPostForm() {
         {photos.length > 0 && (
           <div className="grid grid-cols-5 gap-2 mb-2">
             {photos.map((p, i) => (
-              <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group">
+              <div key={i} className={`relative aspect-square rounded-lg overflow-hidden bg-gray-100 group ${i === 0 ? 'ring-2 ring-amber-500' : ''}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.preview} alt="" className="w-full h-full object-cover" />
+                {i === 0 ? (
+                  <span className="absolute bottom-0 inset-x-0 bg-amber-500 text-white text-[10px] font-semibold text-center py-0.5">Photo principale</span>
+                ) : (
+                  <button type="button" onClick={() => makeMainPhoto(i)} aria-label="Choisir comme photo principale"
+                    className="absolute inset-0 flex items-end justify-center pb-1 bg-black/0 hover:bg-black/30 text-white text-[10px] font-semibold opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity">
+                    Mettre en 1re
+                  </button>
+                )}
                 <button type="button" onClick={() => removePhoto(i)} aria-label="Supprimer cette photo"
                   className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 hover:bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span aria-hidden="true">×</span></button>
               </div>
@@ -387,6 +402,9 @@ export default function AdoptionPostForm() {
           </button>
         )}
         <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={e => addFiles(e.target.files)} />
+        <p className="text-xs text-gray-500 mt-2">
+          La 1re photo est la photo principale : elle illustre votre annonce et sera publiée sur nos pages Facebook et Instagram et dans notre newsletter pour lui donner plus de visibilité. Choisissez la plus belle ! Touchez une autre photo pour la mettre en 1re.
+        </p>
       </div>
 
       {/* Prénom · Email · Téléphone */}
@@ -538,6 +556,19 @@ export default function AdoptionPostForm() {
           placeholder="Expliquez pourquoi vous donnez votre animal (déménagement, allergie, manque de temps…)"
           className={`${inputCls} resize-none`} />
       </div>
+
+      {/* Opt-in newsletter : case décochée par défaut (consentement explicite RGPD, comme la Grille) */}
+      <label className="flex items-start gap-2.5 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={newsletter}
+          onChange={e => setNewsletter(e.target.checked)}
+          className="mt-0.5 w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400 cursor-pointer"
+        />
+        <span className="text-xs text-gray-500 leading-relaxed">
+          Je souhaite recevoir la newsletter Mes Poilus (conseils, nouvelles annonces d&apos;adoption). Désinscription en un clic à tout moment.
+        </span>
+      </label>
 
       <button type="submit" disabled={status === 'loading'}
         className="bg-amber-500 hover:bg-amber-400 text-black font-semibold px-6 py-2.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">

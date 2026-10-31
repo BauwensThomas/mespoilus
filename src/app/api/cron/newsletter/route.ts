@@ -3,7 +3,8 @@ import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendBulkNewsletter, sendEmail } from '@/lib/resend';
 import { cronEmailWrapper, statsRow, sectionBlock } from '@/lib/cron-email';
-import { buildNewsletterHtml, type NlArticle, type NlGrille } from '@/lib/newsletter-template';
+import { buildNewsletterHtml, type NlArticle, type NlGrille, type NlAdoption } from '@/lib/newsletter-template';
+import { ANIMAL_LABEL, publicLocation } from '@/lib/adoption-share';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -94,6 +95,25 @@ export async function GET(req: Request) {
     }
   } catch { /* pas de grille active */ }
 
+  // ── Annonces d'adoption en ligne (section "Ils cherchent une famille") ───────
+  // Les 3 plus récentes ; section absente s'il n'y en a aucune. Photo principale, ville sans code postal.
+  let adoptions: NlAdoption[] = [];
+  try {
+    const { data: posts } = await supabase
+      .from('adoption_posts')
+      .select('id, animal_type, breed, age, gender, region, photo_urls')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(3);
+    adoptions = (posts ?? []).map(p => ({
+      id: p.id,
+      label: `${ANIMAL_LABEL[p.animal_type] ?? 'Animal'}${p.breed ? ` - ${p.breed}` : ''}`,
+      details: [p.age, p.gender && p.gender !== 'inconnu' ? p.gender : null].filter(Boolean).join(', ') || null,
+      location: publicLocation(p.region),
+      imageUrl: p.photo_urls?.[0] ?? null,
+    }));
+  } catch { /* section adoption omise */ }
+
   try {
     // ── Étape 1 : Sofia génère UNIQUEMENT le texte (le HTML est fixe en code) ──
     const currentYear = new Date().getFullYear();
@@ -127,7 +147,7 @@ Réponds UNIQUEMENT avec ce JSON (sans balises code, texte simple sans HTML) :
     const conseil = parsed.conseil?.trim() || '';
 
     // ── Étape 2 : Assemblage du HTML (template fixe, déterministe) ────────────
-    const html = buildNewsletterHtml({ intro, conseil, articles, grille, year: currentYear });
+    const html = buildNewsletterHtml({ intro, conseil, articles, grille, adoptions, year: currentYear });
 
     const { data: campaign } = await supabase
       .from('newsletter_campaigns')
