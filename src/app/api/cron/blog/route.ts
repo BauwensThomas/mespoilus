@@ -9,6 +9,7 @@ import { getDailyTrends, formatTrendsForLucas, getAnimalSuggestions, formatSugge
 import { generateFaq } from '@/lib/generate-faq';
 import { pingIndexNow } from '@/lib/indexnow';
 import { slugify } from '@/lib/slugify';
+import { expandShortArticle, MIN_ARTICLE_WORDS } from '@/lib/article-expand';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -606,7 +607,7 @@ CONSIGNES :
     // Vérification longueur de l'article (hors frontmatter)
     const fmEnd = marieResult.content.indexOf('---', 3);
     const bodyForCount = fmEnd > -1 ? marieResult.content.slice(fmEnd + 3) : marieResult.content;
-    const wordCount = bodyForCount.trim().split(/\s+/).filter(Boolean).length;
+    let wordCount = bodyForCount.trim().split(/\s+/).filter(Boolean).length;
     if (wordCount < 1000) console.warn(`[Cron1] Article court: ${wordCount} mots (cible: 1100-1400)`);
     else console.log(`[Cron1] Article: ~${wordCount} mots ✓`);
 
@@ -641,6 +642,23 @@ CONSIGNES :
     }
 
     console.log(`[Cron1] Marie : slug=${articleSlug}`);
+
+    // Garde-fou longueur : un article de moins de 1000 mots est complété avant le nettoyage
+    // emoji / tiret long ci-dessous (qui s'applique donc aussi au texte ajouté). Non bloquant.
+    if (articleSlug && wordCount < MIN_ARTICLE_WORDS) {
+      try {
+        const { data: art } = await supabase.from('articles').select('content').eq('slug', articleSlug).maybeSingle();
+        const expanded = art?.content ? await expandShortArticle(art.content) : null;
+        if (expanded) {
+          await supabase.from('articles').update({ content: expanded.content }).eq('slug', articleSlug);
+          pipelineTokens += expanded.tokens;
+          console.log(`[Cron1] Article court complété : ${wordCount} -> ${expanded.words} mots`);
+          wordCount = expanded.words;
+        }
+      } catch (err) {
+        console.warn('[Cron1] Complément article court échoué :', err instanceof Error ? err.message : err);
+      }
+    }
 
     // Nettoyage GARANTI du contenu publié : retire tout emoji et remplace les tirets longs (— –)
     // par une ponctuation classique, même si Marie en a glissé malgré le prompt. Non bloquant.
