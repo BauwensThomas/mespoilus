@@ -25,6 +25,14 @@ const TYPE_COLOR: Record<string, { border: string; badge: string; bg: string }> 
   autre:   { border: 'border-gray-300',   badge: 'text-gray-700',   bg: 'bg-gray-100'   },
 };
 
+// Le formulaire enregistre 'mâle' / 'femelle' / 'inconnu' (anciennes annonces : 'male') ;
+// null = sexe inconnu, pas de badge
+function genderLabel(gender: string | null | undefined): string | null {
+  if (gender === 'mâle' || gender === 'male') return '♂ Mâle';
+  if (gender === 'femelle') return '♀ Femelle';
+  return null;
+}
+
 function GridCard({ post, index }: { post: AdoptionPost; index: number }) {
   const colors = TYPE_COLOR[post.animal_type] ?? TYPE_COLOR.autre;
   const typeInfo = ANIMAL_TYPES.find(t => t.id === post.animal_type);
@@ -77,9 +85,9 @@ function GridCard({ post, index }: { post: AdoptionPost; index: number }) {
         <div className="flex flex-wrap gap-2">
           {post.breed  && <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full font-medium hover:bg-gray-200 transition-colors">{post.breed}</span>}
           {post.age    && <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full font-medium hover:bg-gray-200 transition-colors">{post.age}</span>}
-          {post.gender !== 'inconnu' && (
-            <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full font-medium capitalize hover:bg-gray-200 transition-colors">
-              {post.gender === 'male' ? '♂ Mâle' : '♀ Femelle'}
+          {genderLabel(post.gender) && (
+            <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full font-medium hover:bg-gray-200 transition-colors">
+              {genderLabel(post.gender)}
             </span>
           )}
         </div>
@@ -110,19 +118,19 @@ function ListRow({ post, index }: { post: AdoptionPost; index: number }) {
       href={`/adoption/${post.id}`} 
       className={`stagger-child bg-white border ${colors.border} rounded-xl flex items-center gap-4 px-4 py-3 hover:shadow-md hover:scale-[1.01] transition-all duration-300 group`}
     >
-      <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-orange-100 to-blue-100">
+      <div className="relative w-28 h-28 sm:w-36 sm:h-36 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-orange-100 to-blue-100">
         {post.photo_urls?.length > 0 ? (
           <Image 
             src={post.photo_urls[0]} 
             alt={typeInfo?.label ?? post.animal_type}
             fill 
             unoptimized 
-            className="object-cover group-hover:scale-110 transition-transform duration-300" 
-            sizes="64px" 
+            className="object-cover group-hover:scale-110 transition-transform duration-300"
+            sizes="144px"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <PawPrint size={24} className="text-gray-300" strokeWidth={1} />
+            <PawPrint size={40} className="text-gray-300" strokeWidth={1} />
           </div>
         )}
         {isNew && (
@@ -142,13 +150,13 @@ function ListRow({ post, index }: { post: AdoptionPost; index: number }) {
           )}
           {post.breed  && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{post.breed}</span>}
           {post.age    && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{post.age}</span>}
-          {post.gender !== 'inconnu' && (
-            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full capitalize">
-              {post.gender === 'male' ? '♂ Mâle' : '♀ Femelle'}
+          {genderLabel(post.gender) && (
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+              {genderLabel(post.gender)}
             </span>
           )}
         </div>
-        <p className="text-sm text-gray-700 truncate">{post.description}</p>
+        <p className="text-sm text-gray-700 line-clamp-2">{post.description}</p>
         <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
           <MapPin size={11} strokeWidth={1.5} />{post.region}
         </p>
@@ -173,7 +181,7 @@ export default function AdoptionPostsGrid({ posts, view = 'grid' }: { posts: Ado
       </div>
 
       {view === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {posts.map((post, index) => <GridCard key={post.id} post={post} index={index} />)}
         </div>
       ) : (

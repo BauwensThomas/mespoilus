@@ -330,7 +330,8 @@ export default async function BreedPage({ params }: Props) {
                     <p className="text-xs text-gray-500 mt-0.5">
                       {[
                         post.age,
-                        post.gender === 'male' ? 'Mâle' : post.gender === 'female' ? 'Femelle' : null,
+                        // Valeurs du formulaire : 'mâle' / 'femelle' / 'inconnu'
+                        post.gender === 'mâle' || post.gender === 'male' ? 'Mâle' : post.gender === 'femelle' ? 'Femelle' : null,
                         post.region,
                       ].filter(Boolean).join(' · ')}
                     </p>
