@@ -12,6 +12,22 @@ export interface SeoSuggestion {
   target_url: string | null;
 }
 
+/**
+ * Vérifie qu'une URL interne répond 200 sur le site en ligne (pas 404, pas de redirection).
+ * Lucas inventait des pages cibles (/blog/bien-etre-oiseau-en-cage, /veterinaires/nac/oiseaux...) :
+ * 6 liens internes cassés appliqués avant ce contrôle (corrigés le 31/10/2026).
+ */
+export async function internalPageExists(target: string): Promise<boolean> {
+  const path = target.startsWith(GSC_SITE_ORIGIN) ? target.slice(GSC_SITE_ORIGIN.length) : target;
+  if (!path.startsWith('/') || path.startsWith('//')) return false;
+  try {
+    const res = await fetch(`${GSC_SITE_ORIGIN}${path}`, { redirect: 'manual', signal: AbortSignal.timeout(8000) });
+    return res.status === 200;
+  } catch {
+    return false;
+  }
+}
+
 export interface ApplyResult {
   ok: boolean;
   error?: string;
@@ -82,6 +98,9 @@ async function applyInternalLink(
   }
   if (!suggestion.anchor_text || !suggestion.target_url) {
     return { ok: false, error: 'Ancre ou URL cible manquante.' };
+  }
+  if (!(await internalPageExists(suggestion.target_url))) {
+    return { ok: false, error: `Page cible introuvable (${suggestion.target_url}) : lien non ajouté.` };
   }
 
   const slug = extractSlug(suggestion.page, '/blog/');

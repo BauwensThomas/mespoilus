@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
+import { internalPageExists } from '@/lib/seo-apply';
 import { runAgent } from '@/lib/anthropic';
 import { AGENTS } from '@/lib/agents/config';
 import { GSC_SITE_ORIGIN } from '@/lib/gsc';
@@ -162,7 +163,9 @@ export async function GET(req: Request) {
         });
       }
       const link = parsed.internal_link;
-      if (link?.anchor_text && link?.target_url && isSafeInternalUrl(link.target_url)) {
+      // La page cible doit exister (Lucas inventait des URLs) : sinon pas de suggestion de lien
+      if (link?.anchor_text && link?.target_url && isSafeInternalUrl(link.target_url)
+          && await internalPageExists(link.target_url)) {
         rows.push({
           page: candidate.page, page_type: candidate.page_type, suggestion_type: 'internal_link',
           current_value: null, proposed_value: `${link.anchor_text} → ${link.target_url}`,
