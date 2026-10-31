@@ -20,7 +20,6 @@ const CRON_PATHS: Record<string, string> = {
   'catalog-dedup-ean':           '/api/cron/catalog-sync/dedup-ean',
   'catalog-dedup-title':         '/api/cron/catalog-sync/dedup-title',
   'catalog-dedup-image':         '/api/cron/catalog-sync/dedup-image',
-  'adoption-social':         '/api/cron/adoption-social',
   'grille-social':           '/api/cron/grille-social',
   'grille-rotation':         '/api/cron/grille-rotation',
   'db-backup':               '/api/cron/db-backup',

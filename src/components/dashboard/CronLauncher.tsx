@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   RefreshCw, Dog, Cat, Bird, Mouse, Zap, Flame, ShoppingBag, Clipboard,
-  Rocket, CheckCircle2, XCircle, BookOpen, Mail, Sparkles, Heart,
+  Rocket, CheckCircle2, XCircle, BookOpen, Mail, Sparkles,
   ChevronDown, ChevronUp, Send, Tag, ImageIcon, X, Play, RotateCcw, MessageSquare, DatabaseBackup,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -80,17 +80,6 @@ const CRONS: CronConfig[] = [
     accentColor: 'border-teal-200',
     group: 'Données',
     steps: [{ key: 'prenoms', label: 'Génération prénoms (Thomas × 5 animaux)' }],
-  },
-  {
-    id: 'adoption-social',
-    label: 'Adoption - Réseaux',
-    description: 'Emma publie un post sur les dernières annonces d\'adoption (Facebook + Instagram).',
-    icon: Heart,
-    iconBg: 'bg-purple-100',
-    iconColor: 'text-purple-600',
-    accentColor: 'border-purple-200',
-    group: 'Contenu',
-    steps: [{ key: 'adoption-social', label: 'Post adoption (Emma → Facebook + Instagram)' }],
   },
   {
     id: 'grille-social',

@@ -153,6 +153,7 @@ export interface AdoptionPost {
   deleted_at: string | null;
   deleted_by: 'user' | 'cron' | 'admin' | null;
   deleted_reason: 'adopted' | 'error' | 'auto_expired' | 'admin' | null;
+  shared_at?: string | null;
 }
 
 export interface AwinProduct {

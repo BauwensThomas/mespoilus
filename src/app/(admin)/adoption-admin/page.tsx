@@ -1,18 +1,22 @@
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
+import { shareAdoptionPost, sendAdoptionOnlineEmail } from '@/lib/adoption-share';
 import { randomBytes } from 'crypto';
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/resend';
 import { emailWrapper } from '@/lib/cron-email';
 import type { AdoptionPost } from '@/types';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
 import Image from 'next/image';
-import { CheckCircle2, XCircle, Pencil, Heart, Clock, User, Bot } from 'lucide-react';
+import { CheckCircle2, XCircle, Pencil, Heart, Clock, User, Bot, Share2 } from 'lucide-react';
 import DeletePostButton from './DeletePostButton';
 import ModerationSearchInput from './SearchInput';
 
 export const revalidate = 0;
+// Partage réseaux (Emma + recadrage photo + Make) exécuté via after() dans approvePost
+export const maxDuration = 60;
 
 async function approvePost(id: string) {
   'use server';
@@ -65,24 +69,35 @@ async function approvePost(id: string) {
       console.error('[moderation] alerts send error:', alertErr);
     }
 
-    try {
-      await sendEmail({
-        to: post.email,
-        subject: 'Votre annonce est en ligne sur Mes Poilus !',
-        html: emailWrapper('Annonce publiee !', `
-          <p>Bonjour <strong>${post.poster_name}</strong>,</p>
-          <p>Votre annonce d'adoption pour votre <strong>${post.animal_type}</strong> (${post.region}) est desormais visible sur Mes Poilus.</p>
-          <p><a href="https://mespoilus.com/adoption" style="color:#ea580c">Voir les annonces</a></p>
-          <p style="font-size:13px;color:#6b7280;margin-top:16px">Pour supprimer votre annonce à tout moment, utilisez ce code sur la page de votre annonce :</p>
-          <p style="font-family:monospace;font-size:26px;font-weight:bold;letter-spacing:6px;color:#111;background:#f3f4f6;padding:14px 20px;border-radius:8px;text-align:center">${deleteToken}</p>
-          <p style="font-size:12px;color:#9ca3af">Conservez ce code precieusement, il ne peut pas etre recupere.</p>
-        `),
+    // Après la réponse (l'approbation reste instantanée) : partage Facebook + Instagram, puis
+    // email au déposant, qui ne mentionne les réseaux que si le partage a réussi.
+    after(async () => {
+      const share = await shareAdoptionPost(id).catch((err) => {
+        console.error('[moderation] partage réseaux:', err);
+        return { ok: false };
       });
-    } catch (mailErr) {
-      console.error('[moderation] approve mail error:', mailErr);
-    }
+      try {
+        await sendAdoptionOnlineEmail({
+          id,
+          email: post.email as string,
+          posterName: post.poster_name as string,
+          animalType: post.animal_type as string,
+          region: post.region as string | null,
+          deleteToken,
+          shared: share.ok,
+        });
+      } catch (mailErr) {
+        console.error('[moderation] approve mail error:', mailErr);
+      }
+    });
   }
 
+  revalidatePath('/adoption-admin');
+}
+
+async function sharePost(id: string) {
+  'use server';
+  await shareAdoptionPost(id);
   revalidatePath('/adoption-admin');
 }
 
@@ -333,6 +348,7 @@ export default async function ModerationPage({ searchParams }: Props) {
             const approve      = approvePost.bind(null, post.id);
             const rejectWithId = rejectPost.bind(null, post.id);
             const deleteWithId = deletePost.bind(null, post.id);
+            const shareWithId  = sharePost.bind(null, post.id);
             const date         = formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: fr });
             const animalLabel  = ANIMAL_LABELS[post.animal_type] ?? post.animal_type;
             const deletedInfo  = post.deleted_reason ? DELETED_REASON_LABEL[post.deleted_reason] : null;
@@ -414,6 +430,22 @@ export default async function ModerationPage({ searchParams }: Props) {
                         </button>
                       </form>
                     </div>
+                  )}
+
+                  {post.status === 'approved' && (
+                    post.shared_at ? (
+                      <p className="text-xs text-pink-600 flex items-center gap-1 pt-1">
+                        <Share2 size={13} strokeWidth={1.5} />
+                        Partagée sur Facebook et Instagram le {format(new Date(post.shared_at), 'dd/MM/yyyy')}
+                      </p>
+                    ) : (
+                      <form action={shareWithId} className="pt-1">
+                        <button type="submit" className="w-full px-3 py-1.5 bg-pink-50 border border-pink-200 text-pink-600 hover:bg-pink-100 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1">
+                          <Share2 size={14} strokeWidth={1.5} />
+                          Partager sur Facebook et Instagram
+                        </button>
+                      </form>
+                    )
                   )}
 
                   {activeStatus !== 'deleted' && (

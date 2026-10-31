@@ -61,8 +61,8 @@ const DAILY_CRONS = [
 ];
 
 // Crons RELANÇABLES en cas d'erreur/absence : uniquement les crons IDEMPOTENTS (upsert/dedup).
-// On EXCLUT volontairement blog / social / newsletter / races / finance / securite / prenoms /
-// adoption-social : les relancer générerait des doublons d'articles/posts ou serait inutile.
+// On EXCLUT volontairement blog / social / newsletter / races / finance / securite / prenoms :
+// les relancer générerait des doublons d'articles/posts ou serait inutile.
 const RETRYABLE_ROUTES: Record<string, string> = {
   'Catalog sync chiens':          '/api/cron/catalog-sync/chiens',
   'Catalog sync chats':           '/api/cron/catalog-sync/chats',
@@ -87,9 +87,6 @@ const WEEKDAY_CRONS: Record<number, Array<{ label: string; pattern: string; hour
   1: [ // Lundi
     { label: 'Blog (Lucas + Marie)', pattern: '[Cron blog]',        hour: '09h', agent: 'Lucas' },
     { label: 'Social (Emma)',        pattern: '[Cron social',        hour: '09h', agent: 'Emma'  },
-  ],
-  2: [ // Mardi
-    { label: 'Adoption social',      pattern: '[Adoption social]',  hour: '19h', agent: 'Thomas' },
   ],
   3: [ // Mercredi
     { label: 'Blog (Lucas + Marie)', pattern: '[Cron blog]',        hour: '09h', agent: 'Lucas' },
