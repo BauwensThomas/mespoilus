@@ -10,7 +10,7 @@ const BATCH_SIZE_DESC = 1;
 const MAX_RETRIES = 4;
 
 // Marchands anglophones : leurs produits sont TOUJOURS traduits (Pass 0), jamais marqués "déjà FR"
-const FORCE_MERCHANTS = ['CanadaPetCare', 'Puft', 'Tuft & Paw', 'EntirelyPets'];
+const FORCE_MERCHANTS = ['CanadaPetCare', 'Puft', 'Tuft & Paw'];
 
 // Les marchands francophones (Amazon FR, Maxi Zoo FR/BE, Zooplus BE) ne sont JAMAIS traduits en bloc :
 // on ne traduit QUE les rares produits dont le nom contient du néerlandais (feed BE mixte FR/NL).
