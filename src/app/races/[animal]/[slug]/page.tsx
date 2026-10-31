@@ -81,9 +81,13 @@ export default async function BreedPage({ params }: Props) {
   let adoptionPosts: AdoptionPreview[] = [];
   let products: ProductPreview[] = [];
   let articles: ArticlePreview[] = [];
+  // Article de blog consacré à cette race (articles.breed_slug) : lié en évidence depuis la fiche.
+  // L'article renvoie déjà vers la fiche ; le lien inverse aide Google à distinguer les deux pages
+  // (fiche = repères rapides, article = guide complet) au lieu de les voir comme des doublons.
+  let guide: ArticlePreview | null = null;
 
   try {
-    const [{ data: a }, { data: p }, { data: ar }] = await Promise.all([
+    const [{ data: a }, { data: p }, { data: ar }, { data: g }] = await Promise.all([
       supabase
         .from('adoption_posts')
         .select('id, breed, age, gender, region, photo_urls')
@@ -103,11 +107,21 @@ export default async function BreedPage({ params }: Props) {
         .eq('status', 'published')
         .eq('category', category)
         .order('published_at', { ascending: false })
-        .limit(3),
+        .limit(4),
+      supabase
+        .from('articles')
+        .select('id, title, slug, excerpt, image_url, reading_time')
+        .eq('status', 'published')
+        .eq('breed_slug', slug)
+        .order('published_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
     adoptionPosts = (a ?? []) as AdoptionPreview[];
     products      = (p ?? []) as ProductPreview[];
-    articles      = (ar ?? []) as ArticlePreview[];
+    guide         = (g ?? null) as ArticlePreview | null;
+    // Le guide est mis en avant à part : on l'exclut de "Articles & conseils" (4 chargés, 3 affichés)
+    articles      = ((ar ?? []) as ArticlePreview[]).filter(x => x.id !== guide?.id).slice(0, 3);
   } catch { /* fail silently - le contenu principal reste visible */ }
 
   const c = breed.content;
@@ -270,6 +284,26 @@ export default async function BreedPage({ params }: Props) {
               dangerouslySetInnerHTML={{ __html: c.description }}
             />
           </div>
+        )}
+
+        {/* Guide complet consacré à la race (article de blog lié) */}
+        {guide && (
+          <Link
+            href={`/blog/${guide.slug}`}
+            className="group flex flex-col sm:flex-row gap-4 bg-orange-50 border border-orange-200 rounded-2xl p-4 hover:shadow-md transition-shadow duration-300 fade-up"
+          >
+            {guide.image_url && (
+              <div className="relative w-full sm:w-44 h-40 sm:h-auto sm:min-h-[7rem] flex-shrink-0 rounded-xl overflow-hidden">
+                <Image src={guide.image_url} alt={guide.title} fill unoptimized className="object-cover" sizes="(max-width: 640px) 100vw, 176px" />
+              </div>
+            )}
+            <div className="flex flex-col justify-center min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide text-orange-600 mb-1">Notre guide complet sur le {breed.name}</p>
+              <p className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">{guide.title}</p>
+              {guide.excerpt && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{guide.excerpt}</p>}
+              <span className="text-sm font-medium text-orange-600 mt-2">Lire le guide &rarr;</span>
+            </div>
+          </Link>
         )}
 
         {/* Soins avec stagger */}

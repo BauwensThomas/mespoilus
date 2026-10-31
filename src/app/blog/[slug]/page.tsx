@@ -15,6 +15,7 @@ import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle, Pencil } 
 import ClientWrapper from '@/components/animations/ClientWrapper';
 import { toHashtag } from '@/lib/hashtag';
 import ProductImage from '@/components/boutique/ProductImage';
+import { ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
 
 export const dynamic = 'force-dynamic';
 
@@ -126,6 +127,30 @@ export default async function ArticlePage({ params }: Props) {
     relProducts = (p ?? []) as typeof relProducts;
     relArticles = (a ?? []) as typeof relArticles;
   } catch { /* le contenu principal reste visible */ }
+
+  // Article consacré à une race (articles.breed_slug) : encadré vers sa fiche d'identité.
+  // La fiche renvoie vers cet article ("Notre guide complet") : maillage dans les deux sens,
+  // pour que Google voie deux pages complémentaires et non deux doublons.
+  let breedCard: { name: string; url: string; photo: string | null; excerpt: string | null } | null = null;
+  const breedSlug = (article as Article & { breed_slug?: string | null }).breed_slug;
+  if (breedSlug) {
+    try {
+      const { data: b } = await createAdminClient()
+        .from('breeds')
+        .select('name, animal, slug, photo_url, content')
+        .eq('slug', breedSlug)
+        .not('content', 'is', null)
+        .maybeSingle();
+      if (b) {
+        breedCard = {
+          name: b.name,
+          url: `/races/${ANIMAL_URL[b.animal as AnimalType]}/${b.slug}`,
+          photo: b.photo_url ?? null,
+          excerpt: (b.content as { excerpt?: string } | null)?.excerpt ?? null,
+        };
+      }
+    } catch { /* encadré omis */ }
+  }
 
   let htmlContent = await marked(article.content, { gfm: true });
   // Le titre H1 est déjà rendu par le template — on descend les headings du contenu d'un niveau.
@@ -358,6 +383,26 @@ export default async function ArticlePage({ params }: Props) {
                 ))}
               </div>
             </section>
+          )}
+
+          {/* Fiche d'identité de la race (article lié à une race) */}
+          {breedCard && (
+            <Link
+              href={breedCard.url}
+              className="group mt-12 flex flex-col sm:flex-row gap-4 bg-orange-50 border border-orange-200 rounded-2xl p-4 hover:shadow-md transition-shadow duration-300 fade-up not-prose"
+            >
+              {breedCard.photo && (
+                <div className="relative w-full sm:w-40 h-40 sm:h-auto sm:min-h-[7rem] flex-shrink-0 rounded-xl overflow-hidden">
+                  <Image src={breedCard.photo} alt={breedCard.name} fill unoptimized className="object-cover" sizes="(max-width: 640px) 100vw, 160px" />
+                </div>
+              )}
+              <div className="flex flex-col justify-center min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wide text-orange-600 mb-1">Fiche d&apos;identité</p>
+                <p className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">{breedCard.name} : origine, taille, caractère et santé</p>
+                {breedCard.excerpt && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{breedCard.excerpt}</p>}
+                <span className="text-sm font-medium text-orange-600 mt-2">Voir la fiche &rarr;</span>
+              </div>
+            </Link>
           )}
 
           <AdBanner slot="1266534148" variant="in-article" className="my-10" />
