@@ -287,7 +287,7 @@ export default async function LandingPage() {
                 </span>
               </p>
               <p className="text-lg text-gray-600 max-w-xl mx-auto xl:mx-0 mb-8 leading-relaxed">
-                Conseils vétérinaires, guides pratiques et produits sélectionnés pour chiens, chats, oiseaux, rongeurs, reptiles et bien plus.
+                Conseils santé, guides pratiques et produits sélectionnés pour chiens, chats, oiseaux, rongeurs, reptiles et bien plus.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center xl:justify-start">
                 <Link href="/blog" className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-white bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl font-semibold shadow-lg shadow-orange-500/25 hover:scale-105 transition-all duration-300">
@@ -498,7 +498,7 @@ export default async function LandingPage() {
             Rejoignez notre communauté
           </h2>
           <p className="text-white/90 text-lg mb-10 leading-relaxed">
-            Recevez nos meilleurs conseils chaque semaine - conseils vétérinaires,
+            Recevez nos meilleurs conseils chaque semaine - conseils santé,
             astuces éducation et bons plans pour vos animaux.
           </p>
           <NewsletterForm />
@@ -527,7 +527,7 @@ export default async function LandingPage() {
                 <span className="font-bold text-white text-lg">Mes Poilus</span>
               </div>
               <p className="text-sm leading-relaxed text-gray-400 max-w-xs">
-                Conseils vétérinaires, guides pratiques et boutique pour chiens, chats, oiseaux, rongeurs et reptiles.
+                Conseils santé, guides pratiques et boutique pour chiens, chats, oiseaux, rongeurs et reptiles.
               </p>
               <div className="flex gap-4 mt-4">
                 <a href="https://www.instagram.com/mespoilusofficiel" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-orange-400 transition-colors">Instagram</a>

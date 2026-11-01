@@ -12,7 +12,7 @@ export default function CGUPage() {
     <div className="min-h-screen text-gray-900">
       <div className="max-w-6xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Conditions Générales d'Utilisation</h1>
-        <p className="text-gray-600 text-sm mb-12">Applicables au site Mes Poilus - Dernière mise à jour : juin 2026</p>
+        <p className="text-gray-600 text-sm mb-12">Applicables au site Mes Poilus - Dernière mise à jour : novembre 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 
@@ -47,6 +47,7 @@ export default function CGUPage() {
                 <li>Tout contenu illicite, trompeur, offensant ou contraire aux lois sur la protection animale est strictement interdit.</li>
                 <li>Chaque annonce est soumise à <strong>modération</strong> avant publication. Mes Poilus se réserve le droit de refuser ou supprimer toute annonce sans justification.</li>
                 <li>L'email et le numéro de téléphone renseignés sont conservés de façon privée et ne sont pas affichés publiquement.</li>
+                <li>En publiant une annonce, vous autorisez Mes Poilus à la <strong>partager gratuitement</strong> pour aider l'animal à trouver une famille : sur nos pages Facebook et Instagram et dans notre newsletter (photo principale, espèce, race, âge, sexe, ville et lien vers l'annonce). Vous garantissez détenir les droits sur les photos envoyées. Vous pouvez demander à tout moment le retrait d'une publication à contact@mespoilus.com.</li>
               </ul>
               <p>Mes Poilus agit uniquement en tant qu'intermédiaire technique. Mes Poilus n'est pas partie aux transactions ou arrangements conclus entre les utilisateurs et ne peut être tenu responsable des litiges, dommages ou problèmes résultant d'une adoption conclue via le site.</p>
             </div>
@@ -74,7 +75,7 @@ export default function CGUPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">5. Contenu éditorial</h2>
             <div className="text-sm space-y-3">
               <p>Les articles publiés sur Mes Poilus sont rédigés à titre informatif. Ils ne constituent en aucun cas un avis vétérinaire professionnel. En cas de doute sur la santé de votre animal, consultez un vétérinaire.</p>
-              <p>Une partie des contenus est produite avec l'aide d'outils d'intelligence artificielle et relue par un éditeur humain.</p>
+              <p>Les articles et une partie des autres contenus sont produits avec l'aide d'outils d'intelligence artificielle, sous la supervision du fondateur de Mes Poilus, qui les relit et les corrige régulièrement et dès qu'une erreur est signalée.</p>
               <p>Mes Poilus s'efforce de maintenir des informations exactes et à jour, mais ne garantit pas l'exactitude, l'exhaustivité ou l'actualité des contenus publiés.</p>
             </div>
           </section>

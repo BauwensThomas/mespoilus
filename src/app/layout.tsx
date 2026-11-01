@@ -29,7 +29,7 @@ export function generateMetadata(): Metadata {
       default: 'Mes Poilus - Conseils & guides animaux de compagnie',
       template: '%s | Mes Poilus',
     },
-    description: "Conseils vétérinaires, guides pratiques, adoption animaux et boutique pour chiens, chats, oiseaux, rongeurs et reptiles. Communauté francophone.",
+    description: "Conseils santé, guides pratiques, adoption animaux et boutique pour chiens, chats, oiseaux, rongeurs et reptiles. Communauté francophone.",
     robots: { index: true, follow: true },
     openGraph: {
       siteName: 'Mes Poilus',
@@ -72,7 +72,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 '@id': 'https://www.mespoilus.com/#website',
                 url: 'https://www.mespoilus.com',
                 name: 'Mes Poilus',
-                description: 'Conseils vétérinaires, guides pratiques, adoption animaux et boutique pour chiens, chats, oiseaux, rongeurs et reptiles.',
+                description: 'Conseils santé, guides pratiques, adoption animaux et boutique pour chiens, chats, oiseaux, rongeurs et reptiles.',
                 publisher: { '@id': 'https://www.mespoilus.com/#organization' },
                 inLanguage: 'fr',
               },

@@ -38,7 +38,7 @@ export default async function PressePage() {
     { label: 'Outils gratuits', value: '4' },
   ];
 
-  const description = `Mes Poilus est un site de référence francophone dédié aux animaux de compagnie. Il propose des articles de conseils vétérinaires et pratiques, des fiches races détaillées, des outils interactifs (calculateur d'âge, calculateur nutritionnel, quiz, générateur de prénoms, guides PDF gratuits), une section adoption entre particuliers et une boutique de produits animaliers sélectionnés via des partenaires affiliés. Le contenu est rédigé de manière claire et accessible, avec pour objectif d'accompagner chaque propriétaire d'animal au quotidien.`;
+  const description = `Mes Poilus est un site de référence francophone dédié aux animaux de compagnie. Il propose des articles de conseils santé et pratiques, des fiches races détaillées, des outils interactifs (calculateur d'âge, calculateur nutritionnel, quiz, générateur de prénoms, guides PDF gratuits), une section adoption entre particuliers et une boutique de produits animaliers sélectionnés via des partenaires affiliés. Le contenu est rédigé de manière claire et accessible, avec pour objectif d'accompagner chaque propriétaire d'animal au quotidien.`;
 
   return (
     <div className="min-h-screen">
@@ -70,7 +70,7 @@ export default async function PressePage() {
               <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
                 <p className="text-xs font-semibold text-orange-600 uppercase tracking-widest mb-2">Description courte (à copier-coller)</p>
                 <p className="text-sm text-gray-800 leading-relaxed italic">
-                  "Mes Poilus est le guide de référence francophone pour les propriétaires d'animaux de compagnie : conseils vétérinaires, fiches races, outils pratiques, petites annonces d'adoption et sélection de produits animaliers."
+                  "Mes Poilus est le guide de référence francophone pour les propriétaires d'animaux de compagnie : conseils santé, fiches races, outils pratiques, petites annonces d'adoption et sélection de produits animaliers."
                 </p>
               </div>
             </section>

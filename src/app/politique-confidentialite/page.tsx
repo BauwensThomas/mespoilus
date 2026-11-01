@@ -12,7 +12,7 @@ export default function PolitiqueConfidentialitePage() {
     <div className="min-h-screen text-gray-900">
       <div className="max-w-6xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Politique de confidentialité</h1>
-        <p className="text-gray-600 text-sm mb-12">Conforme au RGPD (Règlement UE 2016/679) - Dernière mise à jour : mai 2026</p>
+        <p className="text-gray-600 text-sm mb-12">Conforme au RGPD (Règlement UE 2016/679) - Dernière mise à jour : novembre 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 
@@ -34,6 +34,8 @@ export default function PolitiqueConfidentialitePage() {
               <div>
                 <h3 className="font-medium text-gray-700 mb-2">2.2 Annonces d'adoption</h3>
                 <p>Lorsque vous déposez une annonce d'adoption, nous collectons : votre <strong>prénom</strong>, votre <strong>adresse email</strong> (non affichée publiquement), votre <strong>numéro de téléphone</strong> (non affiché publiquement), votre <strong>pays et région/ville</strong>, ainsi que les <strong>informations sur l'animal</strong> (type, race, âge, sexe, description, raison du don) et les <strong>photos</strong>. Ces données sont nécessaires à la publication et à la modération de l'annonce.</p>
+                <p className="mt-2">Une fois l&apos;annonce approuvée, elle est publiée sur le site (prénom, ville, informations sur l&apos;animal et photos). Pour lui donner plus de visibilité, elle est aussi <strong>partagée sur nos pages Facebook et Instagram</strong> et peut apparaître dans notre <strong>newsletter</strong> : seuls la photo principale, l&apos;espèce, la race, l&apos;âge, le sexe, la ville et le pays (sans code postal) et un lien vers l&apos;annonce sont repris, jamais votre email ni votre téléphone. Le texte de la publication est rédigé par une intelligence artificielle à partir de ces informations. Vous pouvez vous opposer à ce partage ou demander la suppression d&apos;une publication à tout moment à <a href="mailto:contact@mespoilus.com" className="text-orange-600 underline">contact@mespoilus.com</a>.</p>
+                <p className="mt-2">Lors du dépôt, vous pouvez aussi cocher, de façon facultative et séparée, une case pour recevoir notre newsletter (case non cochée par défaut).</p>
               </div>
               <div>
                 <h3 className="font-medium text-gray-700 mb-2">2.3 Cookies et données de navigation</h3>
@@ -78,6 +80,7 @@ export default function PolitiqueConfidentialitePage() {
                   { traitement: 'Newsletter', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Annonces d\'adoption', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Alertes adoption', base: 'Consentement (Art. 6.1.a RGPD)' },
+                  { traitement: 'Partage des annonces (Facebook, Instagram, newsletter)', base: 'Intérêt légitime à faire adopter l\'animal (Art. 6.1.f RGPD), avec droit d\'opposition à tout moment' },
                   { traitement: 'Commentaires articles', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Cookies analytiques', base: 'Consentement (Art. 6.1.a RGPD)' },
                   { traitement: 'Téléchargement guide PDF', base: 'Consentement (Art. 6.1.a RGPD)' },
@@ -104,6 +107,7 @@ export default function PolitiqueConfidentialitePage() {
                 { type: 'Alertes adoption', duree: "Jusqu'à désinscription (lien dans chaque email)" },
                 { type: 'Annonces d\'adoption', duree: "60 jours après approbation, ou suppression à votre demande" },
                 { type: 'Photos d\'adoption', duree: "Supprimées avec l'annonce" },
+                { type: 'Publications Facebook / Instagram d\'une annonce', duree: "Jusqu'à suppression à votre demande (elles ne sont pas retirées automatiquement à la fin de l'annonce)" },
                 { type: 'Email téléchargement guide', duree: "Jusqu'à désinscription ou suppression à votre demande" },
                 { type: 'Participations Grille Mystère (prénom, email)', duree: "Durée du jeu + archivage, ou suppression à votre demande" },
                 { type: 'Commentaires articles', duree: "Jusqu'à suppression par l'administrateur ou sur demande" },
@@ -130,7 +134,7 @@ export default function PolitiqueConfidentialitePage() {
                   <span className="text-gray-700 text-xs ml-1">(aucune donnée personnelle transmise, simple redirection)</span>
                   <ul className="mt-1.5 space-y-1 ml-6">
                     <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />Amazon FR Associates</li>
-                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />Awin (Dogfy Diet, Maxi Zoo, Tuft &amp; Paw)</li>
+                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />Awin (Zooplus, Maxi Zoo, Dogfy Diet, Tuft &amp; Paw)</li>
                     <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />CJ.com (CanadaPetCare)</li>
                   </ul>
                 </li>
@@ -142,7 +146,11 @@ export default function PolitiqueConfidentialitePage() {
                 <li>Stripe - Traitement des paiements du jeu « Grille Mystère ». Vos données de carte sont saisies directement chez Stripe et ne transitent jamais par nos serveurs (<a href="https://stripe.com/fr/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">politique Stripe</a>)</li>
                 <li>Vercel - Hébergeur du site (infrastructure technique)</li>
                 <li>Supabase - Base de données et stockage des photos (hébergement EU disponible)</li>
-                <li>Sentry - Outil de surveillance des erreurs techniques (stack traces, logs d'erreurs) ; aucune donnée personnelle volontairement transmise (<a href="https://sentry.io/privacy/" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">politique Sentry</a>)</li>
+                <li>Sentry - Outil de surveillance des erreurs techniques ; en cas d&apos;erreur, il reçoit l&apos;adresse IP, le type de navigateur et la page consultée, uniquement pour diagnostiquer le problème (<a href="https://sentry.io/privacy/" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">politique Sentry</a>)</li>
+                <li>Upstash - Stockage temporaire des adresses IP pour limiter les abus (limitation du nombre de requêtes, blocage des adresses malveillantes)</li>
+                <li>Make.com - Automatisation de la publication des annonces d&apos;adoption sur nos pages Facebook et Instagram</li>
+                <li>Meta (Facebook, Instagram) - Publication des annonces d&apos;adoption sur nos pages, soumise à la <a href="https://www.facebook.com/privacy/policy" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">politique de Meta</a></li>
+                <li>Anthropic (Claude) - Intelligence artificielle utilisée pour rédiger nos articles et le texte des publications d&apos;annonces ; seules les informations publiques de l&apos;annonce lui sont transmises, jamais votre email ni votre téléphone</li>
               </ul>
               <p>Tout transfert hors UE est encadré par les clauses contractuelles types de la Commission européenne.</p>
             </div>

@@ -14,7 +14,7 @@ export default function MentionsLegalesPage() {
       <div className="max-w-6xl mx-auto px-6 py-12">
 
         <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-2">Mentions légales</h1>
-        <p className="text-gray-600 text-sm mb-12">Conformes au droit belge - Dernière mise à jour : mai 2026</p>
+        <p className="text-gray-600 text-sm mb-12">Conformes au droit belge - Dernière mise à jour : novembre 2026</p>
 
         <div className="space-y-10 text-gray-700 leading-relaxed">
 
@@ -66,7 +66,7 @@ export default function MentionsLegalesPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">5. Contenu généré par intelligence artificielle</h2>
             <p className="text-sm">
-              Une partie des contenus de ce site (articles de blog, descriptions produits) est rédigée avec l'aide d'outils d'intelligence artificielle (Claude d'Anthropic) et relue par un éditeur humain. Ces contenus sont fournis à titre informatif et ne constituent pas un avis vétérinaire professionnel.
+              Les articles de blog, les descriptions de produits et les textes des publications sur nos réseaux sociaux sont rédigés avec l'aide d'outils d'intelligence artificielle (Claude d'Anthropic). « Marie », qui signe les articles, est l'assistante de rédaction IA de Mes Poilus et non une personne réelle ; son portrait est une illustration. Ces contenus sont produits sous la supervision du fondateur, qui les relit et les corrige régulièrement et dès qu'une erreur est signalée. Ils sont fournis à titre informatif et ne constituent pas un avis vétérinaire professionnel.
             </p>
           </section>
 
