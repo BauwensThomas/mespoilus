@@ -259,7 +259,9 @@ const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // marge sous la limite Vercel (4,5 Mo
 
 async function compressPhoto(file: File): Promise<File> {
   try {
-    const bitmap = await createImageBitmap(file);
+    // Orientation EXIF appliquée ici : le canvas supprime les métadonnées, le .rotate() de sharp
+    // côté serveur ne pourrait plus redresser une photo prise en portrait
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
     const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement('canvas');
     canvas.width = Math.round(bitmap.width * scale);
