@@ -251,6 +251,30 @@ const EMPTY = {
 
 interface PhotoEntry { file: File; preview: string }
 
+// Vercel refuse toute requête de plus de 4,5 Mo (413) : une seule photo de téléphone (3-5 Mo)
+// suffisait presque à bloquer le dépôt. On réduit donc chaque photo dans le navigateur
+// (1600 px max, JPEG), comme le fait déjà le serveur avec sharp après réception.
+const PHOTO_MAX_SIDE = 1600;
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // marge sous la limite Vercel (4,5 Mo, champs texte compris)
+
+async function compressPhoto(file: File): Promise<File> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+  } catch {
+    // Format non décodable par le navigateur (ex. HEIC sur Chrome) : on garde l'original
+    return file;
+  }
+}
+
 export default function AdoptionPostForm() {
   const router = useRouter();
   const [form, setForm]     = useState(EMPTY);
@@ -280,17 +304,19 @@ export default function AdoptionPostForm() {
     setForm(prev => ({ ...prev, [field]: value }));
   }
 
-  function addFiles(fileList: FileList | null) {
+  async function addFiles(fileList: FileList | null) {
     if (!fileList) return;
     const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
-    files.forEach(f => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const preview = e.target?.result as string;
-        setPhotos(prev => prev.length < 5 ? [...prev, { file: f, preview }] : prev);
-      };
-      reader.readAsDataURL(f);
-    });
+    for (const original of files) {
+      const f = await compressPhoto(original);
+      // Aperçu en data: (la CSP autorise data: pour les images, pas blob:)
+      const preview = await new Promise<string>(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target?.result as string);
+        reader.readAsDataURL(f);
+      });
+      setPhotos(prev => prev.length < 5 ? [...prev, { file: f, preview }] : prev);
+    }
   }
 
   // La 1re photo est celle publiée sur Facebook/Instagram à l'approbation (shareAdoptionPost)
@@ -305,6 +331,10 @@ export default function AdoptionPostForm() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (photos.length < 2) { setError("Veuillez ajouter au moins 2 photos de l'animal."); return; }
+    if (photos.reduce((s, p) => s + p.file.size, 0) > MAX_UPLOAD_BYTES) {
+      setError("Vos photos sont trop lourdes pour être envoyées ensemble. Retirez-en une ou choisissez des photos plus légères (format JPG de préférence).");
+      return;
+    }
     setStatus('loading'); setError('');
     try {
       const { country, customCountry, region, indicatif, contact_phone, age_number, age_unit, ...rest } = form;
