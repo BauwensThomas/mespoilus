@@ -19,6 +19,16 @@ Sentry.init({
   ignoreErrors: [
     /Java object is gone/,
     /Java bridge method invoked after JavaScript context destroyed/,
+    // Requêtes injectées par des extensions / adwares du visiteur (ex. "Failed to fetch
+    // (safesearchinc.com)", 01/11/2026) : seuls les échecs vers notre domaine ou Supabase
+    // nous concernent, les autres hôtes sont ignorés.
+    /Failed to fetch \((?!(?:www\.)?mespoilus\.com\)|[a-z0-9-]+\.supabase\.co\))[^)]+\)/,
+  ],
+  // Erreurs levées par le code d'une extension de navigateur, jamais par le site.
+  denyUrls: [
+    /^chrome-extension:\/\//i,
+    /^moz-extension:\/\//i,
+    /^safari-(web-)?extension:\/\//i,
   ],
 });
 
