@@ -586,11 +586,11 @@ STRUCTURE OBLIGATOIRE :
 CONSIGNES :
 - INTERDIT : aucun emoji dans l'article. INTERDIT : aucun tiret long (— ou –) ; utilise une ponctuation classique (virgule, deux-points, parenthèses) ou coupe la phrase.
 - Entre 1100 et 1400 mots au total. IMPORTANT : la longueur doit venir de contenu RÉELLEMENT utile (sous-sections détaillées, exemples concrets, étapes pratiques, cas particuliers) - JAMAIS de remplissage ou de répétitions. Termine toujours tes phrases et l'article, ne coupe jamais au milieu.
-- Ton chaleureux, bienveillant et PERSONNEL, comme un passionné d'animaux qui partage son expérience à un ami (utilise "je"/"nous" avec parcimonie, des observations concrètes, un point de vue)
+- Ton chaleureux, bienveillant et vivant, comme un passionné d'animaux qui conseille un ami (des observations concrètes, un point de vue). Tu peux dire "nous" au nom de la rédaction de Mes Poilus, mais JAMAIS "je" avec une vie personnelle : les articles sont rédigés par une IA, n'invente aucune expérience vécue, aucun animal possédé, aucune anecdote présentée comme personnelle.
 - Public : propriétaires francophones (Belgique, France, Suisse, Canada)
-- ORIGINALITÉ (crucial pour la qualité) : apporte un angle concret et spécifique (étapes détaillées, exemples vécus, cas particuliers, erreurs fréquentes à éviter) plutôt que des généralités qu'on lit partout. Le lecteur doit apprendre quelque chose de précis et actionnable.
+- ORIGINALITÉ (crucial pour la qualité) : apporte un angle concret et spécifique (étapes détaillées, cas typiques, cas particuliers, erreurs fréquentes à éviter) plutôt que des généralités qu'on lit partout. Le lecteur doit apprendre quelque chose de précis et actionnable.
 - EXPERTISE & SOURCES : sur les sujets santé/comportement, appuie-toi sur des références fiables (recommandations vétérinaires, associations reconnues) et rappelle de consulter un vétérinaire pour tout cas sérieux. N'invente JAMAIS de diplôme, de titre professionnel ni de fausse expérience clinique.
-- Glisse 1-2 exemples concrets ou mises en situation réelles pour rendre l'article vivant et unique.
+- Glisse 1-2 mises en situation concrètes pour rendre l'article vivant et unique, présentées comme des cas typiques (ex. "Imaginons un chat de 12 ans qui...", "C'est souvent le cas d'un chiot qui...") et jamais comme un vécu personnel ou un témoignage réel.
 - LIENS OBLIGATOIRES dans le corps du texte, insérés NATURELLEMENT (jamais en bloc artificiel, sans alourdir la lecture) :
   - OBLIGATOIRE (vérifié automatiquement) : au moins un lien vers la boutique ou un produit. Lien boutique : [notre boutique](https://www.mespoilus.com/boutique) ou la catégorie concernée (ex: /boutique?category=${animal}). Un article SANS lien boutique/produit est invalide ;
   - un lien vers l'adoption, amené avec tact et seulement si c'est pertinent dans le contexte : [nos annonces d'adoption](https://www.mespoilus.com/adoption) ;

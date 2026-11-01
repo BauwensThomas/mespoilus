@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'À propos de Mes Poilus',
-  description: 'Découvrez l\'équipe derrière Mes Poilus : Thomas, fondateur, et Marie, rédactrice. Un média animalier francophone basé en Belgique, dédié aux chiens, chats, oiseaux, rongeurs et reptiles.',
+  description: 'Découvrez Mes Poilus : un média animalier francophone basé en Belgique, fondé par Thomas, dont les conseils sont rédigés avec l\'aide d\'une IA. Chiens, chats, oiseaux, rongeurs et reptiles.',
   robots: { index: true, follow: true },
   alternates: { canonical: 'https://www.mespoilus.com/a-propos' },
 };
@@ -33,13 +33,13 @@ export default function AProposPage() {
           </div>
           <div className="flex items-start gap-4 bg-orange-50 border border-orange-200 rounded-2xl p-5">
             <div className="w-40 h-40 rounded-full overflow-hidden flex-shrink-0">
-              <Image src="/images/team/marie.webp" alt="Marie, rédactrice principale de Mes Poilus" width={160} height={160} className="object-cover w-full h-full" />
+              <Image src="/images/team/marie-illustration.webp" alt="Illustration de Marie, l'assistante de rédaction IA de Mes Poilus" width={160} height={160} className="object-cover w-full h-full" />
             </div>
             <div>
               <h2 className="font-bold text-gray-900">Marie</h2>
-              <p className="text-xs text-orange-600 mb-2">Rédactrice principale de Mes Poilus</p>
+              <p className="text-xs text-orange-600 mb-2">Assistante de rédaction (intelligence artificielle)</p>
               <p className="text-sm text-gray-700 leading-relaxed">
-                Passionnée d&apos;animaux depuis l&apos;enfance, Marie partage son quotidien avec un chien et deux chats. Elle rédige les conseils de Mes Poilus avec le souci de proposer un contenu pratique, clair et bien documenté.
+                Marie est l&apos;intelligence artificielle qui rédige les conseils de Mes Poilus, à partir de recommandations vétérinaires reconnues et sous la supervision de Thomas. Son portrait est une illustration : Marie n&apos;est pas une personne réelle.
               </p>
             </div>
           </div>
@@ -95,7 +95,10 @@ export default function AProposPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">3. Notre approche éditoriale</h2>
             <div className="space-y-3 text-sm">
               <p>
-                Chaque article publié sur Mes Poilus est relu et validé avant publication. Les sujets sont choisis en fonction des questions réelles que se posent les propriétaires francophones. Les informations sont vérifiées auprès de sources vétérinaires reconnues et mises à jour régulièrement.
+                <strong>Nos articles sont rédigés avec l&apos;aide d&apos;une intelligence artificielle</strong> (Marie), sous la supervision de Thomas. Les sujets sont choisis en fonction des questions réelles que se posent les propriétaires francophones, et la rédaction s&apos;appuie sur des recommandations vétérinaires reconnues.
+              </p>
+              <p>
+                Avant publication, chaque article passe des contrôles automatiques (longueur, liens, présentation). Thomas relit et enrichit régulièrement les articles, et corrige toute erreur dès qu&apos;elle lui est signalée : si vous repérez une information inexacte, écrivez-nous à <a href="mailto:contact@mespoilus.com" className="text-amber-600 hover:underline">contact@mespoilus.com</a>.
               </p>
               <p>
                 Nos articles sont rédigés en français clair et naturel, pour être compréhensibles partout dans la francophonie. Ils sont fournis à titre informatif uniquement et <strong>ne constituent pas un avis vétérinaire professionnel</strong>. En cas de doute sur la santé de votre animal, consultez toujours un vétérinaire.

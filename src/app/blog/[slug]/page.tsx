@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale: 'fr_FR',
       publishedTime: article.published_at ?? undefined,
       modifiedTime: article.updated_at ?? undefined,
-      authors: ['Marie'],
+      authors: ['Mes Poilus'],
       tags: article.seo_keywords,
       images: ogImages,
     },
@@ -203,7 +203,9 @@ export default async function ArticlePage({ params }: Props) {
     keywords: article.seo_keywords?.join(', '),
     datePublished: article.published_at ?? undefined,
     dateModified: article.updated_at ?? article.published_at ?? undefined,
-    author: { '@type': 'Person', name: 'Marie', url: `${appUrl}/a-propos` },
+    // Auteur = l'organisation, pas une personne : les articles sont rédigés avec une IA (Marie)
+    // sous la supervision de Thomas, déclarer "Marie" en Person serait un faux profil d'auteur.
+    author: { '@type': 'Organization', name: 'Mes Poilus', url: `${appUrl}/a-propos` },
     publisher: { '@type': 'Organization', name: 'Mes Poilus', url: appUrl, logo: { '@type': 'ImageObject', url: `${appUrl}/icon.svg` } },
     mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl },
     inLanguage: 'fr',
@@ -319,11 +321,11 @@ export default async function ArticlePage({ params }: Props) {
             <div className="flex flex-wrap items-center gap-4 py-4 border-t border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <div className="w-16 h-16 rounded-full overflow-hidden">
-                  <Image src="/images/team/marie.webp" alt="Marie" width={64} height={64} className="object-cover w-full h-full" />
+                  <Image src="/images/team/marie-illustration.webp" alt="Illustration de Marie, assistante de rédaction IA" width={64} height={64} className="object-cover w-full h-full" />
                 </div>
                 <div>
                   <div className="text-xs font-semibold text-gray-900">Marie</div>
-                  <div className="text-[10px] text-gray-500">Rédactrice principale</div>
+                  <div className="text-[10px] text-gray-500">Assistante de rédaction IA</div>
                 </div>
               </div>
               {publishedDate && (
@@ -469,13 +471,13 @@ export default async function ArticlePage({ params }: Props) {
           {/* Boîte auteur */}
           <div className="mt-10 bg-orange-50 border border-orange-200 rounded-2xl p-5 flex items-start gap-4 fade-up">
             <div className="w-32 h-32 rounded-full overflow-hidden flex-shrink-0">
-              <Image src="/images/team/marie.webp" alt="Marie, rédactrice principale de Mes Poilus" width={128} height={128} className="object-cover w-full h-full" />
+              <Image src="/images/team/marie-illustration.webp" alt="Illustration de Marie, l'assistante de rédaction IA de Mes Poilus" width={128} height={128} className="object-cover w-full h-full" />
             </div>
             <div className="min-w-0">
               <p className="font-semibold text-gray-900">Marie</p>
-              <p className="text-xs text-orange-600 mb-2">Rédactrice principale de Mes Poilus</p>
+              <p className="text-xs text-orange-600 mb-2">Assistante de rédaction (intelligence artificielle)</p>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Passionnée d&apos;animaux depuis l&apos;enfance, Marie partage son quotidien avec un chien et deux chats. Elle rédige les conseils de Mes Poilus avec le souci de proposer un contenu pratique, clair et bien documenté.
+                Cet article a été rédigé avec l&apos;aide de Marie, l&apos;intelligence artificielle de Mes Poilus, à partir de recommandations vétérinaires reconnues et sous la supervision de Thomas, fondateur du site. Il ne remplace pas l&apos;avis d&apos;un vétérinaire. Une erreur ? Écrivez-nous, nous corrigeons rapidement.
               </p>
               <Link href="/a-propos" className="text-xs text-orange-600 hover:underline mt-1.5 inline-block">
                 En savoir plus →
