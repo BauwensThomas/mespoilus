@@ -21,7 +21,7 @@ export default function AProposPage() {
         <div className="grid sm:grid-cols-2 gap-4 mb-12">
           <div className="flex items-start gap-4 bg-orange-50 border border-orange-200 rounded-2xl p-5">
             <div className="w-40 h-40 rounded-full overflow-hidden flex-shrink-0">
-              <Image src="/images/team/thomas.webp" alt="Thomas, fondateur de Mes Poilus" width={160} height={160} className="object-cover w-full h-full" />
+              <Image src="/images/team/thomas-illustration.webp" alt="Portrait dessiné de Thomas, fondateur de Mes Poilus" width={160} height={160} className="object-cover w-full h-full" />
             </div>
             <div>
               <h2 className="font-bold text-gray-900">Thomas</h2>
