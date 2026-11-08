@@ -61,4 +61,13 @@ export async function isRacePageIndexable(animalUrl: string, slug: string): Prom
   return guideSlugs.has(slug) || paths.has(`/races/${animalUrl}/${slug}`);
 }
 
-export const NOINDEX_FOLLOW = { index: false, follow: true } as const;
+/**
+ * Noindex réservé à Google (balise `googlebot`) : Bing apporte du trafic sur ces fiches
+ * (28 clics / 6 mois, positions 4 à 8, export Bing du 08/11/2026), elles restent donc
+ * indexables pour Bing et les autres moteurs (balise `robots` = index, follow).
+ */
+export const NOINDEX_FOLLOW = {
+  index: true,
+  follow: true,
+  googleBot: { index: false, follow: true },
+} as const;
