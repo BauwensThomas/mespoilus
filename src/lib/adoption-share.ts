@@ -198,6 +198,8 @@ export async function sendAdoptionOnlineEmail(params: {
       <p>Nous espérons de tout coeur que votre ${animal} trouvera très vite une famille aimante, qui lui offrira toute la tendresse et l'attention qu'il mérite. Merci de lui donner cette chance.</p>
       <p>Toute l'équipe de Mes Poilus</p>
 
+      <p style="font-size:13px;color:#6b7280;margin-top:18px;padding-top:14px;border-top:1px solid #f3f4f6">Le service d'adoption vous a été utile ? Votre retour aide d'autres propriétaires à nous faire confiance : <a href="https://www.mespoilus.com/avis" style="color:#ea580c;font-weight:bold">laissez-nous un avis en 30 secondes</a>.</p>
+
       <p style="font-size:13px;color:#6b7280;margin-top:22px">Pour supprimer votre annonce à tout moment (par exemple une fois votre animal adopté), utilisez ce code sur la page de votre annonce :</p>
       <p style="font-family:monospace;font-size:26px;font-weight:bold;letter-spacing:6px;color:#111;background:#f3f4f6;padding:14px 20px;border-radius:8px;text-align:center">${params.deleteToken}</p>
       <p style="font-size:12px;color:#9ca3af">Conservez ce code précieusement, il ne peut pas être récupéré.</p>
