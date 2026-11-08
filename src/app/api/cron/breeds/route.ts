@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createAdminClient } from '@/lib/supabase/server';
-import { BREEDS_SEED, type AnimalType } from '@/lib/breeds-list';
+import { BREEDS_SEED, ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
+import { pingIndexNowPaths } from '@/lib/indexnow';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -214,6 +215,14 @@ Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans commentaires) :
     { generated: generated.length, errors, remaining, targeted_animal: targetAnimal },
     totalTokens
   );
+
+  // Nouvelles fiches signalées à Bing & co (indexables pour Bing même sans guide : noindex réservé à Google)
+  if (generated.length) {
+    await pingIndexNowPaths(generated.map(g => {
+      const [animal, slug] = g.split('/');
+      return `/races/${ANIMAL_URL[animal as AnimalType]}/${slug}`;
+    }));
+  }
 
   return NextResponse.json({
     success: errors.length === 0,

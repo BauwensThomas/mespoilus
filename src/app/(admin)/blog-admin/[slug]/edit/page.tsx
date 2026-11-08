@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import EditArticleClient from './EditArticleClient';
+import { pingIndexNowPaths } from '@/lib/indexnow';
 
 export const revalidate = 0;
 
@@ -36,6 +37,8 @@ async function updateArticle(slug: string, formData: FormData) {
   revalidatePath(`/blog/${slug}`);
   revalidatePath('/blog');
   revalidatePath('/blog-admin');
+  // Bing & co prévenus de la modification (IndexNow) ; Google relit via le sitemap (lastmod)
+  if (formData.get('status') === 'published') await pingIndexNowPaths([`/blog/${slug}`]);
   redirect('/blog-admin?tab=articles');
 }
 

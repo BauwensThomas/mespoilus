@@ -6,6 +6,11 @@ const INDEXNOW_KEY = 'ca8aaba288857f4b487a4944227d8234';
 const HOST = 'www.mespoilus.com';
 const KEY_LOCATION = `https://${HOST}/${INDEXNOW_KEY}.txt`;
 
+/** Variante par chemins ("/blog/slug") : construit les URL complètes du site. Non bloquant. */
+export async function pingIndexNowPaths(paths: string[]): Promise<void> {
+  await pingIndexNow(paths.filter(Boolean).map(p => `https://${HOST}${p.startsWith('/') ? p : `/${p}`}`));
+}
+
 /**
  * Soumet une ou plusieurs URLs à IndexNow (Bing + Yandex via l'endpoint partagé).
  * Non bloquant : les erreurs sont loguées, jamais propagées (ne doit pas casser un cron).

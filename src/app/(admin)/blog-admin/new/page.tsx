@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import NewArticleClient from './NewArticleClient';
+import { pingIndexNowPaths } from '@/lib/indexnow';
 
 export const revalidate = 0;
 
@@ -81,6 +82,7 @@ async function createArticle(formData: FormData) {
   revalidatePath('/blog');
   revalidatePath('/blog-admin');
   revalidatePath(`/blog/${slug}`);
+  if (status === 'published') await pingIndexNowPaths([`/blog/${slug}`]);
   redirect('/blog-admin?tab=articles');
 }
 

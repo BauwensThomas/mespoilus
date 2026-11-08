@@ -7,6 +7,7 @@ import { getPhotoForCategory } from '@/lib/pexels';
 import { downloadAndStorePhoto } from '@/lib/unsplash-storage';
 import { buildEnrichedPrompt } from '@/lib/agents/context';
 import { generateFaq } from '@/lib/generate-faq';
+import { pingIndexNowPaths } from '@/lib/indexnow';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300; // pipeline complet (Thomas→Lucas→Marie→image→Emma→synthèse) : 120s trop court
@@ -182,6 +183,7 @@ Termine avec une conclusion + CTA court.`;
 
         // Image : override si fourni, sinon Pexels
         if (articleSlug) {
+          await pingIndexNowPaths([`/blog/${articleSlug}`]);
           try {
             if (overrideImageUrl) {
               await supabase.from('articles').update({ image_url: overrideImageUrl }).eq('slug', articleSlug);

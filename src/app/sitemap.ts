@@ -40,14 +40,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let adoptionEntries: MetadataRoute.Sitemap = [];
   // Pages de filtres races (appartement, enfants...) : même règle d'indexation que les fiches
   const { paths: indexableRacePaths } = await getIndexableRacePaths();
+  // Vraies dates de dernière modification (Google ignore les lastmod d'un sitemap qui ment) :
+  // listes = date du contenu le plus récent qu'elles affichent ; pages fixes = pas de lastmod.
+  const latest: Record<string, Date> = {};
+  const bump = (key: string, d: Date) => { if (!latest[key] || d > latest[key]) latest[key] = d; };
 
   try {
     const supabase = createAdminClient();
     const { data: articles } = await supabase
       .from('articles')
-      .select('slug, published_at, updated_at, image_url')
+      .select('slug, category, published_at, updated_at, image_url')
       .eq('status', 'published')
       .order('published_at', { ascending: false });
+
+    for (const a of articles ?? []) {
+      if (!a.published_at) continue;
+      const d = new Date(a.published_at);
+      bump('blog', d);
+      if (a.category) bump(`blog/${a.category}`, d);
+    }
 
     articleEntries = (articles ?? [])
       .filter(article => article.slug)
@@ -91,6 +102,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .eq('status', 'published')
       .not('content', 'is', null);
 
+    const ANIMAL_KEY: Record<string, string> = { chien: 'chiens', chat: 'chats', oiseau: 'oiseaux', rongeur: 'rongeurs', reptile: 'reptiles' };
+    for (const b of breeds ?? []) {
+      if (!b.generated_at) continue;
+      bump('races', new Date(b.generated_at));
+      if (ANIMAL_KEY[b.animal]) bump(`races/${ANIMAL_KEY[b.animal]}`, new Date(b.generated_at));
+    }
+
     const ANIMAL_URL: Record<string, string> = { chien: 'chiens', chat: 'chats', oiseau: 'oiseaux', rongeur: 'rongeurs', reptile: 'reptiles' };
     // Seules les fiches indexables (guide dédié ou impressions Google récentes) : voir breed-indexing.ts
     const { paths: racePaths, guideSlugs } = await getIndexableRacePaths();
@@ -116,6 +134,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select('id, created_at, photo_urls')
       .eq('status', 'approved');
 
+    for (const p of adoptionPosts ?? []) if (p.created_at) bump('adoption', new Date(p.created_at));
+
     adoptionEntries = (adoptionPosts ?? [])
       .filter(post => post.id)
       .map((post) => ({
@@ -131,44 +151,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   return [
-    { url: `${APP_URL}/`,         lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 1.0 },
-    { url: `${APP_URL}/blog`,          lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.9 },
-    { url: `${APP_URL}/guides`,        lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.9 },
-    { url: `${APP_URL}/blog/chiens`,   lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.8 },
-    { url: `${APP_URL}/blog/chats`,    lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.8 },
-    { url: `${APP_URL}/blog/oiseaux`,  lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.8 },
-    { url: `${APP_URL}/blog/rongeurs`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.8 },
-    { url: `${APP_URL}/blog/reptiles`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.8 },
-    { url: `${APP_URL}/adoption`, lastModified: new Date(), changeFrequency: 'daily' as const,  priority: 0.8 },
-    { url: `${APP_URL}/boutique`, lastModified: new Date(), changeFrequency: 'daily' as const,  priority: 0.8 },
-    { url: `${APP_URL}/grille`,   lastModified: new Date(), changeFrequency: 'daily' as const,  priority: 0.8 },
-    { url: `${APP_URL}/grilles`,  lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.6 },
-    { url: `${APP_URL}/outils/age`,       lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.7 },
-    { url: `${APP_URL}/outils/nutrition`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.7 },
-    { url: `${APP_URL}/outils/prenom`,    lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.7 },
-    { url: `${APP_URL}/outils/quiz`,      lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.7 },
-    { url: `${APP_URL}/races`,          lastModified: new Date(), changeFrequency: 'weekly' as const,  priority: 0.8 },
-    { url: `${APP_URL}/races/chiens`,   lastModified: new Date(), changeFrequency: 'weekly' as const,  priority: 0.8 },
-    { url: `${APP_URL}/races/chats`,    lastModified: new Date(), changeFrequency: 'weekly' as const,  priority: 0.8 },
-    { url: `${APP_URL}/races/oiseaux`,  lastModified: new Date(), changeFrequency: 'weekly' as const,  priority: 0.7 },
-    { url: `${APP_URL}/races/rongeurs`, lastModified: new Date(), changeFrequency: 'weekly' as const,  priority: 0.7 },
-    { url: `${APP_URL}/races/reptiles`, lastModified: new Date(), changeFrequency: 'weekly' as const,  priority: 0.7 },
+    { url: `${APP_URL}/`,         ...(latest['blog'] ? { lastModified: latest['blog'] } : {}), changeFrequency: 'weekly' as const, priority: 1.0 },
+    { url: `${APP_URL}/blog`,          ...(latest['blog'] ? { lastModified: latest['blog'] } : {}), changeFrequency: 'daily' as const, priority: 0.9 },
+    { url: `${APP_URL}/guides`,        changeFrequency: 'weekly' as const, priority: 0.9 },
+    { url: `${APP_URL}/blog/chiens`,   ...(latest['blog/chiens'] ? { lastModified: latest['blog/chiens'] } : {}), changeFrequency: 'daily' as const, priority: 0.8 },
+    { url: `${APP_URL}/blog/chats`,    ...(latest['blog/chats'] ? { lastModified: latest['blog/chats'] } : {}), changeFrequency: 'daily' as const, priority: 0.8 },
+    { url: `${APP_URL}/blog/oiseaux`,  ...(latest['blog/oiseaux'] ? { lastModified: latest['blog/oiseaux'] } : {}), changeFrequency: 'daily' as const, priority: 0.8 },
+    { url: `${APP_URL}/blog/rongeurs`, ...(latest['blog/rongeurs'] ? { lastModified: latest['blog/rongeurs'] } : {}), changeFrequency: 'daily' as const, priority: 0.8 },
+    { url: `${APP_URL}/blog/general`,  ...(latest['blog/general'] ? { lastModified: latest['blog/general'] } : {}), changeFrequency: 'weekly' as const, priority: 0.7 },
+    { url: `${APP_URL}/blog/reptiles`, ...(latest['blog/reptiles'] ? { lastModified: latest['blog/reptiles'] } : {}), changeFrequency: 'daily' as const, priority: 0.8 },
+    { url: `${APP_URL}/adoption`, ...(latest['adoption'] ? { lastModified: latest['adoption'] } : {}), changeFrequency: 'daily' as const,  priority: 0.8 },
+    { url: `${APP_URL}/boutique`, changeFrequency: 'daily' as const,  priority: 0.8 },
+    { url: `${APP_URL}/grille`,   changeFrequency: 'daily' as const,  priority: 0.8 },
+    { url: `${APP_URL}/grilles`,  changeFrequency: 'weekly' as const, priority: 0.6 },
+    { url: `${APP_URL}/outils/age`,       changeFrequency: 'yearly' as const, priority: 0.7 },
+    { url: `${APP_URL}/outils/nutrition`, changeFrequency: 'yearly' as const, priority: 0.7 },
+    { url: `${APP_URL}/outils/prenom`,    changeFrequency: 'yearly' as const, priority: 0.7 },
+    { url: `${APP_URL}/outils/quiz`,      changeFrequency: 'yearly' as const, priority: 0.7 },
+    { url: `${APP_URL}/races`,          ...(latest['races'] ? { lastModified: latest['races'] } : {}), changeFrequency: 'weekly' as const,  priority: 0.8 },
+    { url: `${APP_URL}/races/chiens`,   ...(latest['races/chiens'] ? { lastModified: latest['races/chiens'] } : {}), changeFrequency: 'weekly' as const,  priority: 0.8 },
+    { url: `${APP_URL}/races/chats`,    ...(latest['races/chats'] ? { lastModified: latest['races/chats'] } : {}), changeFrequency: 'weekly' as const,  priority: 0.8 },
+    { url: `${APP_URL}/races/oiseaux`,  ...(latest['races/oiseaux'] ? { lastModified: latest['races/oiseaux'] } : {}), changeFrequency: 'weekly' as const,  priority: 0.7 },
+    { url: `${APP_URL}/races/rongeurs`, ...(latest['races/rongeurs'] ? { lastModified: latest['races/rongeurs'] } : {}), changeFrequency: 'weekly' as const,  priority: 0.7 },
+    { url: `${APP_URL}/races/reptiles`, ...(latest['races/reptiles'] ? { lastModified: latest['races/reptiles'] } : {}), changeFrequency: 'weekly' as const,  priority: 0.7 },
     ...(['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'] as const).flatMap(animal =>
       (['appartement', 'enfants', 'debutants', 'seniors'] as const)
         .filter(critere => indexableRacePaths.has(`/races/${animal}/${critere}`))
         .map(critere => ({
         url: `${APP_URL}/races/${animal}/${critere}`,
-        lastModified: new Date(),
+        ...(latest[`races/${animal}`] ? { lastModified: latest[`races/${animal}`] } : {}),
         changeFrequency: 'monthly' as const,
         priority: 0.7,
       }))
     ),
-    { url: `${APP_URL}/adoption/deposer`,          lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.6 },
-    { url: `${APP_URL}/a-propos`,                  lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.6 },
-    { url: `${APP_URL}/mentions-legales`,          lastModified: new Date(), changeFrequency: 'yearly' as const,  priority: 0.3 },
-    { url: `${APP_URL}/politique-confidentialite`, lastModified: new Date(), changeFrequency: 'yearly' as const,  priority: 0.3 },
-    { url: `${APP_URL}/cgu`,     lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.3 },
-    { url: `${APP_URL}/cookies`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.3 },
+    { url: `${APP_URL}/a-propos`,                  changeFrequency: 'monthly' as const, priority: 0.6 },
+    { url: `${APP_URL}/mentions-legales`,          changeFrequency: 'yearly' as const,  priority: 0.3 },
+    { url: `${APP_URL}/politique-confidentialite`, changeFrequency: 'yearly' as const,  priority: 0.3 },
+    { url: `${APP_URL}/cgu`,     changeFrequency: 'yearly' as const, priority: 0.3 },
+    { url: `${APP_URL}/cookies`, changeFrequency: 'yearly' as const, priority: 0.3 },
     ...articleEntries.filter(isValidSitemapEntry),
     ...guideEntries.filter(isValidSitemapEntry),
     ...breedEntries.filter(isValidSitemapEntry),

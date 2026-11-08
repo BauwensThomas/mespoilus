@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { pingIndexNowPaths } from '@/lib/indexnow';
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -26,6 +27,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug
   revalidatePath(`/blog/${slug}`);
   revalidatePath('/blog');
   revalidatePath('/blog-admin');
+  if (status === 'published') await pingIndexNowPaths([`/blog/${slug}`]);
 
   return NextResponse.json({ success: true });
 }

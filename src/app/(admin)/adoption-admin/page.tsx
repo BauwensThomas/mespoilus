@@ -13,6 +13,7 @@ import Image from 'next/image';
 import { CheckCircle2, XCircle, Pencil, Heart, Clock, User, Bot, Share2 } from 'lucide-react';
 import DeletePostButton from './DeletePostButton';
 import ModerationSearchInput from './SearchInput';
+import { pingIndexNowPaths } from '@/lib/indexnow';
 
 export const revalidate = 0;
 // Partage réseaux (Emma + recadrage photo + Make) exécuté via after() dans approvePost
@@ -72,6 +73,7 @@ async function approvePost(id: string) {
     // Après la réponse (l'approbation reste instantanée) : partage Facebook + Instagram, puis
     // email au déposant, qui ne mentionne les réseaux que si le partage a réussi.
     after(async () => {
+      await pingIndexNowPaths([`/adoption/${id}`, '/adoption']);
       const share = await shareAdoptionPost(id).catch((err) => {
         console.error('[moderation] partage réseaux:', err);
         return { ok: false };
