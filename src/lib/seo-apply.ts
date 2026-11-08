@@ -49,8 +49,13 @@ export async function applySuggestion(suggestion: SeoSuggestion): Promise<ApplyR
 
     if (suggestion.page_type === 'blog') {
       const slug = extractSlug(suggestion.page, '/blog/');
-      const column = suggestion.suggestion_type === 'title' ? 'title' : 'meta_description';
-      const { error } = await supabase.from('articles').update({ [column]: suggestion.proposed_value }).eq('slug', slug);
+      // Titre : surcharge du titre Google (seo_meta_overrides), le H1 de l'article reste intact.
+      // Description : colonne native articles.meta_description.
+      const { error } = suggestion.suggestion_type === 'title'
+        ? await supabase.from('seo_meta_overrides').upsert(
+            { url_path: `/blog/${slug}`, title: suggestion.proposed_value, updated_at: new Date().toISOString() },
+            { onConflict: 'url_path' })
+        : await supabase.from('articles').update({ meta_description: suggestion.proposed_value }).eq('slug', slug);
       if (error) return { ok: false, error: error.message };
       await pingIndexNow(`${GSC_SITE_ORIGIN}${suggestion.page}`);
       return { ok: true };

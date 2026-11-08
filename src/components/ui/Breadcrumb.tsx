@@ -30,7 +30,8 @@ export default function Breadcrumb({ items, currentUrl, className = '' }: { item
       <nav aria-label="Fil d'Ariane" className={`text-sm text-gray-500 ${className}`}>
         <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
           {items.map((c, i) => (
-            <li key={i} className="flex items-center gap-1.5 min-w-0">
+            // Sur mobile, la page courante est masquée : elle répète le H1 juste en dessous
+            <li key={i} className={`items-center gap-1.5 min-w-0 ${c.href ? 'flex' : 'hidden sm:flex'}`}>
               {i > 0 && <span aria-hidden="true" className="text-gray-300">/</span>}
               {c.href ? (
                 <Link href={c.href} className="hover:text-orange-600 transition-colors">{c.name}</Link>

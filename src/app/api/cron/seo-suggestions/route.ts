@@ -234,8 +234,12 @@ async function getCurrentValues(
 ): Promise<{ title: string | null; meta: string | null; content: string | null }> {
   if (pageType === 'blog') {
     const slug = page.replace('/blog/', '').replace(/\/$/, '');
-    const { data } = await supabase.from('articles').select('title, meta_description, content').eq('slug', slug).single();
-    return { title: data?.title ?? null, meta: data?.meta_description ?? null, content: data?.content?.slice(0, 4000) ?? null };
+    const [{ data }, { data: ov }] = await Promise.all([
+      supabase.from('articles').select('title, meta_description, content').eq('slug', slug).single(),
+      // Titre Google surchargé (seo_meta_overrides) prioritaire sur le H1 : c'est lui qui s'affiche dans les résultats
+      supabase.from('seo_meta_overrides').select('title').eq('url_path', `/blog/${slug}`).maybeSingle(),
+    ]);
+    return { title: ov?.title ?? data?.title ?? null, meta: data?.meta_description ?? null, content: data?.content?.slice(0, 4000) ?? null };
   }
   if (pageType === 'race') {
     const slug = page.split('/').filter(Boolean).pop() ?? '';

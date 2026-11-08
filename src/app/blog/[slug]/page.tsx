@@ -18,6 +18,7 @@ import ProductImage from '@/components/boutique/ProductImage';
 import { ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
 import { getRelatedArticles, type RelatedArticle } from '@/lib/related-articles';
 import Breadcrumb from '@/components/ui/Breadcrumb';
+import { getMetaOverride } from '@/lib/seo-overrides';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,19 +47,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!article) return { title: 'Article introuvable' };
 
   const canonicalUrl = `/blog/${article.slug}`;
+  // Titre Google distinct du H1 (seo_meta_overrides) : on optimise le clic dans les résultats
+  // sans toucher au titre affiché dans l'article. Le titre surchargé est complet (pas de suffixe).
+  const override = await getMetaOverride(canonicalUrl).catch(() => null);
+  const seoTitle = override?.title ?? article.title;
+  // Description : uniquement articles.meta_description (une seule source, celle que Lucas modifie)
   const description = article.meta_description ?? article.excerpt;
   const ogImages = article.image_url
     ? [{ url: article.image_url, alt: article.image_alt ?? article.title, width: 1200, height: 630 }]
     : [];
 
   return {
-    title: article.title,
+    title: override?.title ? { absolute: override.title } : article.title,
     description,
     keywords: article.seo_keywords,
     robots: { index: true, follow: true },
     alternates: { canonical: canonicalUrl },
     openGraph: {
-      title: article.title,
+      title: seoTitle,
       description: description ?? '',
       type: 'article',
       url: canonicalUrl,
@@ -72,7 +78,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: article.title,
+      title: seoTitle,
       description: description ?? '',
       images: article.image_url ? [article.image_url] : [],
     },

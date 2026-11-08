@@ -43,8 +43,9 @@ CREATE INDEX IF NOT EXISTS idx_seo_suggestions_status ON seo_suggestions (status
 CREATE INDEX IF NOT EXISTS idx_seo_suggestions_page ON seo_suggestions (page, suggestion_type);
 
 -- Surcharge de métadonnées pour les pages sans champ éditable natif
--- (boutique produits, pages statiques). Ne JAMAIS l'utiliser pour articles/breeds,
--- qui ont déjà leurs propres colonnes (title/meta_description, content.excerpt).
+-- (boutique produits, pages statiques). Articles (08/11/2026) : utilisée pour le TITRE GOOGLE
+-- uniquement (url_path = '/blog/<slug>'), afin de ne pas modifier le H1 (articles.title) ;
+-- la description reste dans articles.meta_description. Breeds : content.excerpt.
 CREATE TABLE IF NOT EXISTS seo_meta_overrides (
   url_path TEXT PRIMARY KEY,
   title TEXT,
