@@ -16,6 +16,8 @@ import ClientWrapper from '@/components/animations/ClientWrapper';
 import { toHashtag } from '@/lib/hashtag';
 import ProductImage from '@/components/boutique/ProductImage';
 import { ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
+import { getRelatedArticles, type RelatedArticle } from '@/lib/related-articles';
+import Breadcrumb from '@/components/ui/Breadcrumb';
 
 export const dynamic = 'force-dynamic';
 
@@ -107,25 +109,21 @@ export default async function ArticlePage({ params }: Props) {
 
   // Produits + articles liés (même logique que les fiches races) : maillage interne + monétisation.
   let relProducts: { catalog_id: string; name: string; image_url: string | null; price: number; currency: string | null; merchant_name: string; affiliate_url: string }[] = [];
-  let relArticles: { id: string; title: string; slug: string; image_url: string | null }[] = [];
+  let relArticles: RelatedArticle[] = [];
   try {
     const supRel = createAdminClient();
-    const [{ data: p }, { data: a }] = await Promise.all([
+    const [{ data: p }, a] = await Promise.all([
       supRel.from('catalog_best_offer')
         .select('catalog_id, name, image_url, price, currency, merchant_name, affiliate_url')
         .or(`category.eq.${article.category},categories.cs.{${article.category}}`)
         .order('price', { ascending: true })
         .limit(4),
-      supRel.from('articles')
-        .select('id, title, slug, image_url')
-        .eq('status', 'published')
-        .eq('category', article.category)
-        .neq('slug', slug)
-        .order('published_at', { ascending: false })
-        .limit(3),
+      // Articles vraiment proches (race, mots-clés, titre) + 1 place pour un article peu lié : voir related-articles.ts
+      getRelatedArticles({ ...article, breed_slug: (article as Article & { breed_slug?: string | null }).breed_slug ?? null }, 4)
+        .catch(() => [] as RelatedArticle[]),
     ]);
     relProducts = (p ?? []) as typeof relProducts;
-    relArticles = (a ?? []) as typeof relArticles;
+    relArticles = a;
   } catch { /* le contenu principal reste visible */ }
 
   // Article consacré à une race (articles.breed_slug) : encadré vers sa fiche d'identité.
@@ -180,17 +178,6 @@ export default async function ArticlePage({ params }: Props) {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com';
   const articleUrl = `${appUrl}/blog/${article.slug}`;
-
-  const breadcrumbLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Accueil', item: appUrl },
-      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${appUrl}/blog` },
-      { '@type': 'ListItem', position: 3, name: CATEGORY_LABELS[article.category] ?? article.category, item: `${appUrl}/blog/${article.category}` },
-      { '@type': 'ListItem', position: 4, name: article.title, item: articleUrl },
-    ],
-  };
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -247,7 +234,6 @@ export default async function ArticlePage({ params }: Props) {
         </div>
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
 
       {/* Hero image - responsive mobile/tablette avec fond orange-50 */}
@@ -300,13 +286,17 @@ export default async function ArticlePage({ params }: Props) {
       <div className="px-6 py-10">
         <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-sm p-6 md:p-8" style={{ color: '#111827' }}>
 
-          {/* Retour au blog */}
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-1.5 text-gray-500 hover:text-orange-600 text-sm font-medium transition-colors mb-8 fade-up"
-          >
-            ← Retour au blog
-          </Link>
+          {/* Fil d'Ariane visible + BreadcrumbList (remplace "Retour au blog") */}
+          <Breadcrumb
+            className="mb-8 fade-up"
+            currentUrl={articleUrl}
+            items={[
+              { name: 'Accueil', href: '/' },
+              { name: 'Blog', href: '/blog' },
+              { name: CATEGORY_LABELS[article.category] ?? article.category, href: `/blog/${article.category}` },
+              { name: article.title },
+            ]}
+          />
 
           {/* Header avec animations */}
           <header className="mb-8 fade-up">
@@ -440,12 +430,12 @@ export default async function ArticlePage({ params }: Props) {
                 <h2 className="text-xl font-bold text-gray-900">À lire aussi</h2>
                 <Link href={`/blog/${article.category}`} className="text-sm text-orange-600 hover:underline">Voir tout &rarr;</Link>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-container">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-container">
                 {relArticles.map((ra) => (
                   <Link key={ra.id} href={`/blog/${ra.slug}`} className="stagger-child bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col">
                     <div className="relative h-40">
                       {ra.image_url ? (
-                        <Image src={ra.image_url} alt={ra.title} fill unoptimized className="object-cover" sizes="(max-width:640px) 100vw, 33vw" />
+                        <Image src={ra.image_url} alt={ra.title} fill unoptimized className="object-cover" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
                       ) : (
                         <div className="absolute inset-0 bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center"><PawPrint className="text-orange-300" size={32} /></div>
                       )}

@@ -4,6 +4,7 @@ import { ARTICLE_CARD_COLUMNS, withFeaturedContent } from '@/lib/blog-list';
 import BlogPostsGrid from '@/components/blog/BlogPostsGrid';
 import { Article } from '@/types';
 import Link from 'next/link';
+import Breadcrumb from '@/components/ui/Breadcrumb';
 import AdBanner from '@/components/ui/AdBanner';
 import BlogSearchBar from '@/components/blog/BlogSearchBar';
 import { Dog, Cat, Bird, Mouse, Zap, PawPrint, Globe } from 'lucide-react';
@@ -85,6 +86,11 @@ export async function CategoryPageContent({ category, search }: { category: stri
     <div className="min-h-screen px-6 md:px-8 py-6 space-y-5">
       {/* Header */}
       <div>
+        <Breadcrumb
+          className="mb-2"
+          currentUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.mespoilus.com'}/blog/${category}`}
+          items={[{ name: 'Accueil', href: '/' }, { name: 'Blog', href: '/blog' }, { name: meta.label }]}
+        />
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">{meta.label}</h1>
         <p className="text-sm text-gray-500 truncate">{meta.intro}</p>
       </div>
