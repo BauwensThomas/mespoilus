@@ -43,22 +43,25 @@ function textToHtml(s: string): string {
 }
 
 // Carte commune articles + adoptions : image à gauche (200 px), texte à droite.
-// Sur mobile (< 600 px), les classes nl-side-* empilent l'image au-dessus du texte.
+// Mise en page "hybride" : deux blocs inline-block qui passent l'un sous l'autre d'eux-mêmes quand
+// l'écran est trop étroit, SANS media query (Gmail ignorait le <style> placé dans le corps du mail
+// et gardait image + texte côte à côte sur téléphone, 08/11/2026). Les media queries de <head>
+// (lues par Gmail) ne servent plus qu'aux finitions mobiles (image pleine largeur, résumé masqué).
 const SIDE_IMG_W = 200;
 const SIDE_IMG_H = 170;
+const SIDE_TXT_MAX = 420;
 
 function sideCard(opts: { imageUrl: string | null; alt: string; body: string; bg: string }): string {
-  const imgCell = opts.imageUrl
-    ? `<td class="nl-side-img" width="${SIDE_IMG_W}" style="padding:14px 0 14px 14px;vertical-align:top;width:${SIDE_IMG_W}px">
-          <img src="${opts.imageUrl}" alt="${esc(opts.alt)}" width="${SIDE_IMG_W}" height="${SIDE_IMG_H}" style="display:block;width:${SIDE_IMG_W}px;height:${SIDE_IMG_H}px;object-fit:cover;border-radius:8px;border:0">
-        </td>`
+  const imgBlock = opts.imageUrl
+    ? `<div class="nl-side-img" style="display:inline-block;vertical-align:top;width:${SIDE_IMG_W}px;max-width:100%;margin:0 16px 12px 0">
+          <img src="${opts.imageUrl}" alt="${esc(opts.alt)}" width="${SIDE_IMG_W}" height="${SIDE_IMG_H}" style="display:block;width:${SIDE_IMG_W}px;max-width:100%;height:${SIDE_IMG_H}px;object-fit:cover;border-radius:8px;border:0">
+        </div>`
     : '';
   return `
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;background:${opts.bg};border:1px solid #fed7aa;border-radius:12px">
-      <tr>
-        ${imgCell}
-        <td class="nl-side-txt" style="padding:14px 16px;vertical-align:top">${opts.body}</td>
-      </tr>
+      <tr><td class="nl-side" style="padding:14px 14px 2px;font-size:0;line-height:0">
+        ${imgBlock}<div class="nl-side-txt" style="display:inline-block;vertical-align:top;width:100%;max-width:${SIDE_TXT_MAX}px;font-size:14px;line-height:1.6;margin:0 0 12px">${opts.body}</div>
+      </td></tr>
     </table>`;
 }
 
@@ -69,7 +72,7 @@ function articleCard(a: NlArticle): string {
     bg: '#fff7ed',
     body: `
       <h3 style="margin:0 0 8px;font-size:17px;font-weight:700;color:${TEXT}">${esc(a.title)}</h3>
-      <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:${MUTED}">${esc(a.excerpt ?? '')}</p>
+      <p class="nl-excerpt" style="margin:0 0 14px;font-size:14px;line-height:1.6;color:${MUTED}">${esc(a.excerpt ?? '')}</p>
       <a href="https://www.mespoilus.com/blog/${a.slug}" style="display:inline-block;background:${ORANGE};color:#fff;text-decoration:none;font-size:14px;font-weight:700;padding:10px 22px;border-radius:8px">Lire l'article</a>`,
   });
 }
@@ -118,7 +121,28 @@ export function buildNewsletterHtml(opts: {
   year: number;
 }): string {
   const { intro, conseil, articles, grille, adoptions = [], year } = opts;
-  return `<style>@media only screen and (max-width:600px){.nl-out{padding:0 1mm!important}.nl-in{border-radius:0!important}.nl-hd{padding:16px 14px!important}.nl-bd{padding:16px 14px!important}.nl-side-img,.nl-side-txt{display:block!important;width:auto!important}.nl-side-img{padding:12px 12px 0!important}.nl-side-img img{width:100%!important;height:auto!important;max-height:220px}.nl-side-txt{padding:12px!important}.nl-ft{padding:16px 14px!important}}</style>
+  // Document complet : Gmail ne lit les media queries que dans le <style> du <head>.
+  // Mobile : image pleine largeur au-dessus du texte, résumé des articles masqué (titre seul).
+  return `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+@media only screen and (max-width:600px){
+  .nl-out{padding:0 1mm!important}
+  .nl-in{border-radius:0!important}
+  .nl-hd{padding:16px 14px!important}
+  .nl-bd{padding:16px 14px!important}
+  .nl-side-img{display:block!important;width:100%!important;margin:0 0 12px!important}
+  .nl-side-img img{width:100%!important;height:auto!important}
+  .nl-side-txt{display:block!important;max-width:100%!important}
+  .nl-excerpt{display:none!important}
+  .nl-ft{padding:16px 14px!important}
+}
+</style>
+</head>
+<body style="margin:0;padding:0;background:#f9fafb">
 <table class="nl-out" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f9fafb;padding:16px 0;font-family:Arial,sans-serif">
   <tr><td align="center">
     <table class="nl-in" width="860" cellpadding="0" cellspacing="0" border="0" style="max-width:860px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden">
@@ -170,5 +194,7 @@ export function buildNewsletterHtml(opts: {
 
     </table>
   </td></tr>
-</table>`;
+</table>
+</body>
+</html>`;
 }
