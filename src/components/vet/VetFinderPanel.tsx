@@ -146,7 +146,7 @@ export default function VetFinderPanel() {
         } else if (err.code === err.POSITION_UNAVAILABLE) {
           setError('Position GPS indisponible. Entrez votre adresse.');
         } else {
-          setError('Delai depasse. Reessayez.');
+          setError('Délai dépassé. Réessayez.');
         }
       },
       { timeout: 10000, maximumAge: 60000 },
@@ -169,7 +169,7 @@ export default function VetFinderPanel() {
       } catch { coords = null; }
       if (!coords) {
         setLoading(false);
-        setError('Adresse introuvable. Selectionnez une suggestion ou soyez plus precis.');
+        setError('Adresse introuvable. Sélectionnez une suggestion ou soyez plus précis.');
         return;
       }
     }
@@ -202,13 +202,13 @@ export default function VetFinderPanel() {
       });
 
       if (!places || places.length === 0) {
-        setError(`Aucun veterinaire trouve dans ${radius} km.`);
+        setError(`Aucun vétérinaire trouvé dans ${radius} km.`);
         return;
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const vets: VetResult[] = places.map((p: any) => ({
-        name:         p.displayName ?? 'Veterinaire',
+        name:         p.displayName ?? 'Vétérinaire',
         address:      p.shortFormattedAddress ?? '',
         rating:       p.rating,
         ratingsTotal: p.userRatingCount,
@@ -234,7 +234,7 @@ export default function VetFinderPanel() {
       });
       if (vets.length > 1) mapInstance.current!.fitBounds(bounds);
     } catch {
-      setError('Erreur lors de la recherche. Verifiez que Places API est activee.');
+      setError('Erreur lors de la recherche. Vérifiez que Places API est activée.');
     } finally {
       setLoading(false);
     }
@@ -254,13 +254,13 @@ export default function VetFinderPanel() {
       {/* Tab lateral */}
       <button
         onClick={() => setOpen(true)}
-        aria-label="Trouver un veterinaire"
+        aria-label="Trouver un vétérinaire"
         className={`fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-blue-600 hover:bg-blue-700 text-white rounded-l-xl shadow-lg transition-all duration-300 ${open ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         <div className="flex flex-col items-center gap-2 px-2.5 py-5">
           <Stethoscope size={16} strokeWidth={1.5} />
           <span className="text-[11px] font-semibold tracking-wide" style={{ writingMode: 'vertical-rl' }}>
-            Veterinaire
+            Vétérinaire
           </span>
         </div>
       </button>
@@ -277,9 +277,9 @@ export default function VetFinderPanel() {
         <div className="flex items-center justify-between px-4 py-2 bg-blue-600 text-white shrink-0">
           <div className="flex items-center gap-2">
             <Stethoscope size={15} strokeWidth={1.5} />
-            <span className="text-sm font-bold">Trouver un veterinaire</span>
+            <span className="text-sm font-bold">Trouver un vétérinaire</span>
           </div>
-          <button onClick={() => setOpen(false)} aria-label="Fermer le panneau veterinaire" className="p-1 rounded-lg hover:bg-blue-700 transition-colors">
+          <button onClick={() => setOpen(false)} aria-label="Fermer le panneau vétérinaire" className="p-1 rounded-lg hover:bg-blue-700 transition-colors">
             <X size={16} strokeWidth={2} />
           </button>
         </div>
@@ -392,7 +392,7 @@ export default function VetFinderPanel() {
             {results.length > 0 ? (
               <div className="px-3 py-1.5">
                 <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1 px-0.5">
-                  {results.length} veterinaire{results.length > 1 ? 's' : ''}
+                  {results.length} vétérinaire{results.length > 1 ? 's' : ''}
                 </p>
                 <div className="space-y-1">
                   {results.map((vet, i) => (
@@ -418,7 +418,7 @@ export default function VetFinderPanel() {
                               </div>
                             )}
                             {vet.isOpen === true && <span className="text-[10px] text-green-600 font-medium">Ouvert</span>}
-                            {vet.isOpen === false && <span className="text-[10px] text-red-500">Ferme</span>}
+                            {vet.isOpen === false && <span className="text-[10px] text-red-500">Fermé</span>}
                           </div>
                         )}
                       </div>
