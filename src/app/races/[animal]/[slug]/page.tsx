@@ -8,6 +8,7 @@ import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_EMOJI, ANIMAL_GRADIENT, ANIMAL_URL
 import type { Article } from '@/types';
 import AdBanner from '@/components/ui/AdBanner';
 import ClientWrapper from '@/components/animations/ClientWrapper';
+import { isRacePageIndexable, NOINDEX_FOLLOW } from '@/lib/breed-indexing';
 
 export const revalidate = 3600;
 
@@ -44,6 +45,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${data.name} - Caractère, Santé, Entretien`,
     description: data.content?.excerpt ?? `Fiche complète du ${data.name} : caractère, tempérament, santé, alimentation, toilettage et conseils pratiques. Tout ce qu'il faut savoir avant l'adoption.`,
+    alternates: { canonical: `/races/${animal}/${slug}` },
+    ...(await isRacePageIndexable(animal, slug) ? {} : { robots: NOINDEX_FOLLOW }),
   };
 }
 

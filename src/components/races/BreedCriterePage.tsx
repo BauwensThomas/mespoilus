@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_URL, type Breed } from '@/lib/breeds-list';
 import BreedsList from '@/components/races/BreedsList';
 import BreedsSearchBar from '@/components/races/BreedsSearchBar';
+import { isRacePageIndexable, NOINDEX_FOLLOW } from '@/lib/breed-indexing';
 
 const CRITERE_EXPLAINER: Record<Critere, string> = {
   appartement: `Un animal adapté à la vie en appartement se distingue par un niveau d'énergie maîtrisable, une taille compatible avec l'espace disponible, et une tendance à rester calme en intérieur. Le niveau d'activité et le tempérament comptent souvent plus que le gabarit brut.`,
@@ -115,6 +116,7 @@ export async function getBreedCritereMetadata(
     title: `Meilleure race de ${animalLabel} pour ${label} | Mes Poilus`,
     description: CRITERE_INTRO[critere](animalLabel),
     alternates: { canonical: `/races/${params.animal}/${critere}` },
+    ...(await isRacePageIndexable(params.animal, critere) ? {} : { robots: NOINDEX_FOLLOW }),
   };
 }
 

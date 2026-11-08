@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
+import { getIndexableRacePaths } from '@/lib/breed-indexing';
 
 export const revalidate = 86400;
 
@@ -37,6 +38,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let guideEntries: MetadataRoute.Sitemap = [];
   let breedEntries: MetadataRoute.Sitemap = [];
   let adoptionEntries: MetadataRoute.Sitemap = [];
+  // Pages de filtres races (appartement, enfants...) : même règle d'indexation que les fiches
+  const { paths: indexableRacePaths } = await getIndexableRacePaths();
 
   try {
     const supabase = createAdminClient();
@@ -89,8 +92,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .not('content', 'is', null);
 
     const ANIMAL_URL: Record<string, string> = { chien: 'chiens', chat: 'chats', oiseau: 'oiseaux', rongeur: 'rongeurs', reptile: 'reptiles' };
+    // Seules les fiches indexables (guide dédié ou impressions Google récentes) : voir breed-indexing.ts
+    const { paths: racePaths, guideSlugs } = await getIndexableRacePaths();
     breedEntries = (breeds ?? [])
       .filter(b => b.slug && ANIMAL_URL[b.animal])
+      .filter(b => guideSlugs.has(b.slug) || racePaths.has(`/races/${ANIMAL_URL[b.animal]}/${b.slug}`))
       .map(b => ({
         url: `${APP_URL}/races/${ANIMAL_URL[b.animal]}/${encodeURIComponent(b.slug)}`,
         lastModified: new Date(b.generated_at ?? Date.now()),
@@ -148,7 +154,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${APP_URL}/races/rongeurs`, lastModified: new Date(), changeFrequency: 'weekly' as const,  priority: 0.7 },
     { url: `${APP_URL}/races/reptiles`, lastModified: new Date(), changeFrequency: 'weekly' as const,  priority: 0.7 },
     ...(['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles'] as const).flatMap(animal =>
-      (['appartement', 'enfants', 'debutants', 'seniors'] as const).map(critere => ({
+      (['appartement', 'enfants', 'debutants', 'seniors'] as const)
+        .filter(critere => indexableRacePaths.has(`/races/${animal}/${critere}`))
+        .map(critere => ({
         url: `${APP_URL}/races/${animal}/${critere}`,
         lastModified: new Date(),
         changeFrequency: 'monthly' as const,
