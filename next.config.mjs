@@ -23,6 +23,11 @@ const nextConfig = {
   async redirects() {
     return [
       { source: '/favicon.ico', destination: '/favicon.svg', permanent: true },
+      // 404 vues par Google (export GSC du 10/11/2026) : URL inexistantes mais demandées
+      // (liens externes ou inventés). Redirigées vers la page la plus proche plutôt que perdues.
+      { source: '/accessoires/:animal(chiens|chats|oiseaux|rongeurs|reptiles)/:rest*', destination: '/boutique?category=:animal', permanent: true },
+      { source: '/accessoires/:rest*', destination: '/boutique', permanent: true },
+      { source: '/blog/bien-etre-oiseau-en-cage', destination: '/blog/oiseaux', permanent: true },
     ];
   },
   async headers() {
