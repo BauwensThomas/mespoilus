@@ -15,4 +15,8 @@ Sentry.init({
     nodeProfilingIntegration(),
     Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
   ],
+  // POST forgés par des robots scanners (ex. 12/11/2026 : POST / de 137 Ko depuis la
+  // Moldavie avec des cookies d'un autre site) ou onglet resté ouvert pendant un déploiement.
+  // Next.js rejette déjà la requête, aucune action possible de notre côté.
+  ignoreErrors: [/Failed to find Server Action/],
 });
