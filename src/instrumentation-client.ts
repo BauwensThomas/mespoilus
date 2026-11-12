@@ -29,6 +29,10 @@ Sentry.init({
     /^chrome-extension:\/\//i,
     /^moz-extension:\/\//i,
     /^safari-(web-)?extension:\/\//i,
+    // Robots qui imitent un navigateur (faux DOM sur runtime Deno) : leurs erreurs viennent
+    // de leur propre code "<obscura:bootstrap>" / "ext:core/...", pas du site (12/11/2026).
+    /^<obscura/i,
+    /^ext:core\//i,
   ],
 });
 

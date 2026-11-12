@@ -143,7 +143,10 @@ export default function QuizPage() {
     setAnswers(newAnswers);
 
     if (currentQ < QUESTIONS.length - 1) {
-      setTimeout(() => setCurrentQ(q => q + 1), 300);
+      // Avance d'une seule question même en cas de double tap pendant l'animation de 300 ms
+      // (sinon deux timeouts s'empilent, currentQ dépasse la dernière question et q est undefined).
+      const from = currentQ;
+      setTimeout(() => setCurrentQ(c => (c === from ? from + 1 : c)), 300);
     } else {
       // Calcul des scores
       const scores: Record<AnimalKey, number> = { chien: 0, chat: 0, lapin: 0, oiseau: 0, rongeur: 0 };
