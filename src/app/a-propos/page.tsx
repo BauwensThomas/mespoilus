@@ -19,8 +19,8 @@ export default function AProposPage() {
 
         {/* Équipe */}
         <div className="grid sm:grid-cols-2 gap-4 mb-12">
-          <div className="flex items-start gap-4 bg-orange-50 border border-orange-200 rounded-2xl p-5">
-            <div className="w-40 h-40 rounded-full overflow-hidden flex-shrink-0">
+          <div className="flex flex-col sm:flex-row items-start gap-4 bg-orange-50 border border-orange-200 rounded-2xl p-5">
+            <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden flex-shrink-0">
               <Image src="/images/team/thomas-illustration.webp" alt="Portrait dessiné de Thomas, fondateur de Mes Poilus" width={160} height={160} className="object-cover w-full h-full" />
             </div>
             <div>
@@ -31,8 +31,8 @@ export default function AProposPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-start gap-4 bg-orange-50 border border-orange-200 rounded-2xl p-5">
-            <div className="w-40 h-40 rounded-full overflow-hidden flex-shrink-0">
+          <div className="flex flex-col sm:flex-row items-start gap-4 bg-orange-50 border border-orange-200 rounded-2xl p-5">
+            <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden flex-shrink-0">
               <Image src="/images/team/marie-illustration.webp" alt="Illustration de Marie, l'assistante de rédaction IA de Mes Poilus" width={160} height={160} className="object-cover w-full h-full" />
             </div>
             <div>

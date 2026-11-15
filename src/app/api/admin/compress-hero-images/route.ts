@@ -21,17 +21,17 @@ async function listFilesRecursive(
   supabase: ReturnType<typeof createAdminClient>,
   bucket: string,
   prefix = ''
-): Promise<string[]> {
+): Promise<{ path: string; size: number }[]> {
   const { data, error } = await supabase.storage
     .from(bucket)
     .list(prefix, { limit: 1000, sortBy: { column: 'name', order: 'asc' } });
   if (error || !data) return [];
 
-  const paths: string[] = [];
+  const paths: { path: string; size: number }[] = [];
   for (const item of data) {
     const fullPath = prefix ? `${prefix}/${item.name}` : item.name;
     if (item.metadata) {
-      if (/\.(jpe?g|png|webp)$/i.test(item.name)) paths.push(fullPath);
+      if (/\.(jpe?g|png|webp)$/i.test(item.name)) paths.push({ path: fullPath, size: Number(item.metadata.size ?? 0) });
     } else {
       const nested = await listFilesRecursive(supabase, bucket, fullPath);
       paths.push(...nested);
@@ -49,12 +49,23 @@ export async function GET() {
   const results: Result[] = [];
   const errors: FileError[] = [];
   let totalFiles = 0;
+  // Avant : chaque fichier était téléchargé juste pour connaître sa taille (des milliers de
+  // téléchargements) et la fonction dépassait sa durée max sur Vercel ("An error occurred...",
+  // 15/11/2026). La taille vient maintenant du listing : seuls les fichiers trop lourds sont
+  // téléchargés, et on s'arrête proprement avant la limite (relancer pour finir le reste).
+  const deadline = Date.now() + (maxDuration - 40) * 1000;
+  let timedOut = false;
 
   for (const { name: bucket, maxWidth, skipBelowKb } of BUCKETS) {
     const files = await listFilesRecursive(supabase, bucket);
     totalFiles += files.length;
 
-    for (const path of files) {
+    for (const { path, size } of files) {
+      if (size > 0 && size < skipBelowKb * 1024) {
+        results.push({ bucket, path, before: size, after: size, skipped: true });
+        continue;
+      }
+      if (Date.now() > deadline) { timedOut = true; break; }
       try {
         const { data: blob, error: dlError } = await supabase.storage.from(bucket).download(path);
         if (dlError || !blob) throw new Error(dlError?.message ?? 'Download failed');
@@ -118,6 +129,7 @@ export async function GET() {
 
   return NextResponse.json({
     total: totalFiles,
+    timedOut,
     compressed: done.length,
     skipped: results.filter(r => r.skipped).length,
     errors: errors.length,

@@ -44,14 +44,16 @@ export default function PublicHeader() {
 
   return (
     <header className="sticky top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-orange-100 shadow-sm h-20" style={{ viewTransitionName: 'site-header' }}>
-      <nav className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between gap-4">
+      {/* Très petits écrans (< 360 px) : marges et espacements réduits, nom du site masqué (le logo
+          reste) pour que le hamburger ne sorte pas de l'écran. */}
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-2 sm:gap-4">
 
         {/* Logo */}
         <Link href="/" onClick={close} className="flex items-center gap-2.5 shrink-0 group">
           <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg text-white group-hover:shadow-md transition-shadow h-10 w-10 flex items-center justify-center">
             <PawPrint size={24} strokeWidth={1.5} />
           </div>
-          <span className="font-bold text-gray-900 text-base tracking-tight">Mes Poilus</span>
+          <span className="font-bold text-gray-900 text-base tracking-tight max-[359px]:sr-only">Mes Poilus</span>
         </Link>
 
         {/* Nav desktop - visible à partir de lg */}
@@ -98,10 +100,10 @@ export default function PublicHeader() {
         </div>
 
         {/* Droite : Boutique + hamburger */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <Link
             href="/boutique"
-            className="bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 whitespace-nowrap"
+            className="bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold px-3 sm:px-4 py-2.5 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 whitespace-nowrap"
             aria-label="Accéder à la boutique"
           >
             Boutique

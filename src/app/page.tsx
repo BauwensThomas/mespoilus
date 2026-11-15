@@ -19,6 +19,7 @@ import { formatReviewDate } from '@/lib/formatReviewDate';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getMetaOverride } from '@/lib/seo-overrides';
+import { ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
 
 type Review = { id: string; name: string; rating: number; comment: string | null; created_at: string };
 
@@ -51,7 +52,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   rongeurs: 'Rongeurs', reptiles: 'Reptiles', general: 'Général',
 };
 
-type HeroPhoto = { url: string; alt: string };
+type HeroPhoto = { url: string; alt: string; href: string };
 
 // Les 4 cadres du hero montent chacun une race tirée au hasard, d'une espèce différente
 // (4 espèces parmi 5). Le tirage change à chaque régénération de la page (revalidate 1 h).
@@ -60,20 +61,22 @@ async function getHeroPhotosFromDB(): Promise<(HeroPhoto | null)[]> {
   try {
     const { data } = await createAdminClient()
       .from('breeds')
-      .select('animal, name, photo_url')
+      .select('animal, slug, name, photo_url')
       .eq('status', 'published')
       .not('photo_url', 'is', null);
     if (!data || data.length === 0) return [null, null, null, null];
 
-    const byAnimal: Record<string, { name: string; photo_url: string }[]> = {};
-    for (const b of data as { animal: string; name: string; photo_url: string }[]) {
+    const byAnimal: Record<string, { slug: string; name: string; photo_url: string }[]> = {};
+    for (const b of data as { animal: AnimalType; slug: string; name: string; photo_url: string }[]) {
+      if (!ANIMAL_URL[b.animal]) continue;
       (byAnimal[b.animal] ??= []).push(b);
     }
-    const animals = Object.keys(byAnimal).sort(() => Math.random() - 0.5).slice(0, 4);
+    const animals = (Object.keys(byAnimal) as AnimalType[]).sort(() => Math.random() - 0.5).slice(0, 4);
     const selected: (HeroPhoto | null)[] = animals.map(animal => {
       const list = byAnimal[animal];
       const pick = list[Math.floor(Math.random() * list.length)];
-      return { url: pick.photo_url, alt: pick.name };
+      // Chaque cadre mène à la fiche de sa race
+      return { url: pick.photo_url, alt: pick.name, href: `/races/${ANIMAL_URL[animal]}/${pick.slug}` };
     });
     while (selected.length < 4) selected.push(null);
     return selected;
@@ -222,16 +225,16 @@ export default async function LandingPage() {
             {/* GRILLE 2x2 MOBILE */}
             <div className="grid grid-cols-2 gap-2 max-w-[280px] mx-auto w-full">
               <div className="relative aspect-square rounded-xl overflow-hidden shadow-md group transform -rotate-3 hover:rotate-0 transition-all duration-300">
-                {heroPhotos[0] ? <Image src={heroPhotos[0].url} alt={heroPhotos[0].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /> : <div className="w-full h-full bg-gradient-to-br from-orange-200 to-amber-200" />}
+                {heroPhotos[0] ? <Link href={heroPhotos[0].href} aria-label={`Voir la fiche : ${heroPhotos[0].alt}`} className="absolute inset-0"><Image src={heroPhotos[0].url} alt={heroPhotos[0].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-200 to-amber-200" />}
               </div>
               <div className="relative aspect-square rounded-xl overflow-hidden shadow-md group transform rotate-3 hover:rotate-0 transition-all duration-300">
-                {heroPhotos[1] ? <Image src={heroPhotos[1].url} alt={heroPhotos[1].alt} fill priority className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
+                {heroPhotos[1] ? <Link href={heroPhotos[1].href} aria-label={`Voir la fiche : ${heroPhotos[1].alt}`} className="absolute inset-0"><Image src={heroPhotos[1].url} alt={heroPhotos[1].alt} fill priority className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
               </div>
               <div className="relative aspect-square rounded-xl overflow-hidden shadow-md group transform -rotate-2 hover:rotate-0 transition-all duration-300">
-                {heroPhotos[2] ? <Image src={heroPhotos[2].url} alt={heroPhotos[2].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /> : <div className="w-full h-full bg-gradient-to-br from-amber-200 to-orange-200" />}
+                {heroPhotos[2] ? <Link href={heroPhotos[2].href} aria-label={`Voir la fiche : ${heroPhotos[2].alt}`} className="absolute inset-0"><Image src={heroPhotos[2].url} alt={heroPhotos[2].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-amber-200 to-orange-200" />}
               </div>
               <div className="relative aspect-square rounded-xl overflow-hidden shadow-md group transform rotate-2 hover:rotate-0 transition-all duration-300">
-                {heroPhotos[3] ? <Image src={heroPhotos[3].url} alt={heroPhotos[3].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /> : <div className="w-full h-full bg-gradient-to-br from-orange-200 to-amber-200" />}
+                {heroPhotos[3] ? <Link href={heroPhotos[3].href} aria-label={`Voir la fiche : ${heroPhotos[3].alt}`} className="absolute inset-0"><Image src={heroPhotos[3].url} alt={heroPhotos[3].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-200 to-amber-200" />}
               </div>
             </div>
           </div>
@@ -274,20 +277,20 @@ export default async function LandingPage() {
             <div className="relative w-full max-w-md mx-auto xl:max-w-full">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] w-full">
                 {heroPhotos[1] ? (
-                  <Image src={heroPhotos[1].url} alt={heroPhotos[1].alt} fill priority className="object-cover" sizes="(max-width: 1280px) 50vw, 40vw" />
+                  <Link href={heroPhotos[1].href} aria-label={`Voir la fiche : ${heroPhotos[1].alt}`} className="absolute inset-0"><Image src={heroPhotos[1].url} alt={heroPhotos[1].alt} fill priority className="object-cover" sizes="(max-width: 1280px) 50vw, 40vw" /></Link>
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-orange-200 to-amber-200" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
               </div>
               <div className="absolute -bottom-6 -left-6 2xl:-bottom-8 2xl:-left-8 w-28 h-28 2xl:w-36 2xl:h-36 rounded-xl overflow-hidden shadow-lg border-4 border-white rotate-[-8deg] group">
-                {heroPhotos[0] ? <Image src={heroPhotos[0].url} alt={heroPhotos[0].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
+                {heroPhotos[0] ? <Link href={heroPhotos[0].href} aria-label={`Voir la fiche : ${heroPhotos[0].alt}`} className="absolute inset-0"><Image src={heroPhotos[0].url} alt={heroPhotos[0].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
               </div>
               <div className="absolute -top-6 -right-6 2xl:-top-8 2xl:-right-8 w-24 h-24 2xl:w-32 2xl:h-32 rounded-xl overflow-hidden shadow-lg border-4 border-white rotate-[12deg] group">
-                {heroPhotos[2] ? <Image src={heroPhotos[2].url} alt={heroPhotos[2].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /> : <div className="w-full h-full bg-gradient-to-br from-amber-300 to-orange-300" />}
+                {heroPhotos[2] ? <Link href={heroPhotos[2].href} aria-label={`Voir la fiche : ${heroPhotos[2].alt}`} className="absolute inset-0"><Image src={heroPhotos[2].url} alt={heroPhotos[2].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-amber-300 to-orange-300" />}
               </div>
               <div className="absolute bottom-8 -right-8 2xl:bottom-12 2xl:-right-10 w-20 h-20 2xl:w-28 2xl:h-28 rounded-xl overflow-hidden shadow-lg border-4 border-white rotate-[6deg] group">
-                {heroPhotos[3] ? <Image src={heroPhotos[3].url} alt={heroPhotos[3].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
+                {heroPhotos[3] ? <Link href={heroPhotos[3].href} aria-label={`Voir la fiche : ${heroPhotos[3].alt}`} className="absolute inset-0"><Image src={heroPhotos[3].url} alt={heroPhotos[3].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
               </div>
             </div>
           </div>

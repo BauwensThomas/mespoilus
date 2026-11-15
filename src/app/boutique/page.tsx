@@ -323,7 +323,7 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
               <CatalogSearchBar defaultValue={search ?? ''} />
             </div>
           </Suspense>
-          <div className="flex items-center gap-2 fade-up">
+          <div className="flex flex-wrap items-center gap-2 fade-up">
             <Suspense fallback={<div className="h-9 w-36 bg-gray-100 rounded-lg animate-pulse" />}>
               <CatalogSortSelect defaultValue={sort} />
             </Suspense>
