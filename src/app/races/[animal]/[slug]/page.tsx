@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import ProductImage from '@/components/boutique/ProductImage';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { CheckCircle2, XCircle, Activity, MapPin, Scale, Heart } from 'lucide-react';
@@ -398,19 +399,16 @@ export default async function BreedPage({ params }: Props) {
                   className="stagger-child bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col"
                 >
                   <div className="relative h-28 bg-gray-50">
-                    {p.image_url ? (
-                      <Image
-                        src={p.image_url}
-                        alt={p.name}
-                        fill unoptimized
-                        className="object-contain p-2 transition-transform duration-500 hover:scale-105"
-                        sizes="200px"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-3xl">{ANIMAL_EMOJI[animalType]}</span>
-                      </div>
-                    )}
+                    {/* ProductImage : image directe du marchand si le proxy Awin est bloqué, puis icône */}
+                    <ProductImage
+                      src={p.image_url}
+                      alt={p.name}
+                      className="object-contain p-2 transition-transform duration-500 hover:scale-105"
+                      sizes="200px"
+                      icon="pawprint"
+                      iconSize={28}
+                      iconClassName="text-gray-300"
+                    />
                   </div>
                   <div className="p-2.5 flex flex-col flex-1">
                     <p className="text-xs text-gray-700 font-medium line-clamp-2 flex-1">{p.name}</p>

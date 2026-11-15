@@ -5,6 +5,7 @@ import { Article } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { marked } from 'marked';
+import { refreshProductLinks } from '@/lib/product-links';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -157,6 +158,8 @@ export default async function ArticlePage({ params }: Props) {
   }
 
   let htmlContent = await marked(article.content, { gfm: true });
+  // Liens produits vérifiés contre la boutique : produit retiré ou en rupture -> boutique de la catégorie.
+  htmlContent = await refreshProductLinks(htmlContent, article.category);
   // Le titre H1 est déjà rendu par le template — on descend les headings du contenu d'un niveau.
   htmlContent = htmlContent.replace(/<h1>/gi, '<h2>').replace(/<\/h1>/gi, '</h2>');
   // TOUS les liens d'un article s'ouvrent dans un NOUVEL ONGLET → le lecteur ne quitte jamais son article.
