@@ -18,26 +18,31 @@ const LABEL: Record<string, string> = {
   chien: 'Chien', chat: 'Chat', oiseau: 'Oiseau', rongeur: 'Rongeur', reptile: 'Reptile',
 };
 
-async function getOnePerType() {
+// Jusqu'à 5 annonces : d'abord une par espèce (variété), puis complété avec les autres
+// annonces au hasard. Avant, une seule annonce par espèce : 2 chiens = 1 seule carte visible.
+const MAX_POSTS = 5;
+
+async function getPreviewPosts() {
   unstable_noStore();
-  const supabase = createAdminClient();
-  const results = await Promise.all(
-    TYPES.map(async type => {
-      const { data } = await supabase
-        .from('adoption_posts')
-        .select('id,animal_type,breed,age,region,photo_urls,poster_name')
-        .eq('status', 'approved')
-        .eq('animal_type', type)
-        .limit(10);
-      if (!data || data.length === 0) return null;
-      return data[Math.floor(Math.random() * data.length)];
-    })
-  );
-  return results.filter((p): p is NonNullable<typeof p> => p !== null);
+  const { data } = await createAdminClient()
+    .from('adoption_posts')
+    .select('id,animal_type,breed,age,region,photo_urls,poster_name')
+    .eq('status', 'approved')
+    .in('animal_type', TYPES as unknown as string[])
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (!data || data.length === 0) return [];
+
+  const shuffled = [...data].sort(() => Math.random() - 0.5);
+  const firstOfType = TYPES
+    .map(type => shuffled.find(p => p.animal_type === type))
+    .filter((p): p is NonNullable<typeof p> => !!p);
+  const rest = shuffled.filter(p => !firstOfType.includes(p));
+  return [...firstOfType, ...rest].slice(0, MAX_POSTS);
 }
 
 export default async function AdoptionPreviewSection() {
-  const posts = await getOnePerType();
+  const posts = await getPreviewPosts();
   if (posts.length === 0) return null;
 
   return (

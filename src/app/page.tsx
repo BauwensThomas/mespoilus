@@ -53,62 +53,30 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 type HeroPhoto = { url: string; alt: string };
 
-const HERO_SLOTS = ['chiens', 'chats', 'oiseaux', 'rongeurs'];
-
+// Les 4 cadres du hero montent chacun une race tirée au hasard, d'une espèce différente
+// (4 espèces parmi 5). Le tirage change à chaque régénération de la page (revalidate 1 h).
+// Toutes les races publiées ont une photo (bucket hero-photos/races, ~600 px).
 async function getHeroPhotosFromDB(): Promise<(HeroPhoto | null)[]> {
   try {
-    const supabase = createAdminClient();
-    const { data } = await supabase
-      .from('hero_photos')
-      .select('id, url, alt, animal_type, last_used_at')
-      .eq('active', true)
-      .order('last_used_at', { ascending: true, nullsFirst: true });
+    const { data } = await createAdminClient()
+      .from('breeds')
+      .select('animal, name, photo_url')
+      .eq('status', 'published')
+      .not('photo_url', 'is', null);
     if (!data || data.length === 0) return [null, null, null, null];
 
-    const byType: Record<string, { id: string; url: string; alt: string }[]> = {};
-    for (const row of data) {
-      const key = ANIMAL_TYPE_MAP[row.animal_type] ?? row.animal_type;
-      if (!byType[key]) byType[key] = [];
-      byType[key].push({ id: row.id, url: row.url, alt: row.alt });
+    const byAnimal: Record<string, { name: string; photo_url: string }[]> = {};
+    for (const b of data as { animal: string; name: string; photo_url: string }[]) {
+      (byAnimal[b.animal] ??= []).push(b);
     }
-
-    // Sélectionne 4 animaux aléatoirement
-    const allTypes = Object.keys(byType);
-    const shuffled = [...allTypes].sort(() => Math.random() - 0.5);
-    const selectedTypes = shuffled.slice(0, 4);
-
-    const selected: (HeroPhoto | null)[] = selectedTypes.map(type => {
-      const photos = byType[type];
-      if (!photos || photos.length === 0) return null;
-      return { url: photos[0].url, alt: photos[0].alt };
-    });
-
-    // Si moins de 4 types, complète avec null
-    while (selected.length < 4) selected.push(null);
-
-    const selectedIds = HERO_SLOTS
-      .map(type => byType[type]?.[0]?.id)
-      .filter(Boolean) as string[];
-    if (selectedIds.length > 0) {
-      await supabase
-        .from('hero_photos')
-        .update({ last_used_at: new Date().toISOString() })
-        .in('id', selectedIds);
-    }
-
-    const SLOT_TO_ANIMAL: Record<string, string> = { chiens: 'chien', chats: 'chat', oiseaux: 'oiseau', rongeurs: 'rongeur' };
-    const final = await Promise.all(selected.map(async (photo, i) => {
-      if (photo) return photo;
-      const animalType = SLOT_TO_ANIMAL[HERO_SLOTS[i]];
-      if (!animalType) return null;
-      const { data: breeds } = await supabase
-        .from('breeds').select('photo_url, name')
-        .eq('animal', animalType).eq('status', 'published').not('photo_url', 'is', null).limit(30);
-      if (!breeds || breeds.length === 0) return null;
-      const pick = breeds[Math.floor(Math.random() * breeds.length)] as { photo_url: string; name: string };
+    const animals = Object.keys(byAnimal).sort(() => Math.random() - 0.5).slice(0, 4);
+    const selected: (HeroPhoto | null)[] = animals.map(animal => {
+      const list = byAnimal[animal];
+      const pick = list[Math.floor(Math.random() * list.length)];
       return { url: pick.photo_url, alt: pick.name };
-    }));
-    return final;
+    });
+    while (selected.length < 4) selected.push(null);
+    return selected;
   } catch {
     return [null, null, null, null];
   }
@@ -343,7 +311,7 @@ export default async function LandingPage() {
 
             <div className="flex flex-wrap justify-center gap-4 stagger-container">
               {reviews.latest.map(r => (
-                <div key={r.id} className="stagger-child bg-white border border-gray-200 rounded-2xl p-4 w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex flex-col">
+                <div key={r.id} className="stagger-child bg-white border border-gray-200 rounded-2xl p-4 w-full max-w-sm sm:max-w-none sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex flex-col">
                   <StarRatingDisplay rating={r.rating} size={14} />
                   {r.comment && <p className="text-sm text-gray-600 mt-2 leading-relaxed line-clamp-4">{r.comment}</p>}
                   <div className="flex items-center justify-between gap-2 mt-auto pt-3">

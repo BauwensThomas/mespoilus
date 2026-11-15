@@ -132,8 +132,8 @@ export default async function RacesPage() {
                 </div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-3">
-                <p className="font-bold text-white text-sm leading-tight">{ANIMAL_LABEL[animal]}</p>
+              <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
+                <p className="font-bold text-white text-xs sm:text-sm leading-tight break-words">{ANIMAL_LABEL[animal]}</p>
                 <p className="text-white/70 text-xs mt-0.5">
                   {count > 0 ? `${count} race${count > 1 ? 's' : ''}` : 'Bientôt'}
                 </p>

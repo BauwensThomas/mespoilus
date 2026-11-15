@@ -166,7 +166,7 @@ export default function PartenairesSection() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12 fade-up">
           <span className="text-orange-700 text-sm font-semibold uppercase tracking-widest">Partenaires</span>
-          <h2 className="text-4xl font-bold text-gray-900 mt-2 glow-text">Nos recommandations</h2>
+          <h2 className="text-[clamp(1.5rem,8vw,2.25rem)] font-bold text-gray-900 mt-2 glow-text">Nos recommandations</h2>
           <p className="text-gray-600 mt-3 text-base">Des marques sélectionnées pour la qualité de leurs produits et services.</p>
         </div>
 
