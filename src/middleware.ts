@@ -190,5 +190,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)',],
+  // /monitoring = tunnel Sentry (next.config.mjs) : pas de middleware sur ces envois
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|monitoring).*)',],
 };

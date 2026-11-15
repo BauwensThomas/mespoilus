@@ -6,13 +6,16 @@ import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "https://be2b25d58b9617d48f5102aefe1b9487@o4511412620689408.ingest.de.sentry.io/4511412634189904",
-  tracesSampleRate: 1,
+  // 10 % des visites pour les mesures de performance (depuis le tunnel /monitoring du 15/11/2026,
+  // chaque envoi passe par Vercel). Les erreurs restent envoyées à 100 %.
+  tracesSampleRate: 0.1,
   profilesSampleRate: 1,
   sendDefaultPii: true,
   enableLogs: true,
   integrations: [
     Sentry.browserProfilingIntegration(),
-    Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
+    // Côté navigateur : seulement warn + error (les console.log multipliaient les envois)
+    Sentry.consoleLoggingIntegration({ levels: ['warn', 'error'] }),
   ],
   // Bruit connu du navigateur intégré Instagram/Android WebView (pont natif détruit
   // pendant la navigation) - ne vient jamais de notre code, aucune action possible.

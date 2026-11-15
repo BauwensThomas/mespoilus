@@ -92,7 +92,10 @@ export default withSentryConfig(nextConfig, {
   // This can increase your server load as well as your hosting bill.
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
   // side errors will fail.
-  // tunnelRoute: "/monitoring",
+  // Activé le 15/11/2026 : les bloqueurs de pub (extensions, protection anti-suivi d'Edge)
+  // bloquaient les envois vers *.ingest.de.sentry.io (ERR_BLOCKED_BY_CLIENT), donc les erreurs
+  // des visiteurs équipés d'un bloqueur n'arrivaient jamais. /monitoring est exclu du middleware.
+  tunnelRoute: "/monitoring",
 
   webpack: {
     // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
