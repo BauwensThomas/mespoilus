@@ -111,7 +111,6 @@ export async function GET(req: Request) {
   let raison = '';
   let nomProduit = '';
   let lienAffilie = '';
-  let imageProduit = '';
   let metaDesc = '';
   let relatedArticles: { slug: string; title: string }[] = [];
   let articleSlug = '';
@@ -126,7 +125,7 @@ export async function GET(req: Request) {
     const month = now.getMonth() + 1;
     season = getSeason(month);
     const week = getISOWeek(now);
-    const dayIndex = [1, 3, 5].indexOf(now.getDay());
+    const dayIndex = [1, 3, 5, 0].indexOf(now.getDay()); // lundi, mercredi, vendredi, dimanche (vercel.json)
     const postIndex = dayIndex >= 0 ? dayIndex : 0;
 
     // Mode auto : catégorie la moins utilisée, sinon rotation par semaine
@@ -135,7 +134,7 @@ export async function GET(req: Request) {
     } else {
       animal = (urlAnimal && ANIMAL_CATEGORIES.includes(urlAnimal))
         ? urlAnimal
-        : ANIMAL_CATEGORIES[(week * 3 + postIndex) % 5];
+        : ANIMAL_CATEGORIES[(week * 4 + postIndex) % 5];
     }
 
     const { data: articles } = await supabase
@@ -208,7 +207,12 @@ export async function GET(req: Request) {
       ? `\nARTICLES DÉJÀ PUBLIÉS SUR LES ${animal.toUpperCase()} CES 30 DERNIERS JOURS (INTERDICTION ABSOLUE d'en reprendre le thème ou un angle proche) :\n${animalRecentTitles.map(t => `- ${t}`).join('\n')}\nTon sujet doit traiter un BESOIN DIFFÉRENT de tous ceux ci-dessus, et être un thème ACTUELLEMENT RECHERCHÉ sur Google (appuie-toi sur les données SEO/GSC/tendances ci-dessous).\n`
       : '';
     const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-    // Rotation du type par animal : chaque animal cycle indépendamment à travers les 5 types
+    // Rotation du type par animal (22/11/2026, bilan GSC sur 12 semaines) :
+    // conseil/tendance = 69 impressions et 0,51 clic par article, affiliation un seul produit = 37 et
+    // 0,05, articles race = 9 et 0 clic (doublon des fiches /races). La rotation automatique ne
+    // produit donc plus que des conseils/tendances et des sélections de PLUSIEURS produits.
+    // 'affiliation', 'race' et 'best_of' restent accessibles en manuel (CronLauncher : type= ou
+    // partenaire forcé) mais ne sont plus jamais choisis automatiquement.
     let animalArticleCount = 0;
     try {
       const { count } = await supabase
@@ -219,13 +223,14 @@ export async function GET(req: Request) {
       animalArticleCount = count ?? 0;
     } catch { /* fallback 0 */ }
 
-    const ARTICLE_TYPES = ['trending', 'affiliation', 'pratique', 'race', 'best_of'] as const;
+    const ARTICLE_TYPES = ['trending', 'pratique', 'selection', 'affiliation', 'race', 'best_of'] as const;
     type ArticleType = typeof ARTICLE_TYPES[number];
-    const ANIMAL_OFFSET: Record<string, number> = { chiens: 0, chats: 1, oiseaux: 2, rongeurs: 3, reptiles: 4 };
-    const articleTypeIndex = (animalArticleCount + (ANIMAL_OFFSET[animal] ?? 0)) % 5;
+    const AUTO_ROTATION: ArticleType[] = ['trending', 'pratique', 'trending', 'selection'];
+    const ANIMAL_OFFSET: Record<string, number> = { chiens: 0, chats: 1, oiseaux: 2, rongeurs: 3, reptiles: 0 };
+    const articleTypeIndex = (animalArticleCount + (ANIMAL_OFFSET[animal] ?? 0)) % AUTO_ROTATION.length;
     const requestedType: ArticleType = (urlType && (ARTICLE_TYPES as readonly string[]).includes(urlType))
       ? urlType as ArticleType
-      : ARTICLE_TYPES[articleTypeIndex];
+      : AUTO_ROTATION[articleTypeIndex];
 
     // Fallback affiliation → pratique si tous les partenaires sont bloqués et aucun produit dispo
     const availablePartners = partenairesAnimal.filter(p => !recentlyFeaturedPartners.includes(p.nom));
@@ -304,17 +309,22 @@ export async function GET(req: Request) {
     let speciesDiversityBlock = '';
     let coveredSpecies: string[] = [];
     let uncoveredSpecies: string[] = [];
+    // Photos des espèces/races de l'animal : l'image de l'article est une photo de l'animal
+    // (jamais d'un produit), celle de l'espèce citée dans le sujet quand on la reconnaît.
+    let speciesPhotos: { name: string; photo_url: string }[] = [];
     try {
       const animalSingularDiv: Record<string, string> = {
         chiens: 'chien', chats: 'chat', oiseaux: 'oiseau', rongeurs: 'rongeur', reptiles: 'reptile',
       };
       const { data: speciesRows } = await supabase
         .from('breeds')
-        .select('name')
+        .select('name, photo_url')
         .eq('animal', animalSingularDiv[animal] ?? animal)
         .eq('status', 'published')
         .limit(200);
       const speciesNames = (speciesRows ?? []).map((r: { name: string }) => r.name).filter(Boolean);
+      speciesPhotos = ((speciesRows ?? []) as { name: string; photo_url: string | null }[])
+        .filter((r): r is { name: string; photo_url: string } => !!r.name && !!r.photo_url);
       if (speciesNames.length > 0) {
         const titlesLc = animalRecentTitles.map(t => t.toLowerCase());
         const isCovered = (name: string) => {
@@ -369,6 +379,15 @@ Critères : volume de recherche Google, popularité de la race, questions fréqu
 Angles possibles : caractère et comportement, est-ce la bonne race pour moi, santé et maladies fréquentes, alimentation et entretien, éducation, convient-il aux familles/seniors/appartement.
 Tu DOIS retourner RACE_SLUG correspondant EXACTEMENT au slug indiqué dans la liste ci-dessus.
 NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT doivent être AUCUN.`,
+
+      selection: `TYPE IMPOSÉ : SÉLECTION DE PLUSIEURS PRODUITS AUTOUR D'UN BESOIN
+Propose un sujet autour d'un BESOIN concret des propriétaires de ${animal}, qui se résout avec PLUSIEURS produits différents (jamais un article sur un seul produit ou une seule marque).
+Exemples : "Accueillir un ${animal.replace(/s$/, '')} : les indispensables", "Équiper son ${animal.replace(/s$/, '')} pour l'hiver", "Occuper un ${animal.replace(/s$/, '')} seul à la maison", "Kit de soins de base pour ${animal}".
+Le sujet doit partir d'une vraie question ou situation recherchée sur Google (pas d'un produit), et pouvoir être illustré par 4 à 6 produits de types différents disponibles dans notre boutique.
+NOM_PRODUIT : AUCUN
+LIEN_AFFILIE : AUCUN
+IMAGE_PRODUIT : AUCUN (l'image de l'article sera une photo de l'animal)
+RACE_SLUG : AUCUN`,
 
       best_of: `TYPE IMPOSÉ : SÉLECTION PRODUITS
 Propose un sujet d'article comparatif "Meilleur(s) X pour ${animal}" avec fort potentiel SEO et intention d'achat.
@@ -465,10 +484,8 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       raison = raisonMatch?.[1]?.trim() ?? '';
       const nomMatch = lucasResult.content.match(/NOM_PRODUIT:\s*(.+)/i);
       const lienMatch = lucasResult.content.match(/LIEN_AFFILIE:\s*(.+)/i);
-      const imageMatch = lucasResult.content.match(/IMAGE_PRODUIT:\s*(.+)/i);
       nomProduit = (nomMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (nomMatch?.[1]?.trim() ?? '');
       lienAffilie = (lienMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (lienMatch?.[1]?.trim() ?? '');
-      imageProduit = (imageMatch?.[1]?.trim() ?? '') === 'AUCUN' ? '' : (imageMatch?.[1]?.trim() ?? '');
       // Produit forcé depuis le CronLauncher : override ce que Lucas a retourné
       if (urlProductName) nomProduit = urlProductName;
       if (urlProductUrl) lienAffilie = urlProductUrl;
@@ -495,7 +512,6 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
           const picked = withLink[Math.floor(Math.random() * withLink.length)];
           nomProduit = picked.name;
           lienAffilie = picked.affiliate_url;
-          imageProduit = picked.image_url || '';
           sujet = `${picked.name} : avis, utilisation et conseils pour votre ${animal.replace(/s$/, '')}`;
           console.log(`[Cron1] Affiliation: Lucas sans lien → produit forcé: ${nomProduit}, sujet adapté`);
         }
@@ -541,7 +557,37 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       .join('\n');
     // Lien vers la boutique filtrée sur l'animal (catch-all : on garde le trafic sur le site)
     const boutiqueUrl = `https://www.mespoilus.com/boutique?category=${animal}`;
-    const produitSection = forcedType === 'best_of'
+
+    // Sélection autour d'un besoin : liste plus large (types de produits variés) pour que Marie
+    // trouve 4 à 6 produits réellement liés au sujet, au lieu des 8 mieux notés de la catégorie.
+    let selectionProductsStr = '';
+    if (forcedType === 'selection') {
+      try {
+        const { data: selRows } = await supabase
+          .from('catalog_best_offer')
+          .select('name, affiliate_url, rating, rating_count, product_type')
+          .or(`category.eq.${animal},categories.cs.{${animal}}`)
+          .gt('price', 0)
+          .order('rating', { ascending: false, nullsFirst: false })
+          .limit(60);
+        selectionProductsStr = ((selRows ?? []) as (ProductRow & { product_type?: string | null })[])
+          .filter(p => p.affiliate_url)
+          .map(p => `- ${p.name}${p.product_type ? ` [${p.product_type}]` : ''}${ratingStr(p)} → ${p.affiliate_url}`)
+          .join('\n');
+      } catch { /* liste standard utilisée */ }
+    }
+
+    const produitSection = forcedType === 'selection'
+      ? `\nSTRUCTURE OBLIGATOIRE POUR CET ARTICLE (sélection autour d'un besoin) :
+L'article répond d'abord au BESOIN du lecteur (conseils, erreurs à éviter, comment choisir), puis présente 4 à 6 produits de TYPES DIFFÉRENTS qui y répondent, choisis EXCLUSIVEMENT dans cette liste de produits réellement disponibles dans notre boutique :
+${selectionProductsStr || productsStr || '(aucun produit fourni)'}
+Ne retiens que les produits réellement liés au sujet. Pour chaque produit retenu :
+- Titre H3 : à quoi il sert (ex. "Un abri pour qu'il se sente en sécurité"), puis le nom du produit
+- 2-3 phrases : pourquoi il répond au besoin, à quoi faire attention
+- Si une note clients est indiquée, tu peux la mentionner. N'invente JAMAIS de note.
+- Lien d'achat en markdown avec EXACTEMENT le lien fourni à côté du produit.
+RÈGLES ABSOLUES : jamais un article centré sur un seul produit ou une seule marque. N'invente JAMAIS de produit ni de lien, pas de liens de recherche Amazon. N'affirme jamais avoir testé les produits. Termine par un lien vers la boutique : [Voir tous les produits ${animal}](${boutiqueUrl}).\n`
+      : forcedType === 'best_of'
       ? `\nSTRUCTURE OBLIGATOIRE POUR CET ARTICLE (sélection produits) :
 Présente un TOP 3 à 5 produits recommandés, choisis EXCLUSIVEMENT dans la liste ci-dessous (ce sont les produits réellement disponibles dans notre boutique) :
 ${productsStr || '(aucun produit fourni)'}
@@ -724,6 +770,13 @@ CONSIGNES :
       } catch { /* migration non encore appliquée -pas de blocage */ }
     }
 
+    // Type éditorial (migration_article_type.sql) : permet de comparer les types dans les bilans GSC
+    if (articleSlug) {
+      try {
+        await supabase.from('articles').update({ article_type: forcedType }).eq('slug', articleSlug);
+      } catch { /* non-bloquant */ }
+    }
+
     // Temps de lecture calculé depuis le vrai nombre de mots (250 mots/min)
     if (articleSlug && wordCount > 0) {
       try {
@@ -762,59 +815,47 @@ CONSIGNES :
           console.log(`[Cron1] Image race "${selectedBreed.name}": photo Supabase ✅`);
         }
 
+        // Photo de l'espèce citée dans le sujet (ex. "perruche ondulée") : nom le plus long reconnu
         if (!imageUrl) {
-          if (imageProduit) {
-            // Image du produit Awin - télécharger dans Supabase Storage (URL CDN Awin rejetée par Instagram)
-            console.log(`[Cron1] Image: produit Awin "${nomProduit}"...`);
-            const hdImageUrl = imageProduit.replace(/([?&])(w|h)=\d+/g, '$1$2=800');
-            const stored = await downloadAndStorePhoto(hdImageUrl, `article-${articleSlug}.jpg`);
-            if (stored) {
-              imageUrl = stored;
-              await supabase.from('articles').update({ image_url: imageUrl }).eq('slug', articleSlug);
-              console.log('[Cron1] Image produit Awin: stockée Supabase ✅');
-            } else {
-              // Téléchargement Awin échoué → Pexels pour éviter URL CDN non accessible sur Instagram
-              console.log('[Cron1] Image produit Awin: timeout → fallback Pexels...');
-              const photo = await Promise.race([
-                getPhotoForCategory(animal, sujet),
-                new Promise<null>(r => setTimeout(() => r(null), 5000)),
-              ]);
-              if (photo) {
-                const pexelsStored = await downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`);
-                imageUrl = pexelsStored ?? photo.url;
-                await supabase.from('articles').update({
-                  image_url: imageUrl,
-                  image_alt: photo.alt,
-                  image_credit: photo.credit,
-                  image_credit_url: photo.creditUrl,
-                }).eq('slug', articleSlug);
-                console.log('[Cron1] Image fallback Pexels:', pexelsStored ? 'stockée ✅' : 'URL directe');
-              } else {
-                console.log('[Cron1] Image: Pexels indisponible, article sans image');
-              }
-            }
-          } else {
-            console.log(`[Cron1] Image: téléchargement Pexels pour catégorie "${animal}"...`);
-            const photo = await Promise.race([
-              getPhotoForCategory(animal, sujet),
-              new Promise<null>(r => setTimeout(() => r(null), 5000)),
-            ]);
-            if (photo) {
-              const stored = await downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`);
-              imageUrl = stored ?? photo.url;
-              await supabase.from('articles').update({
-                image_url: imageUrl,
-                image_alt: photo.alt,
-                image_credit: photo.credit,
-                image_credit_url: photo.creditUrl,
-              }).eq('slug', articleSlug);
-              console.log('[Cron1] Image Pexels:', stored ? 'stockée Supabase ✅' : 'URL directe');
-            } else {
-              console.log('[Cron1] Image: Pexels indisponible (clé absente ou timeout)');
-            }
+          const subjectLc = `${sujet} ${articleTitle}`.toLowerCase();
+          const species = speciesPhotos
+            .filter(sp => sp.name.length >= 4 && subjectLc.includes(sp.name.toLowerCase()))
+            .sort((x, y) => y.name.length - x.name.length)[0];
+          if (species) {
+            imageUrl = species.photo_url;
+            await supabase.from('articles').update({
+              image_url: imageUrl,
+              image_alt: `Photo de ${species.name}`,
+            }).eq('slug', articleSlug);
+            console.log(`[Cron1] Image espèce "${species.name}": photo Supabase ✅`);
           }
-        } else {
-          console.log('[Cron1] Image déjà présente:', imageUrl.slice(0, 60));
+        }
+
+        // Sinon photo Pexels de l'animal. Plus jamais l'image d'un produit (22/11/2026) : les posts
+        // avec une photo produit n'avaient aucune interaction sur les réseaux. Pour une sélection,
+        // requête sur l'animal seul (les mots du sujet, ex. "litière", ramènent des photos d'objets).
+        if (!imageUrl) {
+          console.log(`[Cron1] Image: téléchargement Pexels pour catégorie "${animal}"...`);
+          const photo = await Promise.race([
+            getPhotoForCategory(animal, forcedType === 'selection' ? undefined : sujet),
+            new Promise<null>(r => setTimeout(() => r(null), 5000)),
+          ]);
+          if (photo) {
+            const stored = await downloadAndStorePhoto(photo.url, `article-${articleSlug}.jpg`);
+            imageUrl = stored ?? photo.url;
+            await supabase.from('articles').update({
+              image_url: imageUrl,
+              image_alt: photo.alt,
+              image_credit: photo.credit,
+              image_credit_url: photo.creditUrl,
+            }).eq('slug', articleSlug);
+            console.log('[Cron1] Image Pexels:', stored ? 'stockée Supabase ✅' : 'URL directe');
+          } else {
+            console.log('[Cron1] Image: Pexels indisponible (clé absente ou timeout)');
+          }
+        }
+        if (imageUrl) {
+          console.log('[Cron1] Image:', imageUrl.slice(0, 60));
         }
       } catch (err) {
         console.warn('[Cron1] Image erreur:', err instanceof Error ? err.message : err);

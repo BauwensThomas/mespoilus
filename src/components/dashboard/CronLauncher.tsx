@@ -24,10 +24,11 @@ const ANIMALS = [
 const ARTICLE_TYPES = [
   { value: '',            label: 'Auto (rotation)', icon: RefreshCw },
   { value: 'trending',   label: 'Trending / Actualité', icon: Flame },
-  { value: 'affiliation', label: 'Partenaire / Produit', icon: ShoppingBag },
+  { value: 'affiliation', label: 'Partenaire / Produit (manuel)', icon: ShoppingBag },
   { value: 'pratique',   label: 'Conseil pratique', icon: Clipboard },
-  { value: 'race',       label: 'Fiche de race', icon: BookOpen },
-  { value: 'best_of',   label: 'Sélection produits', icon: Rocket },
+  { value: 'selection',  label: 'Sélection (plusieurs produits)', icon: Rocket },
+  { value: 'race',       label: 'Race (manuel)', icon: BookOpen },
+  { value: 'best_of',   label: 'Meilleur X (ancien)', icon: Rocket },
 ];
 
 type StepStatus = 'idle' | 'running' | 'done' | 'error';
