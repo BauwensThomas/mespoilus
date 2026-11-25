@@ -11,6 +11,7 @@ import { pingIndexNow } from '@/lib/indexnow';
 import { slugify } from '@/lib/slugify';
 import { expandShortArticle, MIN_ARTICLE_WORDS } from '@/lib/article-expand';
 import { HONESTY_RULE, hasFalseClaim, removeFalseClaims } from '@/lib/article-honesty';
+import { isNoelSeason, noelTheme } from '@/lib/noel';
 import { sendEmail } from '@/lib/resend';
 
 export const runtime = 'nodejs';
@@ -130,8 +131,30 @@ export async function GET(req: Request) {
     const dayIndex = [1, 3, 5, 0].indexOf(now.getDay()); // lundi, mercredi, vendredi, dimanche (vercel.json)
     const postIndex = dayIndex >= 0 ? dayIndex : 0;
 
+    // Un article des fêtes par semaine, du 25 novembre au 10 janvier (src/lib/noel.ts) : il remplace
+    // un des 4 articles de la semaine (6,5 jours d'écart minimum, donc le même jour chaque semaine).
+    let noelArticle = urlType === 'noel';
+    let noelCount = 0;
+    if ((urlAuto && !urlType && !urlPartner && isNoelSeason(now)) || noelArticle) {
+      const { data: noelRows, error: noelErr } = await supabase
+        .from('articles')
+        .select('published_at')
+        .eq('article_type', 'noel')
+        .eq('status', 'published')
+        .gte('published_at', new Date(now.getTime() - 60 * 86400000).toISOString())
+        .order('published_at', { ascending: false });
+      noelCount = noelRows?.length ?? 0;
+      const last = noelRows?.[0]?.published_at;
+      if (!noelErr && (!last || now.getTime() - new Date(last).getTime() > 6.5 * 86400000)) noelArticle = true;
+    }
+
     // Mode auto : catégorie la moins utilisée, sinon rotation par semaine
-    if (urlAuto) {
+    if (noelArticle && urlAuto) {
+      // Chats et chiens d'abord : ce sont les recherches de Noël les plus nombreuses
+      const NOEL_ANIMALS = ['chats', 'chiens', 'rongeurs', 'oiseaux', 'chiens', 'chats', 'reptiles'];
+      animal = NOEL_ANIMALS[noelCount % NOEL_ANIMALS.length];
+      console.log(`[Cron1] Article des fêtes n°${noelCount + 1} : ${animal}`);
+    } else if (urlAuto) {
       animal = await selectLeastUsedCategory(supabase);
     } else {
       animal = (urlAnimal && ANIMAL_CATEGORIES.includes(urlAnimal))
@@ -225,14 +248,14 @@ export async function GET(req: Request) {
       animalArticleCount = count ?? 0;
     } catch { /* fallback 0 */ }
 
-    const ARTICLE_TYPES = ['trending', 'pratique', 'selection', 'affiliation', 'race', 'best_of'] as const;
+    const ARTICLE_TYPES = ['trending', 'pratique', 'selection', 'noel', 'affiliation', 'race', 'best_of'] as const;
     type ArticleType = typeof ARTICLE_TYPES[number];
     const AUTO_ROTATION: ArticleType[] = ['trending', 'pratique', 'trending', 'selection'];
     const ANIMAL_OFFSET: Record<string, number> = { chiens: 0, chats: 1, oiseaux: 2, rongeurs: 3, reptiles: 0 };
     const articleTypeIndex = (animalArticleCount + (ANIMAL_OFFSET[animal] ?? 0)) % AUTO_ROTATION.length;
     const requestedType: ArticleType = (urlType && (ARTICLE_TYPES as readonly string[]).includes(urlType))
       ? urlType as ArticleType
-      : AUTO_ROTATION[articleTypeIndex];
+      : noelArticle ? 'noel' : AUTO_ROTATION[articleTypeIndex];
 
     // Fallback affiliation → pratique si tous les partenaires sont bloqués et aucun produit dispo
     const availablePartners = partenairesAnimal.filter(p => !recentlyFeaturedPartners.includes(p.nom));
@@ -385,6 +408,16 @@ NOM_PRODUIT, LIEN_AFFILIE et IMAGE_PRODUIT doivent être AUCUN.`,
 Propose un sujet autour d'un BESOIN concret des propriétaires de ${animal}, qui se résout avec PLUSIEURS produits différents (jamais un article sur un seul produit ou une seule marque).
 Exemples : "Accueillir un ${animal.replace(/s$/, '')} : les indispensables", "Équiper son ${animal.replace(/s$/, '')} pour l'hiver", "Occuper un ${animal.replace(/s$/, '')} seul à la maison", "Kit de soins de base pour ${animal}".
 Le sujet doit partir d'une vraie question ou situation recherchée sur Google (pas d'un produit), et pouvoir être illustré par 4 à 6 produits de types différents disponibles dans notre boutique.
+NOM_PRODUIT : AUCUN
+LIEN_AFFILIE : AUCUN
+IMAGE_PRODUIT : AUCUN (l'image de l'article sera une photo de l'animal)
+RACE_SLUG : AUCUN`,
+
+      noel: `TYPE IMPOSÉ : ARTICLE DES FÊTES
+Thème obligatoire : ${noelTheme(now)}, pour les propriétaires de ${animal}.
+Trouve un sujet PRÉCIS que les propriétaires de ${animal} recherchent sur Google à cette période. Exemples : "Chat et sapin de Noël : comment faire", "Aliments de Noël dangereux pour le chien", "Feux d'artifice : calmer son chien", "Galette des rois : danger pour le chien".
+Le mot Noël, réveillon, fêtes ou le thème précis doit figurer dans le sujet. Si les recherches Google ou GSC ci-dessous n'ont rien à voir avec les fêtes, ignore-les.
+INTERDIT : présenter un animal comme une idée de cadeau.
 NOM_PRODUIT : AUCUN
 LIEN_AFFILIE : AUCUN
 IMAGE_PRODUIT : AUCUN (l'image de l'article sera une photo de l'animal)
@@ -580,7 +613,23 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       } catch { /* liste standard utilisée */ }
     }
 
-    const produitSection = forcedType === 'selection'
+    // Article des fêtes : produits de Noël de la boutique quand il y en a (jusqu'au 25 décembre)
+    let noelProductsStr = '';
+    if (forcedType === 'noel' && noelTheme(now).startsWith('NOËL')) {
+      try {
+        const { data: noelProducts } = await supabase
+          .from('catalog_best_offer')
+          .select('name, affiliate_url')
+          .or(`category.eq.${animal},categories.cs.{${animal}}`)
+          .filter('name_search', 'imatch', '\\mnoel')
+          .limit(12);
+        noelProductsStr = (noelProducts ?? []).map(p => `- ${p.name} → ${p.affiliate_url}`).join('\n');
+      } catch { /* sans produit */ }
+    }
+
+    const produitSection = forcedType === 'noel'
+      ? `\nARTICLE DES FÊTES : c'est d'abord un article de CONSEILS (sécurité, bien-être, erreurs à éviter). ${noelProductsStr ? `Tu peux citer 1 à 3 produits, SEULEMENT s'ils ont un vrai rapport avec le sujet, choisis EXCLUSIVEMENT dans cette liste et avec leur lien EXACT :\n${noelProductsStr}\n` : ''}Sinon renvoie vers notre boutique : [notre boutique](${boutiqueUrl}). N'invente JAMAIS de produit ni de lien. INTERDIT : présenter un animal comme une idée de cadeau. Le lien vers l'adoption n'est PAS obligatoire dans cet article.\n`
+      : forcedType === 'selection'
       ? `\nSTRUCTURE OBLIGATOIRE POUR CET ARTICLE (sélection autour d'un besoin) :
 L'article répond d'abord au BESOIN du lecteur (conseils, erreurs à éviter, comment choisir), puis présente 4 à 6 produits de TYPES DIFFÉRENTS qui y répondent, choisis EXCLUSIVEMENT dans cette liste de produits réellement disponibles dans notre boutique :
 ${selectionProductsStr || productsStr || '(aucun produit fourni)'}
@@ -853,7 +902,8 @@ CONSIGNES :
         }
 
         // Photo de l'espèce citée dans le sujet (ex. "perruche ondulée") : nom le plus long reconnu
-        if (!imageUrl) {
+        // (pas pour un article des fêtes : photo de l'animal à Noël via Pexels)
+        if (!imageUrl && forcedType !== 'noel') {
           const subjectLc = `${sujet} ${articleTitle}`.toLowerCase();
           const species = speciesPhotos
             .filter(sp => sp.name.length >= 4 && subjectLc.includes(sp.name.toLowerCase()))
@@ -874,7 +924,7 @@ CONSIGNES :
         if (!imageUrl) {
           console.log(`[Cron1] Image: téléchargement Pexels pour catégorie "${animal}"...`);
           const photo = await Promise.race([
-            getPhotoForCategory(animal, forcedType === 'selection' ? undefined : sujet),
+            getPhotoForCategory(animal, forcedType === 'selection' ? undefined : forcedType === 'noel' ? 'christmas' : sujet),
             new Promise<null>(r => setTimeout(() => r(null), 5000)),
           ]);
           if (photo) {

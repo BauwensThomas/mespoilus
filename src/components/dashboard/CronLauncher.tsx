@@ -27,6 +27,7 @@ const ARTICLE_TYPES = [
   { value: 'affiliation', label: 'Partenaire / Produit (manuel)', icon: ShoppingBag },
   { value: 'pratique',   label: 'Conseil pratique', icon: Clipboard },
   { value: 'selection',  label: 'Sélection (plusieurs produits)', icon: Rocket },
+  { value: 'noel',       label: 'Noël et fêtes', icon: Flame },
   { value: 'race',       label: 'Race (manuel)', icon: BookOpen },
   { value: 'best_of',   label: 'Meilleur X (ancien)', icon: Rocket },
 ];
