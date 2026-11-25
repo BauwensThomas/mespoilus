@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/nextjs';
 import type { Metadata } from 'next';
 import './globals.css';
 import LayoutShell from '@/components/layout/LayoutShell';
+import NoelProvider from '@/components/noel/NoelProvider';
 import CookieBanner from '@/components/ui/CookieBanner';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import AdSense from '@/components/analytics/AdSense';
@@ -10,7 +11,8 @@ import ExternalLinks from '@/components/ExternalLinks';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { createAdminClient } from '@/lib/supabase/server';
-import { isGrilleVisible } from '@/lib/site-settings';
+import { isGrilleVisible, isNoelEnabled } from '@/lib/site-settings';
+import { isGiftSeason, isNoelSeason } from '@/lib/noel';
 
 async function getPendingCount(): Promise<number> {
   try {
@@ -48,7 +50,7 @@ export function generateMetadata(): Metadata {
 
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [pendingCount, grilleVisible] = await Promise.all([getPendingCount(), isGrilleVisible()]);
+  const [pendingCount, grilleVisible, noelEnabled] = await Promise.all([getPendingCount(), isGrilleVisible(), isNoelEnabled()]);
 
   return (
     <html lang="fr" suppressHydrationWarning data-scroll-behavior="smooth">
@@ -82,7 +84,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body className="min-h-screen">
-        <LayoutShell pendingCount={pendingCount} grilleVisible={grilleVisible}>{children}</LayoutShell>
+        <NoelProvider enabled={noelEnabled} initial={{ decor: noelEnabled && isNoelSeason(), gifts: noelEnabled && isGiftSeason() }}>
+          <LayoutShell pendingCount={pendingCount} grilleVisible={grilleVisible}>{children}</LayoutShell>
+        </NoelProvider>
         <CookieBanner />
         <GoogleAnalytics />
         <AdSense />

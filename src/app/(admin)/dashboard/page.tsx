@@ -4,6 +4,8 @@ import AgentCard from '@/components/dashboard/AgentCard';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
 import GlobalStats from '@/components/dashboard/GlobalStats';
 import AutoRefresh from '@/components/dashboard/AutoRefresh';
+import NoelToggle from '@/components/dashboard/NoelToggle';
+import { isNoelEnabled } from '@/lib/site-settings';
 import { AgentStat, ActivityLog } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -92,8 +94,11 @@ export default async function DashboardPage() {
 
   const statByAgent = Object.fromEntries(stats.map((s) => [s.agent_id, s]));
 
+  const noelEnabled = await isNoelEnabled();
+
   return (
     <div className="px-8 py-8 space-y-8 animate-fade-in">
+      <NoelToggle enabled={noelEnabled} />
       <AutoRefresh intervalMs={30000} />
       {/* Header */}
       <div>

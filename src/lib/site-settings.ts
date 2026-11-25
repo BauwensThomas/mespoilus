@@ -37,6 +37,30 @@ export async function isGrilleVisibleNow(): Promise<boolean> {
   try { return await readGrilleVisible(); } catch { return false; }
 }
 
+async function readNoelEnabled(): Promise<boolean> {
+  const { data, error } = await createAdminClient()
+    .from('site_settings')
+    .select('value')
+    .eq('key', 'noel_enabled')
+    .maybeSingle();
+  if (error) throw error;
+  return data?.value !== false; // activé par défaut, la période fait le reste (src/lib/noel.ts)
+}
+
+const cachedNoelEnabled = unstable_cache(readNoelEnabled, ['noel-enabled'], { tags: [SITE_SETTINGS_TAG], revalidate: false });
+
+/** Décorations de Noël autorisées (interrupteur du dashboard). */
+export async function isNoelEnabled(): Promise<boolean> {
+  try { return await cachedNoelEnabled(); } catch { return false; }
+}
+
+export async function setNoelEnabled(enabled: boolean): Promise<void> {
+  const { error } = await createAdminClient()
+    .from('site_settings')
+    .upsert({ key: 'noel_enabled', value: enabled, updated_at: new Date().toISOString() });
+  if (error) throw error;
+}
+
 export async function setGrilleVisible(visible: boolean): Promise<void> {
   const { error } = await createAdminClient()
     .from('site_settings')

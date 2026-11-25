@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
 import { normalizeSearch } from '@/lib/search';
+import { NoelAdoptionMessage } from '@/components/noel/NoelDecor';
 import type { AdoptionPost } from '@/types';
 import Link from 'next/link';
 import AdBanner from '@/components/ui/AdBanner';
@@ -127,6 +128,8 @@ export default async function AdoptionPage({ searchParams }: Props) {
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">Animaux à adopter</h1>
         <p className="text-sm text-gray-500">Trouvez un compagnon ou aidez un animal à trouver un foyer</p>
       </div>
+
+      <NoelAdoptionMessage />
 
       {/* Filtres + bouton avec stagger */}
       <div className="flex flex-wrap items-center gap-3 stagger-container">

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { NoelHat } from '@/components/noel/NoelDecor';
 import { PawPrint, ChevronDown, Calculator, HelpCircle, Sparkles, BookOpen, Menu, X, UtensilsCrossed } from 'lucide-react';
 
 const ALL_NAV_LINKS = [
@@ -51,8 +52,9 @@ export default function PublicHeader({ grilleVisible = false }: { grilleVisible?
 
         {/* Logo */}
         <Link href="/" onClick={close} className="flex items-center gap-2.5 shrink-0 group">
-          <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg text-white group-hover:shadow-md transition-shadow h-10 w-10 flex items-center justify-center">
+          <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg text-white group-hover:shadow-md transition-shadow h-10 w-10 flex items-center justify-center relative">
             <PawPrint size={24} strokeWidth={1.5} />
+            <NoelHat className="w-[48px] max-w-none -top-[19px]" />
           </div>
           <span className="font-bold text-gray-900 text-base tracking-tight max-[359px]:sr-only">Mes Poilus</span>
         </Link>

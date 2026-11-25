@@ -17,6 +17,7 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getMetaOverride } from '@/lib/seo-overrides';
 import { isGrilleVisible } from '@/lib/site-settings';
+import { NoelGifts, NoelHat } from '@/components/noel/NoelDecor';
 import { ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -314,6 +315,8 @@ export default async function LandingPage() {
         </section>
       )}
 
+      <NoelGifts className="max-w-6xl mx-6 xl:mx-auto mt-6" />
+
       {/* ── DERNIERS ARTICLES ─────────────────────────────────────────────── */}
       <section className="py-20 px-6 bg-white reveal-color">
         <div className="max-w-6xl mx-auto">
@@ -445,8 +448,9 @@ export default async function LandingPage() {
       <section id="newsletter" className="py-20 px-6 bg-gradient-to-br from-orange-500 via-orange-600 to-red-500 reveal-color">
         <div className="max-w-2xl mx-auto text-center bounce-in">
           <div className="flex justify-center mb-6">
-            <div className="p-3 bg-white/20 rounded-full">
+            <div className="p-3 bg-white/20 rounded-full relative">
               <PawPrint size={40} className="text-white rotate-icon" strokeWidth={1.5} />
+              <NoelHat className="w-[60px] max-w-none -top-5" />
             </div>
           </div>
           <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4 glow-text">
@@ -476,8 +480,9 @@ export default async function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8 pb-6 border-b border-gray-800">
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-orange-600 rounded-lg text-white">
+                <div className="p-2 bg-orange-600 rounded-lg text-white relative">
                   <PawPrint size={20} strokeWidth={1.5} />
+                  <NoelHat className="w-[43px] max-w-none -top-[17px]" />
                 </div>
                 <span className="font-bold text-white text-lg">Mes Poilus</span>
               </div>

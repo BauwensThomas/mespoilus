@@ -1,5 +1,6 @@
 ﻿import type { Metadata } from 'next';
 import { applySearch } from '@/lib/search';
+import { NoelGifts } from '@/components/noel/NoelDecor';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -314,6 +315,8 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
             <ChevronRight size={18} className="text-orange-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
+
+        {!search && <NoelGifts className="mb-4" />}
 
         {/* Barre de controle avec animations - sans transitionDelay */}
         <div className="space-y-2 mb-4">
