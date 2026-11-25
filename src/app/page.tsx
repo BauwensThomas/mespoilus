@@ -206,13 +206,13 @@ export default async function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Link href="/blog" className="inline-flex items-center justify-center gap-1 px-4 py-2.5 text-white bg-gradient-to-r from-orange-600 to-orange-500 rounded-lg font-semibold text-xs shadow-md hover:scale-105 transition-all duration-300">
-                  Découvrir
+                  Découvrir le blog
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </Link>
-                <Link href="#categories" className="inline-flex items-center justify-center gap-1 px-4 py-2.5 text-gray-700 bg-white border border-gray-200 rounded-lg font-semibold text-xs hover:border-orange-300 hover:bg-orange-50 hover:scale-105 transition-all duration-300">
-                  Explorer
+                <Link href="/races" className="inline-flex items-center justify-center gap-1 px-4 py-2.5 text-gray-700 bg-white border border-gray-200 rounded-lg font-semibold text-xs hover:border-orange-300 hover:bg-orange-50 hover:scale-105 transition-all duration-300">
+                  Explorer les races
                 </Link>
               </div>
             </div>
@@ -257,13 +257,13 @@ export default async function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center xl:justify-start">
                 <Link href="/blog" className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-white bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl font-semibold shadow-lg shadow-orange-500/25 hover:scale-105 transition-all duration-300">
-                  Découvrir nos conseils
+                  Découvrir le blog
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </Link>
-                <Link href="#categories" className="inline-flex items-center justify-center gap-2 px-8 py-4 text-gray-700 bg-white border-2 border-gray-200 rounded-xl font-semibold hover:border-orange-300 hover:bg-orange-50 hover:scale-105 transition-all duration-300">
-                  Explorer par animal
+                <Link href="/races" className="inline-flex items-center justify-center gap-2 px-8 py-4 text-gray-700 bg-white border-2 border-gray-200 rounded-xl font-semibold hover:border-orange-300 hover:bg-orange-50 hover:scale-105 transition-all duration-300">
+                  Explorer les races
                 </Link>
               </div>
             </div>
@@ -353,7 +353,7 @@ export default async function LandingPage() {
           <div className="text-center mb-12 fade-up">
             <span className="text-orange-600 text-sm font-semibold uppercase tracking-widest">Explorer</span>
             <h2 className="text-4xl font-bold text-gray-900 mt-2">Par type d'animal</h2>
-            <p className="text-gray-600 mt-3 text-lg">Trouvez les conseils adaptés à votre compagnon</p>
+            <p className="text-gray-600 mt-3 text-lg">Découvrez les races et espèces, et nos conseils pour chacune</p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 stagger-container">
@@ -362,11 +362,11 @@ export default async function LandingPage() {
               const IconComponent = cat.icon;
 
               return (
+                <div key={cat.id}>
                 <Link
-                  key={cat.id}
-                  href={`/blog/${cat.id}`}
+                  href={`/races/${cat.id}`}
                   className={`group relative overflow-hidden rounded-2xl sm:rounded-3xl aspect-[3/4] block shadow-md hover:shadow-xl transition-shadow duration-300 focus-ring stagger-child ${!imgSrc ? cat.color : 'bg-gray-200'}`}
-                  aria-label={`Articles sur les ${cat.label}`}
+                  aria-label={`Races et espèces : ${cat.label}`}
                 >
                   {imgSrc && (
                     <Image
@@ -384,6 +384,10 @@ export default async function LandingPage() {
                     <span className="text-white font-bold text-sm drop-shadow-md">{cat.label}</span>
                   </div>
                 </Link>
+                <Link href={`/blog/${cat.id}`} className="mt-2 flex items-center justify-center gap-1 py-2 text-sm font-medium text-orange-600 hover:text-orange-500 focus-ring rounded-lg">
+                  Conseils {cat.label.toLowerCase()} <ChevronRight size={14} />
+                </Link>
+                </div>
               );
             })}
           </div>
