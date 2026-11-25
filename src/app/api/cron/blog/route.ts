@@ -169,15 +169,15 @@ export async function GET(req: Request) {
 
     const { data: productRows } = await supabase
       .from('catalog_best_offer')
-      .select('name, affiliate_url, image_url, rating, rating_count')
+      .select('name, affiliate_url, image_url')
       .eq('category', animal)
       .gt('price', 0)
       .order('rating', { ascending: false, nullsFirst: false })
       .limit(8);
-    type ProductRow = { name: string; affiliate_url: string; image_url: string; rating?: number | null; rating_count?: number | null };
+    type ProductRow = { name: string; affiliate_url: string; image_url: string };
     const productsWithLinks: ProductRow[] = (productRows && productRows.length > 0)
       ? (productRows as ProductRow[])
-      : GENERIC_PRODUCTS[animal].map(name => ({ name, affiliate_url: '', image_url: '', rating: null, rating_count: null }));
+      : GENERIC_PRODUCTS[animal].map(name => ({ name, affiliate_url: '', image_url: '' }));
 
     // Derniers articles de la même catégorie pour liens internes dans l'article de Marie
     try {
@@ -300,9 +300,8 @@ export async function GET(req: Request) {
     const partenairesStr = availablePartners.length
       ? availablePartners.map(p => `- ${p.nom} : ${p.description ?? ''}\n  Lien affilié : ${p.url}`).join('\n')
       : '';
-    const ratingStr = (p: ProductRow) => p.rating ? ` | note clients : ${p.rating}/5${p.rating_count ? ` (${p.rating_count} avis)` : ''}` : '';
     const productsForLucas = productsWithLinks
-      .map(p => p.affiliate_url ? `- ${p.name} | lien : ${p.affiliate_url}${p.image_url ? ` | image : ${p.image_url}` : ''}${ratingStr(p)}` : `- ${p.name}`)
+      .map(p => p.affiliate_url ? `- ${p.name} | lien : ${p.affiliate_url}${p.image_url ? ` | image : ${p.image_url}` : ''}` : `- ${p.name}`)
       .join('\n');
 
     // ─── Diversité des espèces (TOUS les types) ──────────────────────────────
@@ -557,7 +556,7 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
     // ─── ÉTAPE 3 : Marie écrit l'article ─────────────────────────────────
     const step3Start = Date.now();
     const productsStr = productsWithLinks
-      .map(p => p.affiliate_url ? `- ${p.name}${ratingStr(p)} → ${p.affiliate_url}` : `- ${p.name}`)
+      .map(p => p.affiliate_url ? `- ${p.name} → ${p.affiliate_url}` : `- ${p.name}`)
       .join('\n');
     // Lien vers la boutique filtrée sur l'animal (catch-all : on garde le trafic sur le site)
     const boutiqueUrl = `https://www.mespoilus.com/boutique?category=${animal}`;
@@ -569,14 +568,14 @@ META_DESC: [meta description SEO optimisée, 155 caractères max]`;
       try {
         const { data: selRows } = await supabase
           .from('catalog_best_offer')
-          .select('name, affiliate_url, rating, rating_count, product_type')
+          .select('name, affiliate_url, product_type')
           .or(`category.eq.${animal},categories.cs.{${animal}}`)
           .gt('price', 0)
           .order('rating', { ascending: false, nullsFirst: false })
           .limit(60);
         selectionProductsStr = ((selRows ?? []) as (ProductRow & { product_type?: string | null })[])
           .filter(p => p.affiliate_url)
-          .map(p => `- ${p.name}${p.product_type ? ` [${p.product_type}]` : ''}${ratingStr(p)} → ${p.affiliate_url}`)
+          .map(p => `- ${p.name}${p.product_type ? ` [${p.product_type}]` : ''} → ${p.affiliate_url}`)
           .join('\n');
       } catch { /* liste standard utilisée */ }
     }
@@ -588,7 +587,7 @@ ${selectionProductsStr || productsStr || '(aucun produit fourni)'}
 Ne retiens que les produits réellement liés au sujet. Pour chaque produit retenu :
 - Titre H3 : à quoi il sert (ex. "Un abri pour qu'il se sente en sécurité"), puis le nom du produit
 - 2-3 phrases : pourquoi il répond au besoin, à quoi faire attention
-- Si une note clients est indiquée, tu peux la mentionner. N'invente JAMAIS de note.
+- Ne cite JAMAIS de note, d'étoiles ni de nombre d'avis.
 - Lien d'achat en markdown avec EXACTEMENT le lien fourni à côté du produit.
 RÈGLES ABSOLUES : jamais un article centré sur un seul produit ou une seule marque. N'invente JAMAIS de produit ni de lien, pas de liens de recherche Amazon. N'affirme jamais avoir testé les produits. Termine par un lien vers la boutique : [Voir tous les produits ${animal}](${boutiqueUrl}).\n`
       : forcedType === 'best_of'
@@ -598,7 +597,7 @@ ${productsStr || '(aucun produit fourni)'}
 Pour chaque produit :
 - Titre H3 : nom du produit
 - 2-3 phrases : pourquoi le choisir, avantages concrets pour l'animal
-- Si une note clients est indiquée (ex. 4.6/5), mentionne-la pour rassurer le lecteur. N'invente JAMAIS de note si elle n'est pas fournie.
+- Ne cite JAMAIS de note, d'étoiles ni de nombre d'avis.
 - Lien d'achat en markdown en utilisant EXACTEMENT le lien fourni à côté du produit.${nomProduit && lienAffilie ? `\nProduit à mettre en avant en premier : [${nomProduit}](${lienAffilie})` : ''}
 RÈGLE ABSOLUE : n'invente JAMAIS de produit ni de lien. N'utilise PAS de liens de recherche Amazon. Si tu veux suggérer plus de choix que la liste, ajoute un lien vers notre boutique : [Voir notre sélection ${animal}](${boutiqueUrl}).\n`
       : nomProduit && lienAffilie

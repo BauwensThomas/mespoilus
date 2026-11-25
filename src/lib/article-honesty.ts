@@ -5,7 +5,7 @@ import { runAgent, MODELS } from '@/lib/anthropic';
  * personne n'a été rencontré, aucun lecteur n'a écrit. 43 phrases de ce genre ont été corrigées
  * à la main ce jour-là dans 32 articles publiés, malgré la consigne du prompt.
  */
-export const HONESTY_RULE = `HONNÊTETÉ (règle absolue) : tu es une IA. N'écris JAMAIS que des produits ont été testés, essayés, comparés ou approuvés par nous, par des experts ou par des propriétaires. N'invente JAMAIS un vécu ("j'ai constaté", "je vois souvent"), une rencontre, un message de lecteur, un "cas réel" ni une équipe de vétérinaires. Pas de "j'aimerais", "j'adore", "je serais ravi". Écris plutôt "une erreur fréquente", "imaginons un chat qui...", "voici une sélection".`;
+export const HONESTY_RULE = `HONNÊTETÉ (règle absolue) : tu es une IA. N'écris JAMAIS que des produits ont été testés, essayés, comparés ou approuvés par nous, par des experts ou par des propriétaires. N'invente JAMAIS un vécu ("j'ai constaté", "je vois souvent"), une rencontre, un message de lecteur, un "cas réel" ni une équipe de vétérinaires. Ne cite JAMAIS de note (4,6/5), d'étoiles ni de nombre d'avis clients : ces chiffres changent et ne sont pas vérifiables. Pas de "j'aimerais", "j'adore", "je serais ravi". Écris plutôt "une erreur fréquente", "imaginons un chat qui...", "voici une sélection".`;
 
 const CLAIMS: RegExp[] = [
   /\b(?:nous|on) (?:avons|a) (?:\w+ )?(?:teste|essaye|compare|analyse)\b/,
@@ -25,6 +25,11 @@ const CLAIMS: RegExp[] = [
   /\bcas reel\b/,
   /\b(?:nos|notre) (?:equipes?|experts?|veterinaires?|testeurs?)\b/,
   /\bont aide de nombreux\b/,
+  // Notes et nombres d'avis ("4,6/5", "25 000 avis clients"), sans toucher à une fraction ("4/5 de la ration")
+  /\(?\b(?:notes?|notee?s?|etoiles?|avis)\b[^.!?]{0,25}\b[1-5](?:[.,]\d)? ?\/ ?5\b/,
+  /\b[1-5](?:[.,]\d)? ?\/ ?5\b[^!?]{0,25}\b(?:avis|etoiles?|utilisateurs)\b/,
+  /\([1-5](?:[.,]\d)? ?\/ ?5\b/,
+  /\b\d[\d\s.,]* avis\b|\bmilliers d'avis\b/,
 ];
 
 /** Sans accents ni majuscules, guillemets retirés : une citation ("je crois que...") n'est pas une affirmation. */
