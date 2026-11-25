@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
-import { normalizeSearch } from '@/lib/search';
+import { searchArticles } from '@/lib/blog-search';
 import { ARTICLE_CARD_COLUMNS, withFeaturedContent } from '@/lib/blog-list';
 import BlogPostsGrid from '@/components/blog/BlogPostsGrid';
 import type { Metadata } from 'next';
@@ -38,16 +38,15 @@ export const revalidate = 3600;
 async function getArticles(category?: string, search?: string) {
   try {
     const supabase = createAdminClient();
-    let query = supabase
-      .from('articles')
-      .select(ARTICLE_CARD_COLUMNS)
-      .eq('status', 'published')
-      .order('published_at', { ascending: false });
-
-    if (category) query = query.or(`category.eq.${category},categories.cs.{${category}}`);
-    if (search) query = query.ilike('title_search', `%${normalizeSearch(search)}%`);
-
-    const { data } = await query;
+    const base = () => {
+      const query = supabase
+        .from('articles')
+        .select(ARTICLE_CARD_COLUMNS)
+        .eq('status', 'published')
+        .order('published_at', { ascending: false });
+      return category ? query.or(`category.eq.${category},categories.cs.{${category}}`) : query;
+    };
+    const data = search ? await searchArticles(supabase, base, search) : (await base()).data;
     return withFeaturedContent(supabase, data);
   } catch {
     return [];
@@ -130,7 +129,9 @@ export default async function BlogPage({ searchParams }: Props) {
       {/* Grille d'articles ou message vide */}
       {articles.length === 0 ? (
         <div className="text-center py-20 bg-orange-50 rounded-3xl border border-orange-100 fade-up">
-          <p className="text-gray-600 font-medium text-lg">Les premiers articles arrivent bientôt !</p>
+          <p className="text-gray-600 font-medium text-lg">
+            {search ? `Aucun article trouvé pour "${search}"` : 'Les premiers articles arrivent bientôt !'}
+          </p>
         </div>
       ) : (
         <BlogPostsGrid

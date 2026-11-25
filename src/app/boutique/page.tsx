@@ -1,5 +1,5 @@
 ﻿import type { Metadata } from 'next';
-import { normalizeSearch } from '@/lib/search';
+import { applySearch } from '@/lib/search';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -81,7 +81,7 @@ async function getCatalogItems(params: {
     if (params.productType) {
       q = q.eq('product_type', params.productType);
     }
-    if (params.search) q = q.ilike('name_search', `%${normalizeSearch(params.search)}%`);
+    if (params.search) q = applySearch(q, 'name_search', params.search);
     if (params.minPrice) q = q.gte('price', params.minPrice);
     if (params.maxPrice) q = q.lte('price', params.maxPrice);
     if (params.favIds && params.favIds.length > 0) q = q.in('catalog_id', params.favIds);
