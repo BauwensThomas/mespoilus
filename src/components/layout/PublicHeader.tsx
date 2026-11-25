@@ -7,7 +7,6 @@ import { PawPrint, ChevronDown, Calculator, HelpCircle, Sparkles, BookOpen, Menu
 
 const ALL_NAV_LINKS = [
   { href: '/blog',        label: 'Blog'       },
-  { href: '/#categories', label: 'Animaux'    },
   { href: '/races',       label: 'Races'      },
   { href: '/adoption',    label: 'Adoption'   },
   { href: '/grille',      label: 'Grille Mystère' },
@@ -59,7 +58,7 @@ export default function PublicHeader({ grilleVisible = false }: { grilleVisible?
         </Link>
 
         {/* Nav desktop - visible à partir de lg */}
-        <div className="hidden md:flex items-center gap-5 flex-1 mx-4">
+        <div className="hidden md:flex items-center gap-1 lg:gap-5 flex-1 md:mx-1 lg:mx-4">
           {NAV_LINKS.map(({ href, label }) => (
             <Link
               key={href}
