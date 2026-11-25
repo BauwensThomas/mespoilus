@@ -3,7 +3,6 @@ import { createAdminClient } from '@/lib/supabase/server';
 import GrilleView from './_components/GrilleView';
 import GrilleResults from './_components/GrilleResults';
 import { computeGrilleResults } from '@/lib/grille-finish';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 
 const DESCRIPTION = 'Achète des pixels, révèle la photo mystère et devine la race de l\'animal. Une partie des recettes est reversée à un refuge animalier partenaire.';
 
@@ -86,7 +85,6 @@ export default async function GrillePage() {
           gagnantTrouve={!!grille.gagnant_devinette_id}
           endsAt={grille.ends_at ?? null}
         />
-        <ClientWrapper />
       </>
     );
   }
@@ -110,7 +108,6 @@ export default async function GrillePage() {
           winners={winners.map(w => ({ rang: w.rang, prenom: w.prenom, raison: w.raison }))}
           nextStartsAt={completed.next_starts_at}
         />
-        <ClientWrapper />
       </>
     );
   }
@@ -130,7 +127,6 @@ export default async function GrillePage() {
             : 'Reviens bientôt pour la prochaine grille mystère !'}
         </p>
       </div>
-      <ClientWrapper />
     </div>
   );
 }

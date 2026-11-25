@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Dog, Cat, UtensilsCrossed, Info } from 'lucide-react';
 import AdBanner from '@/components/ui/AdBanner';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 
 type Animal   = 'chien' | 'chat';
 type Stage    = 'chiot' | 'adulte' | 'senior';
@@ -306,7 +305,6 @@ export default function NutritionPage() {
         </div>
       </div>
       
-      <ClientWrapper />
     </div>
   );
 }

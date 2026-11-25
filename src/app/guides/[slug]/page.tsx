@@ -4,7 +4,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Dog, Cat, Rat, Bird, Shell, FileText, ChevronRight, CheckCircle2 } from 'lucide-react';
 import GuideDownloadButton from '@/components/guides/GuideDownloadButton';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -196,7 +195,6 @@ export default async function GuidePage({ params }: Props) {
         </div>
 
       </div>
-      <ClientWrapper />
     </div>
   );
 }

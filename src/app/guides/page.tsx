@@ -2,7 +2,6 @@ import { createAdminClient } from '@/lib/supabase/server';
 import type { Metadata } from 'next';
 import GuidesGrid from '@/components/guides/GuidesGrid';
 import type { PdfGuide } from '@/lib/guides';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 import { getMetaOverride } from '@/lib/seo-overrides';
 
 export const revalidate = 3600;
@@ -77,7 +76,6 @@ export default async function GuidesPage() {
           <GuidesGrid guides={guides} />
         )}
         
-        <ClientWrapper />
       </div>
     </div>
   );

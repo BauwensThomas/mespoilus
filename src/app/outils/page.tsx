@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Calculator, UtensilsCrossed, HelpCircle, Sparkles, BookOpen, Wrench } from 'lucide-react';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const metadata: Metadata = {
   title: 'Outils gratuits pour animaux : calculateur, quiz, générateur',
@@ -80,7 +79,6 @@ export default function OutilsPage() {
         </section>
       </div>
 
-      <ClientWrapper />
     </div>
   );
 }

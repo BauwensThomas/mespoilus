@@ -10,7 +10,6 @@ import PartenairesSection from '@/components/landing/PartenairesSection';
 import AdoptionPreviewSection from '@/components/landing/AdoptionPreviewSection';
 import GrilleSection from '@/components/landing/GrilleSection';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronRight, UtensilsCrossed, Calculator, HelpCircle, Sparkles, BookOpen, ClipboardList } from 'lucide-react';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 import ScrollIndicator from '@/components/ui/ScrollIndicator';
 import ReviewsSummary from '@/components/reviews/ReviewsSummary';
 import StarRatingDisplay from '@/components/reviews/StarRatingDisplay';
@@ -564,7 +563,6 @@ export default async function LandingPage() {
         </div>
       </footer>
       
-      <ClientWrapper />
     </div>
   );
 }

@@ -4,7 +4,6 @@ import type { Metadata } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_LABEL, ANIMAL_URL, ANIMAL_EMOJI, ANIMAL_GRADIENT, type AnimalType } from '@/lib/breeds-list';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 import { getMetaOverride } from '@/lib/seo-overrides';
 
 export const revalidate = 3600;
@@ -167,7 +166,6 @@ export default async function RacesPage() {
         </div>
       </section>
 
-      <ClientWrapper />
     </div>
     </DirectionalTransition>
   );

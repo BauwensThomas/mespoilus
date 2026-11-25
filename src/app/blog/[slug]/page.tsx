@@ -13,7 +13,6 @@ import DirectionalTransition from '@/components/ui/DirectionalTransition';
 import AdBanner from '@/components/ui/AdBanner';
 import CommentForm from '@/components/blog/CommentForm';
 import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle, Pencil } from 'lucide-react';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 import { toHashtag } from '@/lib/hashtag';
 import ProductImage from '@/components/boutique/ProductImage';
 import { ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
@@ -501,7 +500,6 @@ export default async function ArticlePage({ params }: Props) {
         </div>
       </div>
       
-      <ClientWrapper />
     </div>
     </DirectionalTransition>
   );

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { getFlagUrl } from '@/lib/partenaires';
 import { ExternalLink, X } from 'lucide-react';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 interface DbPartenaire {
   id: string;
@@ -150,10 +149,6 @@ export default function PartenairesSection() {
       .then(data => {
         setPartenaires(data);
         setLoaded(true);
-        // Rafraîchir ScrollTrigger après l'ajout des cartes
-        setTimeout(() => {
-          ScrollTrigger.refresh();
-        }, 100);
       })
       .catch(() => setLoaded(true));
   }, []);

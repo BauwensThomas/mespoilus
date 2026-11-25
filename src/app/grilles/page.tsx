@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/server';
 import { computeGrilleResults } from '@/lib/grille-finish';
 import { Trophy, ArrowRight } from 'lucide-react';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const metadata: Metadata = {
   title: 'Grilles passées - Grille Mystère | Mes Poilus',
@@ -128,7 +127,6 @@ export default async function GrillesHistoriquePage() {
         </div>
         
       </div>
-      <ClientWrapper />
     </div>
   );
 }

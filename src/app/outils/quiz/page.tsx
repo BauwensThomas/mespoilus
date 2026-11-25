@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Dog, Cat, Rabbit, Bird, Rat, RotateCcw } from 'lucide-react';
 import AdBanner from '@/components/ui/AdBanner';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 
 type AnimalKey = 'chien' | 'chat' | 'lapin' | 'oiseau' | 'rongeur';
 
@@ -218,7 +217,6 @@ export default function QuizPage() {
 
           <AdBanner slot="2276363485" className="mt-8 fade-up" />
         </div>
-        <ClientWrapper />
       </div>
     );
   }
@@ -269,7 +267,6 @@ export default function QuizPage() {
 
         <AdBanner slot="2276363485" className="mt-8 fade-up" />
       </div>
-      <ClientWrapper />
     </div>
   );
 }

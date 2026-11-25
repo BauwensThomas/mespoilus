@@ -6,7 +6,6 @@ import { Heart, ArrowLeft, LayoutGrid, List, Info } from 'lucide-react';
 import CatalogCard from '@/app/boutique/_components/CatalogCard';
 import CatalogListItem from '@/app/boutique/_components/CatalogListItem';
 import type { CatalogItem } from '@/app/boutique/_components/CatalogGrid';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 
 function getVisitorId(): string | null {
   if (typeof window === 'undefined') return null;
@@ -154,7 +153,6 @@ export default function FavorisPage() {
           </>
         )}
       </div>
-      <ClientWrapper />
     </div>
   );
 }

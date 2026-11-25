@@ -11,7 +11,6 @@ import AdoptionAlertForm from '@/components/adoption/AdoptionAlertForm';
 import { Suspense } from 'react';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart } from 'lucide-react';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 import { getMetaOverride } from '@/lib/seo-overrides';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -236,7 +235,6 @@ export default async function AdoptionPage({ searchParams }: Props) {
         </div>
       </section>
 
-      <ClientWrapper />
     </div>
     </DirectionalTransition>
   );

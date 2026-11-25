@@ -8,7 +8,6 @@ import AdBanner from '@/components/ui/AdBanner';
 import BlogSearchBar from '@/components/blog/BlogSearchBar';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Globe } from 'lucide-react';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 
 const CATEGORY_SLUGS = ['chiens', 'chats', 'oiseaux', 'rongeurs', 'reptiles', 'general'];
 
@@ -144,7 +143,6 @@ export default async function BlogPage({ searchParams }: Props) {
 
       <AdBanner slot="1266534148" variant="in-article" className="mt-6" />
       
-      <ClientWrapper />
     </div>
     </DirectionalTransition>
   );

@@ -8,7 +8,6 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_EMOJI, ANIMAL_GRADIENT, ANIMAL_URL, type Breed } from '@/lib/breeds-list';
 import type { Article } from '@/types';
 import AdBanner from '@/components/ui/AdBanner';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 import { isRacePageIndexable, NOINDEX_FOLLOW } from '@/lib/breed-indexing';
 
 export const revalidate = 3600;
@@ -466,7 +465,6 @@ export default async function BreedPage({ params }: Props) {
         )}
       </div>
       
-      <ClientWrapper />
     </div>
   );
 }

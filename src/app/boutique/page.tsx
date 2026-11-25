@@ -12,7 +12,6 @@ import CatalogSortSelect, { type CatalogSortValue } from './_components/CatalogS
 import CatalogViewToggle from './_components/CatalogViewToggle';
 import CatalogPerPage, { type PerPageValue } from './_components/CatalogPerPage';
 import MobileFiltersPanel from './_components/MobileFiltersPanel';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 import { getMetaOverride } from '@/lib/seo-overrides';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -492,7 +491,6 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
         </p>
       </div>
       
-      <ClientWrapper />
     </div>
     </DirectionalTransition>
   );

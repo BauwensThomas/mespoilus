@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Heart, Search, Link2, ShoppingBag, PawPrint } from 'lucide-react';
 import AffiliateLinkTool from './_components/AffiliateLinkTool';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const metadata: Metadata = {
   title: { absolute: 'Soutenir Mes Poilus - vos achats aident les animaux' },
@@ -81,7 +80,6 @@ export default function SoutenirPage() {
         </div>
 
       </div>
-      <ClientWrapper />
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Dog, Cat, Bird, Rat, Shell } from 'lucide-react';
 import AdBanner from '@/components/ui/AdBanner';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 
 type Animal = 'chien' | 'chat' | 'oiseau' | 'rongeur' | 'reptile';
 type DogSize = 'petit' | 'moyen' | 'grand' | 'geant';
@@ -165,7 +164,6 @@ export default function AgePage() {
         <AdBanner slot="2276363485" className="mt-8 fade-up" />
       </div>
       
-      <ClientWrapper />
     </div>
   );
 }

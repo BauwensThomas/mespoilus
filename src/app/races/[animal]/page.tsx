@@ -7,7 +7,6 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_EMOJI, ANIMAL_URL } from '@/lib/breeds-list';
 import BreedsList from '@/components/races/BreedsList';
 import BreedsSearchBar from '@/components/races/BreedsSearchBar';
-import ClientWrapper from '@/components/animations/ClientWrapper';
 
 export const revalidate = 3600;
 
@@ -128,7 +127,6 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
         />
       )}
 
-      <ClientWrapper />
     </div>
   );
 }

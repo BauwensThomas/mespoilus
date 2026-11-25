@@ -472,18 +472,17 @@
    ANIMATIONS AU SCROLL - MES POILUS
    ============================================= */
 
-/* Classes pour GSAP ScrollTrigger */
-.fade-up, .slide-left, .slide-right, .glow-text, .zoom-image, .flip-card, .bounce-in, .reveal-color {
-  will-change: transform, opacity;
-}
+/* Les animations au défilement (GSAP) ont été retirées le 25/11/2026. Les classes fade-up,
+   slide-*, glow-text, reveal-color, flip-card, zoom-image et stagger-container restent dans le
+   balisage mais n'ont plus aucun effet. */
 
-/* Effet de survol sur les cartes */
+/* Effet de survol sur les cartes : ombre seulement, la carte ne se soulève pas
+   (voir la règle "transform: none" plus bas, après .glow-on-hover). */
 .stagger-child {
-  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), box-shadow 0.3s ease;
+  transition: box-shadow 0.3s ease;
 }
 
 .stagger-child:hover {
-  transform: translateY(-8px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
@@ -506,6 +505,13 @@ html {
 .glow-on-hover:hover {
   box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
   transform: scale(1.02);
+}
+
+/* Survol sans mouvement de la carte : annule hover:-translate-y-1, hover:scale-* et le scale de
+   .glow-on-hover. Le zoom des photos à l'intérieur et l'ombre sont conservés. */
+.stagger-child:hover,
+.fade-up:hover {
+  transform: none !important;
 }
 
 /* Animation de pulse pour les éléments importants */
@@ -623,21 +629,9 @@ html {
 
 /* Cache le scroll progress si l'utilisateur préfère réduire les animations */
 @media (prefers-reduced-motion: reduce) {
-  .stagger-child,
-  .fade-up,
-  .slide-left,
-  .slide-right,
-  .glow-text,
-  .zoom-image,
-  .flip-card,
-  .bounce-in,
-  .reveal-color {
-    transform: none !important;
-    opacity: 1 !important;
-    animation: none !important;
-  }
-  
-  .stagger-child:hover {
+  .image-reveal:hover img,
+  .rotate-icon:hover,
+  .glow-on-hover:hover {
     transform: none !important;
   }
 }
