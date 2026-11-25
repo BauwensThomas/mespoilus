@@ -117,8 +117,8 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
           )}
         </div>
       ) : (
-        /* Carte normale : hauteur fixe, object-cover */
-        <div className={clsx('relative w-full h-48 flex-shrink-0 bg-gradient-to-br', gradient)} style={{ overflow: 'hidden', borderRadius: '0 0 1rem 1rem', borderBottom: '2px solid rgba(251,146,60,0.6)', viewTransitionName: `article-${article.slug}` }}>
+        /* Carte normale, compacte (25/11/2026) : 4 par ligne sur grand écran, sans les mots-clés */
+        <div className={clsx('relative w-full h-40 sm:h-36 flex-shrink-0 bg-gradient-to-br', gradient)} style={{ overflow: 'hidden', borderRadius: '0 0 1rem 1rem', borderBottom: '2px solid rgba(251,146,60,0.6)', viewTransitionName: `article-${article.slug}` }}>
           {imageSrc ? (
             <Image
               src={imageSrc}
@@ -126,7 +126,7 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
               fill
               unoptimized
               className="object-cover object-center transition-smooth group-hover:scale-105"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center opacity-30">
@@ -190,25 +190,16 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3 p-5 flex-1 bg-white">
-            <p className="text-base font-bold text-gray-900 group-hover:text-orange-600 transition-colors leading-snug line-clamp-2">
+          <div className="flex flex-col gap-2 p-4 flex-1 bg-white">
+            <p className="text-[15px] font-bold text-gray-900 group-hover:text-orange-600 transition-colors leading-snug line-clamp-2">
               {article.title}
             </p>
             {article.excerpt && (
-              <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 flex-1">
+              <p className="text-[13px] text-gray-600 leading-snug line-clamp-2">
                 {article.excerpt}
               </p>
             )}
-            {article.seo_keywords.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {article.seo_keywords.slice(0, 2).map((kw) => (
-                  <span key={kw} className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full border border-gray-200">
-                    #{toHashtag(kw)}
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
+            <div className="flex items-center justify-between pt-2.5 border-t border-gray-100 mt-auto">
               <time dateTime={article.published_at ?? ''} className="text-xs text-gray-500">{publishedDate}</time>
               <span className="text-xs text-gray-500 font-medium">{article.reading_time} min</span>
             </div>
