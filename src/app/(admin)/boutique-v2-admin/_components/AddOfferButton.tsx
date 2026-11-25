@@ -3,42 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, X, Loader2, CheckCircle, Sparkles } from 'lucide-react';
+import { AWIN_MERCHANTS, buildAwinDeepLink, findAwinMerchant } from '@/lib/awin-link';
 
 const CPC_PUBLISHER_SID = '101746286';
 const CPC_ADVERTISER_ID = '17287368';
 const AMAZON_TAG = 'mespoilus-21';
-
-function randHex(len = 32) {
-  return Array.from({ length: len }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-}
-
-const MERCHANT_CONFIGS: Record<string, { params: Record<string, string>; awcChannel: string }> = {
-  'Maxi Zoo BE': {
-    awcChannel: '68696',
-    params: {
-      utm_medium: 'public_affiliates', utm_source: 'awin',
-      utm_campaign: 'www.mespoilus.com', 'utm_placement': 'Content+Tier',
-      'utm_term': '2885973-', sv1: 'affiliate', sv_campaign_id: '2885973!',
-    },
-  },
-  'Maxi Zoo FR': {
-    awcChannel: '68698',
-    params: {
-      utm_medium: 'public_affiliates', utm_source: 'awin',
-      utm_campaign: 'www.mespoilus.com', utm_content: '0',
-      utm_placement: 'ContentTier', utm_term: '2885973-',
-      sv1: 'affiliate', sv_campaign_id: '2885973',
-    },
-  },
-  'Tuft & Paw': {
-    awcChannel: '59149',
-    params: {
-      sv1: 'affiliate', sv_campaign_id: '2885973',
-      utm_source: 'shareasale', utm_medium: 'affiliate',
-      utm_campaign: '2885973_0',
-    },
-  },
-};
 
 function buildAffiliateUrl(rawUrl: string, merchantName: string, awinTemplates: Record<string, string>): string {
   if (!rawUrl) return rawUrl;
@@ -67,19 +36,11 @@ function buildAffiliateUrl(rawUrl: string, merchantName: string, awinTemplates: 
     return `https://www.jdoqocy.com/click-${CPC_PUBLISHER_SID}-${CPC_ADVERTISER_ID}?url=${encodeURIComponent(rawUrl)}`;
   }
 
-  // Marchands avec config hardcodée (Maxi Zoo BE/FR, Tuft & Paw)
-  const config = MERCHANT_CONFIGS[merchantName];
-  if (config) {
-    try {
-      const dest = new URL(rawUrl);
-      Object.entries(config.params).forEach(([k, v]) => dest.searchParams.set(k, v));
-      const ts = Math.floor(Date.now() / 1000).toString();
-      dest.searchParams.set('awc', `${config.awcChannel}_${ts}_${randHex()}`);
-      if (merchantName === 'Tuft & Paw') {
-        dest.searchParams.set('sscid', `${config.awcChannel}_${ts}_${randHex()}`);
-      }
-      return dest.toString();
-    } catch { /* fall through */ }
+  // Partenaires Awin : vrai lien de suivi, seulement si l'adresse est bien celle du marchand choisi
+  const known = AWIN_MERCHANTS.find(m => m.merchantName === merchantName);
+  if (known) {
+    const awin = buildAwinDeepLink(rawUrl);
+    return awin && awin.merchant.merchantName === merchantName ? awin.url : rawUrl;
   }
 
   // Fallback : template Awin depuis la base
@@ -96,9 +57,9 @@ function buildAffiliateUrl(rawUrl: string, merchantName: string, awinTemplates: 
 }
 
 function isAffiliateUrl(url: string): boolean {
-  return url.includes('awin1.com') || url.includes('jdoqocy.com') ||
-    url.includes('tag=mespoilus') || url.includes('utm_source=awin') ||
-    url.includes('utm_source=shareasale') || url.includes('awc=');
+  // Une adresse de marchand avec awc= ou utm_source=awin n'est PAS un lien affilié : ces paramètres
+  // viennent d'un ancien clic et ne rapportent rien.
+  return url.includes('awin1.com/') || url.includes('jdoqocy.com/') || url.includes('tag=mespoilus');
 }
 
 export default function AddOfferButton({
@@ -123,9 +84,13 @@ export default function AddOfferButton({
     if (!form.affiliate_url || !form.merchant_name) return;
     setError('');
     const lm = form.merchant_name.toLowerCase();
-    const hasConfig = !!MERCHANT_CONFIGS[form.merchant_name];
+    const known = AWIN_MERCHANTS.find(m => m.merchantName === form.merchant_name);
+    if (known && !isAffiliateUrl(form.affiliate_url) && findAwinMerchant(form.affiliate_url)?.merchantName !== known.merchantName) {
+      setError(`L'adresse doit être une page de ${known.domain}`);
+      return;
+    }
     const hasTemplate = !!awinTemplates[form.merchant_name];
-    const isKnown = hasConfig || hasTemplate || lm.includes('amazon') || lm.includes('canada');
+    const isKnown = !!known || hasTemplate || lm.includes('amazon') || lm.includes('canada');
     if (!isKnown) {
       setError(`Marchand non configuré : "${form.merchant_name}"`);
       return;

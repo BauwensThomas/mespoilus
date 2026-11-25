@@ -2,50 +2,12 @@
 
 import { useState } from 'react';
 import { Sparkles, Copy, ExternalLink, Check, AlertCircle, Heart } from 'lucide-react';
+import { buildAwinDeepLink } from '@/lib/awin-link';
 
 const AMAZON_TAG_FR = 'mespoilus-21';
 const AMAZON_TAG_BE = 'mespoilusbe-21';
 const CPC_PUBLISHER_SID = '101746286';
 const CPC_ADVERTISER_ID = '17287368';
-
-function randHex(len = 32) {
-  return Array.from({ length: len }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-}
-
-const MERCHANT_CONFIGS: Record<string, { match: (host: string) => boolean; awcChannel: string; params: Record<string, string>; sscid?: boolean; label: string }> = {
-  maxizoo_be: {
-    label: 'Maxi Zoo Belgique',
-    match: h => h.includes('maxizoo.be'),
-    awcChannel: '68696',
-    params: {
-      utm_medium: 'public_affiliates', utm_source: 'awin',
-      utm_campaign: 'www.mespoilus.com', utm_placement: 'Content+Tier',
-      utm_term: '2885973-', sv1: 'affiliate', sv_campaign_id: '2885973!',
-    },
-  },
-  maxizoo_fr: {
-    label: 'Maxi Zoo France',
-    match: h => h.includes('maxizoo.fr'),
-    awcChannel: '68698',
-    params: {
-      utm_medium: 'public_affiliates', utm_source: 'awin',
-      utm_campaign: 'www.mespoilus.com', utm_content: '0',
-      utm_placement: 'ContentTier', utm_term: '2885973-',
-      sv1: 'affiliate', sv_campaign_id: '2885973',
-    },
-  },
-  tuft: {
-    label: 'Tuft & Paw',
-    match: h => h.includes('tuftandpaw.com'),
-    awcChannel: '59149',
-    sscid: true,
-    params: {
-      sv1: 'affiliate', sv_campaign_id: '2885973',
-      utm_source: 'shareasale', utm_medium: 'affiliate',
-      utm_campaign: '2885973_0',
-    },
-  },
-};
 
 type Result = { url: string; merchant: string } | { error: string };
 
@@ -74,21 +36,11 @@ function generate(rawUrl: string): Result {
     return { url: `https://www.jdoqocy.com/click-${CPC_PUBLISHER_SID}-${CPC_ADVERTISER_ID}?url=${encodeURIComponent(rawUrl)}`, merchant: 'CanadaPetCare' };
   }
 
-  // Maxi Zoo / Tuft & Paw
-  for (const cfg of Object.values(MERCHANT_CONFIGS)) {
-    if (cfg.match(host)) {
-      try {
-        const dest = new URL(rawUrl);
-        Object.entries(cfg.params).forEach(([k, v]) => dest.searchParams.set(k, v));
-        const ts = Math.floor(Date.now() / 1000).toString();
-        dest.searchParams.set('awc', `${cfg.awcChannel}_${ts}_${randHex()}`);
-        if (cfg.sscid) dest.searchParams.set('sscid', `${cfg.awcChannel}_${ts}_${randHex()}`);
-        return { url: dest.toString(), merchant: cfg.label };
-      } catch { return { error: 'Lien non reconnu.' }; }
-    }
-  }
+  // Partenaires Awin (Maxi Zoo, Zooplus, Tuft & Paw, Dogfy Diet) : vrai lien de suivi Awin
+  const awin = buildAwinDeepLink(rawUrl);
+  if (awin) return { url: awin.url, merchant: awin.merchant.label };
 
-  return { error: "Ce marchand n'est pas encore partenaire de Mes Poilus. Marchands pris en charge : Amazon, Maxi Zoo, CanadaPetCare, Tuft & Paw." };
+  return { error: "Ce marchand n'est pas encore partenaire de Mes Poilus. Marchands pris en charge : Amazon, Maxi Zoo, Zooplus Belgique, Dogfy Diet, CanadaPetCare, Tuft & Paw." };
 }
 
 export default function AffiliateLinkTool() {
@@ -112,7 +64,7 @@ export default function AffiliateLinkTool() {
   return (
     <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-5 sm:p-6">
       <label className="block text-sm font-medium text-gray-600 mb-2">
-        Collez le lien du produit (Amazon, Maxi Zoo, CanadaPetCare, Tuft & Paw)
+        Collez le lien du produit (Amazon, Maxi Zoo, Zooplus Belgique, Dogfy Diet, CanadaPetCare, Tuft & Paw)
       </label>
       <div className="flex flex-col sm:flex-row gap-2">
         <input
@@ -156,7 +108,7 @@ export default function AffiliateLinkTool() {
               <a
                 href={result.url}
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="noopener noreferrer sponsored"
                 className="h-8 px-3 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-xs font-medium transition-colors flex items-center gap-1.5"
               >
                 <ExternalLink size={12} /> Ouvrir
@@ -166,7 +118,7 @@ export default function AffiliateLinkTool() {
           <a
             href={result.url}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noopener noreferrer sponsored"
             className="text-xs text-blue-600 break-all hover:underline font-mono"
           >
             {result.url}

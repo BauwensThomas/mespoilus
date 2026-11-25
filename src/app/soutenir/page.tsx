@@ -39,7 +39,7 @@ export default function SoutenirPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-5 text-center glow-text">Comment ça marche&nbsp;?</h2>
           <div className="grid sm:grid-cols-3 gap-4 stagger-container">
             {[
-              { icon: Search, title: '1. Trouvez le produit', desc: 'Sur Amazon, Maxi Zoo, CanadaPetCare ou Tuft & Paw.' },
+              { icon: Search, title: '1. Trouvez le produit', desc: 'Sur Amazon, Maxi Zoo, Zooplus, Dogfy Diet, CanadaPetCare ou Tuft & Paw.' },
               { icon: Link2, title: '2. Collez le lien', desc: "Copiez l'adresse du produit et générez le lien partenaire." },
               { icon: ShoppingBag, title: '3. Achetez normalement', desc: 'Même prix pour vous, une commission pour Mes Poilus.' },
             ].map(({ icon: Icon, title, desc }, idx) => (
