@@ -1,4 +1,5 @@
 import { runAgent, MODELS } from '@/lib/anthropic';
+import { HONESTY_RULE } from '@/lib/article-honesty';
 
 export const MIN_ARTICLE_WORDS = 1000;
 
@@ -26,6 +27,7 @@ Réécris-le EN ENTIER en Markdown en respectant ces règles :
 - Conserve tout le texte existant, ses titres et TOUS les liens Markdown à l'identique (même texte, même URL). Tu peux seulement ajuster une transition.
 - Ajoute 2 à 3 nouvelles sections H2 réellement utiles (cas particuliers, erreurs fréquentes, étapes pratiques détaillées, différences selon l'âge ou l'espèce, quand consulter un vétérinaire), placées AVANT la section "En résumé".
 - Objectif : entre 1150 et 1350 mots au total.
+- ${HONESTY_RULE}
 - N'invente aucun chiffre précis, aucune étude, aucun nom de produit ni aucun lien nouveau.
 - INTERDIT : emoji, tiret long (— ou –), frontmatter (---). Ton chaleureux, vouvoiement si l'article vouvoie.
 - Renvoie UNIQUEMENT l'article complet, sans commentaire avant ou après.

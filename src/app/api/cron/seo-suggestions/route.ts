@@ -1,3 +1,4 @@
+import { HONESTY_RULE, hasFalseClaim } from '@/lib/article-honesty';
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { internalPageExists } from '@/lib/seo-apply';
@@ -155,7 +156,7 @@ export async function GET(req: Request) {
           reasoning: parsed.reasoning ?? '', opportunity_type: dominantType,
         });
       }
-      if (parsed.meta_description && parsed.meta_description !== current.meta) {
+      if (parsed.meta_description && parsed.meta_description !== current.meta && !hasFalseClaim(parsed.meta_description)) {
         rows.push({
           page: candidate.page, page_type: candidate.page_type, suggestion_type: 'meta',
           current_value: current.meta ?? null, proposed_value: parsed.meta_description,
@@ -274,6 +275,8 @@ META DESCRIPTION ACTUELLE : ${current.meta ?? '(aucune)'}
 ${current.content ? `EXTRAIT DU CONTENU (pour repérer une ancre de lien interne pertinente) :\n${current.content}` : ''}
 
 Important : le site ajoute automatiquement " | Mes Poilus" à la fin de chaque titre (balise <title>). Ne mets JAMAIS "Mes Poilus" ou un nom de marque dans le titre que tu proposes, sous peine de doublon.
+
+${HONESTY_RULE}
 
 Réponds UNIQUEMENT avec un objet JSON strict (rien avant, rien après, pas de balises markdown), au format exact :
 {

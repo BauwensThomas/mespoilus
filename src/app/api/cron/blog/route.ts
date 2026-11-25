@@ -10,6 +10,8 @@ import { generateFaq } from '@/lib/generate-faq';
 import { pingIndexNow } from '@/lib/indexnow';
 import { slugify } from '@/lib/slugify';
 import { expandShortArticle, MIN_ARTICLE_WORDS } from '@/lib/article-expand';
+import { HONESTY_RULE, hasFalseClaim, removeFalseClaims } from '@/lib/article-honesty';
+import { sendEmail } from '@/lib/resend';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -460,6 +462,8 @@ ${suggestionsContext ? `\n${suggestionsContext}\nCe sont les vraies recherches G
 ${animalThemesBlock}${speciesDiversityBlock}Autres articles déjà publiés (à ne pas dupliquer) :
 ${recentContext}${dupWarning}
 
+${HONESTY_RULE}
+
 Retourne UNIQUEMENT :
 SUJET: [le sujet choisi]
 RACE_SLUG: [slug exact de la race choisie tel quel dans la liste, ou AUCUN si type non-race]
@@ -633,6 +637,7 @@ CONSIGNES :
 - INTERDIT : aucun emoji dans l'article. INTERDIT : aucun tiret long (— ou –) ; utilise une ponctuation classique (virgule, deux-points, parenthèses) ou coupe la phrase.
 - Entre 1100 et 1400 mots au total. IMPORTANT : la longueur doit venir de contenu RÉELLEMENT utile (sous-sections détaillées, exemples concrets, étapes pratiques, cas particuliers) - JAMAIS de remplissage ou de répétitions. Termine toujours tes phrases et l'article, ne coupe jamais au milieu.
 - Ton chaleureux, bienveillant et vivant, comme un passionné d'animaux qui conseille un ami (des observations concrètes, un point de vue). Tu peux dire "nous" au nom de la rédaction de Mes Poilus, mais JAMAIS "je" avec une vie personnelle : les articles sont rédigés par une IA, n'invente aucune expérience vécue, aucun animal possédé, aucune anecdote présentée comme personnelle.
+- ${HONESTY_RULE}
 - Public : propriétaires francophones (Belgique, France, Suisse, Canada)
 - ORIGINALITÉ (crucial pour la qualité) : apporte un angle concret et spécifique (étapes détaillées, cas typiques, cas particuliers, erreurs fréquentes à éviter) plutôt que des généralités qu'on lit partout. Le lecteur doit apprendre quelque chose de précis et actionnable.
 - EXPERTISE & SOURCES : sur les sujets santé/comportement, appuie-toi sur des références fiables (recommandations vétérinaires, associations reconnues) et rappelle de consulter un vétérinaire pour tout cas sérieux. N'invente JAMAIS de diplôme, de titre professionnel ni de fausse expérience clinique.
@@ -723,6 +728,39 @@ CONSIGNES :
           }
         }
       } catch { /* non bloquant */ }
+    }
+
+    // Garde-fou honnêteté : aucune affirmation fausse (produits "testés", vécu inventé...). Phrases
+    // réécrites, ou supprimées si la réécriture n'est pas sûre. Reste éventuel signalé par email.
+    if (articleSlug) {
+      try {
+        const { data: art } = await supabase.from('articles').select('content, excerpt, meta_description').eq('slug', articleSlug).maybeSingle();
+        const result = art?.content ? await removeFalseClaims(art.content) : null;
+        const honest = (t: string | null | undefined) => (t ?? '').split(/(?<=[.!?])\s+/).filter(s => !hasFalseClaim(s)).join(' ').trim();
+        const update: { content?: string; excerpt?: string; meta_description?: string | null } = {};
+        if (result) { update.content = result.content; pipelineTokens += result.tokens; }
+        if (art?.excerpt && hasFalseClaim(art.excerpt)) {
+          // Résumé entièrement fautif : première phrase de l'article, débarrassée du Markdown
+          const firstLine = (update.content ?? art.content ?? '').split('\n').find((l: string) => l.trim() && !/^[#>*-]/.test(l.trim())) ?? '';
+          update.excerpt = honest(art.excerpt) || honest(firstLine.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/[*_`]/g, '')).slice(0, 200) || articleTitle;
+          articleExcerpt = update.excerpt;
+        }
+        // meta_description vide : la page retombe sur le résumé
+        if (art?.meta_description && hasFalseClaim(art.meta_description)) update.meta_description = honest(art.meta_description) || null;
+        if (Object.keys(update).length > 0) {
+          await supabase.from('articles').update(update).eq('slug', articleSlug);
+          console.log(`[Cron1] Honnêteté : ${result?.fixed ?? 0} phrase(s) corrigée(s), champs ${Object.keys(update).join(', ')}`);
+        }
+        if (result?.remaining.length) {
+          await sendEmail({
+            to: 'contact@mespoilus.com',
+            subject: '[Mes Poilus] Article à relire : affirmation à vérifier',
+            html: `<p>L'article <a href="https://www.mespoilus.com/blog/${articleSlug}">${articleSlug}</a> contient des phrases à corriger à la main :</p><ul>${result.remaining.map(r => `<li>${r.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</li>`).join('')}</ul>`,
+          });
+        }
+      } catch (err) {
+        console.warn('[Cron1] Contrôle honnêteté échoué :', err instanceof Error ? err.message : err);
+      }
     }
 
     // Garde-fou maillage boutique : tout article DOIT contenir au moins un lien boutique ou produit.
@@ -867,7 +905,7 @@ CONSIGNES :
       try {
         const { data: art } = await supabase.from('articles').select('content').eq('slug', articleSlug).maybeSingle();
         if (art?.content) {
-          const faq = await generateFaq(articleTitle, art.content);
+          const faq = (await generateFaq(articleTitle, art.content)).filter(f => !hasFalseClaim(f.q) && !hasFalseClaim(f.a));
           if (faq.length > 0) {
             await supabase.from('articles').update({ faq }).eq('slug', articleSlug);
             console.log(`[Cron1] FAQ générée: ${faq.length} questions`);
