@@ -11,17 +11,13 @@ import AdoptionPreviewSection from '@/components/landing/AdoptionPreviewSection'
 import GrilleSection from '@/components/landing/GrilleSection';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, ChevronRight, UtensilsCrossed, Calculator, HelpCircle, Sparkles, BookOpen, ClipboardList } from 'lucide-react';
 import ScrollIndicator from '@/components/ui/ScrollIndicator';
-import ReviewsSummary from '@/components/reviews/ReviewsSummary';
 import StarRatingDisplay from '@/components/reviews/StarRatingDisplay';
 import ReviewThanksBanner from '@/components/reviews/ReviewThanksBanner';
-import { formatReviewDate } from '@/lib/formatReviewDate';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getMetaOverride } from '@/lib/seo-overrides';
 import { isGrilleVisible } from '@/lib/site-settings';
 import { ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
-
-type Review = { id: string; name: string; rating: number; comment: string | null; created_at: string };
 
 export async function generateMetadata(): Promise<Metadata> {
   const base: Metadata = {
@@ -134,15 +130,14 @@ async function getReviewsForHome() {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from('reviews')
-      .select('id, name, rating, comment, created_at')
-      .eq('status', 'approved')
-      .order('created_at', { ascending: false });
-    const reviews = (data as Review[]) ?? [];
+      .select('rating')
+      .eq('status', 'approved');
+    const reviews = (data as { rating: number }[]) ?? [];
     const total = reviews.length;
     const average = total > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / total : 0;
-    return { latest: reviews.slice(0, 4), total, average };
+    return { total, average };
   } catch {
-    return { latest: [] as Review[], total: 0, average: 0 };
+    return { total: 0, average: 0 };
   }
 }
 
@@ -302,35 +297,20 @@ export default async function LandingPage() {
         <ReviewThanksBanner />
       </Suspense>
 
-      {/* ── AVIS ──────────────────────────────────────────────────────────── */}
+      {/* ── AVIS ────────────────────────────────────────────────────────────
+          Une seule ligne (25/11/2026) : peu d'avis pour l'instant, la liste complète est sur /avis. */}
       {reviews.total > 0 && (
-        <section className="py-16 px-6 bg-gradient-to-b from-gray-50 to-orange-50 reveal-color">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-10 fade-up">
-              <span className="text-orange-600 text-sm font-semibold uppercase tracking-widest">Avis</span>
-              <h2 className="text-3xl font-bold text-gray-900 mt-2 mb-3">Ce qu'ils en pensent</h2>
-              <ReviewsSummary average={reviews.average} total={reviews.total} />
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-4 stagger-container">
-              {reviews.latest.map(r => (
-                <div key={r.id} className="stagger-child bg-white border border-gray-200 rounded-2xl p-4 w-full max-w-sm sm:max-w-none sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex flex-col">
-                  <StarRatingDisplay rating={r.rating} size={14} />
-                  {r.comment && <p className="text-sm text-gray-600 mt-2 leading-relaxed line-clamp-4">{r.comment}</p>}
-                  <div className="flex items-center justify-between gap-2 mt-auto pt-3">
-                    <p className="text-sm font-semibold text-gray-900">{r.name}</p>
-                    <p className="text-xs text-gray-400 shrink-0">{formatReviewDate(r.created_at)}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="text-center mt-8 fade-up">
-              <Link href="/avis" className="inline-flex items-center gap-2 text-orange-600 font-semibold hover:text-orange-500 focus-ring">
-                Voir tous les avis <ChevronRight size={16} />
-              </Link>
-            </div>
-          </div>
+        <section aria-label="Avis des visiteurs" className="px-6 py-4 bg-gray-50 border-y border-gray-100">
+          <Link href="/avis" className="max-w-6xl mx-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-gray-600 focus-ring group">
+            <StarRatingDisplay rating={reviews.average} size={16} />
+            <span>
+              <span className="font-semibold text-gray-900">{reviews.average % 1 === 0 ? reviews.average.toFixed(0) : reviews.average.toFixed(1)}/5</span>
+              {' '}({reviews.total} avis)
+            </span>
+            <span className="inline-flex items-center gap-1 text-orange-600 font-semibold group-hover:text-orange-500">
+              Voir tous les avis <ChevronRight size={14} />
+            </span>
+          </Link>
         </section>
       )}
 
