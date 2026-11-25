@@ -1,13 +1,16 @@
 {
   "crons": [
-    { "path": "/api/cron/catalog-sync/chiens",           "schedule": "0 2 * * 1" },
-    { "path": "/api/cron/catalog-sync/chats",            "schedule": "20 2 * * 1" },
+    { "path": "/api/cron/catalog-sync/chiens?marchands=zooplus", "schedule": "0 2 * * 1" },
+    { "path": "/api/cron/catalog-sync/chiens?sauf=zooplus",      "schedule": "10 2 * * 1" },
+    { "path": "/api/cron/catalog-sync/chats?marchands=zooplus",  "schedule": "20 2 * * 1" },
+    { "path": "/api/cron/catalog-sync/chats?sauf=zooplus",       "schedule": "30 2 * * 1" },
     { "path": "/api/cron/catalog-sync/oiseaux",          "schedule": "40 2 * * 1" },
     { "path": "/api/cron/catalog-sync/rongeurs",         "schedule": "0 3 * * 1" },
     { "path": "/api/cron/catalog-sync/reptiles",         "schedule": "20 3 * * 1" },
     { "path": "/api/cron/catalog-sync/livres",           "schedule": "40 3 * * 1" },
     { "path": "/api/cron/catalog-sync/general",          "schedule": "0 4 * * 1" },
     { "path": "/api/cron/catalog-sync/canada-pet-care",  "schedule": "30 4 * * 1" },
+    { "path": "/api/cron/catalog-sync/cleanup",          "schedule": "45 4 * * 1" },
     { "path": "/api/cron/catalog-sync/dedup-ean",        "schedule": "0 5 * * 1" },
     { "path": "/api/cron/catalog-sync/dedup-image",      "schedule": "20 5 * * 1" },
     { "path": "/api/cron/catalog-sync/translate",        "schedule": "40 5 * * 1" },

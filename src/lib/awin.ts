@@ -191,7 +191,7 @@ function parseCSV(text: string): Record<string, string>[] {
 async function parseCSVStreamingWithFlush(
   text: string,
   merchantName: string,
-  targetCategory: AwinSyncCategory,
+  targetCategory: AwinSyncCategory | null, // null = toutes les catégories
   seenIds: Set<string>,
   batchSize: number,
   onFlush: (batch: AwinProduct[]) => Promise<void>,
@@ -233,7 +233,7 @@ async function parseCSVStreamingWithFlush(
     if (seenIds.has(pid)) continue;
 
     const assigned = assignCategories(p);
-    if (!assigned || assigned.primary !== targetCategory) continue;
+    if (!assigned || (targetCategory && assigned.primary !== targetCategory)) continue;
     const { primary, all: cats } = assigned;
 
     const desc = p['description'] ?? '';
@@ -442,9 +442,11 @@ export async function fetchAwinProductsByCategory(
   onBatch: (products: AwinProduct[]) => Promise<void>,
   onProgress?: (synced: number, currentFeed: string) => Promise<void>,
   onFeedError?: (merchantName: string, error: string) => void,
-  shouldStop?: () => boolean
+  shouldStop?: () => boolean,
+  merchantFilter?: (merchantName: string) => boolean
 ): Promise<number> {
-  const feeds = await getJoinedFeeds(publisherId, feedToken);
+  const feeds = (await getJoinedFeeds(publisherId, feedToken))
+    .filter(f => !merchantFilter || merchantFilter(f['Advertiser Name'] ?? ''));
   if (!feeds.length) {
     console.error(`[awin:${targetCategory}] Aucun feed actif trouvé - vérifie AWIN_PUBLISHER_ID / AWIN_FEED_TOKEN`);
     return 0;
@@ -496,6 +498,39 @@ export async function fetchAwinProductsByCategory(
 
   console.log(`[awin:${targetCategory}] sync terminée - total: ${grandTotal}`);
   return grandTotal;
+}
+
+/**
+ * Adresses de toutes les offres actuellement vendables, par marchand (mêmes filtres que la sync).
+ * `expected` = nombre de produits annoncé par Awin, pour détecter un catalogue incomplet.
+ * `failed` = marchands dont au moins un flux n'a pas pu être lu : ne rien en conclure.
+ */
+export async function fetchAwinLiveUrls(publisherId: string, feedToken: string): Promise<{
+  urls: Map<string, Set<string>>;
+  failed: Set<string>;
+}> {
+  const urls = new Map<string, Set<string>>();
+  const failed = new Set<string>();
+  const seenIds = new Set<string>();
+  for (const feed of await getJoinedFeeds(publisherId, feedToken)) {
+    const merchant = feed['Advertiser Name'] ?? '';
+    try {
+      const csvText = await fetchAndDecompress(feed['URL']);
+      const announced = Number(feed['No of products']) || 0;
+      const lines = csvText.split('\n').length - 1;
+      // Catalogue tronqué : moins de 80 % des produits annoncés
+      if (announced === 0 || lines < announced * 0.8) { failed.add(merchant); continue; }
+      const set = urls.get(merchant) ?? new Set<string>();
+      urls.set(merchant, set);
+      await parseCSVStreamingWithFlush(csvText, merchant, null, seenIds, 500, async batch => {
+        for (const p of batch) set.add(p.affiliate_url);
+      });
+    } catch (e) {
+      console.error(`[awin] lecture ${merchant} :`, e instanceof Error ? e.message : e);
+      failed.add(merchant);
+    }
+  }
+  return { urls, failed };
 }
 
 // ─── Fonctions conservées pour compatibilité ──────────────────────────────────

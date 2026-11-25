@@ -1,5 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
-import { fetchAwinProductsByCategory, type AwinSyncCategory } from '@/lib/awin';
+import { fetchAwinLiveUrls, fetchAwinProductsByCategory, type AwinSyncCategory } from '@/lib/awin';
+import { sendEmail } from '@/lib/resend';
+import { cronEmailWrapper, sectionBlock } from '@/lib/cron-email';
 import { NextResponse } from 'next/server';
 
 export type CatalogSyncCategory =
@@ -198,9 +200,12 @@ async function processBatch(
       last_synced_at: syncTime,
     }));
 
-    await supabase
+    // Une même adresse deux fois dans le lot faisait échouer TOUT le lot, sans aucune trace (25/11/2026)
+    const uniqueOffers = [...new Map(offers.map(o => [o.affiliate_url, o])).values()];
+    const { error: upsertError } = await supabase
       .from('product_offers')
-      .upsert(offers, { onConflict: 'affiliate_url' });
+      .upsert(uniqueOffers, { onConflict: 'affiliate_url' });
+    if (upsertError) throw new Error(`offres : ${upsertError.message}`);
 
     // Réactiver les fiches qui étaient cachées (produit revenu dans le feed)
     const uniqueCatalogIds = [...new Set(offerPairs.map(p => p.catalog_id))];
@@ -498,6 +503,8 @@ export async function runCatalogSyncForCategory(
   // quand seul le budget temps est dépassé (comportement attendu sur Vercel Hobby).
   let timedOut = false;
   let hadRealError = false;
+  const partParams = new URL(req.url).searchParams;
+  const partLabel = partParams.get('marchands') ? ` (${partParams.get('marchands')})` : partParams.get('sauf') ? ` (sauf ${partParams.get('sauf')})` : '';
 
   if (category === 'canada-pet-care') {
     ({ totalInserted, totalUpdated, lastError } = await runCPCCatalogSync(supabase, syncTime));
@@ -526,6 +533,16 @@ export async function runCatalogSyncForCategory(
 
     const BATCH_SIZE = 50;
 
+    // ?marchands=zooplus ou ?sauf=zooplus : les gros catalogues (chiens, chats) sont mis à jour en deux
+    // passages. En un seul, le budget temps était dépassé chaque semaine et Maxi Zoo jamais terminé.
+    const params = new URL(req.url).searchParams;
+    const only = params.get('marchands')?.toLowerCase();
+    const except = params.get('sauf')?.toLowerCase();
+    const merchantFilter = (name: string) => {
+      const n = name.toLowerCase();
+      return (!only || n.includes(only)) && (!except || !n.includes(except));
+    };
+
     // Budget temps : maxDuration Vercel = 300s. On stoppe proprement à 250s pour laisser
     // le temps de finir le batch en cours et de répondre. Au-delà, Vercel tuerait la fonction.
     const SYNC_DEADLINE_MS = 250_000;
@@ -538,13 +555,12 @@ export async function runCatalogSyncForCategory(
       category as AwinSyncCategory,
       async (batch) => {
         const filtered = batch.filter(p => !isDutchUrl(p.affiliate_url) && !isDutchName(p.name));
-        for (let i = 0; i < filtered.length; i += BATCH_SIZE) {
+        // Les deux moitiés du lot (100 produits) sont traitées en parallèle
+        const chunks: ProductRow[][] = [];
+        for (let i = 0; i < filtered.length; i += BATCH_SIZE) chunks.push(filtered.slice(i, i + BATCH_SIZE) as unknown as ProductRow[]);
+        await Promise.all(chunks.map(async chunk => {
           try {
-            const { inserted, updated } = await processBatch(
-              supabase,
-              filtered.slice(i, i + BATCH_SIZE) as unknown as ProductRow[],
-              syncTime
-            );
+            const { inserted, updated } = await processBatch(supabase, chunk, syncTime);
             totalInserted += inserted;
             totalUpdated += updated;
           } catch (e) {
@@ -552,7 +568,7 @@ export async function runCatalogSyncForCategory(
             hadRealError = true;
             console.error(`[catalog-sync:${category}] batch erreur:`, lastError);
           }
-        }
+        }));
       },
       undefined,
       (merchantName, errMsg) => {
@@ -560,21 +576,17 @@ export async function runCatalogSyncForCategory(
         hadRealError = true;
         console.error(`[catalog-sync:${category}] feed ${merchantName}:`, errMsg);
       },
-      shouldStop
+      shouldStop,
+      merchantFilter
     );
 
     timedOut = shouldStop();
 
-    // Nettoyage offres Awin disparues du feed.
-    // Gardes de sécurité : (1) feed a retourné ≥100 produits, (2) sync NON interrompu par le budget temps.
-    // Sur un sync partiel, le cleanup masquerait à tort les produits pas encore re-synchronisés.
-    if (!timedOut && totalInserted + totalUpdated >= 100) {
-      try {
-        cleanupStats = await cleanupStaleOffersForCategory(supabase, category, 'awin', syncTime);
-      } catch { /* non bloquant */ }
-    } else if (timedOut) {
-      lastError = (lastError ? lastError + ' | ' : '') + 'sync interrompu (budget temps 250s) — cleanup ignoré, reprise au prochain run';
-      console.warn(`[catalog-sync:${category}] budget temps atteint — cleanup ignoré`);
+    // Le nettoyage des offres disparues est fait par /api/cron/catalog-sync/cleanup (runAwinCleanup),
+    // qui compare au catalogue réel : il ne dépend plus d'une sync terminée à temps.
+    if (timedOut) {
+      lastError = (lastError ? lastError + ' | ' : '') + 'sync interrompu (budget temps 250s)';
+      console.warn(`[catalog-sync:${category}] budget temps atteint`);
     }
   }
 
@@ -587,7 +599,7 @@ export async function runCatalogSyncForCategory(
 
   await supabase.from('activity_logs').insert({
     agent_id: 'thomas', agent_name: 'Thomas',
-    action: `[Catalog sync:${category}] ${totalInserted} nouvelles fiches, ${totalUpdated} offres mises à jour${cleanupMsg}`,
+    action: `[Catalog sync:${category}]${partLabel} ${totalInserted} nouvelles fiches, ${totalUpdated} offres mises à jour${cleanupMsg}`,
     details: lastError ? { warning: lastError } : {},
     status: isError ? 'error' : 'success',
   });
@@ -616,4 +628,101 @@ export async function runCatalogSyncForCategory(
     hiddenProducts: cleanupStats.hiddenProducts,
     ...(lastError ? { warning: lastError } : {}),
   });
+}
+
+// ─── Nettoyage des offres Awin disparues ──────────────────────────────────────
+
+const MAX_REMOVED_SHARE = 0.3;
+
+/**
+ * Retire de la boutique les offres Awin absentes du catalogue actuel du marchand (25/11/2026).
+ * Garde-fous par marchand : catalogue illisible ou tronqué, ou plus de 30 % d'offres à retirer = rien
+ * n'est touché, et un email le signale. ?dry=1 : compte sans rien écrire.
+ * ?max=0.5 relève le plafond pour un passage exceptionnel.
+ */
+export async function runAwinCleanup(req: Request): Promise<Response> {
+  if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const params = new URL(req.url).searchParams;
+  const dry = params.get('dry') === '1';
+  const requested = Number(params.get('max'));
+  const maxShare = requested > 0 && requested <= 0.5 ? requested : MAX_REMOVED_SHARE;
+  const publisherId = process.env.AWIN_PUBLISHER_ID;
+  const feedToken = process.env.AWIN_FEED_TOKEN ?? process.env.AWIN_API_TOKEN;
+  if (!publisherId || !feedToken) return NextResponse.json({ error: 'Clés Awin manquantes' }, { status: 503 });
+
+  const supabase = createAdminClient();
+  const { urls, failed } = await fetchAwinLiveUrls(publisherId, feedToken);
+
+  const offers: { id: string; catalog_id: string; affiliate_url: string; merchant_name: string; last_synced_at: string }[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from('product_offers')
+      .select('id, catalog_id, affiliate_url, merchant_name, last_synced_at')
+      .eq('source', 'awin').eq('in_stock', true)
+      .order('id').range(from, from + 999);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    offers.push(...data);
+    if (data.length < 1000) break;
+  }
+
+  const report: Record<string, { offres: number; disparues: number; en_retard: number; action: string }> = {};
+  const toRemove: typeof offers = [];
+  const alerts: string[] = [];
+  const weekAgo = new Date(Date.now() - 8 * 86400000).toISOString();
+
+  for (const merchant of new Set(offers.map(o => o.merchant_name))) {
+    const mine = offers.filter(o => o.merchant_name === merchant);
+    const live = urls.get(merchant);
+    if (!live || failed.has(merchant)) {
+      report[merchant] = { offres: mine.length, disparues: 0, en_retard: 0, action: 'catalogue illisible, rien touché' };
+      alerts.push(`${merchant} : catalogue illisible ou incomplet, aucune offre retirée.`);
+      continue;
+    }
+    const gone = mine.filter(o => !live.has(o.affiliate_url));
+    const late = mine.filter(o => live.has(o.affiliate_url) && o.last_synced_at < weekAgo).length;
+    const blocked = gone.length > 20 && gone.length > mine.length * maxShare;
+    report[merchant] = { offres: mine.length, disparues: gone.length, en_retard: late, action: blocked ? 'plafond dépassé, rien touché' : 'retirées' };
+    if (blocked) alerts.push(`${merchant} : ${gone.length} offres sur ${mine.length} absentes du catalogue, c'est trop. Rien n'a été retiré.`);
+    else toRemove.push(...gone);
+    if (late > 500) alerts.push(`${merchant} : ${late} offres encore en vente n'ont pas été mises à jour depuis 8 jours.`);
+  }
+
+  let removed = 0;
+  let hidden = 0;
+  if (!dry) {
+    for (let i = 0; i < toRemove.length; i += 100) {
+      const ids = toRemove.slice(i, i + 100).map(o => o.id);
+      const { data, error } = await supabase.from('product_offers').update({ in_stock: false }).in('id', ids).select('id');
+      if (error) { alerts.push(`Écriture : ${error.message}`); break; }
+      removed += data.length;
+    }
+    // Fiches actives qui n'ont plus aucune offre (les épinglées ne sont jamais masquées)
+    const catalogIds = [...new Set(toRemove.map(o => o.catalog_id))];
+    for (let i = 0; i < catalogIds.length; i += 100) {
+      const batch = catalogIds.slice(i, i + 100);
+      const { data: left, error } = await supabase.from('product_offers').select('catalog_id').in('catalog_id', batch).eq('in_stock', true).gt('price', 0);
+      if (error) { alerts.push(`Lecture : ${error.message}`); break; }
+      const alive = new Set((left ?? []).map(r => r.catalog_id));
+      const empty = batch.filter(id => !alive.has(id));
+      if (empty.length === 0) continue;
+      const { data: done } = await supabase.from('products_catalog').update({ status: 'hidden' }).in('id', empty).eq('status', 'active').select('id');
+      hidden += done?.length ?? 0;
+    }
+    await supabase.from('activity_logs').insert({
+      agent_id: 'thomas', agent_name: 'Thomas',
+      action: `[Catalog sync:nettoyage] ${removed} offres disparues retirées, ${hidden} fiches masquées`,
+      details: { report, alerts },
+      status: alerts.length ? 'error' : 'success',
+    });
+    if (alerts.length) {
+      await sendEmail({
+        to: 'contact@mespoilus.com',
+        subject: '[Mes Poilus] Boutique : nettoyage à vérifier',
+        html: cronEmailWrapper('Nettoyage de la boutique', 'Boutique', sectionBlock('À vérifier', `<ul>${alerts.map(a => `<li>${a}</li>`).join('')}</ul>`)),
+      }).catch(e => console.error('[catalog-cleanup] email:', e));
+    }
+  }
+  return NextResponse.json({ success: alerts.length === 0, dry, toRemove: toRemove.length, removed, hidden, report, alerts });
 }

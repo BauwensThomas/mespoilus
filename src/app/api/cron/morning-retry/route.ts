@@ -7,8 +7,10 @@ export const maxDuration = 60;
 // scheduledDays : jours de la semaine UTC où le cron est programmé (0=dim, 1=lun, …, 6=sam).
 // undefined = tous les jours. Le morning-retry ne relance que si hier était un jour schedulé.
 const RETRYABLE: Array<{ label: string; pattern: string; route: string; scheduledDays?: number[] }> = [
-  { label: 'Catalog sync chiens',          pattern: '[Catalog sync:chiens]',          route: '/api/cron/catalog-sync/chiens',       scheduledDays: [1] },
-  { label: 'Catalog sync chats',           pattern: '[Catalog sync:chats]',           route: '/api/cron/catalog-sync/chats',        scheduledDays: [1] },
+  { label: 'Catalog sync chiens (Zooplus)',   pattern: '[Catalog sync:chiens] (zooplus)',      route: '/api/cron/catalog-sync/chiens?marchands=zooplus', scheduledDays: [1] },
+  { label: 'Catalog sync chiens (autres)',    pattern: '[Catalog sync:chiens] (sauf zooplus)', route: '/api/cron/catalog-sync/chiens?sauf=zooplus',      scheduledDays: [1] },
+  { label: 'Catalog sync chats (Zooplus)',   pattern: '[Catalog sync:chats] (zooplus)',      route: '/api/cron/catalog-sync/chats?marchands=zooplus', scheduledDays: [1] },
+  { label: 'Catalog sync chats (autres)',    pattern: '[Catalog sync:chats] (sauf zooplus)', route: '/api/cron/catalog-sync/chats?sauf=zooplus',      scheduledDays: [1] },
   { label: 'Catalog sync oiseaux',         pattern: '[Catalog sync:oiseaux]',         route: '/api/cron/catalog-sync/oiseaux',      scheduledDays: [1] },
   { label: 'Catalog sync rongeurs',        pattern: '[Catalog sync:rongeurs]',        route: '/api/cron/catalog-sync/rongeurs',     scheduledDays: [1] },
   { label: 'Catalog sync reptiles',        pattern: '[Catalog sync:reptiles]',        route: '/api/cron/catalog-sync/reptiles',     scheduledDays: [1] },
