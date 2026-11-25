@@ -75,6 +75,10 @@ function ListRow({ article }: { article: Article }) {
   );
 }
 
+// Articles affichés d'un coup. Les suivants restent dans le HTML (class hidden) : leurs liens sont
+// lisibles par Google et leurs images, en lazy, ne se chargent pas tant qu'elles sont cachées.
+const PAGE_SIZE = 24;
+
 interface Props {
   articles: Article[];
   activeCategory?: string;
@@ -85,6 +89,10 @@ interface Props {
 
 export default function BlogPostsGrid({ articles, activeCategory, search, label, showFeatured }: Props) {
   const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  // Nouvelle catégorie ou recherche : on repart du début
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeCategory, search]);
 
   useEffect(() => {
     const saved = localStorage.getItem('blog-view');
@@ -101,6 +109,17 @@ export default function BlogPostsGrid({ articles, activeCategory, search, label,
   const displayArticles = featured ? articles.slice(1) : articles;
 
   if (articles.length === 0) return null;
+
+  const remaining = Math.max(0, displayArticles.length - visibleCount);
+
+  function showMore() {
+    const firstNew = displayArticles[visibleCount];
+    setVisibleCount(c => c + PAGE_SIZE);
+    // Le clavier et les lecteurs d'écran repartent du premier article ajouté
+    if (firstNew) requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(`[data-article="${firstNew.id}"] a`)?.focus({ preventScroll: true });
+    });
+  }
 
   return (
     <>
@@ -133,11 +152,31 @@ export default function BlogPostsGrid({ articles, activeCategory, search, label,
 
           {view === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 xl:gap-5">
-              {displayArticles.map(article => <BlogCard key={article.id} article={article} />)}
+              {displayArticles.map((article, i) => (
+                <div key={article.id} data-article={article.id} className={i < visibleCount ? undefined : 'hidden'}>
+                  <BlogCard article={article} />
+                </div>
+              ))}
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              {displayArticles.map(article => <ListRow key={article.id} article={article} />)}
+              {displayArticles.map((article, i) => (
+                <div key={article.id} data-article={article.id} className={i < visibleCount ? undefined : 'hidden'}>
+                  <ListRow article={article} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {remaining > 0 && (
+            <div className="mt-8 text-center">
+              <button
+                type="button"
+                onClick={showMore}
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white border border-gray-300 text-gray-700 text-sm font-semibold hover:border-orange-400 hover:text-orange-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+              >
+                Voir plus ({remaining} article{remaining > 1 ? 's' : ''})
+              </button>
             </div>
           )}
         </div>
