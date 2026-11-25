@@ -10,7 +10,6 @@ import { getFlagUrl } from '@/lib/partenaires';
 import clsx from 'clsx';
 import AnimalDayPopup from '@/components/ui/AnimalDayPopup';
 import Link from 'next/link';
-import { NoelGarland } from '@/components/noel/NoelDecor';
 
 interface DbPartenaire {
   id: string; nom: string; description: string | null; logo_url: string | null;
@@ -154,7 +153,6 @@ export default function LayoutShell({ children, pendingCount = 0, grilleVisible 
     <>
       <PublicHeader grilleVisible={grilleVisible} />
       <PartenairesBandeau />
-      <NoelGarland />
       {/* Largeur unifiée = celle de la boutique (max-w-screen-2xl), sauf l'accueil
           et la boutique (référence, déjà à cette largeur). Sans effet sous 1536px
           → mobile/tablette/laptop inchangés. */}

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import ProductImage from '@/components/boutique/ProductImage';
+import { NoelGarland } from '@/components/noel/NoelDecor';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { CheckCircle2, XCircle, Activity, MapPin, Scale, Heart } from 'lucide-react';
@@ -218,6 +219,9 @@ export default async function BreedPage({ params }: Props) {
             </div>
           )}
         </div>
+
+        {/* Décor de Noël sous la photo : hauteur nulle, rien ne bouge dans la page */}
+        <div className="max-w-xs mx-auto relative h-0 !mt-0"><NoelGarland /></div>
 
         {/* Stats clés avec stagger */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger-container">

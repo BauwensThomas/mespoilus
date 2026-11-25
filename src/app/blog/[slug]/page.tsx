@@ -15,6 +15,7 @@ import CommentForm from '@/components/blog/CommentForm';
 import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle, Pencil } from 'lucide-react';
 import { toHashtag } from '@/lib/hashtag';
 import ProductImage from '@/components/boutique/ProductImage';
+import { NoelGarland } from '@/components/noel/NoelDecor';
 import { ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
 import { getRelatedArticles, type RelatedArticle } from '@/lib/related-articles';
 import Breadcrumb from '@/components/ui/Breadcrumb';
@@ -289,6 +290,9 @@ export default async function ArticlePage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Décor de Noël sous la photo : hauteur nulle, rien ne bouge dans la page */}
+      <div className="relative h-0 max-w-6xl mx-auto"><NoelGarland /></div>
 
       {/* Contenu */}
       <div className="px-6 py-10">

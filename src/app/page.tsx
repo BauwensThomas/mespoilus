@@ -17,7 +17,7 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getMetaOverride } from '@/lib/seo-overrides';
 import { isGrilleVisible } from '@/lib/site-settings';
-import { NoelGifts, NoelHat } from '@/components/noel/NoelDecor';
+import { NoelGarland, NoelHat } from '@/components/noel/NoelDecor';
 import { ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -219,7 +219,8 @@ export default async function LandingPage() {
             </div>
 
             {/* GRILLE 2x2 MOBILE */}
-            <div className="grid grid-cols-2 gap-2 max-w-[280px] mx-auto w-full">
+            <div className="grid grid-cols-2 gap-2 max-w-[280px] mx-auto w-full relative">
+              <NoelGarland className="top-full -mt-[18px] z-10" />
               <div className="relative aspect-square rounded-xl overflow-hidden shadow-md group transform -rotate-3 hover:rotate-0 transition-all duration-300">
                 {heroPhotos[0] ? <Link href={heroPhotos[0].href} aria-label={`Voir la fiche : ${heroPhotos[0].alt}`} className="absolute inset-0"><Image src={heroPhotos[0].url} alt={heroPhotos[0].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-200 to-amber-200" />}
               </div>
@@ -279,6 +280,7 @@ export default async function LandingPage() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
               </div>
+              <NoelGarland className="top-full -mt-[22px]" />
               <div className="absolute -bottom-6 -left-6 2xl:-bottom-8 2xl:-left-8 w-28 h-28 2xl:w-36 2xl:h-36 rounded-xl overflow-hidden shadow-lg border-4 border-white rotate-[-8deg] group">
                 {heroPhotos[0] ? <Link href={heroPhotos[0].href} aria-label={`Voir la fiche : ${heroPhotos[0].alt}`} className="absolute inset-0"><Image src={heroPhotos[0].url} alt={heroPhotos[0].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
               </div>
@@ -314,8 +316,6 @@ export default async function LandingPage() {
           </Link>
         </section>
       )}
-
-      <NoelGifts className="max-w-6xl mx-6 xl:mx-auto mt-6" />
 
       {/* ── DERNIERS ARTICLES ─────────────────────────────────────────────── */}
       <section className="py-20 px-6 bg-white reveal-color">

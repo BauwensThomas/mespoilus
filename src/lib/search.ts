@@ -9,6 +9,11 @@ const STOP_WORDS = new Set([
 ]);
 const MAX_TERMS = 6;
 
+// Mots cherchés ensemble : beaucoup de produits de Noël s'appellent "Xmas" ou "Calendrier de l'Avent"
+const SYNONYMS: Record<string, string> = {
+  noel: '\\m(noel|xmas|christmas|avent|advent|adventskalender)\\M',
+};
+
 /**
  * Motifs (regex Postgres, insensibles à la casse) pour une recherche : un par mot, à combiner en ET,
  * donc l'ordre des mots n'a pas d'importance.
@@ -22,6 +27,7 @@ export function searchPatterns(search: string): string[] {
   const useful = all.filter(w => !STOP_WORDS.has(w) && (w.length > 1 || /\d/.test(w)));
   const words = [...new Set(useful.length ? useful : all)].slice(0, MAX_TERMS);
   return words.map(w => {
+    if (SYNONYMS[w]) return SYNONYMS[w];
     const term = w.length > 3 && !/\d/.test(w) ? w.replace(/[sx]$/, '') : w;
     // "gris" devient "gri" : on exige le mot entier pour ne pas trouver "griffoir"
     if (term !== w && term.length <= 3) return `\\m${term}[sx]?\\M`;
