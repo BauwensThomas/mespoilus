@@ -2,13 +2,14 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Trophy, Users, Wallet, Euro, Gift, Lock, Download, Calendar, BarChart3, ChevronDown, ChevronUp, Plus, Layers, Archive } from 'lucide-react';
+import { Search, Trophy, Users, Wallet, Euro, Gift, Lock, Download, Calendar, BarChart3, ChevronDown, ChevronUp, Plus, Layers, Archive, Eye, EyeOff } from 'lucide-react';
 import type { AchatRow } from './page';
 
 interface Buyer { prenom: string; email: string; pixels: number; }
 interface Scheduled { id: string; animal: string; race_secrete: string; ordre: number; }
 
 interface Props {
+  visible: boolean;
   grille: {
     id: string;
     animal: string;
@@ -30,7 +31,7 @@ function eur(cents: number) {
   return (cents / 100).toLocaleString('fr-BE', { style: 'currency', currency: 'EUR' });
 }
 
-export default function GrilleAdminClient({ grille, rows, classement, gagnantDevinette, scheduled }: Props) {
+export default function GrilleAdminClient({ visible, grille, rows, classement, gagnantDevinette, scheduled }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [achatsOpen, setAchatsOpen] = useState(false);
@@ -80,6 +81,15 @@ export default function GrilleAdminClient({ grille, rows, classement, gagnantDev
     } catch (e) {
       setActionMsg(e instanceof Error ? e.message : 'Erreur');
     } finally { setActionBusy(false); }
+  }
+
+  async function toggleVisibility() {
+    const enCours = grille.statut === 'active' && rows.length > 0;
+    const question = visible
+      ? `Masquer le jeu ? Les liens disparaissent du site et les achats sont bloqués.${enCours ? ` Attention : ${rows.length} achat(s) sur la grille en cours, qui sera mise en pause.` : ''}`
+      : 'Rendre le jeu visible ? Les liens reviennent sur le site et les achats sont de nouveau possibles.';
+    if (!window.confirm(question)) return;
+    await callManage({ action: 'set-visibility', visible: !visible }, visible ? 'Jeu masqué' : 'Jeu visible');
   }
 
   // Projection de remplissage (vitesse moyenne depuis le 1er achat)
@@ -245,6 +255,33 @@ export default function GrilleAdminClient({ grille, rows, classement, gagnantDev
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-8">
       <div className="w-full">
+
+        {/* Interrupteur de visibilité */}
+        <div className={`flex items-center justify-between flex-wrap gap-3 rounded-2xl border p-4 mb-6 ${visible ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+          <div className="flex items-center gap-3">
+            {visible ? <Eye size={20} className="text-green-700" /> : <EyeOff size={20} className="text-amber-700" />}
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{visible ? 'Jeu visible sur le site' : 'Jeu masqué'}</p>
+              <p className="text-xs text-gray-600">
+                {visible
+                  ? 'Les liens sont affichés et les achats sont possibles.'
+                  : 'Aucun lien sur le site, achats bloqués, rotation et posts arrêtés. Les grilles sont conservées.'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={visible}
+            aria-label="Visibilité du jeu"
+            onClick={toggleVisibility}
+            disabled={actionBusy}
+            className={`relative h-7 w-12 rounded-full transition-colors disabled:opacity-50 ${visible ? 'bg-green-600' : 'bg-gray-300'}`}
+          >
+            <span className={`absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${visible ? 'translate-x-5' : ''}`} />
+          </button>
+        </div>
+        {actionMsg && <p className="text-xs text-gray-600 -mt-4 mb-6">{actionMsg}</p>}
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">

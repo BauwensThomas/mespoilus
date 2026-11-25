@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisibleNow } from '@/lib/site-settings';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  if (!(await isGrilleVisibleNow())) return NextResponse.json({ grille: null, top3: [] });
+
   const supabase = createAdminClient();
 
   const { data: grille } = await supabase

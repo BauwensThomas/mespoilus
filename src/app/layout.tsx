@@ -10,6 +10,7 @@ import ExternalLinks from '@/components/ExternalLinks';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisible } from '@/lib/site-settings';
 
 async function getPendingCount(): Promise<number> {
   try {
@@ -47,7 +48,7 @@ export function generateMetadata(): Metadata {
 
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const pendingCount = await getPendingCount();
+  const [pendingCount, grilleVisible] = await Promise.all([getPendingCount(), isGrilleVisible()]);
 
   return (
     <html lang="fr" suppressHydrationWarning data-scroll-behavior="smooth">
@@ -81,7 +82,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body className="min-h-screen">
-        <LayoutShell pendingCount={pendingCount}>{children}</LayoutShell>
+        <LayoutShell pendingCount={pendingCount} grilleVisible={grilleVisible}>{children}</LayoutShell>
         <CookieBanner />
         <GoogleAnalytics />
         <AdSense />

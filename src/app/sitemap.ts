@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisible } from '@/lib/site-settings';
 import { getIndexableRacePaths } from '@/lib/breed-indexing';
 
 export const revalidate = 86400;
@@ -34,6 +35,7 @@ function isValidSitemapEntry(entry: any): boolean {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const grilleVisible = await isGrilleVisible();
   let articleEntries: MetadataRoute.Sitemap = [];
   let guideEntries: MetadataRoute.Sitemap = [];
   let breedEntries: MetadataRoute.Sitemap = [];
@@ -162,8 +164,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${APP_URL}/blog/reptiles`, ...(latest['blog/reptiles'] ? { lastModified: latest['blog/reptiles'] } : {}), changeFrequency: 'daily' as const, priority: 0.8 },
     { url: `${APP_URL}/adoption`, ...(latest['adoption'] ? { lastModified: latest['adoption'] } : {}), changeFrequency: 'daily' as const,  priority: 0.8 },
     { url: `${APP_URL}/boutique`, changeFrequency: 'daily' as const,  priority: 0.8 },
-    { url: `${APP_URL}/grille`,   changeFrequency: 'daily' as const,  priority: 0.8 },
-    { url: `${APP_URL}/grilles`,  changeFrequency: 'weekly' as const, priority: 0.6 },
+    ...(grilleVisible ? [
+      { url: `${APP_URL}/grille`,   changeFrequency: 'daily' as const,  priority: 0.8 },
+      { url: `${APP_URL}/grilles`,  changeFrequency: 'weekly' as const, priority: 0.6 },
+    ] : []),
     { url: `${APP_URL}/outils/age`,       changeFrequency: 'yearly' as const, priority: 0.7 },
     { url: `${APP_URL}/outils/nutrition`, changeFrequency: 'yearly' as const, priority: 0.7 },
     { url: `${APP_URL}/outils/prenom`,    changeFrequency: 'yearly' as const, priority: 0.7 },

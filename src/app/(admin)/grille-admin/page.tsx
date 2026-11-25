@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisibleNow } from '@/lib/site-settings';
 import GrilleAdminClient from './GrilleAdminClient';
 
 export const dynamic = 'force-dynamic';
@@ -86,6 +87,7 @@ export default async function GrilleAdminPage() {
 
   return (
     <GrilleAdminClient
+      visible={await isGrilleVisibleNow()}
       grille={{
         id: grille.id,
         animal: grille.animal,

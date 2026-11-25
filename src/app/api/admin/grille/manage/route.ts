@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { finishGrille } from '@/lib/grille-finish';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { SITE_SETTINGS_TAG, setGrilleVisible } from '@/lib/site-settings';
 
 export const runtime = 'nodejs';
 
@@ -9,7 +11,25 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
-  const { action, grilleId, race, montantReverseCents, preuveUrl } = await req.json();
+  const { action, grilleId, race, montantReverseCents, preuveUrl, visible } = await req.json();
+
+  // Interrupteur de visibilité du jeu (réglage global, pas lié à une grille)
+  if (action === 'set-visibility') {
+    if (typeof visible !== 'boolean') return NextResponse.json({ error: 'Valeur invalide' }, { status: 400 });
+    try {
+      await setGrilleVisible(visible);
+    } catch (e) {
+      console.error('[grille] set-visibility:', e);
+      return NextResponse.json({ error: 'Enregistrement impossible' }, { status: 500 });
+    }
+    // Le menu est sur toutes les pages : on régénère tout le site
+    revalidateTag(SITE_SETTINGS_TAG);
+    revalidatePath('/', 'layout');
+    revalidatePath('/sitemap.xml');
+    revalidatePath('/llms.txt');
+    return NextResponse.json({ success: true, visible });
+  }
+
   if (!action || !grilleId) return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 });
 
   const admin = createAdminClient();

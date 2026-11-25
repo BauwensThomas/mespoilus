@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { isGrilleVisible } from '@/lib/site-settings';
 
 export const metadata: Metadata = {
   title: 'À propos de Mes Poilus',
@@ -9,7 +10,8 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://www.mespoilus.com/a-propos' },
 };
 
-export default function AProposPage() {
+export default async function AProposPage() {
+  const grilleVisible = await isGrilleVisible();
   return (
     <div className="min-h-screen text-gray-900">
       <div className="max-w-6xl mx-auto px-6 py-12">
@@ -146,7 +148,7 @@ export default function AProposPage() {
             </div>
           </section>
 
-          <section>
+          {grilleVisible && <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">6. La Grille Mystère</h2>
             <div className="text-sm space-y-3">
               <p>
@@ -156,10 +158,10 @@ export default function AProposPage() {
                 Ce n&apos;est ni une loterie ni une tombola : les gains reposent sur une devinette et sur la participation, pas sur le hasard. Et surtout, <strong>une partie des recettes de chaque grille est reversée à un refuge animalier ou une association</strong> - jouer, c&apos;est aussi soutenir une bonne cause.
               </p>
             </div>
-          </section>
+          </section>}
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">7. Nous contacter</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">{grilleVisible ? 7 : 6}. Nous contacter</h2>
             <p className="text-sm">Pour toute question, suggestion ou demande de partenariat : <a href="mailto:contact@mespoilus.com" className="text-amber-600 hover:underline">contact@mespoilus.com</a></p>
           </section>
 

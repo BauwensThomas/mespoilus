@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisible } from '@/lib/site-settings';
 import GrilleView from './_components/GrilleView';
 import GrilleResults from './_components/GrilleResults';
 import { computeGrilleResults } from '@/lib/grille-finish';
@@ -43,6 +45,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export const revalidate = 0;
 
 export default async function GrillePage() {
+  // Jeu masqué depuis /grille-admin : redirection temporaire
+  if (!(await isGrilleVisible())) redirect('/');
+
   const supabase = createAdminClient();
 
   // ── 1. Grille active ───────────────────────────────────

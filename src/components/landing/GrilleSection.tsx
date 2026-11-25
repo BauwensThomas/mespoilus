@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisible } from '@/lib/site-settings';
 import { Lock, Zap } from 'lucide-react';
 
 export default async function GrilleSection() {
+  if (!(await isGrilleVisible())) return null;
   const supabase = createAdminClient();
   const { data: grille } = await supabase
     .from('pixel_grilles')

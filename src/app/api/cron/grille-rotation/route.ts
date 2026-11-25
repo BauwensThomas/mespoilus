@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisibleNow } from '@/lib/site-settings';
 import { finishGrille, activateNextGrille } from '@/lib/grille-finish';
 
 export const runtime = 'nodejs';
@@ -9,6 +10,10 @@ export async function GET(req: Request) {
   const authHeader = req.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (!(await isGrilleVisibleNow())) {
+    return NextResponse.json({ success: true, skipped: true, reason: 'grille_masquee' });
   }
 
   const supabase = createAdminClient();

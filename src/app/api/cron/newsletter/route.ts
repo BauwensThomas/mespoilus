@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { executeAgentTask } from '@/lib/agents/runner';
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisibleNow } from '@/lib/site-settings';
 import { sendBulkNewsletter, sendEmail } from '@/lib/resend';
 import { cronEmailWrapper, statsRow, sectionBlock } from '@/lib/cron-email';
 import { buildNewsletterHtml, type NlArticle, type NlGrille, type NlAdoption } from '@/lib/newsletter-template';
@@ -79,7 +80,7 @@ export async function GET(req: Request) {
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
-    if (g) {
+    if (g && await isGrilleVisibleNow()) {
       const { data: achats } = await supabase
         .from('pixel_achats')
         .select('positions')

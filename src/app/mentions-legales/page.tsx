@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import GrilleSuspendedNotice from '@/components/legal/GrilleSuspendedNotice';
 
 export const metadata: Metadata = {
   title: 'Mentions légales du site',
@@ -72,6 +73,7 @@ export default function MentionsLegalesPage() {
 
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">6. Jeu « Grille Mystère » et paiements</h2>
+            <GrilleSuspendedNotice />
             <p className="text-sm">
               Mes Poilus organise un jeu en ligne payant, la « Grille Mystère », dont les modalités complètes figurent dans les <Link href="/cgu" className="text-amber-600 hover:underline">Conditions Générales d'Utilisation</Link>. Il ne s'agit ni d'une loterie ni d'une tombola : les gains reposent sur une devinette et sur le nombre de pixels achetés, non sur le hasard. Les paiements sont traités par <strong>Stripe Payments Europe Ltd</strong>. Une partie des recettes de chaque grille est reversée à un refuge animalier ou une association.
             </p>

@@ -123,7 +123,7 @@ function PartenairesBandeau() {
   );
 }
 
-export default function LayoutShell({ children, pendingCount = 0 }: { children: React.ReactNode; pendingCount?: number }) {
+export default function LayoutShell({ children, pendingCount = 0, grilleVisible = false }: { children: React.ReactNode; pendingCount?: number; grilleVisible?: boolean }) {
   const pathname = usePathname();
   const isAdmin = ADMIN_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -151,7 +151,7 @@ export default function LayoutShell({ children, pendingCount = 0 }: { children: 
 
   return (
     <>
-      <PublicHeader />
+      <PublicHeader grilleVisible={grilleVisible} />
       <PartenairesBandeau />
       {/* Largeur unifiée = celle de la boutique (max-w-screen-2xl), sauf l'accueil
           et la boutique (référence, déjà à cette largeur). Sans effet sous 1536px

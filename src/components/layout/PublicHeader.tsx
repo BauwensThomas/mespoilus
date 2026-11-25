@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { PawPrint, ChevronDown, Calculator, HelpCircle, Sparkles, BookOpen, Menu, X, UtensilsCrossed } from 'lucide-react';
 
-const NAV_LINKS = [
+const ALL_NAV_LINKS = [
   { href: '/blog',        label: 'Blog'       },
   { href: '/#categories', label: 'Animaux'    },
   { href: '/races',       label: 'Races'      },
@@ -22,7 +22,9 @@ const TOOLS = [
   { href: '/guides',           label: 'Guides PDF gratuits',      desc: 'Checklists & guides pratiques', icon: BookOpen       },
 ];
 
-export default function PublicHeader() {
+export default function PublicHeader({ grilleVisible = false }: { grilleVisible?: boolean }) {
+  // Jeu masqué depuis /grille-admin : pas de lien dans le menu
+  const NAV_LINKS = ALL_NAV_LINKS.filter(l => l.href !== '/grille' || grilleVisible);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [desktopToolsOpen, setDesktopToolsOpen] = useState(false);

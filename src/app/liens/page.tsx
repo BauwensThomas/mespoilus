@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisible } from '@/lib/site-settings';
 import { Article } from '@/types';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -41,6 +42,7 @@ async function getLatestArticles(): Promise<Article[]> {
 }
 
 export default async function LiensPage() {
+  const grilleVisible = await isGrilleVisible();
   const articles = await getLatestArticles();
 
   return (
@@ -77,16 +79,18 @@ export default async function LiensPage() {
         ))}
 
         {/* Carte jeu : La Grille Mystère (jeu solidaire) */}
-        <Link
-          href="/grille"
-          className="rounded-2xl border border-orange-200 bg-gradient-to-br from-fuchsia-600 to-purple-700 text-white flex flex-col items-center justify-center gap-2.5 p-6 text-center hover:brightness-110 transition shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300 min-h-[220px]"
-        >
-          <Puzzle className="w-9 h-9" strokeWidth={1.5} />
-          <span className="text-lg font-bold leading-tight">La Grille Mystère</span>
-          <span className="inline-flex items-center gap-1 text-sm text-white/90">
-            Joue et soutiens un refuge <ArrowRight className="w-4 h-4" />
-          </span>
-        </Link>
+        {grilleVisible && (
+          <Link
+            href="/grille"
+            className="rounded-2xl border border-orange-200 bg-gradient-to-br from-fuchsia-600 to-purple-700 text-white flex flex-col items-center justify-center gap-2.5 p-6 text-center hover:brightness-110 transition shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300 min-h-[220px]"
+          >
+            <Puzzle className="w-9 h-9" strokeWidth={1.5} />
+            <span className="text-lg font-bold leading-tight">La Grille Mystère</span>
+            <span className="inline-flex items-center gap-1 text-sm text-white/90">
+              Joue et soutiens un refuge <ArrowRight className="w-4 h-4" />
+            </span>
+          </Link>
+        )}
 
         {/* Carte newsletter : inscription (ancre #newsletter de la homepage) */}
         <Link

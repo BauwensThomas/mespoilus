@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisibleNow } from '@/lib/site-settings';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
+  // Jeu masqué : aucun paiement possible, même en appelant l'API directement
+  if (!(await isGrilleVisibleNow())) {
+    return NextResponse.json({ error: 'Le jeu est actuellement suspendu.' }, { status: 403 });
+  }
+
   const { grilleId, prenom, email, nbPixels, newsletter } = await req.json();
 
   if (!grilleId || !prenom || !email || !nbPixels || nbPixels < 5) {

@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisible } from '@/lib/site-settings';
 
 /**
  * /llms.txt généré automatiquement (remplace le fichier fixe public/llms.txt de juin 2026).
@@ -23,6 +24,7 @@ const clean = (s: string | null | undefined) =>
   (s ?? '').replace(/\s+/g, ' ').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
 
 export async function GET() {
+  const grilleVisible = await isGrilleVisible();
   let articles: { slug: string; title: string; category: string; meta_description: string | null; excerpt: string | null }[] = [];
   try {
     const { data } = await createAdminClient()
@@ -77,8 +79,7 @@ Accessoires, alimentation et matériel. Chaque fiche compare les offres de march
 - [Boutique](${SITE}/boutique)
 
 ## Guides et solidarité
-- [Guides PDF gratuits](${SITE}/guides)
-- [Grille Mystère](${SITE}/grille) : jeu solidaire au profit des refuges.
+- [Guides PDF gratuits](${SITE}/guides)${grilleVisible ? `\n- [Grille Mystère](${SITE}/grille) : jeu solidaire au profit des refuges.` : ''}
 - [Soutenir Mes Poilus](${SITE}/soutenir)
 
 ## À propos

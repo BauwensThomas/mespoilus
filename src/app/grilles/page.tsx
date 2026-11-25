@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisible } from '@/lib/site-settings';
 import { computeGrilleResults } from '@/lib/grille-finish';
 import { Trophy, ArrowRight } from 'lucide-react';
 
@@ -16,6 +18,9 @@ export const revalidate = 3600;
 const RANK_EMOJI = ['🥇', '🥈', '🥉'];
 
 export default async function GrillesHistoriquePage() {
+  // Jeu masqué depuis /grille-admin : redirection temporaire
+  if (!(await isGrilleVisible())) redirect('/');
+
   const supabase = createAdminClient();
 
   const { data: grilles } = await supabase

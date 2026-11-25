@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { runAgent } from '@/lib/anthropic';
 import { getAgent } from '@/lib/agents/config';
 import { createAdminClient } from '@/lib/supabase/server';
+import { isGrilleVisibleNow } from '@/lib/site-settings';
 import { prepareSocialImage } from '@/lib/social-image';
 
 export const runtime = 'nodejs';
@@ -11,6 +12,10 @@ export async function GET(req: Request) {
   const authHeader = req.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (!(await isGrilleVisibleNow())) {
+    return NextResponse.json({ success: true, skipped: true, reason: 'grille_masquee' });
   }
 
   const globalStart = Date.now();

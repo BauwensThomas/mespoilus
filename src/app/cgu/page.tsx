@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import GrilleSuspendedNotice from '@/components/legal/GrilleSuspendedNotice';
 export const metadata: Metadata = {
   title: "Conditions Générales d'Utilisation",
   description: "Conditions Générales d'Utilisation de Mes Poilus, site de contenu et d'affiliation animalier.",
@@ -55,6 +56,7 @@ export default function CGUPage() {
 
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">4. Jeu « Grille Mystère »</h2>
+            <GrilleSuspendedNotice />
             <div className="text-sm space-y-3">
               <p>Mes Poilus propose un jeu en ligne intitulé « Grille Mystère » : une photo d'animal est masquée par une grille de pixels que les participants révèlent en achetant des pixels. L'objectif est de deviner la race de l'animal.</p>
               <p><strong>Nature du jeu :</strong> il ne s'agit pas d'une loterie ni d'une tombola. Le gain repose sur une devinette (concours de connaissance) et/ou sur le nombre de pixels achetés (critère déterministe), et non sur un tirage au sort.</p>

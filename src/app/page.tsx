@@ -18,6 +18,7 @@ import { formatReviewDate } from '@/lib/formatReviewDate';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getMetaOverride } from '@/lib/seo-overrides';
+import { isGrilleVisible } from '@/lib/site-settings';
 import { ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
 
 type Review = { id: string; name: string; rating: number; comment: string | null; created_at: string };
@@ -170,7 +171,7 @@ async function getLandingData() {
 }
 
 export default async function LandingPage() {
-  const { heroPhotos, catPhotos, articles, reviews } = await getLandingData();
+  const [{ heroPhotos, catPhotos, articles, reviews }, grilleVisible] = await Promise.all([getLandingData(), isGrilleVisible()]);
 
   return (
     <div className="bg-orange-50 text-gray-900 min-h-screen">
@@ -514,7 +515,7 @@ export default async function LandingPage() {
                   { href: '/boutique', label: 'Boutique' },
                   { href: '/races', label: 'Races' },
                   { href: '/outils', label: 'Outils' },
-                  { href: '/grille', label: 'Grille Mystère' },
+                  ...(grilleVisible ? [{ href: '/grille', label: 'Grille Mystère' }] : []),
                   { href: '/soutenir', label: 'Soutenir Mes Poilus' },
                   { href: '/adoption', label: 'Adoption' },
                   { href: '/avis', label: 'Avis' },

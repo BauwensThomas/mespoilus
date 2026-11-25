@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import GrilleSuspendedNotice from '@/components/legal/GrilleSuspendedNotice';
 export const metadata: Metadata = {
   title: 'Politique de confidentialité',
   description: 'Politique de confidentialité et de protection des données personnelles de Mes Poilus, conforme au RGPD.',
@@ -63,6 +64,7 @@ export default function PolitiqueConfidentialitePage() {
               </div>
               <div>
                 <h3 className="font-medium text-gray-700 mb-2">2.9 Jeu « Grille Mystère »</h3>
+                <GrilleSuspendedNotice />
                 <p>Lorsque vous achetez des pixels, nous collectons votre <strong>prénom</strong> (affiché dans le classement des participants) et votre <strong>adresse email</strong> (pour vous contacter si vous gagnez). Le paiement est traité par <strong>Stripe</strong> ; nous ne recevons ni ne stockons aucune donnée de carte bancaire. Vous pouvez, de façon facultative et séparée, consentir à recevoir notre newsletter lors de l'achat.</p>
               </div>
               <div>
