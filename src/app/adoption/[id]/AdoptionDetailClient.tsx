@@ -8,6 +8,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PawPrint, Dog, Cat, Bird, Mouse, Zap, Heart, ArrowLeft, Mail, ChevronLeft, ChevronRight, User, Trash2, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import type { AdoptionPost } from '@/types';
+import { frameStyle } from '@/lib/image-focus';
 
 const ANIMAL_TYPES = [
   { id: 'chien',   label: 'Chien',   icon: Dog   },
@@ -130,13 +131,15 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
           <div className="space-y-3 fade-up">
             {photos.length > 0 ? (
               <>
-                <div className="relative rounded-2xl overflow-hidden bg-gray-100 aspect-[4/3] group">
+                <div className="relative rounded-2xl overflow-hidden bg-gray-900 aspect-[4/3] group">
+                  {/* Photo toujours entière : fond flou de la même photo, aucune partie de l'animal coupée */}
+                  <Image src={photos[photoIndex]} alt="" aria-hidden fill unoptimized className="object-cover blur-2xl scale-110 opacity-70" sizes="50vw" />
                   <Image
                     src={photos[photoIndex]}
                     alt={`${typeInfo?.label ?? post.animal_type} à adopter${post.breed ? ` - ${post.breed}` : ''}${post.region ? ` à ${post.region}` : ''}`}
                     fill
                     unoptimized
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="object-contain"
                     sizes="(max-width: 768px) 100vw, 50vw"
                     priority
                   />
@@ -170,7 +173,7 @@ export default function AdoptionDetailClient({ post }: { post: AdoptionPost }) {
                         onClick={() => setPhotoIndex(i)}
                         className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-300 hover:scale-105 ${i === photoIndex ? 'border-orange-500' : 'border-transparent'}`}
                       >
-                        <Image src={url} alt="" fill unoptimized className="object-cover" sizes="64px" />
+                        <Image src={url} alt="" fill unoptimized className="object-cover" sizes="64px" style={frameStyle(post.photo_focus?.[i])} />
                       </button>
                     ))}
                   </div>

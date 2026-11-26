@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import ProductImage from '@/components/boutique/ProductImage';
 import { NoelGarland } from '@/components/noel/NoelDecor';
+import { frameStyle } from '@/lib/image-focus';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { CheckCircle2, XCircle, Activity, MapPin, Scale, Heart } from 'lucide-react';
@@ -78,9 +79,9 @@ export default async function BreedPage({ params }: Props) {
 
   const category = ANIMAL_URL[animalType];
 
-  type AdoptionPreview = { id: string; breed: string | null; age: string | null; gender: string; region: string; photo_urls: string[] };
+  type AdoptionPreview = { id: string; breed: string | null; age: string | null; gender: string; region: string; photo_urls: string[]; photo_focus?: (string | null)[] | null };
   type ProductPreview  = { catalog_id: string; name: string; image_url: string | null; price: number; currency: string; merchant_name: string; affiliate_url: string };
-  type ArticlePreview  = Pick<Article, 'id' | 'title' | 'slug' | 'excerpt' | 'image_url' | 'reading_time'>;
+  type ArticlePreview  = Pick<Article, 'id' | 'title' | 'slug' | 'excerpt' | 'image_url' | 'image_focus' | 'reading_time'>;
 
   let adoptionPosts: AdoptionPreview[] = [];
   let products: ProductPreview[] = [];
@@ -94,7 +95,7 @@ export default async function BreedPage({ params }: Props) {
     const [{ data: a }, { data: p }, { data: ar }, { data: g }] = await Promise.all([
       supabase
         .from('adoption_posts')
-        .select('id, breed, age, gender, region, photo_urls')
+        .select('id, breed, age, gender, region, photo_urls, photo_focus')
         .eq('status', 'approved')
         .eq('animal_type', animalType)
         .order('created_at', { ascending: false })
@@ -107,14 +108,14 @@ export default async function BreedPage({ params }: Props) {
         .limit(4),
       supabase
         .from('articles')
-        .select('id, title, slug, excerpt, image_url, reading_time')
+        .select('id, title, slug, excerpt, image_url, image_focus, reading_time')
         .eq('status', 'published')
         .eq('category', category)
         .order('published_at', { ascending: false })
         .limit(4),
       supabase
         .from('articles')
-        .select('id, title, slug, excerpt, image_url, reading_time')
+        .select('id, title, slug, excerpt, image_url, image_focus, reading_time')
         .eq('status', 'published')
         .eq('breed_slug', slug)
         .order('published_at', { ascending: false })
@@ -211,6 +212,7 @@ export default async function BreedPage({ params }: Props) {
               fill
               unoptimized
               className="object-cover transition-transform duration-500 hover:scale-105"
+              style={frameStyle(breed?.photo_focus)}
               sizes="(max-width: 768px) 100vw, 672px"
             />
           ) : (
@@ -301,7 +303,7 @@ export default async function BreedPage({ params }: Props) {
           >
             {guide.image_url && (
               <div className="relative w-full sm:w-44 h-40 sm:h-auto sm:min-h-[7rem] flex-shrink-0 rounded-xl overflow-hidden">
-                <Image src={guide.image_url} alt={guide.title} fill unoptimized className="object-cover" sizes="(max-width: 640px) 100vw, 176px" />
+                <Image src={guide.image_url} alt={guide.title} fill unoptimized className="object-cover" style={frameStyle(guide.image_focus)} sizes="(max-width: 640px) 100vw, 176px" />
               </div>
             )}
             <div className="flex flex-col justify-center min-w-0">
@@ -355,6 +357,7 @@ export default async function BreedPage({ params }: Props) {
                     {post.photo_urls?.[0] ? (
                       <Image
                         src={post.photo_urls[0]}
+                        style={frameStyle(post.photo_focus?.[0])}
                         alt={post.breed ?? ANIMAL_LABEL[animalType]}
                         fill unoptimized
                         className="object-cover transition-transform duration-500 hover:scale-105"
@@ -444,6 +447,7 @@ export default async function BreedPage({ params }: Props) {
                     {a.image_url ? (
                       <Image
                         src={a.image_url}
+                        style={frameStyle(a.image_focus)}
                         alt={a.title}
                         fill unoptimized
                         className="object-cover transition-transform duration-500 hover:scale-105"

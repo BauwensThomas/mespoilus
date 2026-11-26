@@ -37,7 +37,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
 
   let query = supabase
     .from('breeds')
-    .select('name, slug, content, photo_url')
+    .select('name, slug, content, photo_url, photo_focus')
     .eq('animal', animalType)
     .eq('status', 'published')
     .not('content', 'is', null)

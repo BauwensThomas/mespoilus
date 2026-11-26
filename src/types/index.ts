@@ -63,6 +63,7 @@ export interface Article {
   status: 'draft' | 'published' | 'archived';
   reading_time: number;
   image_url?: string | null;
+  image_focus?: string | null;
   image_alt?: string | null;
   image_credit?: string | null;
   image_credit_url?: string | null;
@@ -147,6 +148,7 @@ export interface AdoptionPost {
   reason: string | null;
   contact_info: string;
   photo_urls: string[];
+  photo_focus?: (string | null)[] | null;
   status: 'pending' | 'approved' | 'rejected' | 'deleted';
   created_at: string;
   updated_at: string;

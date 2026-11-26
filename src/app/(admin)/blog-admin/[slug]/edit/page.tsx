@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import EditArticleClient from './EditArticleClient';
+import ArticleImageFrame from './ArticleImageFrame';
 import { pingIndexNowPaths } from '@/lib/indexnow';
 
 export const revalidate = 0;
@@ -16,7 +17,7 @@ async function getArticle(slug: string) {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from('articles')
-    .select('slug, title, excerpt, content, image_url, status, category')
+    .select('slug, title, excerpt, content, image_url, image_focus, status, category')
     .eq('slug', slug)
     .maybeSingle();
   return data;
@@ -42,6 +43,15 @@ async function updateArticle(slug: string, formData: FormData) {
   redirect('/blog-admin?tab=articles');
 }
 
+async function saveImageFrame(slug: string, value: string) {
+  'use server';
+  if (!/^\d{1,3} \d{1,3} \d(\.\d+)?$/.test(value)) throw new Error('Cadrage invalide');
+  await createAdminClient().from('articles').update({ image_focus: value }).eq('slug', slug);
+  revalidatePath(`/blog/${slug}`);
+  revalidatePath('/blog', 'layout');
+  revalidatePath('/');
+}
+
 export default async function EditArticlePage({ params }: Props) {
   const { slug } = await params;
   const article = await getArticle(slug);
@@ -64,6 +74,7 @@ export default async function EditArticlePage({ params }: Props) {
       </div>
 
       <EditArticleClient article={article} updateAction={update} />
+      {article.image_url && <ArticleImageFrame src={article.image_url} value={article.image_focus ?? null} save={saveImageFrame.bind(null, slug)} />}
     </div>
   );
 }

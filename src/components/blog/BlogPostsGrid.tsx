@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import BlogCard from '@/components/blog/BlogCard';
 import type { Article } from '@/types';
+import { frameStyle } from '@/lib/image-focus';
 
 const CATEGORY_COLORS: Record<string, string> = {
   chiens:   'text-orange-600 bg-orange-100',
@@ -47,7 +48,7 @@ function ListRow({ article }: { article: Article }) {
       <div className={`relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br ${gradient}`}>
         {article.image_url ? (
           <Image src={article.image_url} alt={article.image_alt || article.title}
-            fill unoptimized className="object-cover" sizes="64px" />
+            fill unoptimized className="object-cover" sizes="64px" style={frameStyle(article.image_focus)} />
         ) : (
           <div className="w-full h-full flex items-center justify-center opacity-40">
             <IconComponent size={28} className="text-white" strokeWidth={1} />

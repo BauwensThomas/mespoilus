@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { RefreshCw, Check, X, ImageOff, Upload, Link, Trash2, Search, FileText, Monitor, Smartphone, MapPin, Scale, Heart, Activity } from 'lucide-react';
+import { RefreshCw, Check, X, ImageOff, Upload, Link, Trash2, Search, FileText, Monitor, Smartphone, MapPin, Scale, Heart, Activity, Crop } from 'lucide-react';
+import PhotoFrameEditor from '@/components/ui/PhotoFrameEditor';
+import { frameStyle } from '@/lib/image-focus';
 import clsx from 'clsx';
 
 const ANIMAL_TABS = [
@@ -47,6 +49,7 @@ interface Breed {
   slug: string;
   animal: string;
   photo_url: string | null;
+  photo_focus?: string | null;
   status: string;
   content?: BreedContent | null;
 }
@@ -56,6 +59,16 @@ export default function AdminRacesPage() {
   const [breeds, setBreeds] = useState<Breed[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [framingId, setFramingId] = useState<string | null>(null);
+  const [framingBusy, setFramingBusy] = useState(false);
+
+  async function saveFrame(id: string, value: string) {
+    setFramingBusy(true);
+    try {
+      const r = await fetch('/api/admin/breeds', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, photo_focus: value }) });
+      if (r.ok) { setBreeds(prev => prev.map(b => b.id === id ? { ...b, photo_focus: value } : b)); setFramingId(null); }
+    } finally { setFramingBusy(false); }
+  }
   const [editUrl, setEditUrl] = useState('');
   const [uploadMode, setUploadMode] = useState<'url' | 'file'>('file');
   const [saving, setSaving] = useState(false);
@@ -313,7 +326,7 @@ export default function AdminRacesPage() {
                   b.photo_url ? 'bg-gray-50 border-gray-100' : 'bg-red-50 border-red-200'
                 )}>
                   {b.photo_url ? (
-                    <Image src={b.photo_url} alt={b.name} fill className="object-cover" sizes="56px" unoptimized />
+                    <Image src={b.photo_url} alt={b.name} fill className="object-cover" sizes="56px" unoptimized style={frameStyle(b.photo_focus)} />
                   ) : (
                     <ImageOff size={18} strokeWidth={1.5} className="text-red-300" />
                   )}
@@ -362,6 +375,17 @@ export default function AdminRacesPage() {
                     </button>
                   )}
 
+                  {/* Cadrage de la photo */}
+                  {b.photo_url && savedId !== b.id && editingId !== b.id && editingContentId !== b.id && (
+                    <button
+                      onClick={() => setFramingId(framingId === b.id ? null : b.id)}
+                      className={clsx('flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-colors', framingId === b.id ? 'bg-gray-100 text-gray-600 border-gray-300' : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100')}
+                    >
+                      <Crop size={12} strokeWidth={1.5} />
+                      {framingId === b.id ? 'Fermer' : 'Cadrer'}
+                    </button>
+                  )}
+
                   {/* Bouton texte */}
                   {savedId !== b.id && savedContentId !== b.id && editingId !== b.id && (
                     <button
@@ -396,6 +420,12 @@ export default function AdminRacesPage() {
                   )}
                 </div>
               </div>
+
+              {framingId === b.id && b.photo_url && (
+                <div className="border-t border-gray-100 p-4 bg-gray-50/60">
+                  <PhotoFrameEditor src={b.photo_url} value={b.photo_focus ?? null} saving={framingBusy} onSave={v => saveFrame(b.id, v)} />
+                </div>
+              )}
 
               {/* Panel édition contenu */}
               {editingContentId === b.id && (

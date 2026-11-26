@@ -34,6 +34,7 @@ export interface Breed {
   slug: string;
   content: BreedContent | null;
   photo_url: string | null;
+  photo_focus?: string | null;
   status: 'draft' | 'published';
   generated_at: string | null;
   created_at: string;

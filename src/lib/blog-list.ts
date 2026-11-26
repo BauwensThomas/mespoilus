@@ -5,7 +5,7 @@ import type { Article } from '@/types';
 // que pour l'article "À la une" (teaser), via withFeaturedContent : les listes affichent
 // tous les articles publiés, inutile d'envoyer le contenu de chacun au navigateur.
 export const ARTICLE_CARD_COLUMNS =
-  'id, slug, title, excerpt, category, categories, image_url, image_alt, image_credit, image_credit_url, published_at, reading_time, seo_keywords';
+  'id, slug, title, excerpt, category, categories, image_url, image_focus, image_alt, image_credit, image_credit_url, published_at, reading_time, seo_keywords';
 
 export async function withFeaturedContent(supabase: SupabaseClient, rows: unknown[] | null): Promise<Article[]> {
   const articles = ((rows ?? []) as Article[]).map((a) => ({ ...a, content: '' }));

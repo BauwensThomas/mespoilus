@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ImageOff } from 'lucide-react';
+import { frameStyle } from '@/lib/image-focus';
 import type { BreedContent } from '@/lib/breeds-list';
 
 interface BreedItem {
@@ -10,6 +11,7 @@ interface BreedItem {
   slug: string;
   content: BreedContent | null;
   photo_url?: string | null;
+  photo_focus?: string | null;
 }
 
 interface Props {
@@ -33,6 +35,7 @@ function GridCard({ breed, animalUrl }: { breed: BreedItem; animalUrl: string })
             fill
             unoptimized
             className="object-cover transition-transform duration-300 group-hover:scale-105"
+            style={frameStyle(breed.photo_focus)}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
           />
         ) : (
@@ -74,6 +77,7 @@ function ListRow({ breed, animalUrl }: { breed: BreedItem; animalUrl: string }) 
             fill
             unoptimized
             className="object-cover"
+            style={frameStyle(breed.photo_focus)}
             sizes="56px"
           />
         ) : (

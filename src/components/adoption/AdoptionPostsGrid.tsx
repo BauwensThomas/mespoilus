@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { AdoptionPost } from '@/types';
+import { frameStyle } from '@/lib/image-focus';
 
 const ANIMAL_TYPES = [
   { id: 'chien',   label: 'Chien',   icon: Dog },
@@ -55,6 +56,7 @@ function GridCard({ post, index }: { post: AdoptionPost; index: number }) {
             fill 
             unoptimized 
             className="object-cover group-hover:scale-110 transition-transform duration-500"
+            style={frameStyle(post.photo_focus?.[0])}
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw" 
           />
           {/* Badge Nouveau */}
@@ -126,6 +128,7 @@ function ListRow({ post, index }: { post: AdoptionPost; index: number }) {
             fill 
             unoptimized 
             className="object-cover group-hover:scale-110 transition-transform duration-300"
+            style={frameStyle(post.photo_focus?.[0])}
             sizes="144px"
           />
         ) : (

@@ -135,13 +135,13 @@ export default async function BreedCriterePage({ params, critere, searchParams }
   const supabase = createAdminClient();
   const { data: allBreeds } = await supabase
     .from('breeds')
-    .select('name, slug, content, photo_url')
+    .select('name, slug, content, photo_url, photo_focus')
     .eq('animal', animalType)
     .eq('status', 'published')
     .not('content', 'is', null)
     .order('name', { ascending: true });
 
-  const breeds = ((allBreeds ?? []) as Breed[]).filter(b => {
+  const breeds = ((allBreeds ?? []) as unknown as Breed[]).filter(b => {
     if (b.content?.convient_pour?.[critere] !== true) return false;
     if (q) return b.name.toLowerCase().includes(q.toLowerCase());
     return true;

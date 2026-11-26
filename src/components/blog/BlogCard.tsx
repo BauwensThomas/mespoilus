@@ -8,6 +8,7 @@ import { fr } from 'date-fns/locale';
 import { Dog, Cat, Bird, Mouse, Zap, PawPrint } from 'lucide-react';
 import clsx from 'clsx';
 import { toHashtag } from '@/lib/hashtag';
+import { frameStyle } from '@/lib/image-focus';
 
 const CATEGORY_COLORS: Record<string, string> = {
   chiens: 'text-orange-600 bg-orange-100 border-orange-200',
@@ -91,7 +92,8 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
                 alt={imageAlt}
                 fill
                 unoptimized
-                className="object-cover object-center"
+                className="object-cover"
+                style={frameStyle(article.image_focus)}
                 sizes="(max-width: 768px) 100vw, 384px"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
@@ -125,7 +127,8 @@ export default function BlogCard({ article, featured }: BlogCardProps) {
               alt={imageAlt}
               fill
               unoptimized
-              className="object-cover object-center transition-smooth group-hover:scale-105"
+              className="object-cover transition-smooth group-hover:scale-105"
+              style={frameStyle(article.image_focus)}
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
             />
           ) : (

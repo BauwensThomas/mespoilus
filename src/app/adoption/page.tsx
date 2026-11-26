@@ -47,7 +47,7 @@ async function getPosts(animal?: string, search?: string, pays?: string, gender?
     const supabase = createAdminClient();
     let q = supabase
       .from('adoption_posts')
-      .select('id,poster_name,animal_type,breed,age,gender,region,description,photo_urls,created_at')
+      .select('id,poster_name,animal_type,breed,age,gender,region,description,photo_urls,photo_focus,created_at')
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .limit(50);

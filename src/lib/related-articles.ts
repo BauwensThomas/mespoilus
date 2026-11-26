@@ -21,6 +21,7 @@ export interface RelatedArticle {
   title: string;
   slug: string;
   image_url: string | null;
+  image_focus?: string | null;
 }
 
 interface Candidate extends RelatedArticle {
@@ -76,7 +77,7 @@ async function loadCandidates(): Promise<{ list: Candidate[]; top3Count: Map<str
   if (memo && Date.now() - memo.at < MEMO_MS) return memo;
   const { data, error } = await createAdminClient()
     .from('articles')
-    .select('id, title, slug, image_url, category, breed_slug, seo_keywords')
+    .select('id, title, slug, image_url, image_focus, category, breed_slug, seo_keywords')
     .eq('status', 'published');
   if (error) throw error;
   const list: Candidate[] = (data ?? []).map(a => ({
@@ -84,6 +85,7 @@ async function loadCandidates(): Promise<{ list: Candidate[]; top3Count: Map<str
     title: a.title,
     slug: a.slug,
     image_url: a.image_url ?? null,
+    image_focus: a.image_focus ?? null,
     category: a.category,
     breed_slug: a.breed_slug ?? null,
     titleWords: words(a.title),
@@ -129,7 +131,7 @@ export async function getRelatedArticles(
     breed_slug: article.breed_slug ?? null,
     titleWords: words(article.title),
     keywordWords: words((article.seo_keywords ?? []).join(' ')),
-  }, list, top3Count, limit).map(({ id, title, slug, image_url }) => ({ id, title, slug, image_url }));
+  }, list, top3Count, limit).map(({ id, title, slug, image_url, image_focus }) => ({ id, title, slug, image_url, image_focus }));
 }
 
 type Source = Parameters<typeof scoreRelated>[0];

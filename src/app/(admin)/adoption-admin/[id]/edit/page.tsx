@@ -2,6 +2,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import AdoptionPhotoFrames from './AdoptionPhotoFrames';
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -24,6 +25,21 @@ async function updatePost(id: string, formData: FormData) {
   }).eq('id', id);
   revalidatePath('/adoption-admin');
   redirect('/adoption-admin');
+}
+
+async function savePhotoFrame(id: string, index: number, value: string) {
+  'use server';
+  if (!/^\d{1,3} \d{1,3} \d(\.\d+)?$/.test(value)) throw new Error('Cadrage invalide');
+  const supabase = createAdminClient();
+  const { data: post } = await supabase.from('adoption_posts').select('photo_urls, photo_focus').eq('id', id).single();
+  const count = (post?.photo_urls as string[] | null)?.length ?? 0;
+  if (index < 0 || index >= count) throw new Error('Photo inconnue');
+  const frames: (string | null)[] = Array.from({ length: count }, (_, i) => (post?.photo_focus as (string | null)[] | null)?.[i] ?? null);
+  frames[index] = value;
+  await supabase.from('adoption_posts').update({ photo_focus: frames }).eq('id', id);
+  revalidatePath('/adoption');
+  revalidatePath(`/adoption/${id}`);
+  revalidatePath('/');
 }
 
 const ANIMAL_TYPES = ['chien','chat','oiseau','rongeur','reptile','autre'];
@@ -124,6 +140,12 @@ export default async function EditPostPage({ params }: Props) {
           </Link>
         </div>
       </form>
+
+      <AdoptionPhotoFrames
+        photos={(post.photo_urls as string[] | null) ?? []}
+        frames={(post.photo_focus as (string | null)[] | null) ?? []}
+        save={savePhotoFrame.bind(null, id)}
+      />
     </div>
   );
 }

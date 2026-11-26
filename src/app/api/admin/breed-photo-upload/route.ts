@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const publicUrl = await uploadToSupabase(supabase, buffer, file.type || 'image/jpeg', breedId);
-    await supabase.from('breeds').update({ photo_url: publicUrl }).eq('id', breedId);
+    await supabase.from('breeds').update({ photo_url: publicUrl, photo_focus: null }).eq('id', breedId);
     return NextResponse.json({ success: true, url: publicUrl });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
@@ -63,7 +63,7 @@ export async function PUT(req: NextRequest) {
   const supabase = createAdminClient();
   try {
     const publicUrl = await uploadToSupabase(supabase, buffer, contentType, breedId);
-    await supabase.from('breeds').update({ photo_url: publicUrl }).eq('id', breedId);
+    await supabase.from('breeds').update({ photo_url: publicUrl, photo_focus: null }).eq('id', breedId);
     return NextResponse.json({ success: true, url: publicUrl });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });

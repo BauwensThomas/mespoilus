@@ -18,6 +18,7 @@ import type { Metadata } from 'next';
 import { getMetaOverride } from '@/lib/seo-overrides';
 import { isGrilleVisible } from '@/lib/site-settings';
 import { NoelGarland, NoelHat } from '@/components/noel/NoelDecor';
+import { frameStyle } from '@/lib/image-focus';
 import { ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -49,7 +50,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   rongeurs: 'Rongeurs', reptiles: 'Reptiles', general: 'Général',
 };
 
-type HeroPhoto = { url: string; alt: string; href: string };
+type HeroPhoto = { url: string; alt: string; href: string; focus: string | null };
 
 // Les 4 cadres du hero montent chacun une race tirée au hasard, d'une espèce différente
 // (4 espèces parmi 5). Le tirage change à chaque régénération de la page (revalidate 1 h).
@@ -58,13 +59,13 @@ async function getHeroPhotosFromDB(): Promise<(HeroPhoto | null)[]> {
   try {
     const { data } = await createAdminClient()
       .from('breeds')
-      .select('animal, slug, name, photo_url')
+      .select('animal, slug, name, photo_url, photo_focus')
       .eq('status', 'published')
       .not('photo_url', 'is', null);
     if (!data || data.length === 0) return [null, null, null, null];
 
-    const byAnimal: Record<string, { slug: string; name: string; photo_url: string }[]> = {};
-    for (const b of data as { animal: AnimalType; slug: string; name: string; photo_url: string }[]) {
+    const byAnimal: Record<string, { slug: string; name: string; photo_url: string; photo_focus: string | null }[]> = {};
+    for (const b of data as { animal: AnimalType; slug: string; name: string; photo_url: string; photo_focus: string | null }[]) {
       if (!ANIMAL_URL[b.animal]) continue;
       (byAnimal[b.animal] ??= []).push(b);
     }
@@ -73,7 +74,7 @@ async function getHeroPhotosFromDB(): Promise<(HeroPhoto | null)[]> {
       const list = byAnimal[animal];
       const pick = list[Math.floor(Math.random() * list.length)];
       // Chaque cadre mène à la fiche de sa race
-      return { url: pick.photo_url, alt: pick.name, href: `/races/${ANIMAL_URL[animal]}/${pick.slug}` };
+      return { url: pick.photo_url, alt: pick.name, href: `/races/${ANIMAL_URL[animal]}/${pick.slug}`, focus: pick.photo_focus };
     });
     while (selected.length < 4) selected.push(null);
     return selected;
@@ -151,7 +152,7 @@ async function getLandingData() {
         const supabase = createAdminClient();
         const { data } = await supabase
           .from('articles')
-          .select('id,title,slug,excerpt,category,image_url,image_alt,image_credit,image_credit_url,published_at,reading_time,seo_keywords')
+          .select('id,title,slug,excerpt,category,image_url,image_focus,image_alt,image_credit,image_credit_url,published_at,reading_time,seo_keywords')
           .eq('status', 'published')
           .order('published_at', { ascending: false })
           .limit(3);
@@ -222,16 +223,16 @@ export default async function LandingPage() {
             <div className="grid grid-cols-2 gap-2 max-w-[280px] mx-auto w-full relative">
               <NoelGarland className="top-full -mt-[18px] z-10" />
               <div className="relative aspect-square rounded-xl overflow-hidden shadow-md group transform -rotate-3 hover:rotate-0 transition-all duration-300">
-                {heroPhotos[0] ? <Link href={heroPhotos[0].href} aria-label={`Voir la fiche : ${heroPhotos[0].alt}`} className="absolute inset-0"><Image src={heroPhotos[0].url} alt={heroPhotos[0].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-200 to-amber-200" />}
+                {heroPhotos[0] ? <Link href={heroPhotos[0].href} aria-label={`Voir la fiche : ${heroPhotos[0].alt}`} className="absolute inset-0"><Image style={frameStyle(heroPhotos[0].focus)} src={heroPhotos[0].url} alt={heroPhotos[0].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-200 to-amber-200" />}
               </div>
               <div className="relative aspect-square rounded-xl overflow-hidden shadow-md group transform rotate-3 hover:rotate-0 transition-all duration-300">
-                {heroPhotos[1] ? <Link href={heroPhotos[1].href} aria-label={`Voir la fiche : ${heroPhotos[1].alt}`} className="absolute inset-0"><Image src={heroPhotos[1].url} alt={heroPhotos[1].alt} fill priority className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
+                {heroPhotos[1] ? <Link href={heroPhotos[1].href} aria-label={`Voir la fiche : ${heroPhotos[1].alt}`} className="absolute inset-0"><Image style={frameStyle(heroPhotos[1].focus)} src={heroPhotos[1].url} alt={heroPhotos[1].alt} fill priority className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
               </div>
               <div className="relative aspect-square rounded-xl overflow-hidden shadow-md group transform -rotate-2 hover:rotate-0 transition-all duration-300">
-                {heroPhotos[2] ? <Link href={heroPhotos[2].href} aria-label={`Voir la fiche : ${heroPhotos[2].alt}`} className="absolute inset-0"><Image src={heroPhotos[2].url} alt={heroPhotos[2].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-amber-200 to-orange-200" />}
+                {heroPhotos[2] ? <Link href={heroPhotos[2].href} aria-label={`Voir la fiche : ${heroPhotos[2].alt}`} className="absolute inset-0"><Image style={frameStyle(heroPhotos[2].focus)} src={heroPhotos[2].url} alt={heroPhotos[2].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-amber-200 to-orange-200" />}
               </div>
               <div className="relative aspect-square rounded-xl overflow-hidden shadow-md group transform rotate-2 hover:rotate-0 transition-all duration-300">
-                {heroPhotos[3] ? <Link href={heroPhotos[3].href} aria-label={`Voir la fiche : ${heroPhotos[3].alt}`} className="absolute inset-0"><Image src={heroPhotos[3].url} alt={heroPhotos[3].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-200 to-amber-200" />}
+                {heroPhotos[3] ? <Link href={heroPhotos[3].href} aria-label={`Voir la fiche : ${heroPhotos[3].alt}`} className="absolute inset-0"><Image style={frameStyle(heroPhotos[3].focus)} src={heroPhotos[3].url} alt={heroPhotos[3].alt} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="40vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-200 to-amber-200" />}
               </div>
             </div>
           </div>
@@ -274,7 +275,7 @@ export default async function LandingPage() {
             <div className="relative w-full max-w-md mx-auto xl:max-w-full">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] w-full">
                 {heroPhotos[1] ? (
-                  <Link href={heroPhotos[1].href} aria-label={`Voir la fiche : ${heroPhotos[1].alt}`} className="absolute inset-0"><Image src={heroPhotos[1].url} alt={heroPhotos[1].alt} fill priority className="object-cover" sizes="(max-width: 1280px) 50vw, 40vw" /></Link>
+                  <Link href={heroPhotos[1].href} aria-label={`Voir la fiche : ${heroPhotos[1].alt}`} className="absolute inset-0"><Image style={frameStyle(heroPhotos[1].focus)} src={heroPhotos[1].url} alt={heroPhotos[1].alt} fill priority className="object-cover" sizes="(max-width: 1280px) 50vw, 40vw" /></Link>
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-orange-200 to-amber-200" />
                 )}
@@ -282,13 +283,13 @@ export default async function LandingPage() {
               </div>
               <NoelGarland className="top-full -mt-[22px]" />
               <div className="absolute -bottom-6 -left-6 2xl:-bottom-8 2xl:-left-8 w-28 h-28 2xl:w-36 2xl:h-36 rounded-xl overflow-hidden shadow-lg border-4 border-white rotate-[-8deg] group">
-                {heroPhotos[0] ? <Link href={heroPhotos[0].href} aria-label={`Voir la fiche : ${heroPhotos[0].alt}`} className="absolute inset-0"><Image src={heroPhotos[0].url} alt={heroPhotos[0].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
+                {heroPhotos[0] ? <Link href={heroPhotos[0].href} aria-label={`Voir la fiche : ${heroPhotos[0].alt}`} className="absolute inset-0"><Image style={frameStyle(heroPhotos[0].focus)} src={heroPhotos[0].url} alt={heroPhotos[0].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
               </div>
               <div className="absolute -top-6 -right-6 2xl:-top-8 2xl:-right-8 w-24 h-24 2xl:w-32 2xl:h-32 rounded-xl overflow-hidden shadow-lg border-4 border-white rotate-[12deg] group">
-                {heroPhotos[2] ? <Link href={heroPhotos[2].href} aria-label={`Voir la fiche : ${heroPhotos[2].alt}`} className="absolute inset-0"><Image src={heroPhotos[2].url} alt={heroPhotos[2].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-amber-300 to-orange-300" />}
+                {heroPhotos[2] ? <Link href={heroPhotos[2].href} aria-label={`Voir la fiche : ${heroPhotos[2].alt}`} className="absolute inset-0"><Image style={frameStyle(heroPhotos[2].focus)} src={heroPhotos[2].url} alt={heroPhotos[2].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-amber-300 to-orange-300" />}
               </div>
               <div className="absolute bottom-8 -right-8 2xl:bottom-12 2xl:-right-10 w-20 h-20 2xl:w-28 2xl:h-28 rounded-xl overflow-hidden shadow-lg border-4 border-white rotate-[6deg] group">
-                {heroPhotos[3] ? <Link href={heroPhotos[3].href} aria-label={`Voir la fiche : ${heroPhotos[3].alt}`} className="absolute inset-0"><Image src={heroPhotos[3].url} alt={heroPhotos[3].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
+                {heroPhotos[3] ? <Link href={heroPhotos[3].href} aria-label={`Voir la fiche : ${heroPhotos[3].alt}`} className="absolute inset-0"><Image style={frameStyle(heroPhotos[3].focus)} src={heroPhotos[3].url} alt={heroPhotos[3].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="15vw" /></Link> : <div className="w-full h-full bg-gradient-to-br from-orange-300 to-amber-300" />}
               </div>
             </div>
           </div>
@@ -577,6 +578,7 @@ function ArticleCard({ article }: { article: Article }) {
             fill
             unoptimized
             className="object-cover group-hover:scale-105 transition-smooth"
+            style={frameStyle(article.image_focus)}
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         )}

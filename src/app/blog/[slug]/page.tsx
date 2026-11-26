@@ -20,6 +20,7 @@ import { ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
 import { getRelatedArticles, type RelatedArticle } from '@/lib/related-articles';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import { getMetaOverride } from '@/lib/seo-overrides';
+import { frameStyle } from '@/lib/image-focus';
 
 export const dynamic = 'force-dynamic';
 
@@ -257,6 +258,7 @@ export default async function ArticlePage({ params }: Props) {
                 priority
                 unoptimized
                 className="object-cover sm:object-contain md:object-cover"
+                style={frameStyle(article.image_focus)}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 100vw"
               />
             </div>
@@ -447,7 +449,7 @@ export default async function ArticlePage({ params }: Props) {
                   <Link key={ra.id} href={`/blog/${ra.slug}`} className="stagger-child bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col">
                     <div className="relative h-40">
                       {ra.image_url ? (
-                        <Image src={ra.image_url} alt={ra.title} fill unoptimized className="object-cover" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+                        <Image src={ra.image_url} alt={ra.title} fill unoptimized className="object-cover" style={frameStyle(ra.image_focus)} sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
                       ) : (
                         <div className="absolute inset-0 bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center"><PawPrint className="text-orange-300" size={32} /></div>
                       )}

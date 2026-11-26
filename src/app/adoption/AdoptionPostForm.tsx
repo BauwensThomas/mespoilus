@@ -2,7 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Crop } from 'lucide-react';
+import PhotoFrameEditor from '@/components/ui/PhotoFrameEditor';
+import { frameStyle } from '@/lib/image-focus';
 
 const ANIMAL_TYPES = [
   { id: 'chien',   label: 'Chien'   },
@@ -249,7 +251,8 @@ const EMPTY = {
   reason: '', indicatif: '+32', contact_phone: '',
 };
 
-interface PhotoEntry { file: File; preview: string }
+// frame : cadrage choisi par la personne ("x y zoom"), null = cadrage par défaut
+interface PhotoEntry { file: File; preview: string; frame: string | null }
 
 // Vercel refuse toute requête de plus de 4,5 Mo (413) : une seule photo de téléphone (3-5 Mo)
 // suffisait presque à bloquer le dépôt. On réduit donc chaque photo dans le navigateur
@@ -281,6 +284,7 @@ export default function AdoptionPostForm() {
   const router = useRouter();
   const [form, setForm]     = useState(EMPTY);
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
+  const [framing, setFraming] = useState<number | null>(null);
   const [newsletter, setNewsletter] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError]   = useState('');
@@ -317,7 +321,7 @@ export default function AdoptionPostForm() {
         reader.onload = e => resolve(e.target?.result as string);
         reader.readAsDataURL(f);
       });
-      setPhotos(prev => prev.length < 5 ? [...prev, { file: f, preview }] : prev);
+      setPhotos(prev => prev.length < 5 ? [...prev, { file: f, preview, frame: null }] : prev);
     }
   }
 
@@ -328,6 +332,12 @@ export default function AdoptionPostForm() {
 
   function removePhoto(index: number) {
     setPhotos(prev => prev.filter((_, i) => i !== index));
+    setFraming(null);
+  }
+
+  function setFrame(index: number, frame: string) {
+    setPhotos(prev => prev.map((p, i) => (i === index ? { ...p, frame } : p)));
+    setFraming(null);
   }
 
   async function submit(e: React.FormEvent) {
@@ -356,6 +366,7 @@ export default function AdoptionPostForm() {
       fd.append('region', region ? `${region}, ${resolvedCountry}` : resolvedCountry);
       fd.append('contact_phone', `${indicatif} ${contact_phone.trim().replace(/^0+/, '')}`);
       photos.forEach(p => fd.append('photos', p.file));
+      fd.append('photo_focus', JSON.stringify(photos.map(p => p.frame)));
       if (newsletter) fd.append('newsletter', 'true');
 
       const res = await fetch('/api/adoption/submit', { method: 'POST', body: fd });
@@ -403,11 +414,11 @@ export default function AdoptionPostForm() {
           <span className={`text-xs font-medium ${photos.length >= 2 ? 'text-emerald-600' : 'text-gray-500'}`}>{photos.length} / 5</span>
         </div>
         {photos.length > 0 && (
-          <div className="grid grid-cols-5 gap-2 mb-2">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-2">
             {photos.map((p, i) => (
               <div key={i} className={`relative aspect-square rounded-lg overflow-hidden bg-gray-100 group ${i === 0 ? 'ring-2 ring-amber-500' : ''}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.preview} alt="" className="w-full h-full object-cover" />
+                <img src={p.preview} alt="" className="w-full h-full object-cover" style={frameStyle(p.frame)} />
                 {i === 0 ? (
                   <span className="absolute bottom-0 inset-x-0 bg-amber-500 text-white text-[10px] font-semibold text-center py-0.5">Photo principale</span>
                 ) : (
@@ -416,14 +427,31 @@ export default function AdoptionPostForm() {
                     Mettre en 1re
                   </button>
                 )}
+                {/* Toujours visibles : un téléphone n'a pas de survol */}
                 <button type="button" onClick={() => removePhoto(i)} aria-label="Supprimer cette photo"
-                  className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 hover:bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span aria-hidden="true">×</span></button>
+                  className="absolute top-0.5 right-0.5 w-6 h-6 bg-black/70 hover:bg-red-500 text-white rounded-full text-sm flex items-center justify-center"><span aria-hidden="true">×</span></button>
+                <button type="button" onClick={() => setFraming(framing === i ? null : i)} aria-label="Cadrer cette photo"
+                  className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full flex items-center justify-center text-white ${framing === i ? 'bg-amber-500' : 'bg-black/70 hover:bg-amber-500'}`}><Crop size={12} aria-hidden="true" /></button>
               </div>
             ))}
             {photos.length < 5 && (
               <button type="button" onClick={() => inputRef.current?.click()}
                 className="aspect-square rounded-lg border border-dashed border-gray-300 hover:border-amber-500/50 flex items-center justify-center text-gray-500 hover:text-amber-500 transition-colors text-xl">+</button>
             )}
+          </div>
+        )}
+        {framing !== null && photos[framing] && (
+          <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50/50 p-3">
+            <p className="text-sm font-medium text-gray-800 mb-2">Cadrer la photo {framing + 1}</p>
+            <PhotoFrameEditor
+              key={photos[framing].preview}
+              src={photos[framing].preview}
+              value={photos[framing].frame}
+              saveLabel="Valider le cadrage"
+              alwaysEnabled
+              onSave={v => setFrame(framing, v)}
+              onCancel={() => setFraming(null)}
+            />
           </div>
         )}
         {photos.length === 0 && (
@@ -435,7 +463,7 @@ export default function AdoptionPostForm() {
         )}
         <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={e => addFiles(e.target.files)} />
         <p className="text-xs text-gray-500 mt-2">
-          La 1re photo est la photo principale : elle illustre votre annonce et sera publiée sur nos pages Facebook et Instagram et dans notre newsletter pour lui donner plus de visibilité. Choisissez la plus belle ! Touchez une autre photo pour la mettre en 1re.
+          La 1re photo est la photo principale : elle illustre votre annonce et sera publiée sur nos pages Facebook et Instagram et dans notre newsletter pour lui donner plus de visibilité. Choisissez la plus belle ! Touchez une autre photo pour la mettre en 1re. Le bouton de recadrage, en haut à gauche de chaque photo, permet de bien centrer votre animal.
         </p>
       </div>
 

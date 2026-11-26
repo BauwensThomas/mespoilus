@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart } from 'lucide-react';
+import { frameStyle } from '@/lib/image-focus';
 
 const TYPES = ['chien', 'chat', 'oiseau', 'rongeur', 'reptile'] as const;
 
@@ -26,7 +27,7 @@ async function getPreviewPosts() {
   unstable_noStore();
   const { data } = await createAdminClient()
     .from('adoption_posts')
-    .select('id,animal_type,breed,age,region,photo_urls,poster_name')
+    .select('id,animal_type,breed,age,region,photo_urls,photo_focus,poster_name')
     .eq('status', 'approved')
     .in('animal_type', TYPES as unknown as string[])
     .order('created_at', { ascending: false })
@@ -72,6 +73,7 @@ export default async function AdoptionPreviewSection() {
                       fill
                       unoptimized
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      style={frameStyle(post.photo_focus?.[0])}
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
                     />
                   ) : (

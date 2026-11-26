@@ -35,6 +35,12 @@ export async function POST(req: NextRequest) {
     const reason = get('reason');
     const contact_phone = get('contact_phone');
     const photos = formData.getAll('photos').filter((p): p is File => p instanceof File);
+    // Cadrage choisi dans le formulaire, une valeur "x y zoom" par photo (invalide = cadrage par défaut)
+    let photoFocus: (string | null)[] = [];
+    try {
+      const parsed: unknown = JSON.parse(get('photo_focus') ?? '[]');
+      if (Array.isArray(parsed)) photoFocus = parsed.map(v => (typeof v === 'string' && /^\d{1,3} \d{1,3} \d(\.\d+)?$/.test(v) ? v : null));
+    } catch { /* sans cadrage */ }
 
     // ── Validation des champs texte (AVANT tout upload) ───────────────────────
     if (!poster_name?.trim())
@@ -121,6 +127,7 @@ export async function POST(req: NextRequest) {
       reason: reason.trim(),
       contact_info: contact_phone?.trim() || null,
       photo_urls: photoUrls,
+      photo_focus: photoUrls.map((_, i) => photoFocus[i] ?? null),
     });
 
     if (error) {
