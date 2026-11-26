@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 
 async function uploadToSupabase(
   supabase: ReturnType<typeof import('@/lib/supabase/server').createAdminClient>,
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
   try {
     const publicUrl = await uploadToSupabase(supabase, buffer, file.type || 'image/jpeg', breedId);
     await supabase.from('breeds').update({ photo_url: publicUrl, photo_focus: null }).eq('id', breedId);
+    revalidatePath('/races', 'layout');
     return NextResponse.json({ success: true, url: publicUrl });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
@@ -64,6 +66,7 @@ export async function PUT(req: NextRequest) {
   try {
     const publicUrl = await uploadToSupabase(supabase, buffer, contentType, breedId);
     await supabase.from('breeds').update({ photo_url: publicUrl, photo_focus: null }).eq('id', breedId);
+    revalidatePath('/races', 'layout');
     return NextResponse.json({ success: true, url: publicUrl });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });

@@ -91,22 +91,22 @@ const ANIMAL_TYPE_MAP: Record<string, string> = {
   reptile: 'reptiles', reptiles: 'reptiles',
 };
 
-async function getCategoryPhotosFromDB(): Promise<Record<string, string>> {
+async function getCategoryPhotosFromDB(): Promise<Record<string, { url: string; focus: string | null }>> {
   try {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from('hero_photos')
-      .select('url, animal_type')
+      .select('url, animal_type, focus')
       .eq('active', true)
       .not('animal_type', 'is', null);
     if (!data || data.length === 0) return {};
-    const byType: Record<string, string[]> = {};
+    const byType: Record<string, { url: string; focus: string | null }[]> = {};
     for (const row of data) {
       const key = ANIMAL_TYPE_MAP[row.animal_type] ?? row.animal_type;
       if (!byType[key]) byType[key] = [];
-      byType[key].push(row.url);
+      byType[key].push({ url: row.url, focus: row.focus ?? null });
     }
-    const result: Record<string, string> = {};
+    const result: Record<string, { url: string; focus: string | null }> = {};
     for (const [type, urls] of Object.entries(byType)) {
       result[type] = urls[Math.floor(Math.random() * urls.length)];
     }
@@ -114,11 +114,11 @@ async function getCategoryPhotosFromDB(): Promise<Record<string, string>> {
     await Promise.all(Object.entries(CAT_TO_ANIMAL).map(async ([cat, animalType]) => {
       if (result[cat]) return;
       const { data: breeds } = await supabase
-        .from('breeds').select('photo_url')
+        .from('breeds').select('photo_url, photo_focus')
         .eq('animal', animalType).eq('status', 'published').not('photo_url', 'is', null).limit(30);
       if (breeds && breeds.length > 0) {
-        const pick = breeds[Math.floor(Math.random() * breeds.length)] as { photo_url: string };
-        result[cat] = pick.photo_url;
+        const pick = breeds[Math.floor(Math.random() * breeds.length)] as { photo_url: string; photo_focus: string | null };
+        result[cat] = { url: pick.photo_url, focus: pick.photo_focus };
       }
     }));
     return result;
@@ -374,7 +374,8 @@ export default async function LandingPage() {
                 >
                   {imgSrc && (
                     <Image
-                      src={imgSrc}
+                      src={imgSrc.url}
+                      style={frameStyle(imgSrc.focus)}
                       alt={`${cat.label}`}
                       fill
                       unoptimized

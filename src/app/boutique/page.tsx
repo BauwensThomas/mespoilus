@@ -1,4 +1,5 @@
 ﻿import type { Metadata } from 'next';
+import { unstable_cache } from 'next/cache';
 import { applySearch } from '@/lib/search';
 import { NoelGifts } from '@/components/noel/NoelDecor';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
@@ -133,7 +134,10 @@ async function getCatalogItems(params: {
   }
 }
 
-async function getMerchants(): Promise<string[]> {
+// Liste des marchands : change seulement à la synchro du lundi, gardée en cache une heure
+const getMerchants = unstable_cache(getMerchantsUncached, ['boutique-merchants'], { revalidate: 3600 });
+
+async function getMerchantsUncached(): Promise<string[]> {
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase.rpc('get_all_merchants');
@@ -238,18 +242,17 @@ export default async function BoutiqueV2Page({ searchParams }: Props) {
   const perPageRaw      = parseInt(sp.per_page ?? '', 10) as PerPageValue;
   const perPage         = VALID_PER_PAGE.includes(perPageRaw) ? perPageRaw : DEFAULT_PER_PAGE;
 
-  let isAdmin = false;
-  try {
-    const authClient = await createClient();
-    const { data: { user } } = await authClient.auth.getUser();
-    isAdmin = !!user;
-  } catch { /* non-bloquant */ }
-
-  const [{ items, total }, allMerchants, hiddenItems] = await Promise.all([
+  // Tout part en même temps : avant, le contrôle admin passait d'abord, puis les produits.
+  const adminCheck = createClient()
+    .then(c => c.auth.getUser())
+    .then(({ data: { user } }) => !!user)
+    .catch(() => false); // non-bloquant
+  const [{ items, total }, allMerchants, isAdmin] = await Promise.all([
     getCatalogItems({ category, productType, search, sort, minPrice, maxPrice, merchants: filterMerchants, favIds: filterFavIds, page, perPage }),
     getMerchants(),
-    isAdmin ? getHiddenItems() : Promise.resolve([] as CatalogItem[]),
+    adminCheck,
   ]);
+  const hiddenItems = isAdmin ? await getHiddenItems() : [];
 
   const totalPages = Math.ceil(total / perPage);
 

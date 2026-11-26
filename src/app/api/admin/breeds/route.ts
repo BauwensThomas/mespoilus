@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 
 export async function GET(req: NextRequest) {
   const animal = req.nextUrl.searchParams.get('animal');
@@ -32,5 +33,8 @@ export async function PATCH(req: NextRequest) {
 
   const { error } = await supabase.from('breeds').update(update).eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  // Fiches et listes de races sont gardées en cache 1 h : sans ça, photo, cadrage et texte modifiés
+  // n'apparaissaient qu'au bout d'une heure (26/11/2026)
+  revalidatePath('/races', 'layout');
   return NextResponse.json({ success: true });
 }

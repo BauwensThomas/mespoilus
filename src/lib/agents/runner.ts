@@ -325,6 +325,7 @@ async function saveMariesArticle(content: string): Promise<string | null> {
       console.log('[Marie] ✅ Article sauvegardé:', slug);
       revalidatePath('/');
       revalidatePath('/blog');
+      revalidatePath(`/blog/${slug}`); // l'article est en cache (ISR)
       console.log('[Marie] Cache invalidated for / and /blog');
       return slug;
     }

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { RefreshCw, Check, X, ImageOff, Upload, Link, Trash2, Search, FileText, Monitor, Smartphone, MapPin, Scale, Heart, Activity, Crop } from 'lucide-react';
 import PhotoFrameEditor from '@/components/ui/PhotoFrameEditor';
+import CategoryPhotos from './CategoryPhotos';
 import { frameStyle } from '@/lib/image-focus';
 import clsx from 'clsx';
 
@@ -240,6 +241,8 @@ export default function AdminRacesPage() {
           <RefreshCw size={16} strokeWidth={1.5} />
         </button>
       </div>
+
+      <CategoryPhotos />
 
       {/* Recherche + filtres */}
       <div className="space-y-3">

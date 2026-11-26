@@ -1,6 +1,7 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import { slugify } from '@/lib/slugify';
-import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
+import ArticleAdminBar from '@/components/blog/ArticleAdminBar';
 import { Article } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -12,7 +13,7 @@ import Image from 'next/image';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
 import AdBanner from '@/components/ui/AdBanner';
 import CommentForm from '@/components/blog/CommentForm';
-import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle, Pencil } from 'lucide-react';
+import { Dog, Cat, Bird, Mouse, Zap, PawPrint, PenTool, MessageCircle } from 'lucide-react';
 import { toHashtag } from '@/lib/hashtag';
 import ProductImage from '@/components/boutique/ProductImage';
 import { NoelGarland } from '@/components/noel/NoelDecor';
@@ -22,7 +23,15 @@ import Breadcrumb from '@/components/ui/Breadcrumb';
 import { getMetaOverride } from '@/lib/seo-overrides';
 import { frameStyle } from '@/lib/image-focus';
 
-export const dynamic = 'force-dynamic';
+// En cache, régénéré au plus tard toutes les heures (liens produits revérifiés) et tout de suite
+// après une modification dans l'admin, un commentaire approuvé ou une publication (revalidatePath).
+// Avant : recalculé à chaque visite, plus d'une seconde d'attente avant le premier affichage.
+export const revalidate = 3600;
+
+// Liste vide : aucun article généré au build, chacun est mis en cache à sa première visite.
+export async function generateStaticParams() {
+  return [];
+}
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -222,27 +231,11 @@ export default async function ArticlePage({ params }: Props) {
 
   const CategoryIcon = CATEGORY_ICONS[article.category] || PawPrint;
 
-  const supabaseUser = await createClient();
-  const { data: { user } } = await supabaseUser.auth.getUser();
-  const isAdmin = !!user;
 
   return (
     <DirectionalTransition>
     <div className="min-h-screen animate-fade-in">
-      {isAdmin && (
-        <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-2 bg-gray-900/95 backdrop-blur text-white text-xs fade-up">
-          <Pencil size={13} strokeWidth={1.5} className="text-orange-400" />
-          <span className="text-gray-400">Mode admin</span>
-          <Link href={`/blog-admin/${article.slug}/edit`}
-            className="px-2.5 py-1 bg-orange-500 hover:bg-orange-400 text-white rounded-md font-medium transition-colors">
-            Modifier l'article
-          </Link>
-          <Link href="/blog-admin?tab=articles"
-            className="px-2.5 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md transition-colors">
-            Tous les articles
-          </Link>
-        </div>
-      )}
+      <ArticleAdminBar slug={article.slug} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
 

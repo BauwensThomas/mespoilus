@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_LABEL, ANIMAL_URL, ANIMAL_EMOJI, ANIMAL_GRADIENT, type AnimalType } from '@/lib/breeds-list';
 import DirectionalTransition from '@/components/ui/DirectionalTransition';
 import { getMetaOverride } from '@/lib/seo-overrides';
+import { frameStyle } from '@/lib/image-focus';
 
 export const revalidate = 3600;
 
@@ -32,20 +33,22 @@ const ANIMAL_TYPE_MAP: Record<string, AnimalType> = {
   reptile: 'reptile', reptiles: 'reptile',
 };
 
-async function getPhotos(): Promise<Record<AnimalType, string | null>> {
-  const result: Record<AnimalType, string | null> = { chien: null, chat: null, oiseau: null, rongeur: null, reptile: null };
+type CatPhoto = { url: string; focus: string | null };
+
+async function getPhotos(): Promise<Record<AnimalType, CatPhoto | null>> {
+  const result: Record<AnimalType, CatPhoto | null> = { chien: null, chat: null, oiseau: null, rongeur: null, reptile: null };
   try {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from('hero_photos')
-      .select('url, animal_type')
+      .select('url, animal_type, focus')
       .eq('active', true)
       .not('animal_type', 'is', null);
     if (!data) return result;
-    const byType: Record<AnimalType, string[]> = { chien: [], chat: [], oiseau: [], rongeur: [], reptile: [] };
+    const byType: Record<AnimalType, CatPhoto[]> = { chien: [], chat: [], oiseau: [], rongeur: [], reptile: [] };
     for (const row of data) {
       const type = ANIMAL_TYPE_MAP[row.animal_type];
-      if (type) byType[type].push(row.url);
+      if (type) byType[type].push({ url: row.url, focus: row.focus ?? null });
     }
     for (const animal of ANIMALS) {
       const urls = byType[animal];
@@ -55,11 +58,11 @@ async function getPhotos(): Promise<Record<AnimalType, string | null>> {
     await Promise.all(ANIMALS.map(async animal => {
       if (result[animal]) return;
       const { data: breeds } = await supabase
-        .from('breeds').select('photo_url')
+        .from('breeds').select('photo_url, photo_focus')
         .eq('animal', animal).eq('status', 'published').not('photo_url', 'is', null).limit(30);
       if (breeds && breeds.length > 0) {
-        const pick = breeds[Math.floor(Math.random() * breeds.length)] as { photo_url: string };
-        result[animal] = pick.photo_url;
+        const pick = breeds[Math.floor(Math.random() * breeds.length)] as { photo_url: string; photo_focus: string | null };
+        result[animal] = { url: pick.photo_url, focus: pick.photo_focus };
       }
     }));
   } catch { /* fallback null */ }
@@ -118,7 +121,8 @@ export default async function RacesPage() {
             >
               {photo ? (
                 <Image
-                  src={photo}
+                  src={photo.url}
+                  style={frameStyle(photo.focus)}
                   alt={ANIMAL_LABEL[animal]}
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-110"

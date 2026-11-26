@@ -14,9 +14,10 @@ export const revalidate = 0;
 async function approveComment(id: string) {
   'use server';
   const supabase = createAdminClient();
-  await supabase.from('article_comments').update({ status: 'approved' }).eq('id', id);
+  const { data } = await supabase.from('article_comments').update({ status: 'approved' }).eq('id', id).select('article_slug').maybeSingle();
   await notifyCommentSubscribers(id);
   revalidatePath('/blog-admin');
+  if (data?.article_slug) revalidatePath(`/blog/${data.article_slug}`); // l'article est en cache
 }
 
 async function rejectComment(id: string) {
@@ -33,6 +34,7 @@ async function deleteArticle(formData: FormData) {
   const supabase = createAdminClient();
   await supabase.from('articles').delete().eq('slug', slug);
   revalidatePath('/blog');
+  revalidatePath(`/blog/${slug}`);
   revalidatePath('/blog-admin');
 }
 

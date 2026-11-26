@@ -1,7 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import PhotoFrameEditor from '@/components/ui/PhotoFrameEditor';
+import PhotoFrameEditor, { type FrameFormat } from '@/components/ui/PhotoFrameEditor';
+
+// Où l'image d'un article est affichée : en-tête grand écran (21:9), cartes du blog, en-tête mobile (4:3)
+const ARTICLE_FORMATS: FrameFormat[] = [
+  { label: 'En-tête grand écran', ratio: '21 / 9', width: '20rem' },
+  { label: 'Carte du blog', ratio: '16 / 9', width: '12rem' },
+  { label: 'En-tête mobile', ratio: '4 / 3', width: '9rem' },
+];
 
 /** Cadrage de l'image de l'article, enregistré tout de suite (indépendant du bouton du formulaire). */
 export default function ArticleImageFrame({ src, value, save }: {
@@ -23,6 +30,7 @@ export default function ArticleImageFrame({ src, value, save }: {
         key={src}
         src={src}
         value={current}
+        formats={ARTICLE_FORMATS}
         saving={busy}
         onSave={async v => {
           setBusy(true); setMessage('');

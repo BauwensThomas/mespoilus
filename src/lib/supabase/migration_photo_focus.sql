@@ -3,3 +3,5 @@
 ALTER TABLE breeds ADD COLUMN IF NOT EXISTS photo_focus text;
 ALTER TABLE adoption_posts ADD COLUMN IF NOT EXISTS photo_focus text[];
 ALTER TABLE articles ADD COLUMN IF NOT EXISTS image_focus text;
+-- Photos des cartes de catégories (pages Races et Accueil), réglées dans races-admin (26/11/2026)
+ALTER TABLE hero_photos ADD COLUMN IF NOT EXISTS focus text;

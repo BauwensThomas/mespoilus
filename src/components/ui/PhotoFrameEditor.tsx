@@ -14,7 +14,18 @@ const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(mi
  * - ou les trois réglages gauche-droite, haut-bas et zoom.
  * Les aperçus montrent les formats utilisés sur le site (carte large, carré, portrait).
  */
-export default function PhotoFrameEditor({ src, value, onSave, onCancel, saving, saveLabel = 'Enregistrer le cadrage', alwaysEnabled = false }: {
+export interface FrameFormat { label: string; ratio: string; width: string }
+
+/** Formats par défaut : carte large, carré, portrait */
+export const DEFAULT_FORMATS: FrameFormat[] = [
+  { label: 'Carte', ratio: '4 / 3', width: '14rem' },
+  { label: 'Carré', ratio: '1 / 1', width: '8rem' },
+  { label: 'Portrait', ratio: '3 / 4', width: '7rem' },
+];
+
+export default function PhotoFrameEditor({ src, value, onSave, onCancel, saving, saveLabel = 'Enregistrer le cadrage', alwaysEnabled = false, formats = DEFAULT_FORMATS }: {
+  /** Formats d'aperçu, ceux où la photo est réellement affichée sur le site */
+  formats?: FrameFormat[];
   src: string;
   value: string | null;
   onSave: (value: string) => void | Promise<void>;
@@ -93,16 +104,13 @@ export default function PhotoFrameEditor({ src, value, onSave, onCancel, saving,
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
-        {[
-          { label: 'Carte', cls: 'w-full max-w-[16rem] sm:w-56 aspect-[4/3]' },
-          { label: 'Carré', cls: 'w-28 sm:w-32 aspect-square' },
-          { label: 'Portrait', cls: 'w-24 sm:w-28 aspect-[3/4]' },
-        ].map(({ label, cls }) => (
-          <div key={label} className={label === 'Carte' ? 'w-full sm:w-auto' : ''}>
+        {formats.map(({ label, ratio, width }) => (
+          <div key={label} style={{ width, maxWidth: '100%' }}>
             <p className="text-[11px] text-gray-500 mb-1">{label}</p>
             <div
               ref={wheelRef}
-              className={`relative overflow-hidden rounded-lg bg-gray-100 cursor-grab active:cursor-grabbing touch-none select-none ${cls}`}
+              className="relative w-full overflow-hidden rounded-lg bg-gray-100 cursor-grab active:cursor-grabbing touch-none select-none"
+              style={{ aspectRatio: ratio }}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerEnd}
