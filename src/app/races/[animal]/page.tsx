@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { ANIMAL_URL_MAP, ANIMAL_LABEL, ANIMAL_EMOJI, ANIMAL_URL } from '@/lib/breeds-list';
 import BreedsList from '@/components/races/BreedsList';
 import BreedsSearchBar from '@/components/races/BreedsSearchBar';
+import { RACE_HUB_INTROS } from '@/lib/race-hub-intros';
 
 export const revalidate = 3600;
 
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!animalType) return {};
   return {
     title: `Races de ${ANIMAL_LABEL[animalType].toLowerCase()} - fiches complètes`,
-    description: `Toutes nos fiches races ${ANIMAL_LABEL[animalType].toLowerCase()} : caractère, santé, entretien. Trouvez la race qui vous correspond.`,
+    description: `Toutes nos fiches races ${ANIMAL_LABEL[animalType].toLowerCase()} : caractère, santé, entretien, et les bonnes questions à se poser avant d'adopter.`,
     alternates: { canonical: `https://www.mespoilus.com/races/${animal}` },
   };
 }
@@ -56,6 +57,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
   ]);
 
   const totalCount = total ?? 0;
+  const intro = RACE_HUB_INTROS[animalType];
 
   return (
     <div className="min-h-screen px-6 md:px-8 py-6 space-y-5">
@@ -66,6 +68,7 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
           Races de {ANIMAL_LABEL[animalType].toLowerCase()}
         </h1>
         <p className="text-gray-500 text-sm">Fiches races : caractère, santé, entretien</p>
+        <p className="text-gray-700 text-[15px] leading-relaxed mt-3 max-w-3xl">{intro.lead}</p>
       </div>
 
       {/* Onglets filtres avec stagger */}
@@ -126,6 +129,27 @@ export default async function AnimalRacesPage({ params, searchParams }: Props) {
           view={view === 'list' ? 'list' : 'grid'}
         />
       )}
+
+      {/* Guide de choix : contenu éditorial propre à chaque espèce (indexation Google) */}
+      <section className="max-w-3xl pt-6 border-t border-gray-200 space-y-5" aria-labelledby="guide-choix">
+        <h2 id="guide-choix" className="text-xl font-bold text-gray-900">
+          {intro.title}
+        </h2>
+        {intro.sections.map(s => (
+          <div key={s.h} className="space-y-2">
+            <h3 className="font-semibold text-gray-900">{s.h}</h3>
+            {s.p.map((p, i) => <p key={i} className="text-gray-700 text-[15px] leading-relaxed">{p}</p>)}
+          </div>
+        ))}
+        <p className="text-gray-700 text-[15px] leading-relaxed">
+          Pour affiner votre choix, filtrez les races adaptées à{' '}
+          <Link href={`/races/${animal}/appartement`} className="text-orange-600 hover:underline">la vie en appartement</Link>,{' '}
+          <Link href={`/races/${animal}/enfants`} className="text-orange-600 hover:underline">une famille avec enfants</Link>,{' '}
+          <Link href={`/races/${animal}/debutants`} className="text-orange-600 hover:underline">un premier animal</Link> ou{' '}
+          <Link href={`/races/${animal}/seniors`} className="text-orange-600 hover:underline">des personnes âgées</Link>, et retrouvez{' '}
+          <Link href={`/blog/${animal}`} className="text-orange-600 hover:underline">{intro.blogLabel.toLowerCase()}</Link> sur le blog.
+        </p>
+      </section>
 
     </div>
   );
