@@ -16,17 +16,16 @@ function buildAffiliateUrl(rawUrl: string, merchantName: string, awinTemplates: 
   const lm = merchantName.toLowerCase();
   const lu = rawUrl.toLowerCase();
 
-  // Amazon - détecte FR vs BE
+  // Amazon : toujours amazon.fr avec le compte France (le compte amazon.com.be a été fermé le
+  // 27/11/2026 pour inactivité ; amazon.fr livre aussi en Belgique).
   if (lm.includes('amazon') || lu.includes('amazon.')) {
-    const isBE = lm.includes(' be') || lu.includes('amazon.be') || lu.includes('amazon.com.be');
-    const tag = isBE ? 'mespoilusbe-21' : AMAZON_TAG;
-    const domain = isBE ? 'amazon.be' : 'amazon.fr';
     const match = rawUrl.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/) ||
                   rawUrl.match(/amazon\.[a-z.]+\/([A-Z0-9]{10})(?:[/?]|$)/);
-    if (match) return `https://www.${domain}/dp/${match[1]}?tag=${tag}`;
+    if (match) return `https://www.amazon.fr/dp/${match[1]}?tag=${AMAZON_TAG}`;
     try {
       const u = new URL(rawUrl);
-      u.searchParams.set('tag', tag);
+      if (!u.hostname.endsWith('amazon.fr')) return rawUrl; // lien d'un autre Amazon sans code produit : laissé tel quel
+      u.searchParams.set('tag', AMAZON_TAG);
       return u.toString();
     } catch { return rawUrl; }
   }

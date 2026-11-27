@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { Sparkles, Copy, ExternalLink, Check, AlertCircle, Heart } from 'lucide-react';
 import { buildAwinDeepLink } from '@/lib/awin-link';
 
+// Compte France uniquement : le compte amazon.com.be a été fermé le 27/11/2026 pour inactivité.
+// Les liens Amazon Belgique sont convertis vers amazon.fr (même code produit, livraison en Belgique).
 const AMAZON_TAG_FR = 'mespoilus-21';
-const AMAZON_TAG_BE = 'mespoilusbe-21';
 const CPC_PUBLISHER_SID = '101746286';
 const CPC_ADVERTISER_ID = '17287368';
 
@@ -18,16 +19,14 @@ function generate(rawUrl: string): Result {
 
   // Amazon
   if (host.includes('amazon.')) {
-    const isBE = host.includes('amazon.be') || host.includes('amazon.com.be');
-    const tag = isBE ? AMAZON_TAG_BE : AMAZON_TAG_FR;
-    const domain = isBE ? 'amazon.be' : 'amazon.fr';
     const match = rawUrl.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/) ||
                   rawUrl.match(/amazon\.[a-z.]+\/([A-Z0-9]{10})(?:[/?]|$)/);
-    if (match) return { url: `https://www.${domain}/dp/${match[1]}?tag=${tag}`, merchant: isBE ? 'Amazon Belgique' : 'Amazon France' };
+    if (match) return { url: `https://www.amazon.fr/dp/${match[1]}?tag=${AMAZON_TAG_FR}`, merchant: 'Amazon France' };
+    if (!host.endsWith('amazon.fr')) return { error: 'Lien Amazon non reconnu. Ouvrez la page du produit et copiez son adresse.' };
     try {
       const u = new URL(rawUrl);
-      u.searchParams.set('tag', tag);
-      return { url: u.toString(), merchant: isBE ? 'Amazon Belgique' : 'Amazon France' };
+      u.searchParams.set('tag', AMAZON_TAG_FR);
+      return { url: u.toString(), merchant: 'Amazon France' };
     } catch { return { error: 'Lien Amazon non reconnu.' }; }
   }
 
