@@ -484,12 +484,21 @@ RACE_SLUG : AUCUN`,
       return null;
     };
 
+    // Format qui attire le plus de lecteurs (Vercel Analytics, novembre 2026 : "oiseau qui tremble" 2e page du site,
+    // "chien qui tousse", "oiseau qui ne chante plus") : la question d'un propriétaire inquiet face à un symptôme.
+    // Peu de concurrence sur Google pour les oiseaux, rongeurs et reptiles. Pas pour les types imposés (sélection, race, affiliation, noël).
+    const SYMPTOM_FOCUS = ['oiseaux', 'rongeurs', 'reptiles'];
+    const audienceBlock = (forcedType === 'trending' || forcedType === 'pratique')
+      ? `\nCE QUI ATTIRE LE PLUS DE LECTEURS SUR CE SITE : les articles qui répondent à une inquiétude précise sur un symptôme ou un comportement, formulée comme la tape un propriétaire inquiet (exemples qui marchent : "Oiseau qui tremble : causes et dangers", "Mon oiseau ne chante plus", "Chien qui tousse comme s'il avait un truc coincé"). ${SYMPTOM_FOCUS.includes(animal)
+          ? `Pour les ${animal}, la concurrence est faible sur ces sujets : choisis en priorité une question santé ou comportement précise qui n'a pas encore été traitée sur le site.`
+          : "Privilégie ce format si un tel sujet n'a pas encore été traité sur le site."}\n`
+      : '';
     let dupWarning = '';
     let lucasAttempt = 0;
     for (; lucasAttempt < 2; lucasAttempt++) {
     const lucasPrompt = `${forcedPartnerBlock}Trouve le meilleur sujet d'article SEO pour les propriétaires de ${animal}${forcedType === 'trending' ? ` (${monthName})` : ''}.
 
-${typeInstructions[forcedType]}
+${typeInstructions[forcedType]}${audienceBlock}
 ${suggestionsContext ? `\n${suggestionsContext}\nCe sont les vraies recherches Google en ce moment sur les ${animal}. Utilise l'une d'elles comme sujet ou angle d'article.\n` : ''}${trendsContext && forcedType === 'trending' ? `\n${trendsContext}\nTendances générales du jour - si l'une peut être reliée aux ${animal}, c'est un excellent angle. Sinon, ignore-les.\n` : ''}${gscContext ? `\n${gscContext}\nUtilise ces données GSC pour orienter ton choix : privilégie les requêtes à fort potentiel (impressions élevées, mauvaise position ou CTR faible) en lien avec les ${animal}.\n` : ''}
 ${animalThemesBlock}${speciesDiversityBlock}Autres articles déjà publiés (à ne pas dupliquer) :
 ${recentContext}${dupWarning}

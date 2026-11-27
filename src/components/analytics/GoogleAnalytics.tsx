@@ -2,12 +2,17 @@
 
 import Script from 'next/script';
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+
+// Pas de statistiques sur les pages d'administration (mêmes règles que AnalyticsPublic)
+const ADMIN_PATH = /^\/(?:dashboard|agents|orchestrate|login)(?:\/|$)|^\/[a-z-]+-admin(?:\/|$)/;
 
 const GA_ID = 'G-QE9XSS18YQ';
 const CONSENT_KEY = 'mespoilus_cookie_consent';
 
 export default function GoogleAnalytics() {
   const [consented, setConsented] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
   const check = () => {
@@ -24,7 +29,7 @@ export default function GoogleAnalytics() {
   };
 }, []);
 
-  if (!consented) return null;
+  if (!consented || ADMIN_PATH.test(pathname ?? '')) return null;
 
   return (
     <>

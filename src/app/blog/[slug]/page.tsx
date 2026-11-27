@@ -122,7 +122,16 @@ export default async function ArticlePage({ params }: Props) {
   const clean = slugify(decoded);
   if (clean && clean !== slug) permanentRedirect(`/blog/${clean}`);
   const article = await getArticle(slug);
-  if (!article) notFound();
+  if (!article) {
+    // Lien tronqué (anciens posts Facebook : "/blog/nourriture-perruche-ondul") : si le début
+    // correspond à un seul article publié, redirection permanente vers lui plutôt qu'une 404.
+    if (/^[a-z0-9-]{12,}$/.test(slug)) {
+      const { data: matches } = await createAdminClient()
+        .from('articles').select('slug').eq('status', 'published').like('slug', `${slug}%`).limit(2);
+      if (matches?.length === 1) permanentRedirect(`/blog/${matches[0].slug}`);
+    }
+    notFound();
+  }
 
   // Produits + articles liés (même logique que les fiches races) : maillage interne + monétisation.
   let relProducts: { catalog_id: string; name: string; image_url: string | null; price: number; currency: string | null; merchant_name: string; affiliate_url: string }[] = [];

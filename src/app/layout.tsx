@@ -8,7 +8,7 @@ import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import AdSense from '@/components/analytics/AdSense';
 import PinterestTag from '@/components/analytics/PinterestTag';
 import ExternalLinks from '@/components/ExternalLinks';
-import { Analytics } from '@vercel/analytics/next';
+import AnalyticsPublic from '@/components/AnalyticsPublic';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { createAdminClient } from '@/lib/supabase/server';
 import { isGrilleVisible, isNoelEnabled } from '@/lib/site-settings';
@@ -92,7 +92,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <AdSense />
         <PinterestTag />
         <ExternalLinks />
-        <Analytics />
+        <AnalyticsPublic />
         <SpeedInsights />
       </body>
     </html>
