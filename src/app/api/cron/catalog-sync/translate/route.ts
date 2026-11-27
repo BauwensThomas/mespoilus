@@ -1,4 +1,6 @@
 ﻿import { createAdminClient } from '@/lib/supabase/server';
+import { MODELS, modelParams, textOf } from '@/lib/anthropic';
+import { translateNamesPrompt, translateNamesForcedPrompt, translateDescPrompt } from '@/lib/cron-prompts';
 import { NextResponse } from 'next/server';
 
 export const maxDuration = 300;
@@ -73,24 +75,16 @@ async function callAnthropic(body: object): Promise<Response> {
 
 async function translateBatch(names: string[]): Promise<string[]> {
   const res = await callAnthropic({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 2048,
+    ...modelParams(MODELS.haiku, 2048),
     messages: [{
       role: 'user',
-      content: `Tu es un expert en traduction de produits pour animaux de compagnie EN/NL → FR.
-
-Règles STRICTES :
-- Traduis TOUS les mots descriptifs anglais ou néerlandais en français. Exemples obligatoires : Adult→Adulte, Indoor→Intérieur, Outdoor→Extérieur, Senior→Senior, Kitten→Chaton, Puppy→Chiot, Chicken→Poulet, Salmon→Saumon, Beef→Bœuf, Turkey→Dinde, Lamb→Agneau, Fish→Poisson, Dry→Sec, Wet→Humide, Fresh→Frais, Light→Léger, Sterilised→Stérilisé, Grain Free→Sans céréales, Cat→Chat, Dog→Chien, Tree→Arbre, Box→Boîte, Litter→Litière, Enclosure→Enceinte, Toy→Jouet, Bed→Lit, Bowl→Bol, Feeder→Distributeur, Scratcher→Griffoir, Harness→Harnais, Leash→Laisse, Collar→Collier, Brush→Brosse, Coat→Pelage, House→Maison, Tower→Tour, Tunnel→Tunnel, Wand→Baguette, Carrier→Transporteur, Mat→Tapis, Pad→Coussin, Perch→Perchoir, Cage→Cage, Tank→Aquarium, Food→Nourriture, Treat→Friandise, Snack→Snack, Mix→Mélange, Blend→Mélange, Formula→Formule, Recipe→Recette, Natural→Naturel, Organic→Biologique, Grain→Céréale, Free→Sans, With→Avec, For→Pour, Small→Petit, Medium→Moyen, Large→Grand, Mini→Mini, Maxi→Maxi.
-- Les noms propres de MARQUES ne se traduisent pas (Royal Canin, Purina, Whiskas, Hills, Orijen, Acana, Zooplus, Maxi Zoo, CanadaPetCare, Puft, Tuft & Paw, Trixie, Ferplast, etc.).
-- Un prénom de produit (Haven, Milo, Luna, etc.) qui est le NOM DU PRODUIT doit rester tel quel, mais les mots descriptifs qui l'accompagnent se traduisent.
-- Ne retourne JAMAIS le nom identique si celui-ci contient des mots anglais ou néerlandais descriptifs.
-Réponds UNIQUEMENT avec les résultats, un par ligne, dans le même ordre. Pas d'explication, pas de numéro, pas de guillemets.\n\n${names.join('\n')}`,
+      content: translateNamesPrompt(names),
     }],
   });
 
   if (!res.ok) throw new Error(`Anthropic API ${res.status}`);
   const json = await res.json();
-  const text: string = json.content?.[0]?.text ?? '';
+  const text: string = textOf({ content: json.content ?? [] });
   const lines = text.split('\n').map((l: string) => l.trim()).filter(Boolean);
 
   if (lines.length !== names.length) return names;
@@ -99,26 +93,16 @@ Réponds UNIQUEMENT avec les résultats, un par ligne, dans le même ordre. Pas 
 
 async function translateBatchForced(names: string[]): Promise<string[]> {
   const res = await callAnthropic({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 2048,
+    ...modelParams(MODELS.haiku, 2048),
     messages: [{
       role: 'user',
-      content: `Tu es un traducteur EN→FR expert en produits pour animaux. Ces noms sont EN ANGLAIS et doivent être traduits en français naturel et grammaticalement correct.
-
-RÈGLES ABSOLUES :
-- INTERDIT de retourner un nom identique à l'original. TOUT MOT ANGLAIS descriptif doit être traduit.
-- Traduis les groupes nominaux composés avec la bonne grammaire française (ajoute les prépositions nécessaires) : Cat Tree→Arbre à chat, Cat Tower→Tour à chat, Cat Scratcher→Griffoir pour chat, Cat Bed→Lit pour chat, Cat Litter→Litière pour chat, Litter Box→Boîte à litière, Litter Box Enclosure→Meuble cache-litière, Cat Bowl→Bol pour chat, Dog Bed→Lit pour chien, Dog Bowl→Gamelle pour chien, Dog Harness→Harnais pour chien, Cat Food→Nourriture pour chat, Cat Treats→Friandises pour chat, Dog Food→Nourriture pour chien, Dog Treats→Friandises pour chien.
-- Traduis les adjectifs : Really→Vraiment, Great→Super, Good→Bon, Best→Meilleur, Amazing→Incroyable, Premium→Premium, Natural→Naturel, Organic→Bio, Fresh→Frais, Original→Original, Perfect→Parfait, Ultimate→Ultime.
-- Traduis les autres mots : Cat→Chat, Dog→Chien, Tree→Arbre, Tower→Tour, Box→Boîte, Litter→Litière, Enclosure→Meuble, Toy→Jouet, Bed→Lit, Bowl→Bol, Feeder→Distributeur, Scratcher→Griffoir, Harness→Harnais, Leash→Laisse, Collar→Collier, House→Maison, Food→Nourriture, Treat→Friandise, Grain→Céréale, Free→Sans, With→Avec, For→Pour, Small→Petit, Medium→Moyen, Large→Grand, Pack→Lot, Set→Ensemble, Bundle→Pack, Kit→Kit, Rope→Corde, Mat→Tapis, Pad→Coussin, Cover→Housse, Furniture→Meuble.
-- Garde UNIQUEMENT les noms propres de lignes produits (Haven, Milo, Grove, Luna, etc.) et les noms de marques (Puft, CanadaPetCare, Tuft & Paw, Trixie, etc.) tels quels.
-- Chiffres, unités et tirets inchangés.
-Réponds UNIQUEMENT avec les traductions, une par ligne, dans le même ordre. Pas d'explication.\n\n${names.join('\n')}`,
+      content: translateNamesForcedPrompt(names),
     }],
   });
 
   if (!res.ok) throw new Error(`Anthropic API ${res.status}`);
   const json = await res.json();
-  const text: string = json.content?.[0]?.text ?? '';
+  const text: string = textOf({ content: json.content ?? [] });
   const lines = text.split('\n').map((l: string) => l.trim()).filter(Boolean);
   if (lines.length !== names.length) return names;
   return lines;
@@ -126,20 +110,16 @@ Réponds UNIQUEMENT avec les traductions, une par ligne, dans le même ordre. Pa
 
 async function translateDescBatch(descs: string[]): Promise<string[]> {
   const res = await callAnthropic({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 4096,
+    ...modelParams(MODELS.haiku, 4096),
     messages: [{
       role: 'user',
-      content: `Tu es un expert en produits pour animaux de compagnie. Pour chaque description ci-dessous :
-- Si elle est DÉJÀ en français, retourne-la IDENTIQUE.
-- Si elle est principalement en anglais ou en néerlandais, traduis-la en français naturel. Garde les noms de marques et les chiffres tels quels.
-Réponds UNIQUEMENT avec un tableau JSON des résultats dans le même ordre. Pas d'explication, pas de markdown.\n\n${JSON.stringify(descs)}`,
+      content: translateDescPrompt(descs),
     }],
   });
 
   if (!res.ok) throw new Error(`Anthropic API ${res.status}`);
   const json = await res.json();
-  const text: string = json.content?.[0]?.text ?? '';
+  const text: string = textOf({ content: json.content ?? [] });
   const match = text.match(/\[[\s\S]*\]/);
   if (!match) return descs;
   try {

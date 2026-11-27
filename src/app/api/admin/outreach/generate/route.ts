@@ -109,7 +109,7 @@ Rédige l'email (objet accrocheur mais sobre + corps en paragraphes <p>).`;
   let bodyHtml = `<p>Bonjour,</p><p>Je suis Thomas, fondateur de Mes Poilus. Je viens de publier un article où je vous mets en avant : <a href="${articleUrl}">${article.title}</a>. Si vous le trouvez utile, n'hésitez pas à le partager !</p>`;
 
   try {
-    const { content } = await runAgent(system, task, MODELS.sonnet, 1200);
+    const { content } = await runAgent(system, task, MODELS.haiku, 1200);
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]) as { subject?: string; body_html?: string };

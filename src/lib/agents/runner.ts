@@ -26,7 +26,8 @@ export async function executeAgentTask(
       agent.systemPrompt,
       fullTask,
       agent.model,
-      agent.maxTokens ?? 3000
+      agent.maxTokens ?? 3000,
+      agentId === 'marie' ? 'medium' : undefined, // rédaction : un peu plus de réflexion
     );
 
     capturedTokens = inputTokens + outputTokens;
@@ -104,7 +105,8 @@ export async function streamAgentTask(
     task,
     agent.model,
     agent.maxTokens ?? 3000,
-    (tokens) => { totalTokens = tokens; }
+    (tokens) => { totalTokens = tokens; },
+    agentId === 'marie' ? 'medium' : undefined,
   );
 
   const decoder = new TextDecoder();

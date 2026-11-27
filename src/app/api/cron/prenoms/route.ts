@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { anthropic } from '@/lib/anthropic';
+import { anthropic, MODELS, modelParams, textOf } from '@/lib/anthropic';
+import { prenomsPrompt } from '@/lib/cron-prompts';
 import { createAdminClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -52,26 +53,16 @@ export async function GET(req: Request) {
   for (const animal of ANIMALS) {
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1500,
+        ...modelParams(MODELS.haiku, 1500),
         messages: [{
           role: 'user',
-          content: `Génère exactement 50 prénoms originaux et tendance pour un ${ANIMAL_LABELS[animal]} domestique, répartis en 4 styles (environ 12-13 par style) :
-- Mignon : prénoms doux, tendres, kawaii
-- Classique : prénoms courants et intemporels
-- Nature : inspirés de la nature, éléments, saisons, astres
-- Rigolo : originaux, drôles, décalés
-
-Règles : prénoms courts (1-2 mots max), variés, en français principalement, sans doublons entre styles.
-
-Retourne UNIQUEMENT ce JSON valide, sans markdown ni explication :
-{"Mignon":["nom1","nom2",...],"Classique":[...],"Nature":[...],"Rigolo":[...]}`,
+          content: prenomsPrompt(ANIMAL_LABELS[animal]),
         }],
       });
 
       totalTokens += response.usage.input_tokens + response.usage.output_tokens;
 
-      const raw = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
+      const raw = textOf(response).trim();
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error(`JSON introuvable dans la réponse pour ${animal}`);
 

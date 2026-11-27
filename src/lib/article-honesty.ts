@@ -8,13 +8,14 @@ import { runAgent, MODELS } from '@/lib/anthropic';
 export const HONESTY_RULE = `HONNÊTETÉ (règle absolue) : tu es une IA. N'écris JAMAIS que des produits ont été testés, essayés, comparés ou approuvés par nous, par des experts ou par des propriétaires. N'invente JAMAIS un vécu ("j'ai constaté", "je vois souvent"), une rencontre, un message de lecteur, un "cas réel" ni une équipe de vétérinaires. Ne cite JAMAIS de note (4,6/5), d'étoiles ni de nombre d'avis clients : ces chiffres changent et ne sont pas vérifiables. Pas de "j'aimerais", "j'adore", "je serais ravi". Écris plutôt "une erreur fréquente", "imaginons un chat qui...", "voici une sélection".`;
 
 const CLAIMS: RegExp[] = [
-  /\b(?:nous|on) (?:avons|a) (?:\w+ )?(?:teste|essaye|compare|analyse)\b/,
-  /\bapres avoir (?:teste|essaye|compare)\b/,
+  // e?s? : accord du participe ("les croquettes que nous avons testées"), trou constaté le 27/11/2026
+  /\b(?:nous|on) (?:avons|a) (?:\w+ )?(?:teste|essaye|compare|analyse)e?s?\b/,
+  /\bapres avoir (?:teste|essaye|compare)e?s?\b/,
   /\btestee?s? (?:et (?:approuve|recommande|compare|valide)|par (?:nous|nos|notre|des (?:proprietaires|milliers|experts)))/,
   /\b(?:produits?|modeles?|litieres?|cages?|harnais|colliers?|jouets?|croquettes|recommandations?|selection)(?: \w+){0,2} testee?s?\b/,
   /\b(?:concretes?|rigoureuse|fiables?) et testee?s?\b/,
   /\bapprouvee?s? par (?:nos|notre|nous|des|les)\b/,
-  /\bj'ai (?:\w+ )?(?:teste|essaye|constate|observe|remarque|vu|suivi|rencontre|discute|accompagne|recu)\b/,
+  /\bj'ai (?:\w+ )?(?:teste|essaye|constate|observe|remarque|vu|suivi|rencontre|discute|accompagne|recu)e?s?\b/,
   /\bque (?:je|nous) (?:vois|voyons|constate|constatons)\b/,
   /\bj'(?:observe|aimerais|adore|adorerais)\b/,
   /\bje (?:l'ai vu|vois souvent|serais (?:ravi|heureu))/,
@@ -76,7 +77,7 @@ Réécris chaque phrase ci-dessous pour retirer l'affirmation fausse, en gardant
 Réponds par un tableau JSON de ${claims.length} chaîne(s), dans le même ordre.
 
 ${JSON.stringify(claims)}`,
-      MODELS.sonnet, 2000,
+      MODELS.haiku, 2000,
     );
     tokens = res.inputTokens + res.outputTokens;
     const json = res.content.match(/\[[\s\S]*\]/);

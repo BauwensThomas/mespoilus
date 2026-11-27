@@ -1,6 +1,7 @@
 ﻿import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import { anthropic } from '@/lib/anthropic';
+import { anthropic, MODELS, modelParams, textOf } from '@/lib/anthropic';
+import { classifyPrompt } from '@/lib/cron-prompts';
 
 export const maxDuration = 60;
 
@@ -39,30 +40,14 @@ export async function GET(request: Request) {
     .join('\n');
 
   const message = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 4096,
+    ...modelParams(MODELS.haiku, 4096),
     messages: [{
       role: 'user',
-      content: `Tu es un expert en produits pour animaux de compagnie. Classifie chaque produit dans exactement une de ces catégories : nourriture, jouets, hygiene, sante, habitat, accessoires, livres.
-
-Règles :
-- nourriture : croquettes, pâtées, friandises, compléments alimentaires, vitamines
-- jouets : balles, cordes, peluches, laser, jouets interactifs, griffoirs
-- hygiene : shampooings, brosses, soins dentaires, antiparasitaires, produits de toilettage
-- sante : médicaments, compléments santé, articulaire, digestif, calmants
-- habitat : cages, litières, paniers, lits, aquariums, griffoirs muraux, arbres à chat
-- accessoires : laisses, harnais, colliers, gamelles, vêtements, transport, dressage
-- livres : livres, guides, encyclopédies
-
-Format d'entrée : id|nom du produit (marque)|catégorie_animal
-Format de sortie : id|type - une seule ligne par produit, rien d'autre.
-
-Produits à classifier :
-${productList}`,
+      content: classifyPrompt(productList),
     }],
   });
 
-  const responseText = (message.content[0] as { type: string; text: string }).text;
+  const responseText = textOf(message);
   const lines = responseText.trim().split('\n');
 
   const updates: { id: string; type: ProductType }[] = [];

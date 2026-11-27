@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { MODELS, modelParams, textOf } from '@/lib/anthropic';
+import { breedPrompt } from '@/lib/cron-prompts';
 import { createAdminClient } from '@/lib/supabase/server';
 import { BREEDS_SEED, ANIMAL_URL, type AnimalType } from '@/lib/breeds-list';
 import { pingIndexNowPaths } from '@/lib/indexnow';
@@ -112,33 +114,10 @@ export async function GET(req: Request) {
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
       const response = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4096,
+        ...modelParams(MODELS.haiku, 4096),
         messages: [{
           role: 'user',
-          content: `Tu es un expert en bien-etre animal. Genere une fiche race complete et precise pour : ${breed.name} (${ANIMAL_LABEL_FR[breed.animal]}).
-
-Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans commentaires) :
-{
-  "excerpt": "Une phrase accrocheuse de 80-120 caracteres decrivant la race",
-  "description": "<p>Paragraphe sur l'histoire et l'origine.</p><p>Paragraphe sur le caractere et la personnalite.</p><p>Paragraphe sur la vie au quotidien et les conseils pratiques.</p>",
-  "origine": "Pays ou region d'origine",
-  "taille": "petit ou moyen ou grand ou tres grand",
-  "poids": "X-Y kg",
-  "esperance_vie": "X-Y ans",
-  "caractere": ["trait1", "trait2", "trait3", "trait4", "trait5"],
-  "entretien": "2 phrases sur le toilettage et les soins.",
-  "alimentation": "2 phrases sur les besoins alimentaires specifiques.",
-  "sante": "2 phrases sur les maladies frequentes et la robustesse.",
-  "convient_pour": {
-    "appartement": true,
-    "jardin": false,
-    "enfants": true,
-    "debutants": false,
-    "seniors": true
-  },
-  "niveau_activite": "faible ou modere ou eleve ou tres eleve"
-}`,
+          content: breedPrompt(breed.name, ANIMAL_LABEL_FR[breed.animal]),
         }],
       });
 
@@ -148,7 +127,7 @@ Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans commentaires) :
         throw new Error('Reponse tronquee (max_tokens atteint)');
       }
 
-      const raw = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
+      const raw = textOf(response).trim();
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('JSON introuvable dans la reponse');
 

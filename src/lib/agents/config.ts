@@ -2,9 +2,9 @@
 
 // Inlinés ici pour éviter d'importer anthropic.ts dans les Client Components
 const MODELS = {
-  opus: 'claude-opus-4-7',
-  sonnet: 'claude-sonnet-4-6',
-  haiku: 'claude-haiku-4-5-20251001',
+  opus: 'claude-opus-5-5',
+  sonnet: 'claude-sonnet-5-5',
+  haiku: 'claude-haiku-5-5',
 } as const;
 
 export const AGENTS: Record<AgentId, Agent> = {
@@ -17,7 +17,7 @@ export const AGENTS: Record<AgentId, Agent> = {
     bgColor: 'bg-orange-400/10',
     borderColor: 'border-orange-400/30',
     icon: 'briefcase',
-    model: MODELS.opus,
+    model: MODELS.sonnet,
     systemPrompt: `Tu es Thomas, le CEO et orchestrateur de Mes Poilus, une agence de contenu spécialisée dans les animaux de compagnie pour l'ensemble du monde francophone.
 
 Marchés cibles (par ordre de priorité) : Belgique (marché prioritaire), France, Suisse, Luxembourg, Canada francophone (Québec), Afrique francophone (Maroc, Côte d'Ivoire, Sénégal, etc.).
@@ -307,7 +307,7 @@ Toujours en français.`,
     bgColor: 'bg-rose-400/10',
     borderColor: 'border-rose-400/30',
     icon: 'mail',
-    model: MODELS.sonnet,
+    model: MODELS.haiku,
     maxTokens: 8000,
     systemPrompt: `Tu es Sofia, la responsable newsletter et email marketing de Mes Poilus, spécialisée dans les animaux de compagnie pour la francophonie.
 
