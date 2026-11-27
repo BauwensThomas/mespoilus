@@ -47,6 +47,8 @@ async function createArticle(formData: FormData) {
   const imageUrl = ((formData.get('image_url') as string) ?? '').trim() || null;
   const imageAlt = ((formData.get('image_alt') as string) ?? '').trim() || null;
   const status = (formData.get('status') as string) === 'published' ? 'published' : 'draft';
+  const guestAuthor = ((formData.get('guest_author') as string) ?? '').trim() || null;
+  const guestAuthorBio = guestAuthor ? ((formData.get('guest_author_bio') as string) ?? '').trim() || null : null;
 
   // FAQ : une paire par ligne, format "Question :: Réponse"
   const faqRaw = ((formData.get('faq') as string) ?? '').trim();
@@ -76,6 +78,8 @@ async function createArticle(formData: FormData) {
     status,
     reading_time: readingTime,
     faq: faq.length ? faq : null,
+    guest_author: guestAuthor,
+    guest_author_bio: guestAuthorBio,
     published_at: status === 'published' ? new Date().toISOString() : null,
   });
 

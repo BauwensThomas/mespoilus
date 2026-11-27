@@ -1,5 +1,6 @@
 'use client';
 
+import GuestAuthorFields from '../GuestAuthorFields';
 import { useState, useMemo, useRef } from 'react';
 import { Save, Eye, PawPrint, Monitor, Smartphone, ImagePlus, X } from 'lucide-react';
 import Link from 'next/link';
@@ -157,6 +158,10 @@ export default function NewArticleClient({ createAction }: Props) {
               className={inputCls}
             />
             <p className="text-[11px] text-gray-400 mt-1">{metaDescription.length} caractères</p>
+          </div>
+
+          <div>
+            <GuestAuthorFields inputCls={inputCls} labelCls={labelCls} />
           </div>
 
           <div>

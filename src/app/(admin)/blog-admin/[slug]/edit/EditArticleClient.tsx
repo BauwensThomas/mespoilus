@@ -1,5 +1,6 @@
 'use client';
 
+import GuestAuthorFields from '../../GuestAuthorFields';
 import { useState, useMemo } from 'react';
 import { Save, Eye, PawPrint, Monitor, Smartphone } from 'lucide-react';
 import Link from 'next/link';
@@ -10,6 +11,8 @@ interface Article {
   slug: string;
   title: string;
   excerpt: string | null;
+  guest_author?: string | null;
+  guest_author_bio?: string | null;
   content: string | null;
   image_url: string | null;
   status: string;
@@ -86,6 +89,8 @@ export default function EditArticleClient({ article, updateAction }: Props) {
               <img src={imageUrl} alt="" className="mt-2 h-24 w-auto rounded-lg border border-gray-200 object-cover" />
             )}
           </div>
+
+          <GuestAuthorFields author={article.guest_author} bio={article.guest_author_bio} inputCls={inputCls} labelCls={labelCls} />
 
           <div>
             <label className={labelCls}>Statut</label>

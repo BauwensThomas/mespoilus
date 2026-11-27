@@ -83,7 +83,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale: 'fr_FR',
       publishedTime: article.published_at ?? undefined,
       modifiedTime: article.updated_at ?? undefined,
-      authors: ['Mes Poilus'],
+      authors: [article.guest_author?.trim() || 'Mes Poilus'],
       tags: article.seo_keywords,
       images: ogImages,
     },
@@ -201,6 +201,7 @@ export default async function ArticlePage({ params }: Props) {
     ? format(new Date(article.published_at), 'd MMMM yyyy', { locale: fr })
     : '';
 
+  const guestAuthor = article.guest_author?.trim() || null;
   const heroImage = article.image_url || null;
   const heroAlt = article.image_alt || article.title;
 
@@ -220,7 +221,10 @@ export default async function ArticlePage({ params }: Props) {
     dateModified: article.updated_at ?? article.published_at ?? undefined,
     // Auteur = l'organisation, pas une personne : les articles sont rédigés avec une IA (Marie)
     // sous la supervision de Thomas, déclarer "Marie" en Person serait un faux profil d'auteur.
-    author: { '@type': 'Organization', name: 'Mes Poilus', url: `${appUrl}/a-propos` },
+    // Article invité : l'auteur est une vraie personne, déclarée comme telle.
+    author: guestAuthor
+      ? { '@type': 'Person', name: guestAuthor }
+      : { '@type': 'Organization', name: 'Mes Poilus', url: `${appUrl}/a-propos` },
     publisher: { '@type': 'Organization', name: 'Mes Poilus', url: appUrl, logo: { '@type': 'ImageObject', url: `${appUrl}/icon.svg` } },
     mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl },
     inLanguage: 'fr',
@@ -325,15 +329,27 @@ export default async function ArticlePage({ params }: Props) {
             )}
 
             <div className="flex flex-wrap items-center gap-4 py-4 border-t border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <div className="w-16 h-16 rounded-full overflow-hidden">
-                  <Image src="/images/team/marie-illustration.webp" alt="Illustration de Marie, assistante de rédaction IA" width={64} height={64} className="object-cover w-full h-full" />
+              {guestAuthor ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-16 h-16 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xl font-bold" aria-hidden="true">
+                    {guestAuthor.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-gray-900">{guestAuthor}</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wide text-orange-700">Article invité</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-xs font-semibold text-gray-900">Marie</div>
-                  <div className="text-[10px] text-gray-500">Assistante de rédaction IA</div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="w-16 h-16 rounded-full overflow-hidden">
+                    <Image src="/images/team/marie-illustration.webp" alt="Illustration de Marie, assistante de rédaction IA" width={64} height={64} className="object-cover w-full h-full" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-gray-900">Marie</div>
+                    <div className="text-[10px] text-gray-500">Assistante de rédaction IA</div>
+                  </div>
                 </div>
-              </div>
+              )}
               {publishedDate && (
                 <div className="text-xs text-gray-700">Publié le {publishedDate}</div>
               )}
@@ -475,6 +491,23 @@ export default async function ArticlePage({ params }: Props) {
           </Link>
 
           {/* Boîte auteur */}
+          {guestAuthor ? (
+          <div className="mt-10 bg-orange-50 border border-orange-200 rounded-2xl p-5 flex items-start gap-4 fade-up">
+            <div className="w-20 h-20 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-3xl font-bold flex-shrink-0" aria-hidden="true">
+              {guestAuthor.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-700">Article invité</p>
+              <p className="font-semibold text-gray-900">{guestAuthor}</p>
+              {article.guest_author_bio && (
+                <p className="text-sm text-gray-600 leading-relaxed mt-1">{article.guest_author_bio}</p>
+              )}
+              <p className="text-xs text-gray-500 leading-relaxed mt-2">
+                Cet article a été rédigé par un auteur invité et relu par Mes Poilus. Il ne remplace pas l&apos;avis d&apos;un vétérinaire.
+              </p>
+            </div>
+          </div>
+          ) : (
           <div className="mt-10 bg-orange-50 border border-orange-200 rounded-2xl p-5 flex items-start gap-4 fade-up">
             <div className="w-32 h-32 rounded-full overflow-hidden flex-shrink-0">
               <Image src="/images/team/marie-illustration.webp" alt="Illustration de Marie, l'assistante de rédaction IA de Mes Poilus" width={128} height={128} className="object-cover w-full h-full" />
@@ -490,6 +523,7 @@ export default async function ArticlePage({ params }: Props) {
               </Link>
             </div>
           </div>
+          )}
 
           <footer className="mt-6 pt-6 border-t border-gray-200 flex items-center justify-end">
             <Link href="/blog" className="text-sm text-orange-600 hover:text-orange-500 font-medium transition-colors">

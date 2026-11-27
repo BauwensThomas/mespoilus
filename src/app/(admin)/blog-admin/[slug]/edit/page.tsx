@@ -17,7 +17,7 @@ async function getArticle(slug: string) {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from('articles')
-    .select('slug, title, excerpt, content, image_url, image_focus, status, category')
+    .select('slug, title, excerpt, content, image_url, image_focus, status, category, guest_author, guest_author_bio')
     .eq('slug', slug)
     .maybeSingle();
   return data;
@@ -32,6 +32,9 @@ async function updateArticle(slug: string, formData: FormData) {
     content:   (formData.get('content') as string),
     image_url: (formData.get('image_url') as string).trim() || null,
     status:    formData.get('status') as string,
+    // Article invité : nom vide = article Mes Poilus
+    guest_author: ((formData.get('guest_author') as string) ?? '').trim() || null,
+    guest_author_bio: ((formData.get('guest_author') as string) ?? '').trim() ? ((formData.get('guest_author_bio') as string) ?? '').trim() || null : null,
     updated_at: new Date().toISOString(),
   }).eq('slug', slug);
 

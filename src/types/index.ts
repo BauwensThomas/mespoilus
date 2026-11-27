@@ -64,6 +64,9 @@ export interface Article {
   reading_time: number;
   image_url?: string | null;
   image_focus?: string | null;
+  /** Article invité : nom et présentation de l'auteur (vide = article Mes Poilus) */
+  guest_author?: string | null;
+  guest_author_bio?: string | null;
   image_alt?: string | null;
   image_credit?: string | null;
   image_credit_url?: string | null;
