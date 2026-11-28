@@ -285,7 +285,14 @@ export default async function ArticlePage({ params }: Props) {
               rel="noopener noreferrer nofollow"
               className="absolute bottom-2 right-2 sm:bottom-3 sm:right-4 text-[8px] sm:text-[10px] text-white/50 hover:text-white/80 transition-colors bg-black/30 px-1.5 py-0.5 rounded backdrop-blur-sm z-10"
             >
-              © {article.image_credit} / Pexels
+              {/* Source déduite du lien (Pexels par défaut pour les images automatiques) */}
+              © {article.image_credit}{(() => {
+                const u = article.image_credit_url ?? '';
+                if (!u || u.includes('pexels.com')) return ' / Pexels';
+                if (u.includes('unsplash.com')) return ' / Unsplash';
+                if (u.includes('pixabay.com')) return ' / Pixabay';
+                return '';
+              })()}
             </a>
           )}
 

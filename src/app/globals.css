@@ -647,3 +647,10 @@ html {
   border-radius: 1rem;
   object-fit: cover;
 }
+
+/* Puces et numéros des listes d'articles (28/11/2026) : la remise à zéro de Tailwind les masquait,
+   les listes s'affichaient comme de simples lignes. */
+.article-content ul { list-style: disc; }
+.article-content ol { list-style: decimal; }
+.article-content ul ul { list-style: circle; }
+.article-content li::marker { color: #ea580c; }
