@@ -635,3 +635,15 @@ html {
     transform: none !important;
   }
 }
+/* Photos insérées dans le texte d'un article (Markdown ![...](...)), 28/11/2026 : sans limite,
+   elles prenaient toute la largeur de la colonne. Taille modérée, centrées, coins arrondis. */
+.article-content p > img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(100%, 36rem);
+  max-height: 26rem;
+  margin: 1.75rem auto;
+  border-radius: 1rem;
+  object-fit: cover;
+}

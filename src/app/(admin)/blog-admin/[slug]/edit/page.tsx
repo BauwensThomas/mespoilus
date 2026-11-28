@@ -37,6 +37,10 @@ async function updateArticle(slug: string, formData: FormData) {
     guest_author_bio: ((formData.get('guest_author') as string) ?? '').trim() ? ((formData.get('guest_author_bio') as string) ?? '').trim() || null : null,
     updated_at: new Date().toISOString(),
   }).eq('slug', slug);
+  // Brouillon publié pour la première fois : date de publication (sinon pas de date sur l'accueil et le blog)
+  if (formData.get('status') === 'published') {
+    await supabase.from('articles').update({ published_at: new Date().toISOString() }).eq('slug', slug).is('published_at', null);
+  }
 
   revalidatePath(`/blog/${slug}`);
   revalidatePath('/blog');
